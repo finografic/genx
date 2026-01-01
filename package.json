@@ -23,15 +23,21 @@
   "license": "MIT",
   "keywords": [
     "finografic",
-    "core",
-    "types",
-    "utils"
+    "create",
+    "generator",
+    "scaffold",
+    "codemod",
+    "cli"
   ],
+  "bin": {
+    "finografic-create": "./dist/index.mjs"
+  },
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "module": "./dist/index.mjs",
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "exports": {
     ".": "./dist/index.mjs",
@@ -48,13 +54,16 @@
     "·········· LINTING": "···················································",
     "lint": "eslint .",
     "lint.fix": "eslint . --fix",
+    "lint.markdown.fix": "markdownlint --fix . --ignore ./node_modules",
     "·········· PUBLISH.GITHUB": "·····················································",
-    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
-    "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
-    "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
+    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --tags",
+    "release.github.minor": "pnpm run release.check && pnpm version minor && git push --tags",
+    "release.github.major": "pnpm run release.check && pnpm version major && git push --tags",
     "release.check": "pnpm lint && pnpm typecheck",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view @finografic/create --registry=https://npm.pkg.github.com",
+    "·········· PACKAGES": "··················································",
+    "update.project-scripts": "pnpm update @finografic/core --latest",
     "·········· UTILS": "·····················································",
     "tsc.debug": "pnpm exec tsc --pretty --project tsconfig.json",
     "typecheck": "pnpm exec tsc --project tsconfig.json --noEmit",
@@ -63,23 +72,27 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "lodash": "4.17.21"
+    "@clack/prompts": "^0.11.0",
+    "@finografic/core": "^0.6.5",
+    "execa": "^9.5.2",
+    "fast-glob": "^3.3.3",
+    "picocolors": "^1.1.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.32.0",
-    "@types/lodash": "4.17.13",
     "@types/node": "20.15.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "eslint": "9.16.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "lint-staged": "^16.1.2",
+    "markdownlint": "^0.40.0",
     "markdownlint-cli": "^0.47.0",
     "simple-git-hooks": "^2.13.0",
     "tsdown": "^0.18.4",
-    "type-fest": "^5.3.1",
     "typescript": "^5.8.3",
     "vitest": "^4.0.16"
   },
