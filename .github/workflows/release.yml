@@ -34,7 +34,7 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_V3 }}
 
       - name: Build
         run: pnpm build
