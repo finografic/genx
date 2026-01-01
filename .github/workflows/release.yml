@@ -14,11 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Tell setup-node to use your PAT so it writes the correct auth
-      - name: Setup Node
+      - name: Setup Node (use PAT for auth)
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -27,13 +25,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Also create a project .npmrc that pnpm will definitely read
-      - name: Create project .npmrc for GitHub Packages
+      - name: Create project .npmrc (ensures pnpm sees the token)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "@finografic:registry=https://npm.pkg.github.com/" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > /tmp/npmrc
+          NPM_CONFIG_USERCONFIG=/tmp/npmrc npm --registry=https://npm.pkg.github.com view @finografic/core || exit 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -41,6 +41,8 @@ jobs:
           version: 10
 
       - name: Install deps
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm install
 
       - name: Build
