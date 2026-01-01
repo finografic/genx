@@ -1,43 +1,35 @@
 {
-  "name": "@finografic/create",
+  "name": "__PACKAGE_NAME__",
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@10.8.0",
-  "description": "Opinionated generator and codemod toolkit for the @finografic ecosystem.",
-  "homepage": "https://github.com/finografic/create",
+  "description": "__DESCRIPTION__",
+  "homepage": "https://github.com/finografic/__NAME__",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/finografic/create.git"
+    "url": "git+https://github.com/finografic/__NAME__.git"
   },
   "bugs": {
-    "url": "https://github.com/finografic/create/issues"
+    "url": "https://github.com/finografic/__NAME__/issues"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
   "author": {
-    "name": "Justin",
-    "email": "justin.blair.rankin@gmail.com",
-    "url": "http://finografic.github.com/cv-justin-rankin"
+    "name": "__AUTHOR_NAME__",
+    "email": "__AUTHOR_EMAIL__",
+    "url": "__AUTHOR_URL__"
   },
   "license": "MIT",
   "keywords": [
     "finografic",
-    "create",
-    "generator",
-    "scaffold",
-    "codemod",
-    "cli"
+    "__NAME__"
   ],
-  "bin": {
-    "finografic-create": "./dist/index.mjs"
-  },
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "module": "./dist/index.mjs",
   "files": [
-    "dist",
-    "templates"
+    "dist"
   ],
   "exports": {
     ".": "./dist/index.mjs",
@@ -55,13 +47,13 @@
     "lint": "eslint .",
     "lint.fix": "eslint . --fix",
     "lint.markdown.fix": "markdownlint --fix . --ignore ./node_modules",
-    "·········· PUBLISH.GITHUB": "············································",
+    "·········· PUBLISH.GITHUB": "·····················································",
     "release.github.patch": "pnpm run release.check && pnpm version patch && git push --tags",
     "release.github.minor": "pnpm run release.check && pnpm version minor && git push --tags",
     "release.github.major": "pnpm run release.check && pnpm version major && git push --tags",
     "release.check": "pnpm lint && pnpm typecheck",
     "·········· REGISTRIES": "··············································",
-    "view.registry.github": "pnpm view @finografic/create --registry=https://npm.pkg.github.com",
+    "view.registry.github": "pnpm view __PACKAGE_NAME__ --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
     "update.project-scripts": "pnpm update @finografic/core --latest",
     "upgrade.deps.all": "pnpm update --latest",
@@ -73,13 +65,7 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "@clack/prompts": "^0.11.0",
-    "@finografic/core": "^0.6.6",
-    "clack-tree-select": "^1.0.8",
-    "execa": "^9.6.1",
-    "fast-glob": "^3.3.3",
-    "picocolors": "^1.1.1",
-    "zod": "^4.3.4"
+    "@finografic/core": "^0.6.6"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
@@ -107,3 +93,4 @@
     ]
   }
 }
+

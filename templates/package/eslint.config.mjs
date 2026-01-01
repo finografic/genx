@@ -16,10 +16,6 @@ export default [
       parser: tsParser,
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: {
-        console: 'readonly',
-        process: 'readonly',
-      },
     },
     plugins: {
       '@typescript-eslint': tseslint,

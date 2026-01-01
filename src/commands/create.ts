@@ -1,0 +1,118 @@
+/* eslint-disable no-console */
+
+import {
+  copyDir,
+  ensureDir,
+  errorMessage,
+  infoMessage,
+  intro,
+  outro,
+  promptFeatures,
+  promptPackageConfig,
+  spinner,
+  successMessage,
+  validateTargetDir,
+} from '../utils/index.js';
+import { buildTemplateVars } from '../utils/template.js';
+
+import { execa } from 'execa';
+import { resolve } from 'node:path';
+import process from 'node:process';
+import pc from 'picocolors';
+
+/**
+ * Create a new @finografic package from template.
+ */
+export async function createPackage(options: { cwd: string }): Promise<void> {
+  intro('Create new @finografic package');
+
+  // 1. Prompt for package configuration
+  const config = await promptPackageConfig();
+  if (!config) {
+    process.exit(0);
+  }
+
+  // 2. Prompt for optional features
+  const features = await promptFeatures();
+  if (!features) {
+    process.exit(0);
+  }
+
+  // 3. Determine target directory
+  const targetDir = resolve(options.cwd, config.name);
+
+  // 4. Validate target directory
+  const validation = await validateTargetDir(targetDir);
+  if (!validation.ok) {
+    errorMessage(validation.reason || 'Target directory is not valid');
+    process.exit(1);
+  }
+
+  // 5. Build context (for future use)
+  // const _context: GeneratorContext = {
+  //   cwd: options.cwd,
+  //   targetDir,
+  //   config,
+  //   features,
+  // };
+
+  // 6. Copy template files
+  const spin = spinner();
+  spin.start('Creating project structure...');
+
+  try {
+    await ensureDir(targetDir);
+
+    // Get template directory (relative to this file)
+    // We're in dist/index.mjs, templates are at root
+    const templateDir = resolve(import.meta.dirname, '../templates/package');
+
+    const vars = buildTemplateVars(config);
+
+    await copyDir(templateDir, targetDir, vars, {
+      ignore: features.aiRules ? [] : ['.github/copilot-instructions.md', '.github/instructions'],
+    });
+
+    spin.stop('Project structure created');
+  } catch (err) {
+    spin.stop('Failed to create project structure');
+    errorMessage(err instanceof Error ? err.message : 'Unknown error');
+    process.exit(1);
+  }
+
+  // 7. Install dependencies
+  const installSpin = spinner();
+  installSpin.start('Installing dependencies...');
+
+  try {
+    await execa('pnpm', ['install'], { cwd: targetDir });
+    installSpin.stop('Dependencies installed');
+  } catch {
+    installSpin.stop('Failed to install dependencies');
+    errorMessage('You can run `pnpm install` manually');
+  }
+
+  // 8. Initialize git
+  const gitSpin = spinner();
+  gitSpin.start('Initializing git repository...');
+
+  try {
+    await execa('git', ['init'], { cwd: targetDir });
+    await execa('git', ['add', '.'], { cwd: targetDir });
+    await execa('git', ['commit', '-m', 'chore: initial commit'], { cwd: targetDir });
+    gitSpin.stop('Git repository initialized');
+  } catch {
+    gitSpin.stop('Failed to initialize git');
+    errorMessage('You can initialize git manually');
+  }
+
+  // 9. Done!
+  successMessage('Package created successfully!');
+
+  infoMessage('\nNext steps:');
+  console.log(`  ${pc.cyan('cd')} ${config.name}`);
+  console.log(`  ${pc.cyan('pnpm')} dev`);
+
+  outro('Happy coding! 🦋');
+}
+
