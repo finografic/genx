@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 jobs:
@@ -17,21 +17,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Tell setup-node to use your PAT so it writes the correct auth
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: https://npm.pkg.github.com
           scope: '@finografic'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Configure npm auth for GitHub Packages
+      # Also create a project .npmrc that pnpm will definitely read
+      - name: Create project .npmrc for GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Ensure the scope -> registry mapping (required by some clients)
-          echo "@finografic:registry=https://npm.pkg.github.com/" >> ~/.npmrc
-          # Provide auth via environment variable (safe; the actual token is not output)
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          echo "@finografic:registry=https://npm.pkg.github.com/" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -39,13 +41,12 @@ jobs:
           version: 10
 
       - name: Install deps
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm install
 
       - name: Build
         run: pnpm build
 
+      # Publish: using GITHUB_TOKEN is fine for publishing this repo's package
       - name: Publish package
         run: pnpm publish --no-git-checks
         env:
