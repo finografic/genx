@@ -30,11 +30,7 @@ jobs:
           version: 10
 
       - name: Install deps
-        run: pnpm install --frozen-lockfile
-        env:
-          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm install
 
       - name: Build
         run: pnpm build
