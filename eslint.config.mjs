@@ -15,7 +15,7 @@ export default [
   },
 
   {
-    files: ['**/*.ts', '**/*.tsx', './*.mjs'],
+    files: ['**/*.ts', '**/*.tsx', './*.ts', './*.mjs'],
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 'latest',

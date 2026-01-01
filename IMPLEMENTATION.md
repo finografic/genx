@@ -33,7 +33,6 @@ Located in `templates/package/`:
 - `eslint.config.mjs`
 - `prettier.config.mjs`
 - `commitlint.config.mjs`
-- `.markdownlint.jsonc`
 
 **Git & Hooks:**
 
