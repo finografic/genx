@@ -24,6 +24,12 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: '@finografic'
 
+      - name: Create project .npmrc
+        run: |
+          echo "@finografic:registry=https://npm.pkg.github.com/" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
@@ -31,6 +37,8 @@ jobs:
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: pnpm build
