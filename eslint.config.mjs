@@ -6,7 +6,6 @@ import markdownlintPlugin from "eslint-plugin-markdownlint";
 import markdownlintParser from "eslint-plugin-markdownlint/parser.js";
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
-
 export default [
   js.configs.recommended,
 
