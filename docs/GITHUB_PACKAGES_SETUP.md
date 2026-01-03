@@ -402,3 +402,4 @@ Before considering setup complete:
 ### Related Documentation
 
 - [Release Process](./RELEASES.md) - How to cut releases after setup is complete
+- [Developer Workflow](./DEVELOPER_WORKFLOW.md) - Daily development and git workflow

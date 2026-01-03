@@ -41,16 +41,17 @@
     "·········· BUILD": "·····················································",
     "build": "tsdown",
     "·········· TESTING": "···················································",
-    "test.run": "vitest",
+    "test": "vitest",
+    "test.run": "vitest run",
     "test.coverage": "vitest run --coverage",
     "·········· LINTING": "···················································",
     "lint": "eslint .",
     "lint.fix": "eslint . --fix",
     "·········· PUBLISH.GITHUB": "·····················································",
-    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --tags",
-    "release.github.minor": "pnpm run release.check && pnpm version minor && git push --tags",
-    "release.github.major": "pnpm run release.check && pnpm version major && git push --tags",
-    "release.check": "pnpm lint && pnpm typecheck",
+    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
+    "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
+    "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
+    "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view __PACKAGE_NAME__ --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
@@ -70,7 +71,7 @@
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.2",
-    "@types/node": "20.15.0",
+    "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
     "eslint": "9.39.2",
@@ -84,7 +85,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
-      "pnpm exec eslint --fix"
+      "eslint --fix"
     ]
   }
 }

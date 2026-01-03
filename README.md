@@ -127,6 +127,12 @@ pnpm build
 node dist/index.mjs
 ```
 
+### Documentation
+
+- [Developer Workflow](./docs/DEVELOPER_WORKFLOW.md) - Daily development and testing workflow
+- [Release Process](./docs/RELEASES.md) - How to cut releases
+- [GitHub Packages Setup](./docs/GITHUB_PACKAGES_SETUP.md) - Publishing and consuming packages
+
 ---
 
 ## License

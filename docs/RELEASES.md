@@ -118,5 +118,6 @@ pnpm test.run
 
 ## Related Documentation
 
+- [Developer Workflow](./DEVELOPER_WORKFLOW.md) - Daily development and git workflow
 - [GitHub Packages Setup Guide](./GITHUB_PACKAGES_SETUP.md) - Initial configuration
 - [GitHub Releases](https://github.com/finografic/create/releases) - Published releases
