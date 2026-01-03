@@ -30,8 +30,8 @@ export function infoMessage(message: string): void {
  */
 export async function promptPackageConfig(): Promise<PackageConfig | null> {
   const scope = await clack.text({
-    message: 'Package scope (without @):',
-    placeholder: 'finografic',
+    message: 'Package scope (finografic or @finografic):',
+    placeholder: '@finografic',
     validate: (value) => {
       const result = scopeSchema.safeParse(value);
       return result.success ? undefined : result.error.issues[0].message;
@@ -47,6 +47,9 @@ export async function promptPackageConfig(): Promise<PackageConfig | null> {
     message: 'Package name:',
     placeholder: 'my-package',
     validate: (value) => {
+      if (value.includes('/')) {
+        return 'Enter the package name only (no scope). Example: my-package';
+      }
       const result = packageNameSchema.safeParse(value);
       return result.success ? undefined : result.error.issues[0].message;
     },

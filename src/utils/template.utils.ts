@@ -28,10 +28,11 @@ export function buildTemplateVars(config: {
   description: string;
   author: { name: string; email: string; url: string };
 }): TemplateVars {
+  const scopeWithAt = config.scope.startsWith('@') ? config.scope : `@${config.scope}`;
   return {
     NAME: config.name,
-    SCOPE: config.scope,
-    PACKAGE_NAME: `${config.scope}/${config.name}`,
+    SCOPE: scopeWithAt,
+    PACKAGE_NAME: `${scopeWithAt}/${config.name}`,
     DESCRIPTION: config.description,
     AUTHOR_NAME: config.author.name,
     AUTHOR_EMAIL: config.author.email,

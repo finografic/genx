@@ -33,6 +33,24 @@ Run directly using `pnpm dlx`:
 pnpm dlx @finografic/create
 ```
 
+### Migrate an existing package to the latest locked conventions
+
+`migrate` is **dry-run by default**.
+
+```bash
+# Dry run in the current repo
+pnpm dlx @finografic/create migrate
+
+# Dry run against a target directory
+pnpm dlx @finografic/create migrate ../some-repo
+
+# Apply changes
+pnpm dlx @finografic/create migrate ../some-repo --write
+
+# Only update package.json scripts + lint-staged
+pnpm dlx @finografic/create migrate ../some-repo --only=package-json --write
+```
+
 The CLI will interactively prompt you for:
 
 1. Package scope (e.g., `finografic`)
@@ -68,7 +86,7 @@ Every generated package includes:
 - **ESLint** - Modern flat config (v9)
 - **Prettier** - Code formatting
 - **Commitlint** - Conventional commits
-- **simple-git-hooks** - Pre-commit and pre-push hooks
+- **simple-git-hooks** - Pre-commit hooks
 - **lint-staged** - Run linters on staged files
 
 ### Optional Features

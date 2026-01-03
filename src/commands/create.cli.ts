@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import { execa } from 'execa';
 import pc from 'picocolors';
@@ -64,7 +65,8 @@ export async function createPackage(options: { cwd: string }): Promise<void> {
 
     // Get template directory (relative to this file)
     // We're in dist/index.mjs, templates are at root
-    const templateDir = resolve(import.meta.dirname, '../templates/package');
+    const thisDir = fileURLToPath(new URL('.', import.meta.url));
+    const templateDir = resolve(thisDir, '../../templates/package');
 
     const vars = buildTemplateVars(config);
 

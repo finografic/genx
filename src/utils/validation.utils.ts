@@ -20,7 +20,7 @@ export const packageNameSchema = z
 export const scopeSchema = z
   .string()
   .min(1)
-  .regex(/^[a-z0-9-]+$/, {
+  .regex(/^@?[a-z0-9-]+$/, {
     message: 'Scope must be lowercase, alphanumeric, and may contain hyphens',
   });
 
