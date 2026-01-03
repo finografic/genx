@@ -34,6 +34,7 @@ Go to: `https://github.com/finografic/{repo}/settings/actions`
    - Allow GitHub Actions to create and approve pull requests (checked)
 
 These permissions allow the workflow to:
+
 - Publish packages
 - Create releases
 - Read/write repository contents
@@ -173,6 +174,7 @@ jobs:
 **Why NPM_TOKEN in Install Step?**
 
 Include `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` in the install step even if you don't currently consume other @finografic packages. This ensures:
+
 - Future-proof if you add dependencies later
 - Consistent setup across all @finografic packages
 - No errors if dependencies are added
