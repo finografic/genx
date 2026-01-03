@@ -58,7 +58,7 @@
     "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
     "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
     "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
-    "release.check": "pnpm lint && pnpm typecheck",
+    "release.check": "pnpm lint.fix && pnpm typecheck",
     "release.publish": "pnpm publish --registry https://npm.pkg.github.com",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view @finografic/create --registry=https://npm.pkg.github.com",
@@ -68,8 +68,8 @@
     "update.project-scripts": "pnpm update @finografic/project-scripts --latest",
     "upgrade.deps.all": "pnpm update --latest",
     "·········· UTILS": "·····················································",
-    "tsc.debug": "pnpm exec tsc --pretty --project tsconfig.json",
-    "typecheck": "pnpm exec tsc --project tsconfig.json --noEmit",
+    "tsc.debug": "tsc --pretty --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
     "·········· HOOKS": "·····················································",
     "prepack": "pnpm build",
     "prepare": "simple-git-hooks"
@@ -102,7 +102,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
-      "pnpm exec eslint --fix"
+      "eslint --fix"
     ]
   }
 }

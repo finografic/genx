@@ -64,8 +64,14 @@ export default [
   },
 
   {
-    files: ['**/*md'],
-    ignores: ['node_modules/**', 'bin/**', '.cursor/**', '.github/instructions/**', '!templates/**'],
+    files: ['**/*.md'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      '.cursor/chat/**',
+      '.github/instructions/**',
+      '!templates/**',
+    ],
     plugins: {
       'markdownlint': markdownlintPlugin
     },
@@ -74,12 +80,12 @@ export default [
     },
     rules: {
       ...markdownlintPlugin.configs.recommended.rules,
-      "markdownlint/md013": "off",
-      "markdownlint/md024": "off",
-      "markdownlint/md025": "off",
-      "markdownlint/md040": "off",
-      "markdownlint/md041": "off",
-      "markdownlint/md043": "off",
+      "markdownlint/md013": "off", // Line length
+      "markdownlint/md024": "off", // Duplicate headings
+      "markdownlint/md025": "off", // Single h1
+      "markdownlint/md040": "off", // Fenced code language
+      "markdownlint/md041": "off", // First line heading
+      "markdownlint/md043": "off", // Required heading structure
     }
   }
 ];
