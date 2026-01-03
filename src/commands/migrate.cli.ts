@@ -8,7 +8,8 @@ import pc from 'picocolors';
 
 import { copyDir, copyTemplate, ensureDir, errorMessage, infoMessage, intro, successMessage } from 'utils';
 import { validateExistingPackage } from 'utils/validation.utils';
-import { migrateConfig, type MigrateOnlySection } from 'config/migrate.config';
+import { migrateConfig } from 'config/migrate.config';
+import type { MigrateOnlySection } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
 
 type CliArgs = {
