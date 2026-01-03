@@ -30,33 +30,31 @@ It is designed to be **run**, not installed.
 Run directly using `pnpm dlx`:
 
 ```bash
-pnpm dlx @finografic/create
+# Show help
+pnpm dlx @finografic/create help
+pnpm dlx @finografic/create --help
+
+# Create a new package (interactive)
+pnpm dlx @finografic/create create
+
+# Migrate an existing package (dry-run by default)
+pnpm dlx @finografic/create migrate
 ```
 
-### Migrate an existing package to the latest locked conventions
+### Create Command
 
-`migrate` is **dry-run by default**.
+Scaffolds a new `@finografic` package interactively:
 
 ```bash
-# Dry run in the current repo
-pnpm dlx @finografic/create migrate
-
-# Dry run against a target directory
-pnpm dlx @finografic/create migrate ../some-repo
-
-# Apply changes
-pnpm dlx @finografic/create migrate ../some-repo --write
-
-# Only update package.json scripts + lint-staged
-pnpm dlx @finografic/create migrate ../some-repo --only=package-json --write
+pnpm dlx @finografic/create create
 ```
 
-The CLI will interactively prompt you for:
+The CLI will prompt you for:
 
-1. Package scope (e.g., `finografic`)
+1. Package scope (default: `finografic`)
 2. Package name (e.g., `my-package`)
 3. Package description
-4. Author information
+4. Author information (name, email, URL)
 5. Optional features (AI rules, vitest, GitHub workflow)
 
 Then it will:
@@ -65,6 +63,47 @@ Then it will:
 - Copy and configure all template files
 - Install dependencies
 - Initialize git with an initial commit
+
+### Migrate Command
+
+Syncs conventions to an existing `@finografic` package. **Dry-run by default** - no files are modified unless `--write` is passed.
+
+```bash
+# Dry run in the current directory
+pnpm dlx @finografic/create migrate
+
+# Dry run against a target directory
+pnpm dlx @finografic/create migrate ../some-repo
+
+# Apply changes
+pnpm dlx @finografic/create migrate ../some-repo --write
+
+# Only update specific sections
+pnpm dlx @finografic/create migrate --only=package-json,eslint --write
+
+# Get help for migrate command
+pnpm dlx @finografic/create migrate --help
+```
+
+**Available `--only` sections:**
+
+- `package-json` - Update scripts, lint-staged, keywords
+- `hooks` - Sync `.simple-git-hooks.mjs`
+- `nvmrc` - Sync `.nvmrc` (Node version)
+- `eslint` - Sync `eslint.config.mjs`
+- `workflows` - Sync `.github/workflows/release.yml`
+- `docs` - Sync `docs/` directory
+
+**What gets migrated:**
+
+- Package.json scripts (test, lint, release, etc.)
+- lint-staged configuration
+- Keywords (ensures `finografic` and package name)
+- Git hooks configuration
+- Node version (`.nvmrc`)
+- ESLint configuration
+- GitHub release workflow
+- Documentation files
 
 ---
 
@@ -121,11 +160,16 @@ my-package/
 
 ---
 
-## 🔮 Future Features
+## 📋 Commands Reference
 
-- `apply typescript` - Add TypeScript to existing JS packages
-- `apply testing` - Add vitest to existing packages
-- More template types
+| Command | Description | Options |
+|---------|-------------|---------|
+| `create` | Scaffold a new @finografic package | Interactive prompts |
+| `migrate [path]` | Sync conventions to existing package | `--write`, `--only=<sections>` |
+| `help` | Show help message | - |
+| `--help` / `-h` | Show help (works with commands too) | - |
+
+See `finografic-create <command> --help` for detailed usage.
 
 ---
 
@@ -141,9 +185,60 @@ pnpm install
 # Build
 pnpm build
 
-# Test locally
-node dist/index.mjs
+# Run tests
+pnpm test.run
 ```
+
+### Testing the CLI Locally
+
+After building, you can test both commands:
+
+#### Test Create Command
+
+```bash
+# Build first
+pnpm build
+
+# Test create (will prompt interactively)
+node dist/index.mjs create
+
+# Or test in a temporary directory
+cd /tmp
+node /path/to/@finografic-create/dist/index.mjs create
+```
+
+#### Test Migrate Command
+
+```bash
+# Build first
+pnpm build
+
+# Test migrate (dry-run) in current directory
+node dist/index.mjs migrate
+
+# Test migrate (dry-run) against another repo
+node dist/index.mjs migrate ../@finografic-core
+
+# Test migrate with --write (be careful!)
+node dist/index.mjs migrate ../@finografic-core --write
+
+# Test migrate with --only flag
+node dist/index.mjs migrate ../@finografic-core --only=package-json --write
+```
+
+#### Test Help System
+
+```bash
+# Root help
+node dist/index.mjs help
+node dist/index.mjs --help
+
+# Command-specific help
+node dist/index.mjs create --help
+node dist/index.mjs migrate --help
+```
+
+**Note:** When testing locally, you can also use `pnpm dlx` from the project root, but building and running `node dist/index.mjs` is faster for iteration.
 
 ### Documentation
 

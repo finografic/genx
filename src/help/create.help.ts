@@ -1,34 +1,22 @@
-import { renderHelp } from './renderHelp.js';
+import { renderHelp } from 'utils/render-help/render-help.utils';
 
 export function showCreateHelp(): void {
-  renderHelp('finografic-create create', [
-    {
-      title: 'Usage',
-      body: `
-finografic-create create
-
-Scaffolds a new @finografic package interactively.
-`.trim(),
+  renderHelp({
+    main: {
+      bin: 'finografic-create create',
     },
-    {
-      title: 'What It Does',
-      body: `
-1. Prompts for package configuration (scope, name, description, author)
-2. Prompts for optional features (AI rules, vitest, GitHub workflow)
-3. Creates project structure from templates
-4. Installs dependencies
-5. Initializes git repository
-`.trim(),
-    },
-    {
-      title: 'Interactive Prompts',
-      body: `
-- Package scope (default: finografic)
-- Package name
-- Package description
-- Author information (name, email, URL)
-- Optional features (AI rules, vitest, GitHub workflow)
-`.trim(),
-    },
-  ]);
+    examples: [
+      {
+        comment: 'Create a new package interactively',
+        command: 'finografic-create create',
+      },
+    ],
+    help: [
+      {
+        label: 'finografic-create create --help',
+        description: 'Show this help message',
+      },
+    ],
+    minWidth: 100
+  });
 }

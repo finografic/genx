@@ -7,6 +7,7 @@ import { migratePackage } from './commands/migrate.cli.js';
 import { showCreateHelp } from './help/create.help.js';
 import { showMigrateHelp } from './help/migrate.help.js';
 import { showRootHelp } from './help/root.help.js';
+import { safeExit } from './utils/env.utils.js';
 
 const cwd = process.cwd();
 const argv = process.argv.slice(2);
@@ -23,25 +24,25 @@ if (flags.includes('--help') || flags.includes('-h')) {
   } else {
     showRootHelp();
   }
-  process.exit(0);
-}
+  safeExit(0);
+} else {
+  // Route commands
+  switch (command) {
+    case 'create':
+      await createPackage({ cwd });
+      break;
 
-// Route commands
-switch (command) {
-  case 'create':
-    await createPackage({ cwd });
-    break;
+    case 'migrate':
+      await migratePackage(argv, { cwd });
+      break;
 
-  case 'migrate':
-    await migratePackage(argv, { cwd });
-    break;
+    case 'help':
+      showRootHelp();
+      break;
 
-  case 'help':
-    showRootHelp();
-    break;
-
-  default:
-    console.error(`Unknown command: ${command}`);
-    showRootHelp();
-    process.exit(1);
+    default:
+      console.error(`Unknown command: ${command}`);
+      showRootHelp();
+      safeExit(1);
+  }
 }

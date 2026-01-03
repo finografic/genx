@@ -1,5 +1,4 @@
 import { resolve } from 'node:path';
-import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { execa } from 'execa';
@@ -19,6 +18,7 @@ import {
   successMessage,
   validateTargetDir,
 } from 'utils';
+import { safeExit } from 'utils/env.utils';
 
 /**
  * Create a new @finografic package from template.
@@ -29,13 +29,15 @@ export async function createPackage(options: { cwd: string }): Promise<void> {
   // 1. Prompt for package configuration
   const config = await promptPackageConfig();
   if (!config) {
-    process.exit(0);
+    safeExit(0);
+    return;
   }
 
   // 2. Prompt for optional features
   const features = await promptFeatures();
   if (!features) {
-    process.exit(0);
+    safeExit(0);
+    return;
   }
 
   // 3. Determine target directory
@@ -45,7 +47,8 @@ export async function createPackage(options: { cwd: string }): Promise<void> {
   const validation = await validateTargetDir(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Target directory is not valid');
-    process.exit(1);
+    safeExit(1);
+    return;
   }
 
   // 5. Build context (for future use)
@@ -78,7 +81,8 @@ export async function createPackage(options: { cwd: string }): Promise<void> {
   } catch (err) {
     spin.stop('Failed to create project structure');
     errorMessage(err instanceof Error ? err.message : 'Unknown error');
-    process.exit(1);
+    safeExit(1);
+    return;
   }
 
   // 7. Install dependencies

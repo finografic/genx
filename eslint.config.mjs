@@ -39,6 +39,7 @@ export default [
       'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
       'stylistic/no-trailing-spaces': 'error',
       'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
+      'stylistic/object-curly-spacing': ['error', 'always'],
 
       '@typescript-eslint/no-console':'off',
       '@typescript-eslint/no-unused-vars': 'error',

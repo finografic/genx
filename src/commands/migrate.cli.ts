@@ -1,12 +1,12 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import * as clack from '@clack/prompts';
 import pc from 'picocolors';
 
 import { copyDir, copyTemplate, ensureDir, errorMessage, infoMessage, intro, successMessage } from 'utils';
+import { safeExit } from 'utils/env.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { migrateConfig } from 'config/migrate.config';
 import type { MigrateOnlySection } from 'types/migrate.types';
@@ -149,7 +149,8 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
-    process.exit(1);
+    safeExit(1);
+    return;
   }
 
   const packageJsonPath = resolve(targetDir, 'package.json');
@@ -157,7 +158,8 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   const parsed = getScopeAndName(pkg.name);
   if (!parsed) {
     errorMessage('Unable to read package name from package.json');
-    process.exit(1);
+    safeExit(1);
+    return;
   }
 
   // Safety prompt if scope differs from expected
@@ -168,7 +170,8 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     });
     if (clack.isCancel(confirm) || confirm === false) {
       clack.cancel('Operation cancelled');
-      process.exit(0);
+      safeExit(0);
+      return;
     }
   }
 

@@ -24,6 +24,8 @@
     "paths": {
       "commands/*": ["./src/commands/*"],
       "config/*": ["./src/config/*"],
+      "help/*": ["./src/help/*"],
+      "help/utils/*": ["./src/help/utils/*"],
       "templates/*": ["./templates/*"],
       "types": ["./src/types"],
       "types/*": ["./src/types/*"],
