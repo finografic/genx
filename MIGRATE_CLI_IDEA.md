@@ -13,7 +13,7 @@ Primary focus: **config surface area**, not business logic:
 - `package.json` scripts + `lint-staged`
 - `.simple-git-hooks.mjs`
 - `.github/workflows/release.yml` (with repo-specific tokens preserved)
-- `eslint.config.mjs`
+- `eslint.config.ts`
 - docs (`docs/*.md`)
 - `.nvmrc`
 

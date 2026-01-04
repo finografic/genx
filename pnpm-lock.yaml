@@ -12,8 +12,8 @@ importers:
         specifier: 1.0.0-alpha.9
         version: 1.0.0-alpha.9
       '@finografic/core':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       clack-tree-select:
         specifier: ^1.0.8
         version: 1.0.8(@clack/prompts@1.0.0-alpha.9)
@@ -387,8 +387,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@finografic/core@0.9.1':
-    resolution: {integrity: sha512-rDJ8um+/WLtUMDPjUDxWhIrCB//YDUDYK1jCog2pvufkgrEhU+GG5P8iweoFlgim9qxElQ5ZUal0xJYBIUM58w==, tarball: https://npm.pkg.github.com/download/@finografic/core/0.9.1/ea7bf2ef60f2eb46be62eaad0eb6fae35c36835f}
+  '@finografic/core@0.9.2':
+    resolution: {integrity: sha512-pvery4Vsi8WNprrD1FDq7pEl4VnTfkuUURK+VF/x7XSWc0RCunQKQwxbpo8tn0/7LG12D1TOQUTm61hoi9TjQw==, tarball: https://npm.pkg.github.com/download/@finografic/core/0.9.2/1c2a1033b2d6a4adc5ae33abd5abdb392daf0707}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2315,7 +2315,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@finografic/core@0.9.1':
+  '@finografic/core@0.9.2':
     dependencies:
       lodash: 4.17.21
 

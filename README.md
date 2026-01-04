@@ -90,7 +90,7 @@ pnpm dlx @finografic/create migrate --help
 - `package-json` - Update scripts, lint-staged, keywords
 - `hooks` - Sync `.simple-git-hooks.mjs`
 - `nvmrc` - Sync `.nvmrc` (Node version)
-- `eslint` - Sync `eslint.config.mjs`
+- `eslint` - Sync `eslint.config.ts`
 - `workflows` - Sync `.github/workflows/release.yml`
 - `docs` - Sync `docs/` directory
 
@@ -149,7 +149,7 @@ my-package/
 │   └── index.ts
 ├── package.json
 ├── tsconfig.json
-├── eslint.config.mjs
+├── eslint.config.ts
 ├── prettier.config.mjs
 ├── commitlint.config.mjs
 ├── .simple-git-hooks.mjs
@@ -162,12 +162,12 @@ my-package/
 
 ## 📋 Commands Reference
 
-| Command | Description | Options |
-|---------|-------------|---------|
-| `create` | Scaffold a new @finografic package | Interactive prompts |
+| Command          | Description                          | Options                        |
+| ---------------- | ------------------------------------ | ------------------------------ |
+| `create`         | Scaffold a new @finografic package   | Interactive prompts            |
 | `migrate [path]` | Sync conventions to existing package | `--write`, `--only=<sections>` |
-| `help` | Show help message | - |
-| `--help` / `-h` | Show help (works with commands too) | - |
+| `help`           | Show help message                    | -                              |
+| `--help` / `-h`  | Show help (works with commands too)  | -                              |
 
 See `finografic-create <command> --help` for detailed usage.
 

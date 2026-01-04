@@ -64,7 +64,6 @@ const config: Linter.Config[] = [
       'stylistic/arrow-spacing': ['error', { before: true, after: true }],
       'stylistic/type-annotation-spacing': ['error', { 'before': false, 'after': true, 'overrides': { 'arrow': { 'before': true, 'after': true } } } ],
 
-      // Import sorting
       'simple-import-sort/imports': [
         'error',
         {
