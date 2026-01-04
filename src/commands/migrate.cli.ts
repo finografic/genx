@@ -1,140 +1,19 @@
 import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as clack from '@clack/prompts';
+import { parseMigrateArgs } from 'migrate/migrate-metadata.utils';
 import pc from 'picocolors';
+import { confirmMigrateTarget } from 'prompts/migrate.prompt';
+import { getScopeAndName, shouldRunSection } from 'src/migrate/migrate-metadata.utils';
+import { patchPackageJson, readPackageJson, writePackageJson } from 'src/migrate/package-json.utils';
 
 import { copyDir, copyTemplate, ensureDir, errorMessage, findPackageRoot, getTemplatesPackageDir, infoMessage, intro, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { migrateConfig } from 'config/migrate.config';
-import type { MigrateOnlySection } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
-
-type CliArgs = {
-  targetDir: string;
-  write: boolean;
-  only: Set<MigrateOnlySection> | null;
-};
-
-type PackageJson = Record<string, unknown> & {
-  name?: string;
-  keywords?: unknown;
-  scripts?: Record<string, string>;
-  'lint-staged'?: Record<string, string[]>;
-};
-
-function parseArgs(argv: string[], cwd: string): CliArgs {
-  const args = argv.slice();
-
-  // remove command name if present (index.ts passes full argv after selecting command)
-  // supports being called directly with `migrate` as argv[0] too
-  if (args[0] === 'migrate') args.shift();
-
-  let targetDir = cwd;
-  let write = false;
-  let only: Set<MigrateOnlySection> | null = null;
-
-  for (const arg of args) {
-    if (arg === '--write') {
-      write = true;
-      continue;
-    }
-    if (arg.startsWith('--only=')) {
-      const raw = arg.slice('--only='.length);
-      const parts = raw.split(',').map((s) => s.trim()).filter(Boolean);
-      only = new Set(parts as MigrateOnlySection[]);
-      continue;
-    }
-    if (!arg.startsWith('-')) {
-      targetDir = resolve(cwd, arg);
-    }
-  }
-
-  return { targetDir, write, only };
-}
-
-function isOnlyEnabled(only: Set<MigrateOnlySection> | null, section: MigrateOnlySection): boolean {
-  if (!only) return true;
-  return only.has(section);
-}
-
-async function readPackageJson(path: string): Promise<PackageJson> {
-  const raw = await readFile(path, 'utf8');
-  return JSON.parse(raw) as PackageJson;
-}
-
-function getScopeAndName(pkgName: string | undefined): { scope: string; name: string } | null {
-  if (!pkgName) return null;
-  if (pkgName.startsWith('@') && pkgName.includes('/')) {
-    const [scope, name] = pkgName.split('/');
-    return { scope, name };
-  }
-  return { scope: migrateConfig.defaultScope, name: pkgName };
-}
-
-function ensureKeyword(keywords: string[], kw: string): { keywords: string[]; changed: boolean } {
-  if (keywords.some((k) => k.toLowerCase() === kw.toLowerCase())) {
-    return { keywords, changed: false };
-  }
-  return { keywords: [...keywords, kw], changed: true };
-}
-
-function patchPackageJson(packageJson: PackageJson, packageNameWithoutScope: string): { packageJson: PackageJson; changes: string[] } {
-  const changes: string[] = [];
-  const next: PackageJson = { ...packageJson };
-
-  // scripts
-  const scripts = { ...(packageJson.scripts ?? {}) };
-  for (const [key, value] of Object.entries(migrateConfig.packageJson.ensureScripts)) {
-    if (scripts[key] !== value) {
-      scripts[key] = value;
-      changes.push(`scripts.${key}`);
-    }
-  }
-  next.scripts = scripts;
-
-  // lint-staged
-  const lintStaged = { ...(packageJson['lint-staged'] ?? {}) };
-  for (const [pattern, commands] of Object.entries(migrateConfig.packageJson.ensureLintStaged)) {
-    const current = lintStaged[pattern];
-    if (!Array.isArray(current) || current.join('\n') !== commands.join('\n')) {
-      lintStaged[pattern] = commands;
-      changes.push(`lint-staged.${pattern}`);
-    }
-  }
-  next['lint-staged'] = lintStaged;
-
-  // keywords
-  const keywordRaw = packageJson.keywords;
-  const keywords = Array.isArray(keywordRaw) ? (keywordRaw.filter((k) => typeof k === 'string') as string[]) : [];
-  let changedKeywords = false;
-
-  const includeFinograficKeyword = migrateConfig.packageJson.ensureKeywords.includeFinograficKeyword;
-  const finograficKeywordResult = ensureKeyword(keywords, includeFinograficKeyword);
-  changedKeywords = changedKeywords || finograficKeywordResult.changed;
-
-  let updated = finograficKeywordResult.keywords;
-  if (migrateConfig.packageJson.ensureKeywords.includePackageName) {
-    const packageNameKeywordResult = ensureKeyword(updated, packageNameWithoutScope);
-    updated = packageNameKeywordResult.keywords;
-    changedKeywords = changedKeywords || packageNameKeywordResult.changed;
-  }
-
-  if (changedKeywords) {
-    next.keywords = updated;
-    changes.push('keywords');
-  }
-
-  return { packageJson: next, changes };
-}
-
-async function writePackageJson(path: string, packageJson: PackageJson): Promise<void> {
-  const formatted = `${JSON.stringify(packageJson, null, 2)}\n`;
-  await writeFile(path, formatted, 'utf8');
-}
 
 export async function migratePackage(argv: string[], options: { cwd: string }): Promise<void> {
   intro('Migrate existing @finografic package');
@@ -146,7 +25,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
   }
 
-  const { targetDir, write, only } = parseArgs(argv, options.cwd);
+  const { targetDir, write, only } = parseMigrateArgs(argv, options.cwd);
 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
@@ -164,17 +43,14 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     return;
   }
 
-  // Safety prompt if scope differs from expected
-  if (parsed.scope !== migrateConfig.defaultScope) {
-    const confirm = await clack.confirm({
-      message: `Detected package: ${pc.cyan(`${parsed.scope}/${parsed.name}`)}. Continue?`,
-      initialValue: true,
-    });
-    if (clack.isCancel(confirm) || confirm === false) {
-      clack.cancel('Operation cancelled');
-      safeExit(0);
-      return;
-    }
+  const ok = await confirmMigrateTarget({
+    scope: parsed.scope,
+    name: parsed.name,
+    expectedScope: migrateConfig.defaultScope,
+  });
+  if (!ok) {
+    safeExit(0);
+    return;
   }
 
   const vars: TemplateVars = {
@@ -192,7 +68,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   const plan: string[] = [];
 
   // package.json patch plan
-  if (isOnlyEnabled(only, 'package-json')) {
+  if (shouldRunSection(only, 'package-json')) {
     const { changes } = patchPackageJson(packageJson, parsed.name);
     if (changes.length > 0) {
       plan.push(`patch package.json: ${changes.join(', ')}`);
@@ -226,7 +102,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     return;
   }
   for (const item of migrateConfig.syncFromTemplate) {
-    if (!isOnlyEnabled(only, item.section)) continue;
+    if (!shouldRunSection(only, item.section)) continue;
     plan.push(`sync ${item.targetPath} (from template ${item.templatePath})`);
   }
 
@@ -241,7 +117,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   }
 
   // Apply package.json patch
-  if (isOnlyEnabled(only, 'package-json')) {
+  if (shouldRunSection(only, 'package-json')) {
     const { packageJson: nextPackageJson, changes } = patchPackageJson(packageJson, parsed.name);
     if (changes.length > 0) {
       await writePackageJson(packageJsonPath, nextPackageJson);
@@ -252,7 +128,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   }
 
   // Apply template sync
-  const syncTasks = migrateConfig.syncFromTemplate.filter((item) => isOnlyEnabled(only, item.section));
+  const syncTasks = migrateConfig.syncFromTemplate.filter((item) => shouldRunSection(only, item.section));
 
   if (syncTasks.length > 0) {
     const syncSpin = clack.spinner();
