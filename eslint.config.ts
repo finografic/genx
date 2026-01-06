@@ -47,7 +47,19 @@ const config: Linter.Config[] = [
       'no-console': 'off',
 
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          'args': 'all',
+          'argsIgnorePattern': '^_',
+          'caughtErrors': 'all',
+          'caughtErrorsIgnorePattern': '^_',
+          'destructuredArrayIgnorePattern': '^_',
+          'varsIgnorePattern': '^_',
+          'ignoreRestSiblings': true,
+        },
+      ],
+
       '@typescript-eslint/no-redeclare': 'warn',
 
       // Stylistic
@@ -116,6 +128,8 @@ const config: Linter.Config[] = [
       'markdownlint/md013': 'off',
       'markdownlint/md024': 'off',
       'markdownlint/md025': 'off',
+      'markdownlint/md029': 'off',
+      'markdownlint/md036': 'off',
       'markdownlint/md040': 'off',
       'markdownlint/md041': 'off',
       'markdownlint/md043': 'off',

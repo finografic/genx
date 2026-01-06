@@ -43,6 +43,6 @@ export const renameRules: RenameRule[] = [
   },
   {
     canonical: '.simple-git-hooks.mjs',
-    alternatives: ['simple-git-hooks.mjs'],
+    alternatives: ['.simple-git-hooks.js'],
   },
 ];

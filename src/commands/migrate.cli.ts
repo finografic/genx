@@ -34,7 +34,7 @@ import {
   planRenames,
 } from 'src/migrate/rename.utils';
 
-import { copyDir, copyTemplate, ensureDir, errorMessage, findPackageRoot, getTemplatesPackageDir, infoMessage, intro, successMessage } from 'utils';
+import { copyDir, copyTemplate, ensureDir, errorMessage, fileExists, findPackageRoot, getTemplatesPackageDir, infoMessage, intro, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.config';
@@ -100,7 +100,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   if (shouldRunSection(only, 'package-json')) {
     const { changes } = patchPackageJson(packageJson, parsed.name);
     if (changes.length > 0) {
-      plan.push(`patch package.json: ${changes.join(', ')}`);
+      plan.push(`${pc.yellow('patch')} package.json: ${changes.join(', ')}`);
     } else {
       plan.push('package.json already aligned');
     }
@@ -115,7 +115,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   if (shouldRunSection(only, 'dependencies')) {
     const depChanges = planDependencyChanges(packageJson, dependencyRules);
     if (depChanges.length > 0) {
-      plan.push(`dependencies: ${depChanges.map((c) => `${c.name} (${c.operation})`).join(', ')}`);
+      plan.push(`${pc.cyan('dependencies')}: ${depChanges.map((c) => `${c.name} (${c.operation})`).join(', ')}`);
     }
   }
 
@@ -131,7 +131,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
       nodePolicy,
     );
     if (nodeRuntimeChanges.length > 0 || nodeTypesChange) {
-      plan.push('node version updates');
+      plan.push(`${pc.green('node')} version updates`);
     }
   }
 
@@ -142,7 +142,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     existingFiles = await getExistingFiles(targetDir, renameRules);
     renameChanges = planRenames(existingFiles, renameRules);
     if (renameChanges.length > 0) {
-      plan.push(`renames: ${renameChanges.map((r) => `${r.from} → ${r.to}`).join(', ')}`);
+      plan.push(`${pc.yellow('renames')}: ${renameChanges.map((r) => `${r.from} → ${r.to}`).join(', ')}`);
     }
   }
 
@@ -162,7 +162,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     }
     mergeChanges = planMerges(filesAfterRenames, mergeConfig, templateDir);
     if (mergeChanges.length > 0) {
-      plan.push(`merges: ${mergeChanges.map((m) => m.file).join(', ')}`);
+      plan.push(`${pc.yellow('merges')}: ${mergeChanges.map((m) => m.file).join(', ')}`);
     }
   }
 
@@ -189,7 +189,16 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
   }
   for (const item of migrateConfig.syncFromTemplate) {
     if (!shouldRunSection(only, item.section)) continue;
-    plan.push(`sync ${item.targetPath} (from template ${item.templatePath})`);
+    plan.push(`${pc.cyan('sync')} ${item.targetPath} (from template ${item.templatePath})`);
+  }
+
+  // Check for LICENSE file
+  const licensePath = resolve(targetDir, 'LICENSE');
+  const licenseExists = fileExists(licensePath);
+  const packageLicense = (packageJson.license as string | undefined) || 'MIT';
+  const shouldCopyLicense = !licenseExists && packageLicense === 'MIT';
+  if (shouldCopyLicense) {
+    plan.push(`${pc.cyan('sync')} LICENSE (from template LICENSE)`);
   }
 
   // Dry-run default
@@ -300,6 +309,14 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     }
 
     syncSpin.stop(`Synced ${syncTasks.length} file(s)`);
+  }
+
+  // Copy LICENSE if missing
+  if (shouldCopyLicense) {
+    const licenseSourcePath = resolve(templateDir, 'LICENSE');
+    const licenseDestPath = resolve(targetDir, 'LICENSE');
+    await copyTemplate(licenseSourcePath, licenseDestPath, vars);
+    successMessage('Added LICENSE file');
   }
 
   successMessage('Migration complete');
