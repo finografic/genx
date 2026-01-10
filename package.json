@@ -37,7 +37,9 @@
   "module": "./dist/index.mjs",
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "templates/**/.npmrc",
+    "templates/**/.gitignore"
   ],
   "exports": {
     ".": "./dist/index.mjs",
