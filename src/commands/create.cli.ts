@@ -143,11 +143,10 @@ export async function createPackage( argv: string[],
   }
 
   // 7. Done!
+  // successMessage('Package created successfully!');
+
+  outro('Package created successfully!');
   successMessage('Package created successfully!');
 
-  infoMessage('\nNext steps:');
-  console.log(`  ${pc.cyan('cd')} ${config.name}`);
-  console.log(`  ${pc.cyan('pnpm')} dev`);
-
-  outro('Happy coding! 🦋');
+  console.log(`\n${pc.cyan('1. Happy coding! 🦋')}`);
 }
