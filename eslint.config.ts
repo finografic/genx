@@ -5,24 +5,24 @@ import markdownlintPlugin from 'eslint-plugin-markdownlint';
 import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
+// NOTE: ALL @typescript-eslint/eslint-plugin (over 100 rules))
+// https://typescript-eslint.io/rules/
 import tseslint from 'typescript-eslint';
 
 const config: Linter.Config[] = [
-
   js.configs.recommended,
+  // tseslint.configs.strictTypeChecked, // ref: https://typescript-eslint.io/getting-started/typed-linting
+  // tseslint.configs.stylisticTypeChecked, // ref: https://typescript-eslint.io/getting-started/typed-linting
 
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      '.cursor/**',
-    ],
+    ignores: [ 'dist/**', 'node_modules/**', '.cursor/**' ],
   },
 
   {
-    files: ['**/*.ts', '**/*.tsx', './*.mjs'],
+    files: ['**/*.ts', '**/*.tsx', './*.ts', './*.mjs'],
     languageOptions: {
       parser: tseslint.parser,
+      // projectService: true, // ref: https://typescript-eslint.io/getting-started/typed-linting
       parserOptions: {
         // Enable typed linting when you want it
         // project: true,
@@ -101,9 +101,6 @@ const config: Linter.Config[] = [
     },
   },
 
-  // ---------------------------------------------------------------------------
-  // Markdown
-  // ---------------------------------------------------------------------------
   {
     files: ['**/*.md'],
     ignores: [
@@ -117,22 +114,20 @@ const config: Linter.Config[] = [
       parser: markdownlintParser,
     },
     plugins: {
-      markdownlint: markdownlintPlugin,
-      stylistic,
+      'markdownlint': markdownlintPlugin,
+      'stylistic': stylistic,
     },
     rules: {
       ...markdownlintPlugin.configs.recommended.rules,
-
-      // Markdownlint overrides
-      'markdownlint/md012': 'off',
-      'markdownlint/md013': 'off',
-      'markdownlint/md024': 'off',
-      'markdownlint/md025': 'off',
-      'markdownlint/md029': 'off',
-      'markdownlint/md036': 'off',
-      'markdownlint/md040': 'off',
-      'markdownlint/md041': 'off',
-      'markdownlint/md043': 'off',
+      'markdownlint/md012': 'off', // Multiple consecutive blank lines
+      'markdownlint/md013': 'off', // Line length
+      'markdownlint/md024': 'off', // Duplicate headings
+      'markdownlint/md025': 'off', // Single h1
+      'markdownlint/md029': 'off', // List style
+      'markdownlint/md036': 'off', // No mphasis as heading
+      'markdownlint/md040': 'off', // Fenced code language
+      'markdownlint/md041': 'off', // First line heading
+      'markdownlint/md043': 'off', // Required heading structure
 
       // Formatting consistency
       'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
