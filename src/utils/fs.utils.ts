@@ -36,9 +36,7 @@ export async function copyDir(
   dest: string,
   vars: TemplateVars,
   options: {
-    /** File extensions to apply token replacement to */
     templateExtensions?: string[];
-    /** Files/dirs to skip (relative to src) */
     ignore?: string[];
   } = {},
 ): Promise<void> {
@@ -65,8 +63,7 @@ async function copyDirInternal(
     const destPath = join(currentDest, entry.name);
     const relativePath = relative(rootSrc, srcPath);
 
-    // Skip ignored paths
-    if (ignore.some((pattern) => relativePath.startsWith(pattern))) {
+    if (ignore.some((ignorePattern) => relativePath.startsWith(ignorePattern))) {
       continue;
     }
 
@@ -74,8 +71,6 @@ async function copyDirInternal(
       await mkdir(destPath, { recursive: true });
       await copyDirInternal(srcPath, destPath, vars, options, rootSrc);
     } else if (entry.isFile()) {
-      // Files matching template extensions get token replacement
-      // All other files (including dotfiles like .npmrc, .gitignore) are copied as-is
       const shouldTemplate = templateExtensions.some((ext) => entry.name.endsWith(ext));
 
       if (shouldTemplate) {

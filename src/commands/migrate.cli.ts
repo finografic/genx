@@ -174,7 +174,6 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   }
 
   // template sync plan
-
   if (debug) {
     infoMessage(`importMetaDir: ${fromDir}`);
     infoMessage(`packageRoot: ${packageRoot}`);

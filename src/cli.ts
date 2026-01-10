@@ -2,8 +2,6 @@
 
 import process from 'node:process';
 
-import pc from 'picocolors';
-
 import { renderHelp } from 'utils/render-help/render-help.utils.js';
 import { createPackage } from './commands/create.cli.js';
 import { migratePackage } from './commands/migrate.cli.js';
@@ -34,7 +32,6 @@ async function main(): Promise<void> {
   const commands: Record<string, CommandHandler> = {
     create: async (argv, ctx) => {
       await createPackage(argv, ctx);
-      console.log(`\n${pc.cyan('2. Happy coding! 🦋')}`);
     },
 
     migrate: async (argv, ctx) => {

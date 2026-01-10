@@ -17,7 +17,6 @@ import {
   intro,
   outro,
   spinner,
-  successMessage,
   validateTargetDir,
 } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
@@ -143,10 +142,11 @@ export async function createPackage( argv: string[],
   }
 
   // 7. Done!
-  // successMessage('Package created successfully!');
-
   outro('Package created successfully!');
-  successMessage('Package created successfully!');
 
-  console.log(`\n${pc.cyan('1. Happy coding! 🦋')}`);
+  console.log(pc.dim('Next steps:'));
+  console.log(`cd ${config.name}`);
+  console.log('pnpm dev');
+
+  console.log(`\n${pc.cyan('🦋 Happy coding!')}\n`);
 }
