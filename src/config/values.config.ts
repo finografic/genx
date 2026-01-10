@@ -24,11 +24,11 @@ export const defaultValuesConfig: DefaultValuesConfig = {
   scope: '@finografic',
 
   /** Default description placeholder / initial value */
-  description: 'A cool new package',
+  description: 'A cool new package for the finografic ecosystem',
 
   /** Default author values for new packages */
   author: {
-    name: 'Justin',
+    name: 'Justin Rankin',
     email: 'justin.blair.rankin@gmail.com',
     url: 'http://finografic.github.com/cv-justin-rankin',
   },
