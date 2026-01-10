@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { execa } from 'execa';
+import { createHelp } from 'help/create.help';
 import pc from 'picocolors';
 
 import {
@@ -21,6 +22,7 @@ import {
 } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { promptCreatePackage } from 'utils/prompts';
+import { renderHelp } from 'utils/render-help/render-help.utils';
 
 // NOTE: This command never prompts directly.
 // All user input is collected via promptCreatePackage().
@@ -28,7 +30,14 @@ import { promptCreatePackage } from 'utils/prompts';
 /**
  * Create a new @finografic package from template.
  */
-export async function createPackage(options: { cwd: string }): Promise<void> {
+export async function createPackage( argv: string[],
+  context: { cwd: string }): Promise<void> {
+
+  if (argv.includes('--help') || argv.includes('-h')) {
+    renderHelp(createHelp);
+    return;
+  }
+
   intro('Create new @finografic package');
 
   // Helpful debug info (always on in dev)
@@ -48,7 +57,7 @@ export async function createPackage(options: { cwd: string }): Promise<void> {
   const { features } = config;
 
   // 2. Determine target directory
-  const targetDir = resolve(options.cwd, config.name);
+  const targetDir = resolve(context.cwd, config.name);
 
   // 3. Validate target directory
   const validation = await validateTargetDir(targetDir);

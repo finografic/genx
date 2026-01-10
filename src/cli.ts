@@ -2,27 +2,27 @@
 
 import process from 'node:process';
 
+import { renderHelp } from 'utils/render-help/render-help.utils.js';
 import { createPackage } from './commands/create.cli.js';
 import { migratePackage } from './commands/migrate.cli.js';
-import { showCreateHelp } from './help/create.help.js';
-import { showMigrateHelp } from './help/migrate.help.js';
-import { showRootHelp } from './help/root.help.js';
+import { rootHelp } from './help/root.help.js';
 import { safeExit } from './utils/env.utils.js';
 
-type CommandHandler = (args: string[], ctx: { cwd: string }) => Promise<void> | void;
-type HelpHandler = () => void;
+type CommandHandler = (argv: string[], ctx: { cwd: string }) => Promise<void> | void;
 
 async function main(): Promise<void> {
   const cwd = process.cwd();
   const argv = process.argv.slice(2);
 
-  // `finografic-create --help` (or `pnpm dev.cli --help`) should show root help
-  if (argv[0] === '--help' || argv[0] === '-h') {
-    showRootHelp();
+  /* ────────────────────────────────────────────────────────── */
+  /* Root help only                                              */
+  /* ────────────────────────────────────────────────────────── */
+
+  if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
+    renderHelp(rootHelp);
     return;
   }
-
-  const command = argv[0] ?? 'create';
+  const command = argv[0];
   const args = argv.slice(1);
 
   /* ────────────────────────────────────────────────────────── */
@@ -30,38 +30,26 @@ async function main(): Promise<void> {
   /* ────────────────────────────────────────────────────────── */
 
   const commands: Record<string, CommandHandler> = {
-    create: async () => {
-      await createPackage({ cwd });
+    create: async (argv, ctx) => {
+      await createPackage(argv, ctx);
     },
 
-    migrate: async () => {
-      await migratePackage(argv, { cwd });
+    migrate: async (argv, ctx) => {
+      await migratePackage(argv, ctx);
     },
 
     help: () => {
-      showRootHelp();
+      renderHelp(rootHelp);
     },
-  };
-
-  const helpHandlers: Record<string, HelpHandler> = {
-    create: showCreateHelp,
-    migrate: showMigrateHelp,
   };
 
   /* ────────────────────────────────────────────────────────── */
   /* Guards                                                      */
   /* ────────────────────────────────────────────────────────── */
 
-  // --help / -h always wins (for subcommands)
-  if (args.includes('--help') || args.includes('-h')) {
-    helpHandlers[command]?.() ?? showRootHelp();
-    return;
-  }
-
-  // Unknown command
   if (!commands[command]) {
     console.error(`Unknown command: ${command}`);
-    showRootHelp();
+    renderHelp(rootHelp);
     safeExit(1);
     return;
   }

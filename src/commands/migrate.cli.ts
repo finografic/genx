@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as clack from '@clack/prompts';
+import { migrateHelp } from 'help/migrate.help';
 import { parseMigrateArgs } from 'migrate/migrate-metadata.utils';
 import pc from 'picocolors';
 import {
@@ -34,7 +35,7 @@ import {
   planRenames,
 } from 'src/migrate/rename.utils';
 
-import { copyDir, copyTemplate, ensureDir, errorMessage, fileExists, findPackageRoot, getTemplatesPackageDir, infoMessage, intro, successMessage } from 'utils';
+import { copyDir, copyTemplate, ensureDir, errorMessage, fileExists, findPackageRoot, getTemplatesPackageDir, infoMessage, intro, renderHelp, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.config';
@@ -44,7 +45,13 @@ import { nodePolicy } from 'config/node.config';
 import { renameRules } from 'config/rename.config';
 import type { TemplateVars } from 'types/template.types';
 
-export async function migratePackage(argv: string[], options: { cwd: string }): Promise<void> {
+export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
+
+  if (argv.includes('--help') || argv.includes('-h')) {
+    renderHelp(migrateHelp);
+    return;
+  }
+
   intro('Migrate existing @finografic package');
 
   // Helpful debug info (always on in dev)
@@ -54,7 +61,7 @@ export async function migratePackage(argv: string[], options: { cwd: string }): 
     infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
   }
 
-  const { targetDir, write, only } = parseMigrateArgs(argv, options.cwd);
+  const { targetDir, write, only } = parseMigrateArgs(argv, context.cwd);
 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
