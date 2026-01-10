@@ -74,6 +74,8 @@ async function copyDirInternal(
       await mkdir(destPath, { recursive: true });
       await copyDirInternal(srcPath, destPath, vars, options, rootSrc);
     } else if (entry.isFile()) {
+      // Files matching template extensions get token replacement
+      // All other files (including dotfiles like .npmrc, .gitignore) are copied as-is
       const shouldTemplate = templateExtensions.some((ext) => entry.name.endsWith(ext));
 
       if (shouldTemplate) {
