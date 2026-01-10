@@ -1,4 +1,25 @@
-export const defaultValuesConfig = {
+export interface DefaultValuesConfig {
+  /** Default scope for new packages (accepts `finografic` or `@finografic`) */
+  scope: string;
+
+  /** Default description placeholder / initial value */
+  description: string;
+
+  /** Default author values for new packages */
+  author: {
+    name: string;
+    email: string;
+    url: string;
+  };
+
+  /**
+   * Author prompt format (single prompt).
+   * Example: `Name | email@example.com | https://example.com`
+   */
+  authorPromptDelimiter: string;
+}
+
+export const defaultValuesConfig: DefaultValuesConfig = {
   /** Default scope for new packages (accepts `finografic` or `@finografic`) */
   scope: '@finografic',
 
@@ -17,4 +38,4 @@ export const defaultValuesConfig = {
    * Example: `Name | email@example.com | https://example.com`
    */
   authorPromptDelimiter: '|',
-} as const;
+};

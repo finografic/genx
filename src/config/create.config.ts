@@ -8,7 +8,21 @@ import { sharedConfig } from './shared.config';
  *
  * This file exists for create-specific settings (e.g., feature flags, ignore patterns).
  */
-export const createConfig = {
+export interface CreateConfig {
+  /** Default scope for new packages */
+  defaultScope: string;
+
+  /**
+   * Files/directories to ignore when copying templates.
+   * These are controlled by feature flags.
+   */
+  ignorePatterns: {
+    /** Ignore AI rules if not selected */
+    aiRules: string[];
+  };
+}
+
+export const createConfig: CreateConfig = {
   /** Default scope for new packages */
   defaultScope: sharedConfig.defaultScope,
 
@@ -20,4 +34,4 @@ export const createConfig = {
     /** Ignore AI rules if not selected */
     aiRules: ['.github/copilot-instructions.md', '.github/instructions'],
   },
-} as const;
+};

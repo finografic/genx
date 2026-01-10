@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { fileExists } from 'utils/fs.utils';
 import { applyTemplate } from 'utils/template.utils';
-import type { MergeRule } from 'config/merge.config';
+import type { MergeRule } from 'config/merge.rules';
 import type { TemplateVars } from 'types/template.types';
 
 export interface MergeChange {

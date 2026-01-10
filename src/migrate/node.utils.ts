@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { fileExists } from 'utils/fs.utils';
-import type { NodePolicy } from 'config/node.config';
+import type { NodePolicy } from 'config/node.policy';
 import type { PackageJson } from 'types/package-json.types';
 
 export interface NodeChange {

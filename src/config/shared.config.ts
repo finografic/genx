@@ -3,7 +3,33 @@
  * This ensures consistency between scaffolding new packages and updating existing ones.
  */
 
-export const sharedConfig = {
+export interface SharedConfig {
+  /** Default scope for @finografic packages */
+  defaultScope: string;
+
+  /**
+   * Package.json scripts that should be present in all @finografic packages.
+   * These match what's in templates/package/package.json.
+   */
+  packageJsonScripts: Record<string, string>;
+
+  /**
+   * lint-staged configuration that should be present in all @finografic packages.
+   */
+  lintStaged: Record<string, string[]>;
+
+  /**
+   * Keywords configuration.
+   */
+  keywords: {
+    /** Always ensure this keyword exists */
+    includeFinograficKeyword: string;
+    /** Also ensure the package name (without scope) exists */
+    includePackageName: boolean;
+  };
+}
+
+export const sharedConfig: SharedConfig = {
   /** Default scope for @finografic packages */
   defaultScope: '@finografic',
 

@@ -38,11 +38,11 @@ import {
 import { copyDir, copyTemplate, ensureDir, errorMessage, fileExists, findPackageRoot, getTemplatesPackageDir, infoMessage, intro, renderHelp, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
-import { dependencyRules } from 'config/dependencies.config';
-import { mergeConfig } from 'config/merge.config';
+import { dependencyRules } from 'config/dependencies.rules';
+import { mergeConfig } from 'config/merge.rules';
 import { migrateConfig } from 'config/migrate.config';
-import { nodePolicy } from 'config/node.config';
-import { renameRules } from 'config/rename.config';
+import { nodePolicy } from 'config/node.policy';
+import { renameRules } from 'config/rename.rules';
 import type { TemplateVars } from 'types/template.types';
 
 export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
