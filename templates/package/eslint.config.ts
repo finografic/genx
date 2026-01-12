@@ -128,6 +128,7 @@ const config: Linter.Config[] = [
       'markdownlint/md013': 'off', // Line length
       'markdownlint/md024': 'off', // Duplicate headings
       'markdownlint/md025': 'off', // Single h1
+      'markdownlint/md026': 'off', // Trailing punctuation in heading
       'markdownlint/md029': 'off', // List style
       'markdownlint/md036': 'off', // No mphasis as heading
       'markdownlint/md040': 'off', // Fenced code language

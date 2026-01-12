@@ -38,7 +38,7 @@ So you’re **not wrong**.
 The reason to avoid this has **nothing to do with dprint limitations**
 and everything to do with **ecosystem correctness**.
 
-### Mutating on install breaks these invariants:
+### Mutating on install breaks these invariants
 
 #### ❌ 1. Package install should be idempotent
 
