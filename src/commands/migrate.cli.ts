@@ -1,12 +1,15 @@
 import { existsSync } from 'node:fs';
+import { rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as clack from '@clack/prompts';
-import { ensureDprintConfig } from 'features/dprint/dprint.template';
+import type { FeatureId } from 'features/feature.types';
+import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
 import { parseMigrateArgs } from 'migrate/migrate-metadata.utils';
 import pc from 'picocolors';
+import { promptFeatures } from 'prompts/features.prompt';
 import {
   confirmMerges,
   confirmMigrateTarget,
@@ -95,6 +98,13 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
     return;
   }
 
+  // Prompt for features (after confirmation, before planning)
+  const selectedFeatureIds = await promptFeatures();
+  if (!selectedFeatureIds) {
+    safeExit(0);
+    return;
+  }
+
   const vars: TemplateVars = {
     SCOPE: parsed.scope,
     NAME: parsed.name,
@@ -160,7 +170,7 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
     renameChanges = planRenames(existingFiles, renameRules);
     if (renameChanges.length > 0) {
       plan.push(
-        `${pc.yellow('renames')}: ${renameChanges.map((r) => `${r.from} → ${r.to}`).join(', ')}`,
+        `${pc.yellow('renames')}: ${renameChanges.map((nameChange) => `${nameChange.from} → ${nameChange.to}`).join(', ')}`,
       );
     }
   }
@@ -219,15 +229,25 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
     plan.push(`${pc.cyan('sync')} LICENSE (from template LICENSE)`);
   }
 
-  // dprint planning
-  if (shouldRunSection(only, 'dprint')) {
-    const dprintPath = resolve(targetDir, 'dprint.jsonc');
-    const dprintExists = fileExists(dprintPath);
-    if (!dprintExists) {
-      plan.push(`${pc.cyan('dprint')}: create dprint.jsonc`);
+  // Features planning
+  const featuresPlan: string[] = [];
+  for (const featureId of selectedFeatureIds) {
+    const feature = getFeature(featureId);
+    if (!feature) continue;
+
+    if (feature.detect) {
+      const detected = await feature.detect({ targetDir });
+      if (detected) {
+        featuresPlan.push(`${feature.label} already installed`);
+      } else {
+        featuresPlan.push(`${pc.cyan('feature')}: ${feature.label}`);
+      }
     } else {
-      plan.push('dprint.jsonc already exists');
+      featuresPlan.push(`${pc.cyan('feature')}: ${feature.label}`);
     }
+  }
+  if (featuresPlan.length > 0) {
+    plan.push(...featuresPlan);
   }
 
   // Dry-run default
@@ -327,6 +347,24 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
       const sourcePath = resolve(templateDir, item.templatePath);
       const destinationPath = resolve(targetDir, item.targetPath);
 
+      // Special handling for eslint.config.ts: backup existing alternatives first
+      if (item.targetPath === 'eslint.config.ts') {
+        const eslintRule = renameRules.find((rule) => rule.canonical === 'eslint.config.ts');
+        if (eslintRule) {
+          const filesToCheck = [...eslintRule.alternatives, eslintRule.canonical];
+
+          for (const file of filesToCheck) {
+            const filePath = resolve(targetDir, file);
+            if (fileExists(filePath)) {
+              const ext = file.includes('.') ? file.split('.').pop() : 'mjs';
+              const backupPath = resolve(targetDir, `eslint.config--backup.${ext}`);
+              await rename(filePath, backupPath);
+              infoMessage(`Backed up ${file} to eslint.config--backup.${ext}`);
+            }
+          }
+        }
+      }
+
       // Directory copy
       if (item.templatePath === 'docs') {
         await ensureDir(destinationPath);
@@ -350,13 +388,52 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
     successMessage('Added LICENSE file');
   }
 
-  // Apply dprint config
-  if (shouldRunSection(only, 'dprint')) {
-    const result = await ensureDprintConfig(targetDir);
-    if (result.wrote) {
-      successMessage('Created dprint.jsonc');
+  // Apply features
+  const appliedFeatures: FeatureId[] = [];
+  const noopMessages: string[] = [];
+
+  for (const featureId of selectedFeatureIds) {
+    const feature = getFeature(featureId);
+    if (!feature) {
+      errorMessage(`Unknown feature: ${featureId}`);
+      continue;
+    }
+
+    if (feature.detect) {
+      const detected = await feature.detect({ targetDir });
+      if (detected) {
+        noopMessages.push(
+          `${feature.label} already installed. No changes made.`,
+        );
+        continue;
+      }
+    }
+
+    const result = await feature.apply({ targetDir });
+    if (result.error) {
+      errorMessage(result.error.message);
+      safeExit(1);
+      return;
+    }
+
+    if (result.applied.length > 0) {
+      appliedFeatures.push(featureId);
     } else {
-      infoMessage('dprint.jsonc already exists');
+      noopMessages.push(
+        result.noopMessage ?? `${feature.label} already installed. No changes made.`,
+      );
+    }
+  }
+
+  // Show feature results
+  if (appliedFeatures.length > 0) {
+    successMessage(`Applied ${appliedFeatures.length} feature(s): ${appliedFeatures.join(', ')}`);
+    for (const msg of noopMessages) {
+      infoMessage(msg);
+    }
+  } else if (noopMessages.length > 0) {
+    for (const msg of noopMessages) {
+      infoMessage(msg);
     }
   }
 
