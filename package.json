@@ -1,7 +1,7 @@
 {
   "name": "@finografic/create",
   "type": "module",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "packageManager": "pnpm@10.8.0",
   "description": "Opinionated generator and codemod toolkit for the @finografic ecosystem.",
   "homepage": "https://github.com/finografic/create",
