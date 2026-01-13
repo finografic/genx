@@ -1,8 +1,9 @@
+import { getFeature } from 'features/feature-registry';
 import { featuresHelp } from 'help/features.help';
 import pc from 'picocolors';
 import { promptFeatures } from 'prompts/features.prompt';
 
-import { ensureDprintConfig, errorMessage, infoMessage, intro, outro, successMessage } from 'utils';
+import { errorMessage, infoMessage, intro, outro } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { renderHelp } from 'utils/render-help/render-help.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
@@ -40,29 +41,30 @@ export async function addFeatures(
   }
 
   // 2. Prompt for features
-  const features = await promptFeatures();
-  if (!features) {
+  const selectedFeatureIds = await promptFeatures();
+  if (!selectedFeatureIds) {
     safeExit(0);
     return;
   }
 
   // 3. Apply selected features
   const applied: string[] = [];
+  const ctx = { targetDir };
 
-  if (features.dprint) {
-    const result = await ensureDprintConfig(targetDir);
-    if (result.wrote) {
-      applied.push('dprint');
-      successMessage(`Created ${result.path}`);
-    } else {
-      infoMessage(`dprint.jsonc already exists at ${result.path}`);
+  for (const featureId of selectedFeatureIds) {
+    const feature = getFeature(featureId);
+    if (!feature) {
+      errorMessage(`Unknown feature: ${featureId}`);
+      continue;
     }
-  }
 
-  // NOTE: Future features and feature side-effects can be added here:
-  // if (features.vitest) { ... }
-  // if (features.githubWorkflow) { ... }
-  // if (features.aiRules) { ... }
+    const result = await feature.apply(ctx);
+    if (result.error) {
+      safeExit(1);
+      return;
+    }
+    applied.push(...result.applied);
+  }
 
   // 4. Done!
   if (applied.length > 0) {

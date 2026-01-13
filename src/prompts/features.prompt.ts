@@ -1,42 +1,27 @@
 import * as clack from '@clack/prompts';
+import type { FeatureId } from 'features/feature.types';
+import { features } from 'features/feature-registry';
 
 import { cancel } from 'utils/prompts.utils';
 
-export interface FeaturesConfig {
-  vitest: boolean;
-  githubWorkflow: boolean;
-  aiRules: boolean;
-  dprint: boolean;
-}
+/**
+ * Prompt user to select features.
+ * Returns array of selected feature IDs, or null if cancelled.
+ */
+export async function promptFeatures(): Promise<FeatureId[] | null> {
+  const options = features.map((feature) => ({
+    value: feature.id,
+    label: feature.label,
+    hint: feature.hint,
+  }));
 
-export async function promptFeatures(): Promise<FeaturesConfig | null> {
-  const features = await clack.multiselect({
+  const selected = await clack.multiselect({
     message: 'Select optional features:',
-    options: [
-      {
-        value: 'dprint',
-        label: 'dprint formatting (extends @finografic/dprint-config)',
-        hint: 'recommended',
-      },
-      { value: 'vitest', label: 'Vitest testing setup', hint: 'recommended' },
-      { value: 'githubWorkflow', label: 'GitHub release workflow', hint: 'recommended' },
-      {
-        value: 'aiRules',
-        label: 'AI Rules (.github/copilot-instructions.md)',
-        hint: 'recommended',
-      },
-    ],
+    options,
     required: false,
   });
 
-  if (clack.isCancel(features)) return cancel();
+  if (clack.isCancel(selected)) return cancel();
 
-  const selected = new Set(features);
-
-  return {
-    dprint: selected.has('dprint'),
-    vitest: selected.has('vitest'),
-    githubWorkflow: selected.has('githubWorkflow'),
-    aiRules: selected.has('aiRules'),
-  };
+  return selected as FeatureId[];
 }

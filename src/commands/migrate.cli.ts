@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as clack from '@clack/prompts';
+import { ensureDprintConfig } from 'features/dprint/dprint.template';
 import { migrateHelp } from 'help/migrate.help';
 import { parseMigrateArgs } from 'migrate/migrate-metadata.utils';
 import pc from 'picocolors';
@@ -33,7 +34,6 @@ import {
   copyDir,
   copyTemplate,
   ensureDir,
-  ensureDprintConfig,
   errorMessage,
   fileExists,
   findPackageRoot,

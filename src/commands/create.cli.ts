@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { execa } from 'execa';
+import { ensureDprintConfig } from 'features/dprint/dprint.template';
 import { createHelp } from 'help/create.help';
 import pc from 'picocolors';
 
@@ -10,7 +11,6 @@ import {
   buildTemplateVars,
   copyDir,
   ensureDir,
-  ensureDprintConfig,
   errorMessage,
   findPackageRoot,
   getTemplatesPackageDir,
@@ -53,7 +53,7 @@ export async function createPackage(argv: string[], context: { cwd: string; }): 
     return;
   }
 
-  const { features } = config;
+  const selectedFeatures = new Set(config.features);
 
   // 2. Determine target directory
   const targetDir = resolve(context.cwd, config.name);
@@ -99,14 +99,12 @@ export async function createPackage(argv: string[], context: { cwd: string; }): 
     const vars = buildTemplateVars(config);
 
     await copyDir(templateDir, targetDir, vars, {
-      ignore: features.aiRules
-        ? []
-        : createConfig.ignorePatterns.aiRules,
+      ignore: selectedFeatures.has('aiRules') ? [] : createConfig.ignorePatterns.aiRules,
     });
 
     // Generate dprint.jsonc (do not store this in templates/ to avoid dprint
     // resolving node_modules paths inside the template directory)
-    if (features.dprint) {
+    if (selectedFeatures.has('dprint')) {
       await ensureDprintConfig(targetDir);
     }
 

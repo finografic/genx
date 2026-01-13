@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { fileExists } from './fs.utils.js';
+import { fileExists } from 'utils/fs.utils';
 
 const DPRINT_CONFIG_FILENAME = 'dprint.jsonc';
 
@@ -20,7 +20,7 @@ export interface EnsureDprintConfigOptions {
 export async function ensureDprintConfig(
   targetDir: string,
   options: EnsureDprintConfigOptions = {},
-): Promise<{ wrote: boolean; path: string; }> {
+): Promise<{ wrote: boolean; path: string }> {
   const path = join(targetDir, DPRINT_CONFIG_FILENAME);
 
   if (!options.force && fileExists(path)) {
