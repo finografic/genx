@@ -31,7 +31,7 @@ import { createConfig } from 'config/create.config';
 /**
  * Create a new @finografic package from template.
  */
-export async function createPackage(argv: string[], context: { cwd: string; }): Promise<void> {
+export async function createPackage(argv: string[], context: { cwd: string }): Promise<void> {
   if (argv.includes('--help') || argv.includes('-h')) {
     renderHelp(createHelp);
     return;

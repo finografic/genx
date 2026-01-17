@@ -1,9 +1,7 @@
-import { existsSync } from 'node:fs';
-import { rename } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
 import * as clack from '@clack/prompts';
+import { execa } from 'execa';
 import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
@@ -14,46 +12,31 @@ import {
   confirmMerges,
   confirmMigrateTarget,
   confirmNodeVersionUpgrade,
-  confirmReleasesRename,
 } from 'prompts/migrate.prompt';
 import { applyDependencyChanges, planDependencyChanges } from 'src/migrate/dependencies.utils';
-import { applyMerges, planMerges } from 'src/migrate/merge.utils';
+import { restructureDocs } from 'src/migrate/docs-restructure.utils';
+import { applyMerges } from 'src/migrate/merge.utils';
 import { getScopeAndName, shouldRunSection } from 'src/migrate/migrate-metadata.utils';
 import {
   applyNodeRuntimeChanges,
   applyNodeTypesChange,
-  detectCurrentNodeState,
   detectNodeMajor,
-  planNodeRuntimeChanges,
-  planNodeTypesChange,
 } from 'src/migrate/node.utils';
 import {
   patchPackageJson,
   readPackageJson,
   writePackageJson,
 } from 'src/migrate/package-json.utils';
-import { applyRenames, getExistingFiles, planRenames } from 'src/migrate/rename.utils';
+import { planMigration } from 'src/migrate/plan.utils';
+import { applyRenames } from 'src/migrate/rename.utils';
+import { copyLicenseIfMissing, syncFromTemplate } from 'src/migrate/template-sync.utils';
 
-import {
-  copyDir,
-  copyTemplate,
-  ensureDir,
-  errorMessage,
-  fileExists,
-  findPackageRoot,
-  getTemplatesPackageDir,
-  infoMessage,
-  intro,
-  renderHelp,
-  successMessage,
-} from 'utils';
+import { errorMessage, infoMessage, intro, renderHelp, spinner, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
-import { mergeConfig } from 'config/merge.rules';
 import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';
-import { renameRules } from 'config/rename.rules';
 import type { TemplateVars } from 'types/template.types';
 
 export async function migratePackage(argv: string[], context: { cwd: string; }): Promise<void> {
@@ -118,138 +101,25 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
     AUTHOR_URL: '',
   };
 
-  const plan: string[] = [];
+  // Plan all migration changes
+  const { plan, state } = await planMigration(
+    targetDir,
+    packageJson,
+    parsed,
+    selectedFeatureIds,
+    only,
+    debug,
+  );
 
-  // package.json patch plan
-  if (shouldRunSection(only, 'package-json')) {
-    const { changes } = patchPackageJson(packageJson, parsed.name);
-    if (changes.length > 0) {
-      plan.push(`${pc.yellow('patch')} package.json: ${changes.join(', ')}`);
-    } else {
-      plan.push('package.json already aligned');
-    }
-  }
-
-  // Get template directory early (needed for merge planning)
-  const fromDir = fileURLToPath(new URL('.', import.meta.url));
-  const packageRoot = findPackageRoot(fromDir);
-  const templateDir = getTemplatesPackageDir(fromDir);
-
-  // Dependencies planning
-  if (shouldRunSection(only, 'dependencies')) {
-    const depChanges = planDependencyChanges(packageJson, dependencyRules);
-    if (depChanges.length > 0) {
-      plan.push(
-        `${pc.cyan('dependencies')}: ${
-          depChanges.map((c) => `${c.name} (${c.operation})`).join(', ')
-        }`,
-      );
-    }
-  }
-
-  // Node version planning
-  let currentNodeState: Awaited<ReturnType<typeof detectCurrentNodeState>> | null = null;
-  let nodeRuntimeChanges: ReturnType<typeof planNodeRuntimeChanges> = [];
-  let nodeTypesChange: ReturnType<typeof planNodeTypesChange> = null;
-  if (shouldRunSection(only, 'node')) {
-    currentNodeState = await detectCurrentNodeState(targetDir);
-    nodeRuntimeChanges = planNodeRuntimeChanges(currentNodeState, nodePolicy);
-    nodeTypesChange = planNodeTypesChange(
-      (packageJson.devDependencies as Record<string, string> | undefined)?.['@types/node'],
-      nodePolicy,
-    );
-    if (nodeRuntimeChanges.length > 0 || nodeTypesChange) {
-      plan.push(`${pc.green('node')} version updates`);
-    }
-  }
-
-  // Renames planning
-  let existingFiles: Set<string> | null = null;
-  let renameChanges: ReturnType<typeof planRenames> = [];
-  if (shouldRunSection(only, 'renames')) {
-    existingFiles = await getExistingFiles(targetDir, renameRules);
-    renameChanges = planRenames(existingFiles, renameRules);
-    if (renameChanges.length > 0) {
-      plan.push(
-        `${pc.yellow('renames')}: ${renameChanges.map((nameChange) => `${nameChange.from} → ${nameChange.to}`).join(', ')}`,
-      );
-    }
-  }
-
-  // Merges planning
-  // Note: Merge planning needs to be aware of pending renames
-  // If a file will be renamed to the canonical name, treat it as existing
-  let mergeChanges: ReturnType<typeof planMerges> = [];
-  if (shouldRunSection(only, 'merges')) {
-    if (existingFiles === null) {
-      existingFiles = await getExistingFiles(targetDir, renameRules);
-    }
-    // Create a set that includes files that will exist after renames
-    const filesAfterRenames = new Set(existingFiles);
-    for (const rename of renameChanges) {
-      filesAfterRenames.delete(rename.from);
-      filesAfterRenames.add(rename.to);
-    }
-    mergeChanges = planMerges(filesAfterRenames, mergeConfig, templateDir);
-    if (mergeChanges.length > 0) {
-      plan.push(`${pc.yellow('merges')}: ${mergeChanges.map((m) => m.file).join(', ')}`);
-    }
-  }
-
-  // template sync plan
-  if (debug) {
-    infoMessage(`importMetaDir: ${fromDir}`);
-    infoMessage(`packageRoot: ${packageRoot}`);
-    infoMessage(`templateDir: ${templateDir}`);
-  }
-
-  if (!existsSync(templateDir)) {
-    errorMessage(
-      [
-        'Template directory not found.',
-        `templateDir: ${templateDir}`,
-        `importMetaDir: ${fromDir}`,
-        `packageRoot: ${packageRoot}`,
-        'If running a linked build, re-run `pnpm build` in @finografic/create.',
-      ].join('\n'),
-    );
-    safeExit(1);
-    return;
-  }
-  for (const item of migrateConfig.syncFromTemplate) {
-    if (!shouldRunSection(only, item.section)) continue;
-    plan.push(`${pc.cyan('sync')} ${item.targetPath} (from template ${item.templatePath})`);
-  }
-
-  // Check for LICENSE file
-  const licensePath = resolve(targetDir, 'LICENSE');
-  const licenseExists = fileExists(licensePath);
-  const packageLicense = (packageJson.license as string | undefined) || 'MIT';
-  const shouldCopyLicense = !licenseExists && packageLicense === 'MIT';
-  if (shouldCopyLicense) {
-    plan.push(`${pc.cyan('sync')} LICENSE (from template LICENSE)`);
-  }
-
-  // Features planning
-  const featuresPlan: string[] = [];
-  for (const featureId of selectedFeatureIds) {
-    const feature = getFeature(featureId);
-    if (!feature) continue;
-
-    if (feature.detect) {
-      const detected = await feature.detect({ targetDir });
-      if (detected) {
-        featuresPlan.push(`${feature.label} already installed`);
-      } else {
-        featuresPlan.push(`${pc.cyan('feature')}: ${feature.label}`);
-      }
-    } else {
-      featuresPlan.push(`${pc.cyan('feature')}: ${feature.label}`);
-    }
-  }
-  if (featuresPlan.length > 0) {
-    plan.push(...featuresPlan);
-  }
+  const {
+    currentNodeState,
+    nodeRuntimeChanges,
+    nodeTypesChange,
+    renameChanges,
+    mergeChanges,
+    shouldCopyLicense,
+    templateDir,
+  } = state;
 
   // Dry-run default
   if (!write) {
@@ -257,7 +127,11 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
     for (const line of plan) {
       clack.log.info(`- ${line}`);
     }
-    infoMessage(`${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${pc.greenBright('--write')} ${pc.white('to apply changes.')}\n`);
+    infoMessage(
+      `${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${
+        pc.greenBright('--write')
+      } ${pc.white('to apply changes.')}\n`,
+    );
     return;
   }
 
@@ -320,12 +194,14 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
   }
 
   // Apply dependency changes
+  let hasDependencyChanges = false;
   if (shouldRunSection(only, 'dependencies')) {
     const depChanges = planDependencyChanges(updatedPackageJson, dependencyRules);
     if (depChanges.length > 0) {
       updatedPackageJson = applyDependencyChanges(updatedPackageJson, depChanges);
       await writePackageJson(packageJsonPath, updatedPackageJson);
       successMessage(`Updated ${depChanges.length} dependencies`);
+      hasDependencyChanges = true;
     }
   }
 
@@ -337,107 +213,14 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
 
   // Restructure docs/ folder (if docs section is enabled)
   // This runs BEFORE template sync to avoid overwriting existing restructured files
-  if (shouldRunSection(only, 'docs')) {
-    const docsDir = resolve(targetDir, 'docs');
-    const docsProcessDir = resolve(targetDir, 'docs/process');
-
-    // Check if docs/ exists
-    if (existsSync(docsDir)) {
-      // Check if docs/process/ already exists with files - if so, skip restructuring
-      const processDirExists = existsSync(docsProcessDir);
-      const releaseProcessExists = fileExists(resolve(docsProcessDir, 'RELEASE_PROCESS.md'));
-      const developerWorkflowExists = fileExists(resolve(docsProcessDir, 'DEVELOPER_WORKFLOW.md'));
-      const githubPackagesExists = fileExists(resolve(docsProcessDir, 'GITHUB_PACKAGES_SETUP.md'));
-
-      // If all files already exist in docs/process/, skip restructuring (silent abort)
-      if (processDirExists && releaseProcessExists && developerWorkflowExists && githubPackagesExists) {
-        // Silent abort - structure already correct
-      } else {
-        // Ensure docs/process/ exists
-        await ensureDir(docsProcessDir);
-
-        // Files to move from docs/ to docs/process/
-        const filesToMove = [
-          { from: 'DEVELOPER_WORKFLOW.md', to: 'DEVELOPER_WORKFLOW.md' },
-          { from: 'GITHUB_PACKAGES_SETUP.md', to: 'GITHUB_PACKAGES_SETUP.md' },
-          { from: 'RELEASES.md', to: 'RELEASE_PROCESS.md' },
-        ];
-
-        // Check and move files
-        for (const file of filesToMove) {
-          const sourcePath = resolve(docsDir, file.from);
-          const destPath = resolve(docsProcessDir, file.to);
-
-          // Only move if source exists and destination doesn't
-          if (fileExists(sourcePath) && !fileExists(destPath)) {
-            // Special handling for RELEASES.md: prompt for confirmation
-            if (file.from === 'RELEASES.md') {
-              const confirmed = await confirmReleasesRename();
-              if (!confirmed) {
-                infoMessage(`Skipped renaming ${file.from}`);
-                continue;
-              }
-            }
-
-            await rename(sourcePath, destPath);
-            infoMessage(`Moved ${file.from} → docs/process/${file.to}`);
-          }
-        }
-      }
-    }
-  }
+  await restructureDocs(targetDir, only);
 
   // Apply template sync
-  const syncTasks = migrateConfig.syncFromTemplate.filter((item) =>
-    shouldRunSection(only, item.section),
-  );
-
-  if (syncTasks.length > 0) {
-    const syncSpin = clack.spinner();
-    syncSpin.start(`Syncing ${syncTasks.length} file(s) from template...`);
-
-    for (const item of syncTasks) {
-      const sourcePath = resolve(templateDir, item.templatePath);
-      const destinationPath = resolve(targetDir, item.targetPath);
-
-      // Special handling for eslint.config.ts: backup existing alternatives first
-      if (item.targetPath === 'eslint.config.ts') {
-        const eslintRule = renameRules.find((rule) => rule.canonical === 'eslint.config.ts');
-        if (eslintRule) {
-          const filesToCheck = [...eslintRule.alternatives, eslintRule.canonical];
-
-          for (const file of filesToCheck) {
-            const filePath = resolve(targetDir, file);
-            if (fileExists(filePath)) {
-              const ext = file.includes('.') ? file.split('.').pop() : 'mjs';
-              const backupPath = resolve(targetDir, `eslint.config--backup.${ext}`);
-              await rename(filePath, backupPath);
-              infoMessage(`Backed up ${file} to eslint.config--backup.${ext}`);
-            }
-          }
-        }
-      }
-
-      // Directory copy
-      if (item.templatePath === 'docs') {
-        await ensureDir(destinationPath);
-        await copyDir(sourcePath, destinationPath, vars);
-        continue;
-      }
-
-      // Ensure destination directory exists
-      await ensureDir(dirname(destinationPath));
-      await copyTemplate(sourcePath, destinationPath, vars);
-    }
-
-    syncSpin.stop(`Synced ${syncTasks.length} file(s)`);
-  }
+  await syncFromTemplate(targetDir, templateDir, vars, only);
 
   // Copy LICENSE if missing
+  await copyLicenseIfMissing(targetDir, templateDir, vars, shouldCopyLicense);
   if (shouldCopyLicense) {
-    const licenseSourcePath = resolve(templateDir, 'LICENSE');
-    const licenseDestPath = resolve(targetDir, 'LICENSE');
-    await copyTemplate(licenseSourcePath, licenseDestPath, vars);
     successMessage('Added LICENSE file');
   }
 
@@ -487,6 +270,20 @@ export async function migratePackage(argv: string[], context: { cwd: string; }):
   } else if (noopMessages.length > 0) {
     for (const msg of noopMessages) {
       infoMessage(msg);
+    }
+  }
+
+  // Install dependencies if any were updated
+  if (hasDependencyChanges) {
+    const installSpin = spinner();
+    installSpin.start('Installing dependencies...');
+
+    try {
+      await execa('pnpm', ['install'], { cwd: targetDir });
+      installSpin.stop('Dependencies installed');
+    } catch {
+      installSpin.stop('Failed to install dependencies');
+      errorMessage('You can run `pnpm install` manually');
     }
   }
 

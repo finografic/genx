@@ -87,7 +87,6 @@
   "dependencies": {
     "@clack/prompts": "1.0.0-alpha.9",
     "@finografic/core": "^0.9.2",
-    "@finografic/dprint-config": "^0.5.0",
     "clack-tree-select": "^1.0.8",
     "execa": "^9.6.1",
     "fast-glob": "^3.3.3",
@@ -98,6 +97,7 @@
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.2",
+    "@finografic/dprint-config": "^0.8.0",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.51.0",

@@ -3,13 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { ensureKeyword } from 'src/migrate/migrate-metadata.utils';
 
 import { migrateConfig } from 'config/migrate.config';
-
-type PackageJson = Record<string, unknown> & {
-  name?: string;
-  keywords?: unknown;
-  scripts?: Record<string, string>;
-  'lint-staged'?: Record<string, string[]>;
-};
+import type { PackageJson } from 'types/package-json.types';
 
 export async function readPackageJson(path: string): Promise<PackageJson> {
   const raw = await readFile(path, 'utf8');
@@ -19,7 +13,7 @@ export async function readPackageJson(path: string): Promise<PackageJson> {
 export function patchPackageJson(
   packageJson: PackageJson,
   packageNameWithoutScope: string,
-): { packageJson: PackageJson; changes: string[]; } {
+): { packageJson: PackageJson; changes: string[] } {
   const changes: string[] = [];
   const next: PackageJson = { ...packageJson };
 
