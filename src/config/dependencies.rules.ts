@@ -19,6 +19,9 @@ export const dependencyRules: DependencyRule[] = [
   { name: 'eslint-plugin-markdownlint', version: '^0.9.0', section: 'devDependencies' },
   { name: 'eslint-plugin-simple-import-sort', version: '^12.1.1', section: 'devDependencies' },
 
+  // formatting
+  { name: '@finografic/dprint-config', version: '^0.8.0', section: 'devDependencies' },
+
   // finografic ecosystem
   { name: '@finografic/project-scripts', version: '^8.2.0', section: 'devDependencies' },
 ];
