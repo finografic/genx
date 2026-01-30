@@ -14,7 +14,7 @@ import {
 } from 'migrate/node.utils';
 import { patchPackageJson } from 'migrate/package-json.utils';
 import { getExistingFiles, planRenames } from 'migrate/rename.utils';
-import pc from 'picocolors';
+import * as pc from 'picocolors';
 
 import {
   errorMessage,

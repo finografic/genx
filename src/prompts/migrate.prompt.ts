@@ -1,5 +1,5 @@
 import * as clack from '@clack/prompts';
-import pc from 'picocolors';
+import * as pc from 'picocolors';
 
 import { cancel } from 'utils/prompts.utils';
 

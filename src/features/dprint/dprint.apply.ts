@@ -2,6 +2,8 @@ import { readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
 
 import {
+  addExtensionRecommendations,
+  addLanguageFormatterSettings,
   errorMessage,
   fileExists,
   installDevDependency,
@@ -19,6 +21,7 @@ import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
   DPRINT_PACKAGE,
   DPRINT_PACKAGE_VERSION,
+  DPRINT_VSCODE_EXTENSION,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
   PRETTIER_CONFIG_FILES,
@@ -26,6 +29,7 @@ import {
   PRETTIER_PACKAGES,
 } from './dprint.constants';
 import { ensureDprintConfig } from './dprint.template';
+import { getDprintLanguages } from './dprint.vscode';
 
 /**
  * Convert a glob pattern (e.g., "*prettier-plugin-*") to a regex for matching package names.
@@ -237,7 +241,8 @@ async function addFormattingScripts(
 /**
  * Apply dprint feature to an existing package.
  * Replaces Prettier if present (uninstall + backup configs), then installs
- * @finografic/dprint-config, creates dprint.jsonc, and adds formatting scripts.
+ * @finografic/dprint-config, creates dprint.jsonc, adds formatting scripts,
+ * and configures VSCode settings.
  */
 export async function applyDprint(context: FeatureContext): Promise<FeatureApplyResult> {
   const applied: string[] = [];
@@ -292,6 +297,34 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
   if (scriptsResult.added) {
     applied.push('formatting scripts');
     successMessage('Added formatting scripts to package.json');
+  }
+
+  // 4. Configure VSCode extension recommendation
+  const addedExtensions = await addExtensionRecommendations(context.targetDir, [
+    DPRINT_VSCODE_EXTENSION,
+  ]);
+  if (addedExtensions.length > 0) {
+    applied.push('.vscode/extensions.json');
+    successMessage(`Added extension recommendation: ${DPRINT_VSCODE_EXTENSION}`);
+  }
+
+  // 5. Configure VSCode language formatter settings (based on project dependencies)
+  const languages = await getDprintLanguages(context.targetDir);
+  const settingsResult = await addLanguageFormatterSettings(
+    context.targetDir,
+    languages,
+    DPRINT_VSCODE_EXTENSION,
+  );
+  if (settingsResult.addedLanguages.length > 0 || settingsResult.disabledPrettier) {
+    applied.push('.vscode/settings.json');
+    if (settingsResult.disabledPrettier) {
+      successMessage('Disabled Prettier in VSCode settings');
+    }
+    if (settingsResult.addedLanguages.length > 0) {
+      successMessage(
+        `Configured dprint as formatter for: ${settingsResult.addedLanguages.join(', ')}`,
+      );
+    }
   }
 
   if (applied.length === 0) {

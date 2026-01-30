@@ -12,6 +12,9 @@
 export const DPRINT_PACKAGE = '@finografic/dprint-config';
 export const DPRINT_PACKAGE_VERSION = 'latest';
 
+/** VSCode extension ID for dprint */
+export const DPRINT_VSCODE_EXTENSION = 'dprint.dprint';
+
 /**
  * Exact Prettier-related package names to uninstall when replacing with dprint.
  */
@@ -45,4 +48,35 @@ export const FORMATTING_SECTION_TITLE = '·········· FORMATTING';
 export const FORMATTING_SCRIPTS = {
   format: 'dprint fmt --diff',
   'format.check': 'dprint check',
+};
+
+/**
+ * Language categories for dprint VSCode settings.
+ * Each category contains language IDs that should use dprint as the default formatter.
+ */
+export const DPRINT_LANGUAGE_CATEGORIES = {
+  /** Base languages - always included */
+  DEFAULT: ['javascript', 'json', 'jsonc'] as const,
+  /** TypeScript - included when typescript is a dependency */
+  TYPESCRIPT: ['typescript'] as const,
+  /** React/Frontend - included when react is a dependency */
+  REACT: ['typescriptreact', 'javascriptreact', 'css', 'scss', 'html'] as const,
+  /** Markdown - always included (commonly used) */
+  MARKDOWN: ['markdown'] as const,
+  /** Data formats - always included (commonly used in configs) */
+  DATA: ['yaml', 'toml'] as const,
+} as const;
+
+/** Type for language category keys */
+export type DprintLanguageCategory = keyof typeof DPRINT_LANGUAGE_CATEGORIES;
+
+/**
+ * Dependencies that trigger inclusion of specific language categories.
+ */
+export const DPRINT_CATEGORY_DEPENDENCIES: Record<DprintLanguageCategory, string[] | null> = {
+  DEFAULT: null, // Always included
+  TYPESCRIPT: ['typescript'],
+  REACT: ['react', 'react-dom', 'preact', 'solid-js', 'vue'],
+  MARKDOWN: null, // Always included
+  DATA: null, // Always included
 };

@@ -1,5 +1,5 @@
 import * as clack from '@clack/prompts';
-import pc from 'picocolors';
+import * as pc from 'picocolors';
 
 export function intro(message: string): void {
   clack.intro(pc.bgCyan(pc.black(` ${message} `)));

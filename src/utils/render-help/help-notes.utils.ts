@@ -1,4 +1,4 @@
-import pc from 'picocolors';
+import * as pc from 'picocolors';
 
 import { defaultHelpOptions } from 'config/help.config';
 import type { HelpConfig, HelpNote, HelpNoteOptions, HelpNoteReturn } from 'types/help.types';

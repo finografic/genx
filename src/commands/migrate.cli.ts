@@ -6,7 +6,7 @@ import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
 import { parseMigrateArgs } from 'migrate/migrate-metadata.utils';
-import pc from 'picocolors';
+import * as pc from 'picocolors';
 import { promptFeatures } from 'prompts/features.prompt';
 import {
   confirmMerges,

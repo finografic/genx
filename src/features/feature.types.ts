@@ -24,6 +24,14 @@ export interface FeatureApplyResult {
 }
 
 /**
+ * VSCode-specific configuration for a feature.
+ */
+export interface FeatureVSCodeConfig {
+  /** VSCode extension IDs to recommend (e.g., "dprint.dprint") */
+  extensions?: string[];
+}
+
+/**
  * Feature definition.
  * Each feature must implement this interface.
  */
@@ -36,6 +44,8 @@ export interface Feature {
   description?: string;
   /** Optional hint text for prompts */
   hint?: string;
+  /** Optional VSCode-specific configuration */
+  vscode?: FeatureVSCodeConfig;
 
   /**
    * Optional detection function to check if feature is already present.

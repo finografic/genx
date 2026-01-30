@@ -1,7 +1,7 @@
 import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { featuresHelp } from 'help/features.help';
-import pc from 'picocolors';
+import * as pc from 'picocolors';
 import { promptFeatures } from 'prompts/features.prompt';
 
 import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';

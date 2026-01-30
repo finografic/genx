@@ -77,3 +77,19 @@ export async function removeDependency(
   await execa('pnpm', ['remove', packageName], { cwd: targetDir });
   return { removed: true };
 }
+
+/**
+ * Check if any of the given dependencies are declared in package.json.
+ * Useful for detecting feature categories (e.g., "has react" for frontend).
+ */
+export async function hasAnyDependency(
+  targetDir: string,
+  packageNames: string[],
+): Promise<boolean> {
+  for (const name of packageNames) {
+    if (await isDependencyDeclared(targetDir, name)) {
+      return true;
+    }
+  }
+  return false;
+}
