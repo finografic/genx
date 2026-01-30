@@ -93,8 +93,11 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs,json,jsonc,md,yml,yaml}": [
-      "dprint fmt",
+      "dprint fmt  --allow-no-files",
       "eslint --fix"
     ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
   }
 }
