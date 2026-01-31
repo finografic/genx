@@ -34,7 +34,5 @@ export const PKG_SIMPLE_GIT_HOOKS = 'simple-git-hooks';
 // package.json scripts formatting
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const PACKAGE_JSON_SCRIPTS_SECTION_PREFIX = '··········';
-
-export const PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER =
-  '················································';
+export const PACKAGE_JSON_SCRIPTS_SECTION_PREFIX = '·'.repeat(10);
+export const PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER = '·'.repeat(50);
