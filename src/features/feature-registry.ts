@@ -1,5 +1,7 @@
 import { aiRulesFeature } from './ai-rules/ai-rules.feature';
 import { dprintFeature } from './dprint/dprint.feature';
+import { gitHooksFeature } from './git-hooks/git-hooks.feature';
+import { markdownFeature } from './markdown/markdown.feature';
 import { vitestFeature } from './vitest/vitest.feature';
 import type { Feature, FeatureId } from './feature.types';
 
@@ -11,6 +13,8 @@ export const features: Feature[] = [
   dprintFeature,
   vitestFeature,
   aiRulesFeature,
+  markdownFeature,
+  gitHooksFeature,
   // TODO: Add other features as they are migrated:
   // githubWorkflowFeature,
 ];

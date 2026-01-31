@@ -25,6 +25,10 @@ export function infoMessage(message: string): void {
   clack.log.info(pc.cyan(message));
 }
 
+export function warnMessage(message: string): void {
+  clack.log.warn(pc.yellow(message));
+}
+
 /**
  * Canonical cancellation handler.
  * Always call this instead of duplicating clack.cancel().

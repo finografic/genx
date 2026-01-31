@@ -1,7 +1,13 @@
 /**
  * Feature ID type - must match the feature folder name.
  */
-export type FeatureId = 'dprint' | 'vitest' | 'githubWorkflow' | 'aiRules';
+export type FeatureId =
+  | 'dprint'
+  | 'vitest'
+  | 'githubWorkflow'
+  | 'aiRules'
+  | 'markdown'
+  | 'gitHooks';
 
 /**
  * Context passed to feature detection and application.
