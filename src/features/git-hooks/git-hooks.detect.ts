@@ -1,4 +1,5 @@
 import { isDependencyDeclared } from 'utils';
+import { PKG_LINT_STAGED } from 'config/constants.config';
 import type { FeatureContext } from '../feature.types';
 
 /**
@@ -6,5 +7,5 @@ import type { FeatureContext } from '../feature.types';
  * Checks for lint-staged in dependencies.
  */
 export async function detectGitHooks(context: FeatureContext): Promise<boolean> {
-  return isDependencyDeclared(context.targetDir, 'lint-staged');
+  return isDependencyDeclared(context.targetDir, PKG_LINT_STAGED);
 }

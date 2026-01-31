@@ -5,11 +5,19 @@
  * for enforcing code quality and conventional commit messages.
  */
 
+import {
+  COMMITLINT_CONFIG,
+  PKG_COMMITLINT_CLI,
+  PKG_COMMITLINT_CONFIG,
+  PKG_LINT_STAGED,
+  PKG_SIMPLE_GIT_HOOKS,
+} from 'config/constants.config';
+
 export const GIT_HOOKS_PACKAGES = {
-  '@commitlint/cli': 'latest',
-  '@commitlint/config-conventional': 'latest',
-  'lint-staged': 'latest',
-  'simple-git-hooks': 'latest',
+  [PKG_COMMITLINT_CLI]: 'latest',
+  [PKG_COMMITLINT_CONFIG]: 'latest',
+  [PKG_LINT_STAGED]: 'latest',
+  [PKG_SIMPLE_GIT_HOOKS]: 'latest',
 } as const;
 
 /**
@@ -29,12 +37,12 @@ export const SIMPLE_GIT_HOOKS_CONFIG: Record<string, string> = {
 /**
  * Commitlint config filename.
  */
-export const COMMITLINT_CONFIG_FILE = 'commitlint.config.mjs';
+export const COMMITLINT_CONFIG_FILE = COMMITLINT_CONFIG;
 
 /**
  * Commitlint config content.
  */
 export const COMMITLINT_CONFIG_CONTENT = `export default {
-  extends: ['@commitlint/config-conventional'],
+  extends: ['${PKG_COMMITLINT_CONFIG}'],
 };
 `;

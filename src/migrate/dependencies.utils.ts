@@ -18,22 +18,23 @@ export function planDependencyChanges(
   for (const rule of rules) {
     const section = packageJson[rule.section] ?? {};
     const current = section[rule.name as keyof typeof section];
+    const targetVersion = rule.version ?? 'latest';
 
     if (!current) {
       changes.push({
         name: rule.name,
-        to: rule.version,
+        to: targetVersion,
         operation: 'add',
         section: rule.section,
       });
       continue;
     }
 
-    if (current !== rule.version) {
+    if (current !== targetVersion) {
       changes.push({
         name: rule.name,
         from: current,
-        to: rule.version,
+        to: targetVersion,
         operation: 'update',
         section: rule.section,
       });

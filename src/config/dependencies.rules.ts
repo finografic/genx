@@ -1,36 +1,39 @@
 import type { DependencyRule } from 'types/dependencies.types';
 
 /**
- * TODO: these version will get stale, and maintenance should be avoided..
- * The latest dependency versions should be installed, by either:
+ * Dependency version rules for template migrations.
  *
- * - fetching the latest version from the dependency's npm registry
- * - running pnpm update --latest to update the dependency to the latest version
- * - make version optional, therore fixed-version are possible also
+ * Version is optional - omit to install @latest.
+ * Specify a fixed version only when necessary (e.g., breaking changes).
+ *
+ * When migrating, versions are compared and newer versions are installed.
  */
 
 export const dependencyRules: DependencyRule[] = [
   // core tooling
-  { name: 'typescript', version: '^5.9.2', section: 'devDependencies' },
-  { name: 'tsdown', version: '^0.19.0', section: 'devDependencies' },
-  { name: 'vitest', version: '^4.0.16', section: 'devDependencies' },
-  { name: 'simple-git-hooks', version: '^2.13.1', section: 'devDependencies' },
-  { name: 'lint-staged', version: '^16.2.7', section: 'devDependencies' },
+  { name: 'typescript', section: 'devDependencies' },
+  { name: 'tsdown', section: 'devDependencies' },
+  { name: 'vitest', section: 'devDependencies' },
+  { name: 'simple-git-hooks', section: 'devDependencies' },
+  { name: 'lint-staged', section: 'devDependencies' },
 
   // eslint stack
-  { name: 'eslint', version: '^9.39.2', section: 'devDependencies' },
-  { name: '@eslint/js', version: '^9.39.2', section: 'devDependencies' },
-  { name: 'eslint-plugin-markdownlint', version: '^0.9.0', section: 'devDependencies' },
-  { name: '@stylistic/eslint-plugin', version: '^5.6.1', section: 'devDependencies' },
-  { name: '@typescript-eslint/parser', version: '^8.51.0', section: 'devDependencies' },
-  { name: '@typescript-eslint/eslint-plugin', version: '^8.51.0', section: 'devDependencies' },
-  { name: 'typescript-eslint', version: '^8.51.0', section: 'devDependencies' },
-  { name: 'eslint-plugin-markdownlint', version: '^0.9.0', section: 'devDependencies' },
-  { name: 'eslint-plugin-simple-import-sort', version: '^12.1.1', section: 'devDependencies' },
+  { name: 'eslint', section: 'devDependencies' },
+  { name: '@eslint/js', section: 'devDependencies' },
+  { name: 'eslint-plugin-markdownlint', section: 'devDependencies' },
+  { name: '@stylistic/eslint-plugin', section: 'devDependencies' },
+  { name: '@typescript-eslint/parser', section: 'devDependencies' },
+  { name: '@typescript-eslint/eslint-plugin', section: 'devDependencies' },
+  { name: 'typescript-eslint', section: 'devDependencies' },
+  { name: 'eslint-plugin-simple-import-sort', section: 'devDependencies' },
 
   // formatting
-  { name: '@finografic/dprint-config', version: '^0.8.0', section: 'devDependencies' },
+  { name: '@finografic/dprint-config', section: 'devDependencies' },
+
+  // commitlint
+  { name: '@commitlint/cli', section: 'devDependencies' },
+  { name: '@commitlint/config-conventional', section: 'devDependencies' },
 
   // finografic ecosystem
-  { name: '@finografic/project-scripts', version: '^8.2.0', section: 'devDependencies' },
+  { name: '@finografic/project-scripts', section: 'devDependencies' },
 ];

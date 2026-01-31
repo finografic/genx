@@ -18,6 +18,7 @@ import {
   ESLINT_MARKDOWN_CONFIG_BLOCK,
   ESLINT_MARKDOWN_IMPORTS,
   MARKDOWN_VSCODE_SETTINGS,
+  MARKDOWNLINT_CONFIG_KEY,
   MARKDOWNLINT_PACKAGE,
   MARKDOWNLINT_PACKAGE_VERSION,
   MARKDOWNLINT_VSCODE_EXTENSION,
@@ -46,14 +47,14 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
   const content = await readFile(eslintConfigPath, 'utf8');
 
   // Check if markdown config already exists
-  if (content.includes('eslint-plugin-markdownlint') || content.includes('files: [\'**/*.md\']')) {
+  if (content.includes(MARKDOWNLINT_PACKAGE) || content.includes('files: [\'**/*.md\']')) {
     return false;
   }
 
   let updatedContent = content;
 
   // Add imports if not present
-  if (!content.includes('eslint-plugin-markdownlint')) {
+  if (!content.includes(MARKDOWNLINT_PACKAGE)) {
     // Find the last import statement and add after it
     const importRegex = /^import .+ from ['"].+['"];?\s*$/gm;
     let lastImportMatch: RegExpExecArray | null = null;
@@ -118,8 +119,8 @@ async function addMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   }
 
   // Add markdownlint.config
-  if (!settings['markdownlint.config']) {
-    settings['markdownlint.config'] = MARKDOWN_VSCODE_SETTINGS['markdownlint.config'];
+  if (!settings[MARKDOWNLINT_CONFIG_KEY]) {
+    settings[MARKDOWNLINT_CONFIG_KEY] = MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY];
     modified = true;
   }
 
