@@ -18,6 +18,7 @@ const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
 
 /** Base template for .vscode/settings.json */
 const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
+  'npm.packageManager': 'pnpm',
   'editor.formatOnSave': true,
   'eslint.enable': true,
   'eslint.useFlatConfig': true,

@@ -15,15 +15,13 @@ export const MARKDOWNLINT_CONFIG_KEY = 'markdownlint.config';
 
 /**
  * VSCode settings for markdown language.
+ * Note: editor.codeActionsOnSave is inherited from global settings.
  */
 export const MARKDOWN_VSCODE_SETTINGS = {
   '[markdown]': {
     'editor.defaultFormatter': 'dprint.dprint',
     'files.trimTrailingWhitespace': false,
     'files.insertFinalNewline': true,
-    'editor.codeActionsOnSave': {
-      'source.fixAll.eslint': 'explicit',
-    },
   },
   'markdownlint.config': {
     default: true,
