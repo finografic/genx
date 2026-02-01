@@ -13,14 +13,14 @@ Code formatting via `@finografic/dprint-config`.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
+| File                  | Purpose                                     |
+| --------------------- | ------------------------------------------- |
 | `dprint.constants.ts` | Package names, scripts, language categories |
-| `dprint.detect.ts` | Check if dprint already installed |
-| `dprint.apply.ts` | Install + configure dprint |
-| `dprint.template.ts` | Generate `dprint.jsonc` content |
-| `dprint.vscode.ts` | VSCode settings logic (lang detection) |
-| `dprint.feature.ts` | Feature definition |
+| `dprint.detect.ts`    | Check if dprint already installed           |
+| `dprint.apply.ts`     | Install + configure dprint                  |
+| `dprint.template.ts`  | Generate `dprint.jsonc` content             |
+| `dprint.vscode.ts`    | VSCode settings logic (lang detection)      |
+| `dprint.feature.ts`   | Feature definition                          |
 
 ## Language Categories
 

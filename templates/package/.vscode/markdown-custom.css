@@ -33,8 +33,9 @@ body {
 /* Ensure monospace font for code */
 .markdown-body pre,
 .markdown-body code {
-  font-family: "Fira Code", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono",
-    Consolas, "Courier New", monospace !important;
+  font-family:
+    "Fira Code", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
+    monospace !important;
   font-size: 0.85em !important;
   border: none !important;
   line-height: 1.4 !important;

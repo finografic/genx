@@ -13,12 +13,12 @@ Markdown linting via `eslint-plugin-markdownlint`.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
+| File                    | Purpose                                     |
+| ----------------------- | ------------------------------------------- |
 | `markdown.constants.ts` | Package name, VSCode settings, ESLint block |
-| `markdown.detect.ts` | Check if markdownlint installed |
-| `markdown.apply.ts` | Install + configure |
-| `markdown.feature.ts` | Feature definition |
+| `markdown.detect.ts`    | Check if markdownlint installed             |
+| `markdown.apply.ts`     | Install + configure                         |
+| `markdown.feature.ts`   | Feature definition                          |
 
 ## VSCode Extension
 

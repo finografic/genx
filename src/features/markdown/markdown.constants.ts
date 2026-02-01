@@ -26,9 +26,9 @@ export const MARKDOWN_VSCODE_SETTINGS = {
     },
   },
   'markdownlint.config': {
-    'default': true,
-    'MD025': false, // Allow multiple top-level headings (useful for TODO files)
-    'MD041': false, // Don't require first line to be a top-level heading
+    default: true,
+    MD025: false, // Allow multiple top-level headings (useful for TODO files)
+    MD041: false, // Don't require first line to be a top-level heading
   },
 } as const;
 

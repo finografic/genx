@@ -9,9 +9,9 @@ Testing via Vitest.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `vitest.constants.ts` | Package name, version, scripts |
-| `vitest.detect.ts` | Check if vitest already installed |
-| `vitest.apply.ts` | Install + add scripts |
-| `vitest.feature.ts` | Feature definition |
+| File                  | Purpose                           |
+| --------------------- | --------------------------------- |
+| `vitest.constants.ts` | Package name, version, scripts    |
+| `vitest.detect.ts`    | Check if vitest already installed |
+| `vitest.apply.ts`     | Install + add scripts             |
+| `vitest.feature.ts`   | Feature definition                |

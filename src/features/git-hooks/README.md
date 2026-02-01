@@ -13,12 +13,12 @@ Pre-commit linting + conventional commits.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `git-hooks.constants.ts` | Package names, configs |
-| `git-hooks.detect.ts` | Check if lint-staged installed |
-| `git-hooks.apply.ts` | Install + configure |
-| `git-hooks.feature.ts` | Feature definition |
+| File                     | Purpose                        |
+| ------------------------ | ------------------------------ |
+| `git-hooks.constants.ts` | Package names, configs         |
+| `git-hooks.detect.ts`    | Check if lint-staged installed |
+| `git-hooks.apply.ts`     | Install + configure            |
+| `git-hooks.feature.ts`   | Feature definition             |
 
 ## Post-install
 

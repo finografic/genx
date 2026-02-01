@@ -66,10 +66,9 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
 
     if (lastImportMatch) {
       const insertPos = lastImportMatch.index + lastImportMatch[0].length;
-      updatedContent =
-        updatedContent.slice(0, insertPos) +
-        '\n' + ESLINT_MARKDOWN_IMPORTS +
-        updatedContent.slice(insertPos);
+      updatedContent = updatedContent.slice(0, insertPos)
+        + '\n' + ESLINT_MARKDOWN_IMPORTS
+        + updatedContent.slice(insertPos);
     }
   }
 
@@ -80,20 +79,18 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
 
   if (configEndMatch) {
     const insertPos = configEndMatch.index;
-    updatedContent =
-      updatedContent.slice(0, insertPos) +
-      '\n' + ESLINT_MARKDOWN_CONFIG_BLOCK +
-      updatedContent.slice(insertPos);
+    updatedContent = updatedContent.slice(0, insertPos)
+      + '\n' + ESLINT_MARKDOWN_CONFIG_BLOCK
+      + updatedContent.slice(insertPos);
   } else {
     // Try another pattern - just before `export default config`
     const altRegex = /\n\];\n\nexport default/;
     const altMatch = altRegex.exec(updatedContent);
     if (altMatch) {
       const insertPos = altMatch.index + 2; // After the newline, before ];
-      updatedContent =
-        updatedContent.slice(0, insertPos) +
-        ESLINT_MARKDOWN_CONFIG_BLOCK + '\n' +
-        updatedContent.slice(insertPos);
+      updatedContent = updatedContent.slice(0, insertPos)
+        + ESLINT_MARKDOWN_CONFIG_BLOCK + '\n'
+        + updatedContent.slice(insertPos);
     }
   }
 
@@ -142,11 +139,17 @@ async function copyMarkdownCss(targetDir: string): Promise<boolean> {
   }
 
   // Get the templates path relative to this file
-  const templatesPath = resolve(__dirname, '../../../../templates/package/.vscode/markdown-custom.css');
+  const templatesPath = resolve(
+    __dirname,
+    '../../../../templates/package/.vscode/markdown-custom.css',
+  );
 
   if (!fileExists(templatesPath)) {
     // Fallback: check if we're in dist
-    const distTemplatesPath = resolve(__dirname, '../../../templates/package/.vscode/markdown-custom.css');
+    const distTemplatesPath = resolve(
+      __dirname,
+      '../../../templates/package/.vscode/markdown-custom.css',
+    );
     if (fileExists(distTemplatesPath)) {
       await mkdir(dirname(destPath), { recursive: true });
       await copyFile(distTemplatesPath, destPath);

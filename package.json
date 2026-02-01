@@ -114,8 +114,15 @@
     "vitest": "^4.0.16"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,mjs,cjs}": [
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "dprint fmt",
       "eslint --fix"
+    ],
+    "*.{json,jsonc,md,yml,yaml,toml}": [
+      "dprint fmt"
     ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
   }
 }

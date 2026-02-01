@@ -9,9 +9,9 @@ AI coding assistant rules (GitHub Copilot instructions).
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `ai-rules.constants.ts` | File paths to copy |
-| `ai-rules.detect.ts` | Check if instructions exist |
-| `ai-rules.apply.ts` | Copy template files |
-| `ai-rules.feature.ts` | Feature definition |
+| File                    | Purpose                     |
+| ----------------------- | --------------------------- |
+| `ai-rules.constants.ts` | File paths to copy          |
+| `ai-rules.detect.ts`    | Check if instructions exist |
+| `ai-rules.apply.ts`     | Copy template files         |
+| `ai-rules.feature.ts`   | Feature definition          |
