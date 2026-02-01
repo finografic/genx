@@ -1,9 +1,9 @@
 import type { PackageConfig } from '@finografic/core';
 
 import type { FeatureId } from 'features/feature.types';
-import { promptAuthor } from 'prompts/author.prompt';
-import { promptFeatures } from 'prompts/features.prompt';
-import { promptPackageManifest } from 'prompts/package-manifest.prompt';
+import { promptAuthor } from 'src/lib/prompts/author.prompt';
+import { promptFeatures } from 'src/lib/prompts/features.prompt';
+import { promptPackageManifest } from 'src/lib/prompts/package-manifest.prompt';
 
 import { defaultValuesConfig } from 'config/values.config';
 import { cancel } from './prompts.utils';

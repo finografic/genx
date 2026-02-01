@@ -2,7 +2,7 @@ import { rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 import * as clack from '@clack/prompts';
-import { shouldRunSection } from 'migrate/migrate-metadata.utils';
+import { shouldRunSection } from 'src/lib/migrate/migrate-metadata.utils';
 
 import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils';
 import { migrateConfig } from 'config/migrate.config';

@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-import { ensureKeyword } from 'src/migrate/migrate-metadata.utils';
+import { ensureKeyword } from 'src/lib/migrate/migrate-metadata.utils';
 
 import { migrateConfig } from 'config/migrate.config';
 import type { PackageJson } from 'types/package-json.types';

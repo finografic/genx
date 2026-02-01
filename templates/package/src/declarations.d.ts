@@ -1,4 +1,3 @@
-// types/eslint-plugin-markdownlint.d.ts
 declare module 'eslint-plugin-markdownlint' {
   import type { Linter } from 'eslint';
   const plugin: Linter.Plugin;

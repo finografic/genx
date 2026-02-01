@@ -5,31 +5,31 @@ import { execa } from 'execa';
 import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
-import { parseMigrateArgs } from 'migrate/migrate-metadata.utils';
 import * as pc from 'picocolors';
-import { promptFeatures } from 'prompts/features.prompt';
-import {
-  confirmMerges,
-  confirmMigrateTarget,
-  confirmNodeVersionUpgrade,
-} from 'prompts/migrate.prompt';
-import { applyDependencyChanges, planDependencyChanges } from 'src/migrate/dependencies.utils';
-import { restructureDocs } from 'src/migrate/docs-restructure.utils';
-import { applyMerges } from 'src/migrate/merge.utils';
-import { getScopeAndName, shouldRunSection } from 'src/migrate/migrate-metadata.utils';
+import { applyDependencyChanges, planDependencyChanges } from 'src/lib/migrate/dependencies.utils';
+import { restructureDocs } from 'src/lib/migrate/docs-restructure.utils';
+import { applyMerges } from 'src/lib/migrate/merge.utils';
+import { parseMigrateArgs } from 'src/lib/migrate/migrate-metadata.utils';
+import { getScopeAndName, shouldRunSection } from 'src/lib/migrate/migrate-metadata.utils';
 import {
   applyNodeRuntimeChanges,
   applyNodeTypesChange,
   detectNodeMajor,
-} from 'src/migrate/node.utils';
+} from 'src/lib/migrate/node.utils';
 import {
   patchPackageJson,
   readPackageJson,
   writePackageJson,
-} from 'src/migrate/package-json.utils';
-import { planMigration } from 'src/migrate/plan.utils';
-import { applyRenames } from 'src/migrate/rename.utils';
-import { copyLicenseIfMissing, syncFromTemplate } from 'src/migrate/template-sync.utils';
+} from 'src/lib/migrate/package-json.utils';
+import { planMigration } from 'src/lib/migrate/plan.utils';
+import { applyRenames } from 'src/lib/migrate/rename.utils';
+import { copyLicenseIfMissing, syncFromTemplate } from 'src/lib/migrate/template-sync.utils';
+import { promptFeatures } from 'src/lib/prompts/features.prompt';
+import {
+  confirmMerges,
+  confirmMigrateTarget,
+  confirmNodeVersionUpgrade,
+} from 'src/lib/prompts/migrate.prompt';
 
 import { errorMessage, infoMessage, intro, renderHelp, spinner, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
