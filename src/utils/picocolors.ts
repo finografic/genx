@@ -1,8 +1,12 @@
 /**
  * Picocolors with ESM interop.
- * CJS "export =" is exposed as namespace.default when imported as ESM,
- * so we normalize to a single `pc` object for use across the app.
+ * CJS "export =" becomes namespace.default when Node loads it as ESM,
+ * so namespace.black is undefined. Use whichever has .black.
  */
-import * as pcNamespace from 'picocolors';
+import * as ns from 'picocolors';
 
-export const pc = (pcNamespace as { default?: typeof pcNamespace }).default ?? pcNamespace;
+const withDefault = (ns as { default?: unknown }).default;
+export const pc = typeof withDefault === 'object' && withDefault !== null
+    && typeof (withDefault as { black?: unknown }).black === 'function'
+  ? (withDefault as typeof ns)
+  : ns;
