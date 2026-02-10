@@ -13,21 +13,20 @@ export const MARKDOWNLINT_VSCODE_EXTENSION = 'davidanson.vscode-markdownlint';
 /** VSCode settings key for markdownlint config */
 export const MARKDOWNLINT_CONFIG_KEY = 'markdownlint.config';
 
+/** VSCode settings key for markdown preview styles */
+export const MARKDOWN_STYLES_KEY = 'markdown.styles';
+
 /**
- * VSCode settings for markdown language.
- * Note: editor.codeActionsOnSave is inherited from global settings.
+ * VSCode settings for markdown (markdownlint + preview styles only).
+ * Does NOT set [markdown] or dprint.dprint.
  */
 export const MARKDOWN_VSCODE_SETTINGS = {
-  '[markdown]': {
-    'editor.defaultFormatter': 'dprint.dprint',
-    'files.trimTrailingWhitespace': false,
-    'files.insertFinalNewline': true,
-  },
-  'markdownlint.config': {
+  [MARKDOWNLINT_CONFIG_KEY]: {
     default: true,
     MD025: false, // Allow multiple top-level headings (useful for TODO files)
     MD041: false, // Don't require first line to be a top-level heading
   },
+  [MARKDOWN_STYLES_KEY]: ['.vscode/markdown-github-light.css'],
 } as const;
 
 /**

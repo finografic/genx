@@ -17,6 +17,7 @@ import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
   ESLINT_MARKDOWN_CONFIG_BLOCK,
   ESLINT_MARKDOWN_IMPORTS,
+  MARKDOWN_STYLES_KEY,
   MARKDOWN_VSCODE_SETTINGS,
   MARKDOWNLINT_CONFIG_KEY,
   MARKDOWNLINT_PACKAGE,
@@ -104,20 +105,19 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
 
 /**
  * Add markdown settings to VSCode settings.json.
+ * Only adds markdownlint.config and markdown.styles (no [markdown] / dprint.dprint).
  */
 async function addMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   const settings = await readSettingsJson(targetDir);
   let modified = false;
 
-  // Add [markdown] language settings
-  if (!settings['[markdown]']) {
-    settings['[markdown]'] = MARKDOWN_VSCODE_SETTINGS['[markdown]'];
+  if (!settings[MARKDOWNLINT_CONFIG_KEY]) {
+    settings[MARKDOWNLINT_CONFIG_KEY] = MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY];
     modified = true;
   }
 
-  // Add markdownlint.config
-  if (!settings[MARKDOWNLINT_CONFIG_KEY]) {
-    settings[MARKDOWNLINT_CONFIG_KEY] = MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY];
+  if (!settings[MARKDOWN_STYLES_KEY]) {
+    settings[MARKDOWN_STYLES_KEY] = [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]];
     modified = true;
   }
 
@@ -128,39 +128,48 @@ async function addMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   return modified;
 }
 
-/**
- * Copy markdown-custom.css to target .vscode folder.
- */
-async function copyMarkdownCss(targetDir: string): Promise<boolean> {
-  const destPath = resolve(targetDir, '.vscode', 'markdown-custom.css');
+/** CSS files to copy from templates/package/.vscode to target .vscode */
+const MARKDOWN_CSS_FILES = ['markdown-custom.css', 'markdown-github-light.css'] as const;
 
+/**
+ * Copy one CSS file from templates/package/.vscode to target .vscode folder.
+ */
+async function copyMarkdownCssFile(
+  targetDir: string,
+  filename: (typeof MARKDOWN_CSS_FILES)[number],
+): Promise<boolean> {
+  const destPath = resolve(targetDir, '.vscode', filename);
   if (fileExists(destPath)) {
     return false;
   }
 
-  // Get the templates path relative to this file
-  const templatesPath = resolve(
-    __dirname,
-    '../../../../templates/package/.vscode/markdown-custom.css',
-  );
+  const templatesPath = resolve(__dirname, '../../../../templates/package/.vscode', filename);
+  const distTemplatesPath = resolve(__dirname, '../../../templates/package/.vscode', filename);
 
-  if (!fileExists(templatesPath)) {
-    // Fallback: check if we're in dist
-    const distTemplatesPath = resolve(
-      __dirname,
-      '../../../templates/package/.vscode/markdown-custom.css',
-    );
-    if (fileExists(distTemplatesPath)) {
-      await mkdir(dirname(destPath), { recursive: true });
-      await copyFile(distTemplatesPath, destPath);
-      return true;
-    }
+  const srcPath = fileExists(templatesPath)
+    ? templatesPath
+    : fileExists(distTemplatesPath)
+      ? distTemplatesPath
+      : null;
+  if (!srcPath) {
     return false;
   }
 
   await mkdir(dirname(destPath), { recursive: true });
-  await copyFile(templatesPath, destPath);
+  await copyFile(srcPath, destPath);
   return true;
+}
+
+/**
+ * Copy markdown CSS files (markdown-custom.css, markdown-github-light.css) to target .vscode folder.
+ */
+async function copyMarkdownCss(targetDir: string): Promise<boolean> {
+  let anyCopied = false;
+  for (const filename of MARKDOWN_CSS_FILES) {
+    const copied = await copyMarkdownCssFile(targetDir, filename);
+    if (copied) anyCopied = true;
+  }
+  return anyCopied;
 }
 
 /**
@@ -215,11 +224,11 @@ export async function applyMarkdown(context: FeatureContext): Promise<FeatureApp
     successMessage(`Added extension recommendation: ${MARKDOWNLINT_VSCODE_EXTENSION}`);
   }
 
-  // 5. Copy markdown-custom.css
+  // 5. Copy markdown CSS files from templates/package/.vscode
   const cssCopied = await copyMarkdownCss(context.targetDir);
   if (cssCopied) {
-    applied.push('.vscode/markdown-custom.css');
-    successMessage('Copied markdown-custom.css');
+    applied.push('.vscode/markdown-custom.css, markdown-github-light.css');
+    successMessage('Copied markdown CSS files to .vscode');
   }
 
   if (applied.length === 0) {

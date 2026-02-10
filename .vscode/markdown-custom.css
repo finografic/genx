@@ -1,89 +1,209 @@
-/* Custom Markdown Preview Styles */
+/* markdown-claude.css — Preview styles for Claude Code output markdown */
 
-/* Add padding to the container */
+:root {
+  --bg: #1a1b26;
+  --fg: #c0caf5;
+  --fg-dim: #565f89;
+  --accent: #7aa2f7;
+  --green: #9ece6a;
+  --red: #f7768e;
+  --yellow: #e0af68;
+  --cyan: #7dcfff;
+  --magenta: #bb9af7;
+  --orange: #ff9e64;
+  --border: #3b4261;
+  --code-bg: #24283b;
+  --blockquote-bg: #1f2335;
+  --blockquote-border: #3d59a1;
+}
+
 body {
-  padding: 2rem 3rem !important;
-  max-width: 100% !important;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
 }
 
-.markdown-body {
-  padding: 2rem 3rem !important;
+/* Headings */
+h1, h2, h3, h4 {
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+  margin-top: 2em;
 }
 
-/* Dark code blocks with light text */
-.markdown-body pre,
-.markdown-body pre code {
-  background-color: #2d2d2d !important;
-  color: #f8f8f2 !important;
+h1 { font-size: 1.6em; }
+h2 { font-size: 1.3em; color: var(--cyan); }
+h3 { font-size: 1.1em; color: var(--magenta); border-bottom: none; }
+
+/* User prompts */
+blockquote {
+  background: var(--blockquote-bg);
+  border-left: 3px solid var(--blockquote-border);
+  padding: 0.5em 1em;
+  margin: 1em 0;
+  border-radius: 0 4px 4px 0;
+}
+
+blockquote strong {
+  color: var(--cyan);
 }
 
 /* Inline code */
-.markdown-body code {
-  background-color: #f0f0f0 !important;
-  color: #333333 !important;
-  padding: 0.2em 0.4em !important;
+code {
+  background: var(--code-bg);
+  color: var(--orange);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
 }
 
-/* Code blocks - override inline code styling */
-.markdown-body pre code {
-  background-color: #2d2d2d !important;
-  color: #f8f8f2 !important;
+/* Code blocks */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 1em 0;
 }
 
-/* Ensure monospace font for code */
-.markdown-body pre,
-.markdown-body code {
-  font-family:
-    "Fira Code", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
-    monospace !important;
-  font-size: 0.85em !important;
-  border: none !important;
-  line-height: 1.4 !important;
+pre code {
+  background: none;
+  color: var(--fg);
+  padding: 0;
+  font-size: 0.85em;
 }
 
-/* Better contrast for syntax highlighting in dark code blocks */
-.markdown-body pre .hljs-comment,
-.markdown-body pre .hljs-quote {
-  color: #75715e !important;
+/* Diff highlighting */
+pre code .line-added,
+pre code .addition {
+  color: var(--green);
 }
 
-.markdown-body pre .hljs-keyword,
-.markdown-body pre .hljs-selector-tag,
-.markdown-body pre .hljs-subst {
-  color: #f92672 !important;
+pre code .line-removed,
+pre code .deletion {
+  color: var(--red);
 }
 
-.markdown-body pre .hljs-number,
-.markdown-body pre .hljs-literal,
-.markdown-body pre .hljs-variable,
-.markdown-body pre .hljs-template-variable,
-.markdown-body pre .hljs-tag .hljs-attr {
-  color: #ae81ff !important;
+/* Diff syntax: lines starting with + or - inside diff blocks */
+pre code {
+  display: block;
+  white-space: pre;
 }
 
-.markdown-body pre .hljs-string,
-.markdown-body pre .hljs-doctag {
-  color: #e6db74 !important;
+/* Style diff lines via CSS when using a markdown renderer that adds classes */
+.language-diff .line:has(+) { color: var(--green); }
+.language-diff .line:has(-) { color: var(--red); }
+
+/* Bold */
+strong {
+  color: var(--fg);
+  font-weight: 600;
 }
 
-.markdown-body pre .hljs-title,
-.markdown-body pre .hljs-section,
-.markdown-body pre .hljs-selector-id {
-  color: #a6e22e !important;
+/* Italic / timing */
+em {
+  color: var(--fg-dim);
+  font-style: italic;
 }
 
-.markdown-body pre .hljs-type,
-.markdown-body pre .hljs-class .hljs-title {
-  color: #66d9ef !important;
+/* Tables (rendered as code blocks with box-drawing) */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
 }
 
-/* Add some breathing room */
-.markdown-body h2 {
-  margin-top: 2em !important;
-  padding-top: 1em !important;
-  border-top: 1px solid #e1e4e8 !important;
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.4em 0.8em;
+  text-align: left;
 }
 
-.markdown-body h4 {
-  margin-top: 1.5em !important;
+th {
+  background: var(--code-bg);
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: var(--blockquote-bg);
+}
+
+/* Details/summary (collapsed tool output) */
+details {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin: 0.5em 0;
+  padding: 0;
+}
+
+details summary {
+  cursor: pointer;
+  padding: 0.5em 1em;
+  color: var(--fg-dim);
+  font-size: 0.9em;
+}
+
+details summary:hover {
+  color: var(--accent);
+}
+
+details > pre {
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 6px 6px;
+  margin: 0;
+}
+
+/* Horizontal rules */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+/* Lists */
+ul, ol {
+  padding-left: 1.5em;
+}
+
+li {
+  margin: 0.25em 0;
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Tool call styling */
+p > strong:first-child {
+  color: var(--green);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
 }
