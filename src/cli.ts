@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createRequire } from 'node:module';
 import process from 'node:process';
 
 import { renderHelp } from 'utils/render-help/render-help.utils.js';
@@ -9,6 +10,9 @@ import { migratePackage } from './commands/migrate.cli.js';
 import { rootHelp } from './help/root.help.js';
 import { safeExit } from './utils/env.utils.js';
 
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json') as { version: string };
+
 type CommandHandler = (argv: string[], context: { cwd: string }) => Promise<void> | void;
 
 async function main(): Promise<void> {
@@ -16,11 +20,16 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
   /* ────────────────────────────────────────────────────────── */
-  /* Root help only                                              */
+  /* Root help / version                                         */
   /* ────────────────────────────────────────────────────────── */
 
   if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
     renderHelp(rootHelp);
+    return;
+  }
+
+  if (argv[0] === '--version' || argv[0] === '-v') {
+    console.log(version);
     return;
   }
   const command = argv[0];
