@@ -156,6 +156,36 @@ function replaceBetweenMarkers(
   return `${before}\n\n${replacement}\n${after}`;
 }
 
+// ── Commands Reference section ────────────────────────────────────────
+
+/** Extra info not in helpConfig — maps command label to options column */
+const COMMAND_OPTIONS: Record<string, string> = {
+  create: 'Interactive prompts',
+  migrate: '`--write`, `--only=<sections>`',
+  features: 'Interactive prompts',
+  help: '-',
+};
+
+function generateCommandsRefSection(): string {
+  if (!rootHelp.commands) return '';
+
+  const lines: string[] = [];
+  lines.push('| Command | Description | Options |');
+  lines.push('| ------- | ----------- | ------- |');
+
+  for (const cmd of rootHelp.commands.list) {
+    const opts = COMMAND_OPTIONS[cmd.label] ?? '-';
+    lines.push(`| \`${cmd.label}\` | ${cmd.description} | ${opts} |`);
+  }
+
+  // Global flags
+  lines.push('| `--help` / `-h` | Show help (works with commands too) | - |');
+  lines.push('');
+  lines.push('See `genx <command> --help` for detailed usage.');
+
+  return lines.join('\n');
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
 const readmePath = path.join(ROOT, 'README.md');
@@ -173,6 +203,13 @@ readme = replaceBetweenMarkers(
   '<!-- GENERATED:FEATURES:START -->',
   '<!-- GENERATED:FEATURES:END -->',
   generateFeaturesSection(),
+);
+
+readme = replaceBetweenMarkers(
+  readme,
+  '<!-- GENERATED:COMMANDS_REF:START -->',
+  '<!-- GENERATED:COMMANDS_REF:END -->',
+  generateCommandsRefSection(),
 );
 
 fs.writeFileSync(readmePath, readme);
