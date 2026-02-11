@@ -8,7 +8,7 @@ import { cancel } from 'utils/prompts.utils';
  * Prompt user to select features.
  * Returns array of selected feature IDs, or null if cancelled.
  */
-export async function promptFeatures(): Promise<FeatureId[] | null> {
+export async function promptFeatures(initialValues?: FeatureId[]): Promise<FeatureId[] | null> {
   const options = features.map((feature) => ({
     value: feature.id,
     label: feature.label,
@@ -19,6 +19,7 @@ export async function promptFeatures(): Promise<FeatureId[] | null> {
     message: 'Select optional features:',
     options,
     required: false,
+    initialValues,
   });
 
   if (clack.isCancel(selected)) return cancel();

@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -101,6 +102,44 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
     await copyDir(templateDir, targetDir, vars, {
       ignore: selectedFeatures.has('aiRules') ? [] : createConfig.ignorePatterns.aiRules,
     });
+
+    // Apply package type effects
+    const pkgJsonPath = resolve(targetDir, 'package.json');
+    const pkgRaw = await readFile(pkgJsonPath, 'utf8');
+    const pkgJson = JSON.parse(pkgRaw) as Record<string, unknown>;
+
+    // Merge packageJsonDefaults (e.g. bin for CLI)
+    for (const [key, value] of Object.entries(config.packageType.packageJsonDefaults)) {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Replace __PKG_NAME__ placeholder in nested objects
+        const resolved = JSON.parse(
+          JSON.stringify(value).replace(/__PKG_NAME__/g, config.name),
+        );
+        pkgJson[key] = resolved;
+      } else {
+        pkgJson[key] = value;
+      }
+    }
+
+    // Add package type keywords
+    const existingKeywords = (pkgJson['keywords'] as string[]) || [];
+    const typeKeywords = [
+      `genx:type:${config.packageType.id}`,
+      ...config.packageType.keywords,
+    ];
+    pkgJson['keywords'] = [...existingKeywords, ...typeKeywords];
+
+    await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
+
+    // Create CLI entry point if type is CLI
+    if (config.packageType.entryPoints.includes('src/cli.ts')) {
+      const cliEntryPath = resolve(targetDir, 'src/cli.ts');
+      await writeFile(
+        cliEntryPath,
+        `#!/usr/bin/env node\n\nconsole.log('Hello from ${config.name}!');\n`,
+        'utf8',
+      );
+    }
 
     // Generate dprint.jsonc (do not store this in _templates/ to avoid dprint
     // resolving node_modules paths inside the template directory)
