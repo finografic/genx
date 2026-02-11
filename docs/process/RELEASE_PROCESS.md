@@ -80,11 +80,15 @@ After releasing, verify:
 
 ## Manual Steps
 
+**⚠️ Important:** The `release.publish` command is only for manual recovery if the automated GitHub Actions workflow fails. It will check if the current version is already published and prevent duplicate publishes.
+
 If the automated release fails, you can manually publish:
 
 ```bash
 pnpm release.publish
 ```
+
+**Note:** This command will fail if the version is already published. Use `release.github.patch/minor/major` to bump the version first.
 
 ## Troubleshooting
 
@@ -100,6 +104,24 @@ git push origin :refs/tags/v0.5.18
 # Try again
 pnpm release.github.patch
 ```
+
+### Version already published
+
+If you see `npm error You cannot publish over the previously published versions: X.Y.Z`:
+
+**This means the version is already published.** You have two options:
+
+1. **Use the release scripts (recommended):** These automatically bump the version before publishing:
+
+   ```bash
+   pnpm release.github.patch  # Bumps to next patch version
+   ```
+
+2. **Manual publish (only if GitHub Actions failed):** If you need to republish the same version (e.g., after fixing a build issue), you'll need to:
+   - Delete the existing tag (if it exists)
+   - Manually publish (but this is rare and not recommended)
+
+**The release scripts (`release.github.patch/minor/major`) will never have this problem** because they bump the version before pushing.
 
 ### release.check fails
 
