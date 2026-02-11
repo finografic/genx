@@ -37,6 +37,7 @@ export async function copyDir(
   vars: TemplateVars,
   options: {
     templateExtensions?: string[];
+    templateFiles?: string[];
     ignore?: string[];
   } = {},
 ): Promise<void> {
@@ -49,12 +50,14 @@ async function copyDirInternal(
   vars: TemplateVars,
   options: {
     templateExtensions?: string[];
+    templateFiles?: string[];
     ignore?: string[];
   },
   rootSrc: string,
 ): Promise<void> {
   const {
     templateExtensions = ['.json', '.ts', '.md', '.yml', '.yaml', '.mjs', '.js'],
+    templateFiles = ['LICENSE'],
     ignore = [],
   } = options;
 
@@ -73,7 +76,8 @@ async function copyDirInternal(
       await mkdir(destPath, { recursive: true });
       await copyDirInternal(srcPath, destPath, vars, options, rootSrc);
     } else if (entry.isFile()) {
-      const shouldTemplate = templateExtensions.some((ext) => entry.name.endsWith(ext));
+      const shouldTemplate = templateExtensions.some((ext) => entry.name.endsWith(ext))
+        || templateFiles.includes(entry.name);
 
       if (shouldTemplate) {
         await copyTemplate(srcPath, destPath, vars);
