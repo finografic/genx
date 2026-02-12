@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { execa } from 'execa';
+import { FORMATTING_SECTION_TITLE } from 'features/dprint/dprint.constants';
 import { ensureDprintConfig } from 'features/dprint/dprint.template';
 import { createHelp } from 'help/create.help';
 
@@ -135,6 +136,30 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       ...config.packageType.keywords,
     ];
     pkgJson['keywords'] = [...existingKeywords, ...typeKeywords];
+
+    // Strip dprint entries when dprint feature is not selected
+    if (!selectedFeatures.has('dprint')) {
+      const scripts = pkgJson['scripts'] as Record<string, string> | undefined;
+      if (scripts) {
+        delete scripts['update.dprint-config'];
+        delete scripts[FORMATTING_SECTION_TITLE];
+        delete scripts['format'];
+        delete scripts['format.check'];
+
+        if (scripts['release.check']) {
+          scripts['release.check'] = scripts['release.check'].replace('pnpm format.check && ', '');
+        }
+      }
+
+      const devDeps = pkgJson['devDependencies'] as Record<string, string> | undefined;
+      if (devDeps) {
+        delete devDeps['@finografic/dprint-config'];
+      }
+
+      pkgJson['lint-staged'] = {
+        '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'],
+      };
+    }
 
     await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
 
