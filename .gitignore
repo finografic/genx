@@ -12,7 +12,7 @@ build/
 .env.*.local
 
 # IDE
-.cursor/chat
+.cursor/chats
 .claude/
 !.claude/settings.json
 .idea/
