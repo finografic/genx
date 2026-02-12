@@ -2,7 +2,6 @@
   "name": "@finografic/genx",
   "type": "module",
   "version": "3.4.2",
-  "packageManager": "pnpm@10.8.0",
   "description": "Opinionated generator and codemod toolkit for the @finografic ecosystem.",
   "homepage": "https://github.com/finografic/genx",
   "repository": {
@@ -66,8 +65,7 @@
     "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
     "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
     "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
-    "release.publish.check": "tsx scripts/check-version-published.ts",
-    "release.publish": "pnpm run release.publish.check && pnpm publish --registry https://npm.pkg.github.com",
+    "release.publish": "pnpm publish --registry https://npm.pkg.github.com",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view @finografic/genx --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
@@ -86,7 +84,7 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.0-alpha.9",
+    "@clack/prompts": "1.0.0",
     "@finografic/core": "^0.9.2",
     "@finografic/genx": "link:",
     "clack-tree-select": "^1.0.8",
@@ -109,12 +107,14 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "lint-staged": "^16.2.7",
     "simple-git-hooks": "^2.13.1",
-    "tsdown": "^0.19.0",
+    "tsdown": "^0.20.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.51.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   },
+  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc",
+
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "dprint fmt --allow-no-files",
