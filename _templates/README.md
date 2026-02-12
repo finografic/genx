@@ -1,6 +1,6 @@
-# 🦋 **PACKAGE_NAME**
+# 🦋 ****PACKAGE_NAME****
 
-> **DESCRIPTION**
+> ****DESCRIPTION****
 
 ## Installation
 
@@ -37,4 +37,4 @@ pnpm lint
 
 ## License
 
-MIT © [**AUTHOR_NAME**](__AUTHOR_URL__)
+MIT © [****AUTHOR_NAME****](__AUTHOR_URL__)

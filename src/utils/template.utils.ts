@@ -26,7 +26,7 @@ export function buildTemplateVars(config: {
   name: string;
   scope: string;
   description: string;
-  author: { name: string; email: string };
+  author: { name: string; email: string; url: string };
 }): TemplateVars {
   const scopeWithAt = config.scope.startsWith('@') ? config.scope : `@${config.scope}`;
   return {
@@ -36,6 +36,7 @@ export function buildTemplateVars(config: {
     DESCRIPTION: config.description,
     AUTHOR_NAME: config.author.name,
     AUTHOR_EMAIL: config.author.email,
+    AUTHOR_URL: config.author.url,
     YEAR: new Date().getFullYear().toString(),
   };
 }

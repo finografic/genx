@@ -9,6 +9,7 @@ export interface DefaultValuesConfig {
   author: {
     name: string;
     email: string;
+    url: string;
   };
 
   /**
@@ -29,6 +30,7 @@ export const defaultValuesConfig: DefaultValuesConfig = {
   author: {
     name: 'Justin Rankin',
     email: 'justin.blair.rankin@gmail.com',
+    url: '',
   },
 
   /**

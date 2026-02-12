@@ -30,7 +30,8 @@ export async function promptCreatePackage(): Promise<PackageConfigWithFeatures |
   const manifest = await promptPackageManifest(defaultValuesConfig);
   if (!manifest) return cancel();
 
-  const author = await promptAuthor(defaultValuesConfig.author);
+  const scope = manifest.scope;
+  const author = await promptAuthor(defaultValuesConfig.author, scope);
   if (!author) return cancel();
 
   const features = await promptFeatures(packageType.defaultFeatures);
@@ -38,10 +39,7 @@ export async function promptCreatePackage(): Promise<PackageConfigWithFeatures |
 
   return {
     ...manifest,
-    author: {
-      ...author,
-      url: '', // Required by @finografic/core PackageConfig type, but not used in templates
-    },
+    author,
     features,
     packageType,
   };

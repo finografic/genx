@@ -161,7 +161,24 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       };
     }
 
+    // Conditionally add author.url to package.json
+    if (config.author.url) {
+      const author = pkgJson['author'] as Record<string, string>;
+      author['url'] = config.author.url;
+    }
+
     await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
+
+    // Conditionally strip author URL link from README when URL is blank
+    const readmePath = resolve(targetDir, 'README.md');
+    if (!config.author.url) {
+      const readmeContent = await readFile(readmePath, 'utf8');
+      const updated = readmeContent.replace(
+        /\[(\*\*[^*]+\*\*)\]\(__AUTHOR_URL__\)/,
+        '$1',
+      );
+      await writeFile(readmePath, updated, 'utf8');
+    }
 
     // Create CLI entry point if type is CLI
     if (config.packageType.entryPoints.includes('src/cli.ts')) {

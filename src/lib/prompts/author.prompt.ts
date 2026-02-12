@@ -5,21 +5,27 @@ import { emailSchema } from 'utils/validation.utils';
 export type Author = {
   name: string;
   email: string;
+  url: string;
 };
 
-type AuthorField = 'name' | 'email';
+type AuthorField = 'name' | 'email' | 'url';
 
 export async function promptAuthor(
   defaults: Author,
+  scope: string,
 ): Promise<Author | null> {
+  const scopeClean = scope.replace('@', '');
+  const urlSuggestion = defaults.url || `https://github.com/${scopeClean}`;
+
   const fields = await clack.autocompleteMultiselect<AuthorField>({
     message: 'Select author fields to edit',
     options: [
       { value: 'name', label: 'Name', hint: defaults.name },
       { value: 'email', label: 'Email', hint: defaults.email },
+      { value: 'url', label: 'URL', hint: urlSuggestion },
     ],
     placeholder: 'Type to filter fields...',
-    initialValues: ['name', 'email'],
+    initialValues: ['name', 'email', 'url'],
   });
 
   if (clack.isCancel(fields)) {
@@ -32,6 +38,7 @@ export async function promptAuthor(
 
   let name = defaults.name;
   let email = defaults.email;
+  let url = defaults.url;
 
   if (selected.has('name')) {
     const value = await clack.text({
@@ -57,7 +64,17 @@ export async function promptAuthor(
     email = value;
   }
 
-  return { name, email };
+  if (selected.has('url')) {
+    const value = await clack.text({
+      message: 'Author URL (leave blank to omit):',
+      initialValue: urlSuggestion,
+    });
+
+    if (clack.isCancel(value)) return cancel();
+    url = value.trim();
+  }
+
+  return { name, email, url };
 }
 
 function cancel(): null {
