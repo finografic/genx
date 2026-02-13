@@ -4,42 +4,46 @@ import type { Linter } from 'eslint';
 import markdownlintPlugin from 'eslint-plugin-markdownlint';
 import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import globals from 'globals';
 
-// NOTE: ALL @typescript-eslint/eslint-plugin (over 100 rules))
-// https://typescript-eslint.io/rules/
 import tseslint from 'typescript-eslint';
 
 const config: Linter.Config[] = [
+  {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/.cursor/**', '**/*.min.*', '**/*.map'],
+  },
+
   js.configs.recommended,
-  // tseslint.configs.strictTypeChecked, // ref: https://typescript-eslint.io/getting-started/typed-linting
-  // tseslint.configs.stylisticTypeChecked, // ref: https://typescript-eslint.io/getting-started/typed-linting
 
   {
-    ignores: ['dist/**', 'node_modules/**', '.cursor/**'],
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
+    },
   },
 
   {
-    files: ['**/*.ts', '**/*.tsx', './*.ts', './*.mjs'],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       parser: tseslint.parser,
-      // projectService: true, // ref: https://typescript-eslint.io/getting-started/typed-linting
       parserOptions: {
-        // Enable typed linting when you want it
-        // project: true,
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
       globals: {
-        console: 'readonly',
-        process: 'readonly',
-        fetch: 'readonly',
-        URL: 'readonly',
+        ...globals.node,
       },
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
       'simple-import-sort': simpleImportSort,
-      stylistic: stylistic,
+      stylistic,
     },
     rules: {
       // Disable base rules in favor of TS-aware ones
@@ -60,7 +64,6 @@ const config: Linter.Config[] = [
           ignoreRestSiblings: true,
         },
       ],
-
       '@typescript-eslint/no-redeclare': 'warn',
 
       // Stylistic
@@ -111,7 +114,7 @@ const config: Linter.Config[] = [
     ignores: [
       'node_modules/**',
       'dist/**',
-      '.cursor/chat/**',
+      '.cursor/**',
       '.github/instructions/**',
       '_templates/**/*.md',
     ],
@@ -120,7 +123,7 @@ const config: Linter.Config[] = [
     },
     plugins: {
       markdownlint: markdownlintPlugin as Linter.Processor,
-      stylistic: stylistic,
+      stylistic,
     },
     rules: {
       ...markdownlintPlugin.configs.recommended.rules,
@@ -130,7 +133,7 @@ const config: Linter.Config[] = [
       'markdownlint/md025': 'off', // Single h1
       'markdownlint/md026': 'off', // Trailing punctuation in heading
       'markdownlint/md029': 'off', // List style
-      'markdownlint/md036': 'off', // No mphasis as heading
+      'markdownlint/md036': 'off', // No emphasis as heading
       'markdownlint/md040': 'off', // Fenced code language
       'markdownlint/md041': 'off', // First line heading
       'markdownlint/md043': 'off', // Required heading structure

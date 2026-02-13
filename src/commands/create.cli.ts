@@ -8,6 +8,7 @@ import { FORMATTING_SECTION_TITLE } from 'features/dprint/dprint.constants';
 import { ensureDprintConfig } from 'features/dprint/dprint.template';
 import { createHelp } from 'help/create.help';
 
+import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
 import {
   buildTemplateVars,
   copyDir,
@@ -195,6 +196,13 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
     if (selectedFeatures.has('dprint')) {
       await ensureDprintConfig(targetDir);
     }
+
+    // Generate eslint.config.ts based on package type + selected features
+    const eslintContent = generateEslintConfig({
+      globals: config.packageType.eslint.globals,
+      markdown: selectedFeatures.has('markdown'),
+    });
+    await writeFile(resolve(targetDir, 'eslint.config.ts'), eslintContent, 'utf8');
 
     spin.stop('Project structure created');
   } catch (err) {

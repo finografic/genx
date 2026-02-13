@@ -18,6 +18,10 @@ npm run lint.fix -- "src/**/*.tsx"
 npm run lint -- path/to/file.tsx
 ```
 
+## Known Warnings (ignore)
+
+- `[@stylistic/eslint-plugin]: You are using deprecated options("overrides.arrow") in "type-annotation-spacing"` — WIP migration, ignore this warning.
+
 ## Disabled Rules (intentional)
 
 - `style/jsx-wrap-multilines`, `react/jsx-wrap-multilines` (Prettier governs formatting)
