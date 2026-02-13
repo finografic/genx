@@ -18,6 +18,10 @@ npm run lint.fix -- "src/**/*.tsx"
 npm run lint -- path/to/file.tsx
 ```
 
+## dprint
+
+- Always use `--allow-no-files` when running `dprint check` or `dprint fmt` on specific paths (some paths may be excluded by config).
+
 ## Known Warnings (ignore)
 
 - `[@stylistic/eslint-plugin]: You are using deprecated options("overrides.arrow") in "type-annotation-spacing"` — WIP migration, ignore this warning.
