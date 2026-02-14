@@ -5,7 +5,8 @@ export interface GeneratorContext {
   targetDir: string;
   config: PackageConfig;
   features: {
-    aiRules: boolean;
+    aiInstructions: boolean;
+    aiClaude: boolean;
     vitest: boolean;
     githubWorkflow: boolean;
   };

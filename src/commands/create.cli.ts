@@ -101,8 +101,13 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
 
     const vars = buildTemplateVars(config);
 
+    const ignorePatterns = [
+      ...(selectedFeatures.has('aiInstructions') ? [] : createConfig.ignorePatterns.aiInstructions),
+      ...(selectedFeatures.has('aiClaude') ? [] : createConfig.ignorePatterns.aiClaude),
+    ];
+
     await copyDir(templateDir, targetDir, vars, {
-      ignore: selectedFeatures.has('aiRules') ? [] : createConfig.ignorePatterns.aiRules,
+      ignore: ignorePatterns,
     });
 
     // Apply package type effects

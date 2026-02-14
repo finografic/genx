@@ -5,7 +5,8 @@ export type FeatureId =
   | 'dprint'
   | 'vitest'
   | 'githubWorkflow'
-  | 'aiRules'
+  | 'aiClaude'
+  | 'aiInstructions'
   | 'markdown'
   | 'gitHooks';
 

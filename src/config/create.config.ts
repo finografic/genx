@@ -17,8 +17,10 @@ export interface CreateConfig {
    * These are controlled by feature flags.
    */
   ignorePatterns: {
-    /** Ignore AI rules if not selected */
-    aiRules: string[];
+    /** Ignore AI instructions if not selected */
+    aiInstructions: string[];
+    /** Ignore Claude Code files if not selected */
+    aiClaude: string[];
   };
 }
 
@@ -31,7 +33,9 @@ export const createConfig: CreateConfig = {
    * These are controlled by feature flags.
    */
   ignorePatterns: {
-    /** Ignore AI rules if not selected */
-    aiRules: ['.github/copilot-instructions.md', '.github/instructions', 'CLAUDE.md', '.cursor'],
+    /** Ignore AI instructions if not selected */
+    aiInstructions: ['.github/copilot-instructions.md', '.github/instructions', '.cursor'],
+    /** Ignore Claude Code files if not selected */
+    aiClaude: ['CLAUDE.md', '.claude'],
   },
 };
