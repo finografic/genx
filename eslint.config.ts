@@ -51,7 +51,6 @@ const config: Linter.Config[] = [
       'no-redeclare': 'off',
       'no-console': 'off',
 
-      // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -66,7 +65,10 @@ const config: Linter.Config[] = [
       ],
       '@typescript-eslint/no-redeclare': 'warn',
 
-      'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
+      'stylistic/semi': ['error'],
+      'stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
+      'stylistic/no-trailing-spaces': 'error',
       'stylistic/object-curly-spacing': ['error', 'always'],
       'stylistic/comma-spacing': ['error', { before: false, after: true }],
       'stylistic/comma-dangle': ['error', 'always-multiline'],
@@ -78,7 +80,6 @@ const config: Linter.Config[] = [
         overrides: { arrow: { before: true, after: true } },
       }],
 
-      // Import sorting
       'simple-import-sort/imports': [
         'error',
         {

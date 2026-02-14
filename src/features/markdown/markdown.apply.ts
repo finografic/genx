@@ -48,7 +48,7 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
   const content = await readFile(eslintConfigPath, 'utf8');
 
   // Check if markdown config already exists
-  if (content.includes(MARKDOWNLINT_PACKAGE) || content.includes('files: [\'**/*.md\']')) {
+  if (content.includes(MARKDOWNLINT_PACKAGE) || content.includes("files: ['**/*.md']")) {
     return false;
   }
 
@@ -149,8 +149,8 @@ async function copyMarkdownCssFile(
   const srcPath = fileExists(templatesPath)
     ? templatesPath
     : fileExists(distTemplatesPath)
-      ? distTemplatesPath
-      : null;
+    ? distTemplatesPath
+    : null;
   if (!srcPath) {
     return false;
   }
@@ -227,7 +227,7 @@ export async function applyMarkdown(context: FeatureContext): Promise<FeatureApp
   // 5. Copy markdown CSS files from _templates/.vscode
   const cssCopied = await copyMarkdownCss(context.targetDir);
   if (cssCopied) {
-    applied.push('.vscode/markdown-custom-dark.css, markdown-github-light.css');
+    applied.push(`.vscode/${MARKDOWN_CSS_FILES.join(', ')}`);
     successMessage('Copied markdown CSS files to .vscode');
   }
 

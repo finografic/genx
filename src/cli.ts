@@ -15,11 +15,6 @@ const { version } = require('../package.json') as { version: string };
 
 type CommandHandler = (argv: string[], context: { cwd: string }) => Promise<void> | void;
 
-const TEST_MESSAGE_A = 'Hello from';
-const TEST_MESSAGE_B = 'git-cli';
-
-console.log(`${TEST_MESSAGE_A} ${TEST_MESSAGE_B}!`);
-
 async function main(): Promise<void> {
   const cwd = process.cwd();
   const argv = process.argv.slice(2);

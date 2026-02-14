@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { createHelp } from 'help/create.help';
-import { featuresHelp } from 'help/features.help';
-import { migrateHelp } from 'help/migrate.help';
-import { rootHelp } from 'help/root.help';
+import { createHelp } from '../src/help/create.help';
+import { featuresHelp } from '../src/help/features.help';
+import { migrateHelp } from '../src/help/migrate.help';
+import { rootHelp } from '../src/help/root.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 

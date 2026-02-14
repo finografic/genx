@@ -49,7 +49,6 @@ const config: Linter.Config[] = [
       'no-redeclare': 'off',
       'no-console': 'off',
 
-      // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -64,7 +63,6 @@ const config: Linter.Config[] = [
       ],
       '@typescript-eslint/no-redeclare': 'warn',
 
-      // Stylistic
       'stylistic/semi': ['error'],
       'stylistic/quotes': ['error', 'single'],
       'stylistic/indent': ['error', 2, { SwitchCase: 1 }],
@@ -82,7 +80,6 @@ const config: Linter.Config[] = [
         overrides: { arrow: { before: true, after: true } },
       }],
 
-      // Import sorting
       'simple-import-sort/imports': [
         'error',
         {
