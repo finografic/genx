@@ -1,7 +1,7 @@
 {
   "name": "@finografic/genx",
   "type": "module",
-  "version": "3.8.0",
+  "version": "3.7.0",
   "description": "Opinionated generator and codemod toolkit for the @finografic ecosystem.",
   "homepage": "https://github.com/finografic/genx",
   "repository": {
