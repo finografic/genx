@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   lint:
@@ -16,13 +17,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run dprint check
-        uses: dprint/check@v2.3
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: "@finografic"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -31,6 +31,14 @@ jobs:
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: ESLint
+      - name: Lint
         run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Format check
+        run: pnpm dprint check
