@@ -8,6 +8,9 @@ import { rootHelp } from '../src/help/root.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
+// IMPORTANT: to be migrated..
+// TODO: MAKE THIS A SCRIPT FOR 🦋 @finografic/project-scripts
+
 // ── Feature READMEs ──────────────────────────────────────────────────
 
 const FEATURE_DIRS = ['dprint', 'vitest', 'ai-rules', 'markdown', 'git-hooks'] as const;
