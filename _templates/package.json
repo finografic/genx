@@ -48,21 +48,16 @@
     "·········· LINTING": "···················································",
     "lint": "eslint .",
     "lint.fix": "eslint . --fix",
-    "·········· FORMATTING": "················································",
-    "format": "dprint fmt --diff",
-    "format.check": "dprint check",
     "·········· PUBLISH.GITHUB": "············································",
     "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
     "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
     "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
-    "release.check": "pnpm format.check && pnpm lint.fix && pnpm typecheck && pnpm test.run",
+    "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
     "release.publish": "pnpm publish --registry https://npm.pkg.github.com",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view __PACKAGE_NAME__ --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
     "update.eslint-config": "pnpm update @finografic/eslint-config --latest",
-    "update.dprint-config": "pnpm update @finografic/dprint-config --latest",
-    "update.project-scripts": "pnpm update @finografic/core --latest",
     "upgrade.deps.all": "pnpm update --latest",
     "·········· UTILS": "·····················································",
     "tsc.debug": "tsc --pretty --project tsconfig.json",
@@ -71,19 +66,14 @@
     "prepack": "pnpm build",
     "prepare": "simple-git-hooks"
   },
-  "dependencies": {
-    "@finografic/core": "^0.9.2"
-  },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
-    "@finografic/dprint-config": "^0.12.3",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.2",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
-    "dprint": "^0.51.1",
     "eslint": "9.39.2",
     "globals": "^17.3.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
@@ -96,11 +86,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
-      "dprint fmt --allow-no-files",
       "eslint --fix"
-    ],
-    "*.{json,jsonc,md,yml,yaml,toml}": [
-      "dprint fmt --allow-no-files"
     ]
   },
   "simple-git-hooks": {

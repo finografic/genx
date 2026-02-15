@@ -20,6 +20,11 @@ export const migrateConfig: MigrateConfig = {
     },
     {
       section: 'workflows',
+      templatePath: '.github/workflows/ci.yml',
+      targetPath: '.github/workflows/ci.yml',
+    },
+    {
+      section: 'workflows',
       templatePath: '.github/workflows/release.yml',
       targetPath: '.github/workflows/release.yml',
     },

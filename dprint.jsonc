@@ -3,5 +3,6 @@
   "extends": "node_modules/@finografic/dprint-config/dprint.jsonc",
   "excludes": [
     "_templates/**/*.md",
+    "_templates/**/*.css",
   ],
 }

@@ -21,9 +21,16 @@ import {
 import type { PackageJson } from 'types/package-json.types';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
+  DPRINT_CI_STEP,
+  DPRINT_CLI_PACKAGE,
+  DPRINT_CLI_VERSION,
   DPRINT_COVERED_STYLISTIC_RULES,
+  DPRINT_LINT_STAGED_CODE_PATTERN,
+  DPRINT_LINT_STAGED_COMMAND,
+  DPRINT_LINT_STAGED_DATA_PATTERN,
   DPRINT_PACKAGE,
   DPRINT_PACKAGE_VERSION,
+  DPRINT_UPDATE_SCRIPT,
   DPRINT_VSCODE_EXTENSION,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
@@ -242,6 +249,89 @@ async function addFormattingScripts(
 }
 
 /**
+ * Add the update.dprint-config script to the PACKAGES section of package.json.
+ */
+async function addUpdateScript(packageJsonPath: string): Promise<boolean> {
+  const raw = await readFile(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(raw) as PackageJson;
+
+  const scripts = packageJson.scripts ?? {};
+  if (scripts[DPRINT_UPDATE_SCRIPT.key]) return false;
+
+  scripts[DPRINT_UPDATE_SCRIPT.key] = DPRINT_UPDATE_SCRIPT.value;
+  packageJson.scripts = scripts;
+
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  return true;
+}
+
+/**
+ * Add `pnpm format.check &&` to the release.check script if not already present.
+ */
+async function addFormatToReleaseCheck(packageJsonPath: string): Promise<boolean> {
+  const raw = await readFile(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(raw) as PackageJson;
+
+  const scripts = packageJson.scripts ?? {};
+  const releaseCheck = scripts['release.check'];
+  if (!releaseCheck || releaseCheck.includes('format.check')) return false;
+
+  scripts['release.check'] = `pnpm format.check && ${releaseCheck}`;
+  packageJson.scripts = scripts;
+
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  return true;
+}
+
+/**
+ * Add dprint commands to lint-staged config in package.json.
+ * - Prepends `dprint fmt --allow-no-files` to the TS/JS pattern
+ * - Adds a new pattern for non-code files (json, md, yaml, toml)
+ */
+async function addDprintToLintStaged(packageJsonPath: string): Promise<boolean> {
+  const raw = await readFile(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(raw) as PackageJson;
+
+  const lintStaged = (packageJson['lint-staged'] ?? {}) as Record<string, string[]>;
+  let modified = false;
+
+  // Add dprint to TS/JS pattern (prepend so dprint formats before eslint fixes)
+  const codeCommands = lintStaged[DPRINT_LINT_STAGED_CODE_PATTERN];
+  if (Array.isArray(codeCommands) && !codeCommands.includes(DPRINT_LINT_STAGED_COMMAND)) {
+    lintStaged[DPRINT_LINT_STAGED_CODE_PATTERN] = [DPRINT_LINT_STAGED_COMMAND, ...codeCommands];
+    modified = true;
+  }
+
+  // Add non-code file pattern if not present
+  if (!lintStaged[DPRINT_LINT_STAGED_DATA_PATTERN]) {
+    lintStaged[DPRINT_LINT_STAGED_DATA_PATTERN] = [DPRINT_LINT_STAGED_COMMAND];
+    modified = true;
+  }
+
+  if (modified) {
+    packageJson['lint-staged'] = lintStaged;
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  }
+
+  return modified;
+}
+
+/**
+ * Add the format check step to ci.yml if present and not already there.
+ */
+async function addFormatCheckToCI(targetDir: string): Promise<boolean> {
+  const ciPath = resolve(targetDir, '.github/workflows/ci.yml');
+  if (!fileExists(ciPath)) return false;
+
+  const content = await readFile(ciPath, 'utf8');
+  if (content.includes('dprint check') || content.includes('format.check')) return false;
+
+  const updated = content.trimEnd() + DPRINT_CI_STEP;
+  await writeFile(ciPath, updated, 'utf8');
+  return true;
+}
+
+/**
  * Strip formatting-focused stylistic rules from eslint.config.ts.
  * dprint handles these; keeping them causes duplicate/conflicting enforcement.
  */
@@ -285,8 +375,8 @@ async function stripFormattingStylisticRules(targetDir: string): Promise<boolean
 /**
  * Apply dprint feature to an existing package.
  * Replaces Prettier if present (uninstall + backup configs), then installs
- * @finografic/dprint-config, creates dprint.jsonc, adds formatting scripts,
- * and configures VSCode settings.
+ * dprint + @finografic/dprint-config, creates dprint.jsonc, adds formatting scripts,
+ * configures lint-staged and CI, and configures VSCode settings.
  */
 export async function applyDprint(context: FeatureContext): Promise<FeatureApplyResult> {
   const applied: string[] = [];
@@ -302,24 +392,25 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     successMessage(`Backed up Prettier config: ${replaceResult.backedUp.join(', ')}`);
   }
 
-  // 1. Install @finografic/dprint-config
+  // 1. Install dprint CLI + @finografic/dprint-config
   try {
-    const alreadyDeclared = await isDependencyDeclared(context.targetDir, DPRINT_PACKAGE);
-    if (!alreadyDeclared) {
-      const installSpin = spinner();
-      installSpin.start(`Installing ${DPRINT_PACKAGE}...`);
-      const installResult = await installDevDependency(
-        context.targetDir,
-        DPRINT_PACKAGE,
-        DPRINT_PACKAGE_VERSION,
-      );
-      installSpin.stop(
-        installResult.installed
-          ? `Installed ${DPRINT_PACKAGE}`
-          : `${DPRINT_PACKAGE} already installed`,
-      );
-      if (installResult.installed) {
-        applied.push(DPRINT_PACKAGE);
+    for (
+      const [pkg, version] of [
+        [DPRINT_CLI_PACKAGE, DPRINT_CLI_VERSION],
+        [DPRINT_PACKAGE, DPRINT_PACKAGE_VERSION],
+      ] as const
+    ) {
+      const alreadyDeclared = await isDependencyDeclared(context.targetDir, pkg);
+      if (!alreadyDeclared) {
+        const installSpin = spinner();
+        installSpin.start(`Installing ${pkg}...`);
+        const installResult = await installDevDependency(context.targetDir, pkg, version);
+        installSpin.stop(
+          installResult.installed ? `Installed ${pkg}` : `${pkg} already installed`,
+        );
+        if (installResult.installed) {
+          applied.push(pkg);
+        }
       }
     }
   } catch (err) {
@@ -343,7 +434,33 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     successMessage('Added formatting scripts to package.json');
   }
 
-  // 4. Configure VSCode extension recommendation
+  // 4. Add update.dprint-config script
+  const addedUpdateScript = await addUpdateScript(packageJsonPath);
+  if (addedUpdateScript) {
+    successMessage('Added update.dprint-config script');
+  }
+
+  // 5. Add pnpm format.check to release.check script
+  const addedFormatToRelease = await addFormatToReleaseCheck(packageJsonPath);
+  if (addedFormatToRelease) {
+    successMessage('Added format.check to release.check script');
+  }
+
+  // 6. Add dprint to lint-staged config
+  const addedToLintStaged = await addDprintToLintStaged(packageJsonPath);
+  if (addedToLintStaged) {
+    applied.push('lint-staged (dprint entries)');
+    successMessage('Added dprint to lint-staged config');
+  }
+
+  // 7. Add format check step to CI workflow
+  const addedToCI = await addFormatCheckToCI(context.targetDir);
+  if (addedToCI) {
+    applied.push('ci.yml (format check step)');
+    successMessage('Added format check step to CI workflow');
+  }
+
+  // 8. Configure VSCode extension recommendation
   const addedExtensions = await addExtensionRecommendations(context.targetDir, [
     DPRINT_VSCODE_EXTENSION,
   ]);
@@ -352,7 +469,7 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     successMessage(`Added extension recommendation: ${DPRINT_VSCODE_EXTENSION}`);
   }
 
-  // 5. Configure VSCode language formatter settings (based on project dependencies)
+  // 9. Configure VSCode language formatter settings (based on project dependencies)
   const languages = await getDprintLanguages(context.targetDir);
   const settingsResult = await addLanguageFormatterSettings(
     context.targetDir,
@@ -371,7 +488,7 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     }
   }
 
-  // 6. Add dprint-specific VSCode settings
+  // 10. Add dprint-specific VSCode settings
   const dprintSettingsModified = await applyDprintVSCodeSettings(context.targetDir);
   if (dprintSettingsModified) {
     if (!applied.includes('.vscode/settings.json')) {
@@ -380,7 +497,7 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     successMessage('Added dprint settings to VSCode');
   }
 
-  // 7. Strip formatting stylistic rules from eslint config (dprint handles these)
+  // 11. Strip formatting stylistic rules from eslint config (dprint handles these)
   const strippedRules = await stripFormattingStylisticRules(context.targetDir);
   if (strippedRules) {
     applied.push('eslint.config.ts (removed dprint-covered stylistic rules)');

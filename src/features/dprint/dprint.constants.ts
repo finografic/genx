@@ -12,6 +12,10 @@
 export const DPRINT_PACKAGE = '@finografic/dprint-config';
 export const DPRINT_PACKAGE_VERSION = 'latest';
 
+/** dprint CLI package (peer dependency of @finografic/dprint-config) */
+export const DPRINT_CLI_PACKAGE = 'dprint';
+export const DPRINT_CLI_VERSION = '^0.51.1';
+
 /** VSCode extension ID for dprint */
 export const DPRINT_VSCODE_EXTENSION = 'dprint.dprint';
 
@@ -49,6 +53,26 @@ export const FORMATTING_SCRIPTS = {
   format: 'dprint fmt --diff',
   'format.check': 'dprint check',
 };
+
+/** Script to update @finografic/dprint-config to latest */
+export const DPRINT_UPDATE_SCRIPT = {
+  key: 'update.dprint-config',
+  value: 'pnpm update @finografic/dprint-config --latest',
+};
+
+/**
+ * lint-staged entries added by dprint.
+ * Prepended to TS/JS pattern, and a new pattern for non-code files.
+ */
+export const DPRINT_LINT_STAGED_COMMAND = 'dprint fmt --allow-no-files';
+export const DPRINT_LINT_STAGED_CODE_PATTERN = '*.{ts,tsx,js,jsx,mjs,cjs}';
+export const DPRINT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,md,yml,yaml,toml}';
+
+/** CI workflow format check step (appended to ci.yml) */
+export const DPRINT_CI_STEP = `
+      - name: Format check
+        run: pnpm dprint check
+`;
 
 /**
  * Language categories for dprint VSCode settings.
