@@ -74,7 +74,7 @@ export function renderFooterNote(
   const title = footer.title;
   const content = footer.list
     .map((item) =>
-      item.description ? `${pc.white(item.label)}  ${item.description}` : `${pc.white(item.label)}`,
+      item.description ? `${pc.white(item.label)}  ${item.description}` : `${pc.white(item.label)}`
     )
     .join('\n');
 

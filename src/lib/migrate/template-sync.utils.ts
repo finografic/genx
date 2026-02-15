@@ -20,7 +20,7 @@ export async function syncFromTemplate(
   only: Set<MigrateOnlySection> | null,
 ): Promise<void> {
   const syncTasks = migrateConfig.syncFromTemplate.filter((item) =>
-    shouldRunSection(only, item.section),
+    shouldRunSection(only, item.section)
   );
 
   if (syncTasks.length === 0) {

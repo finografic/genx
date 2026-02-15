@@ -71,7 +71,7 @@ const config: Linter.Config[] = [
       'stylistic/no-trailing-spaces': 'error',
       'stylistic/object-curly-spacing': ['error', 'always'],
       'stylistic/comma-spacing': ['error', { before: false, after: true }],
-      'stylistic/comma-dangle': ['error', 'always-multiline'],
+      'stylistic/comma-dangle': ['error', 'only-multiline'],
       'stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
       'stylistic/arrow-spacing': ['error', { before: true, after: true }],
       'stylistic/type-annotation-spacing': ['error', {
