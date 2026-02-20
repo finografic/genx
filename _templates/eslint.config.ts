@@ -1,3 +1,4 @@
+/// <reference path="./src/declarations.d.ts" />
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import type { Linter } from 'eslint';

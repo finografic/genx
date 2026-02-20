@@ -35,8 +35,6 @@
   },
   "include": [
     "src/**/*",
-    "eslint.config.ts",
-    "_templates/eslint.config.ts",
     "_templates/src/declarations.d.ts"
   ],
   "exclude": ["node_modules", "dist"]
