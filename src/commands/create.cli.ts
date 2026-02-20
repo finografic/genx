@@ -7,6 +7,7 @@ import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { createHelp } from 'help/create.help';
 
+import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
 import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
 import {
   buildTemplateVars,
@@ -161,7 +162,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       await writeFile(readmePath, updated, 'utf8');
     }
 
-    // Create CLI entry point if type is CLI
+    // Create CLI entry point and help file if type is CLI
     if (config.packageType.entryPoints.includes('src/cli.ts')) {
       const cliEntryPath = resolve(targetDir, 'src/cli.ts');
       await writeFile(
@@ -169,6 +170,18 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
         `#!/usr/bin/env node\n\nconsole.log('Hello from ${config.name}!');\n`,
         'utf8',
       );
+
+      // Generate *.help.ts (standard @finografic CLI help format)
+      const helpPath = resolve(targetDir, `src/${config.name}.help.ts`);
+      await writeFile(helpPath, generateCliHelpContent(config.name), 'utf8');
+
+      // Ensure picocolors is in dependencies (required by the help file)
+      const deps = (pkgJson['dependencies'] ?? {}) as Record<string, string>;
+      if (!deps['picocolors']) {
+        deps['picocolors'] = '^1.1.1';
+        pkgJson['dependencies'] = deps;
+        await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
+      }
     }
 
     // Generate eslint.config.ts based on package type + selected features

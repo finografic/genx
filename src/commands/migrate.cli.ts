@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import * as clack from '@clack/prompts';
@@ -6,6 +8,11 @@ import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
 
+import {
+  generateCliHelpContent,
+  getBinName,
+  isCliPackage,
+} from 'lib/generators/cli-help.generator';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { restructureDocs } from 'lib/migrate/docs-restructure.utils';
 import { applyMerges } from 'lib/migrate/merge.utils';
@@ -126,6 +133,16 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     for (const line of plan) {
       clack.log.info(`- ${line}`);
     }
+
+    // CLI-type: check if help file needs to be created
+    if (isCliPackage(packageJson)) {
+      const binName = getBinName(packageJson, parsed.name);
+      const helpFilePath = resolve(targetDir, `src/${binName}.help.ts`);
+      if (!existsSync(helpFilePath)) {
+        clack.log.info(`- Would create src/${binName}.help.ts (CLI project)`);
+      }
+    }
+
     infoMessage(
       `${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${
         pc.greenBright('--write')
@@ -269,6 +286,26 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   } else if (noopMessages.length > 0) {
     for (const msg of noopMessages) {
       infoMessage(msg);
+    }
+  }
+
+  // For CLI-type packages: ensure *.help.ts exists
+  if (isCliPackage(updatedPackageJson)) {
+    const binName = getBinName(updatedPackageJson, parsed.name);
+    const helpFilePath = resolve(targetDir, `src/${binName}.help.ts`);
+
+    if (!existsSync(helpFilePath)) {
+      await writeFile(helpFilePath, generateCliHelpContent(binName), 'utf8');
+      successMessage(`Created src/${binName}.help.ts`);
+
+      // Ensure picocolors is in dependencies (required by the help file)
+      const deps = (updatedPackageJson['dependencies'] ?? {}) as Record<string, string>;
+      if (!deps['picocolors']) {
+        deps['picocolors'] = '^1.1.1';
+        updatedPackageJson['dependencies'] = deps;
+        await writePackageJson(packageJsonPath, updatedPackageJson);
+        hasDependencyChanges = true;
+      }
     }
   }
 
