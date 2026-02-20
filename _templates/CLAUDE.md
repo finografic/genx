@@ -18,6 +18,10 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 
 - Do not include `Co-Authored-By` lines in commit messages.
 
+<!-- NOTE: CLI projects (genx:type:cli keyword in package.json) only -->
+
+- When adding a command, update the `commands` array in `src/[binary].help.ts` and add a matching entry to the `EXAMPLES` section.
+
 ## Session Memory
 
 Claude Code maintains a lightweight session log at `.claude/memory.md` (gitignored).
