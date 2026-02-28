@@ -2,8 +2,6 @@ import { readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
 
 import {
-  addExtensionRecommendations,
-  addLanguageFormatterSettings,
   errorMessage,
   fileExists,
   installDevDependency,
@@ -31,7 +29,6 @@ import {
   DPRINT_PACKAGE,
   DPRINT_PACKAGE_VERSION,
   DPRINT_UPDATE_SCRIPT,
-  DPRINT_VSCODE_EXTENSION,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
   PRETTIER_CONFIG_FILES,
@@ -39,7 +36,11 @@ import {
   PRETTIER_PACKAGES,
 } from './dprint.constants';
 import { ensureDprintConfig } from './dprint.template';
-import { applyDprintVSCodeSettings, getDprintLanguages } from './dprint.vscode';
+import {
+  applyDprintExtensions,
+  applyDprintFormatterSettings,
+  applyDprintVSCodeSettings,
+} from './dprint.vscode';
 
 /**
  * Convert a glob pattern (e.g., "*prettier-plugin-*") to a regex for matching package names.
@@ -461,21 +462,14 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
   }
 
   // 8. Configure VSCode extension recommendation
-  const addedExtensions = await addExtensionRecommendations(context.targetDir, [
-    DPRINT_VSCODE_EXTENSION,
-  ]);
+  const addedExtensions = await applyDprintExtensions(context.targetDir);
   if (addedExtensions.length > 0) {
     applied.push('.vscode/extensions.json');
-    successMessage(`Added extension recommendation: ${DPRINT_VSCODE_EXTENSION}`);
+    successMessage(`Added extension recommendation: ${addedExtensions.join(', ')}`);
   }
 
   // 9. Configure VSCode language formatter settings (based on project dependencies)
-  const languages = await getDprintLanguages(context.targetDir);
-  const settingsResult = await addLanguageFormatterSettings(
-    context.targetDir,
-    languages,
-    DPRINT_VSCODE_EXTENSION,
-  );
+  const settingsResult = await applyDprintFormatterSettings(context.targetDir);
   if (settingsResult.addedLanguages.length > 0 || settingsResult.disabledPrettier) {
     applied.push('.vscode/settings.json');
     if (settingsResult.disabledPrettier) {

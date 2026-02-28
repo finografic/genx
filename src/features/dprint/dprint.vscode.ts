@@ -5,11 +5,17 @@
  * configured for dprint based on project dependencies.
  */
 
-import { hasAnyDependency, readSettingsJson, writeSettingsJson } from 'utils';
+import {
+  addExtensionRecommendations,
+  addLanguageFormatterSettings,
+  hasAnyDependency,
+  readSettingsJson,
+  writeSettingsJson,
+} from 'utils';
 import {
   DPRINT_CATEGORY_DEPENDENCIES,
   DPRINT_LANGUAGE_CATEGORIES,
-  DPRINT_VSCODE_EXTENSION,
+  DPRINT_VSCODE_EXTENSIONS,
   type DprintLanguageCategory,
 } from './dprint.constants';
 
@@ -60,6 +66,25 @@ export async function getDprintLanguages(targetDir: string): Promise<string[]> {
 }
 
 /**
+ * Add dprint extension recommendations to .vscode/extensions.json.
+ * Returns the list of extensions that were actually added.
+ */
+export async function applyDprintExtensions(targetDir: string): Promise<string[]> {
+  return addExtensionRecommendations(targetDir, [...DPRINT_VSCODE_EXTENSIONS]);
+}
+
+/**
+ * Configure dprint as the default formatter for applicable languages in .vscode/settings.json.
+ * Language list is determined by project dependencies.
+ */
+export async function applyDprintFormatterSettings(
+  targetDir: string,
+): Promise<{ addedLanguages: string[]; disabledPrettier: boolean }> {
+  const languages = await getDprintLanguages(targetDir);
+  return addLanguageFormatterSettings(targetDir, languages, DPRINT_VSCODE_EXTENSIONS[0]);
+}
+
+/**
  * Apply dprint-specific VSCode settings (experimentalLsp, verbose).
  */
 export async function applyDprintVSCodeSettings(
@@ -82,11 +107,4 @@ export async function applyDprintVSCodeSettings(
   }
 
   return modified;
-}
-
-/**
- * Get the dprint extension ID.
- */
-export function getDprintExtensionId(): string {
-  return DPRINT_VSCODE_EXTENSION;
 }

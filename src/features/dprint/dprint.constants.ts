@@ -16,8 +16,8 @@ export const DPRINT_PACKAGE_VERSION = 'latest';
 export const DPRINT_CLI_PACKAGE = 'dprint';
 export const DPRINT_CLI_VERSION = '^0.51.1';
 
-/** VSCode extension ID for dprint */
-export const DPRINT_VSCODE_EXTENSION = 'dprint.dprint';
+/** VSCode extension IDs for dprint */
+export const DPRINT_VSCODE_EXTENSIONS = ['dprint.dprint'] as const;
 
 /**
  * Exact Prettier-related package names to uninstall when replacing with dprint.

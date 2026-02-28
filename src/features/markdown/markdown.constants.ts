@@ -7,8 +7,8 @@ import { PKG_ESLINT_MARKDOWNLINT } from 'config/constants.config';
 export const MARKDOWNLINT_PACKAGE = PKG_ESLINT_MARKDOWNLINT;
 export const MARKDOWNLINT_PACKAGE_VERSION = 'latest';
 
-/** VSCode extension ID for markdownlint */
-export const MARKDOWNLINT_VSCODE_EXTENSION = 'davidanson.vscode-markdownlint';
+/** VSCode extension IDs for markdownlint */
+export const MARKDOWNLINT_VSCODE_EXTENSIONS = ['davidanson.vscode-markdownlint'] as const;
 
 /** VSCode settings key for markdownlint config */
 export const MARKDOWNLINT_CONFIG_KEY = 'markdownlint.config';

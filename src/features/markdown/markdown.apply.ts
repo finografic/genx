@@ -2,7 +2,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import {
-  addExtensionRecommendations,
   fileExists,
   installDevDependency,
   isDependencyDeclared,
@@ -16,9 +15,12 @@ import {
   ESLINT_MARKDOWN_IMPORTS,
   MARKDOWNLINT_PACKAGE,
   MARKDOWNLINT_PACKAGE_VERSION,
-  MARKDOWNLINT_VSCODE_EXTENSION,
 } from './markdown.constants';
-import { applyMarkdownVSCodeSettings, copyMarkdownCss } from './markdown.vscode';
+import {
+  applyMarkdownExtensions,
+  applyMarkdownVSCodeSettings,
+  copyMarkdownCss,
+} from './markdown.vscode';
 
 /**
  * Find the eslint config file in the target directory.
@@ -140,12 +142,10 @@ export async function applyMarkdown(context: FeatureContext): Promise<FeatureApp
   }
 
   // 4. Add markdownlint extension recommendation
-  const addedExtensions = await addExtensionRecommendations(context.targetDir, [
-    MARKDOWNLINT_VSCODE_EXTENSION,
-  ]);
+  const addedExtensions = await applyMarkdownExtensions(context.targetDir);
   if (addedExtensions.length > 0) {
     applied.push('.vscode/extensions.json');
-    successMessage(`Added extension recommendation: ${MARKDOWNLINT_VSCODE_EXTENSION}`);
+    successMessage(`Added extension recommendation: ${addedExtensions.join(', ')}`);
   }
 
   // 5. Copy markdown CSS files from _templates/.vscode

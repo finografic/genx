@@ -1,6 +1,6 @@
 import type { Feature } from '../feature.types';
 import { applyDprint } from './dprint.apply';
-import { DPRINT_VSCODE_EXTENSION } from './dprint.constants';
+import { DPRINT_VSCODE_EXTENSIONS } from './dprint.constants';
 import { detectDprint } from './dprint.detect';
 
 /**
@@ -11,7 +11,7 @@ export const dprintFeature: Feature = {
   label: 'dprint formatting (extends @finografic/dprint-config)',
   hint: 'recommended',
   vscode: {
-    extensions: [DPRINT_VSCODE_EXTENSION],
+    extensions: [...DPRINT_VSCODE_EXTENSIONS],
   },
   detect: detectDprint,
   apply: applyDprint,

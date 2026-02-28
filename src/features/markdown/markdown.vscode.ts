@@ -9,17 +9,31 @@ import { copyFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { fileExists, readSettingsJson, writeSettingsJson } from 'utils';
+import {
+  addExtensionRecommendations,
+  fileExists,
+  readSettingsJson,
+  writeSettingsJson,
+} from 'utils';
 import {
   MARKDOWN_STYLES_KEY,
   MARKDOWN_VSCODE_SETTINGS,
   MARKDOWNLINT_CONFIG_KEY,
+  MARKDOWNLINT_VSCODE_EXTENSIONS,
 } from './markdown.constants';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** CSS files to copy from _templates/.vscode to target .vscode */
 const MARKDOWN_CSS_FILES = ['markdown-custom-dark.css', 'markdown-github-light.css'] as const;
+
+/**
+ * Add markdownlint extension recommendations to .vscode/extensions.json.
+ * Returns the list of extensions that were actually added.
+ */
+export async function applyMarkdownExtensions(targetDir: string): Promise<string[]> {
+  return addExtensionRecommendations(targetDir, [...MARKDOWNLINT_VSCODE_EXTENSIONS]);
+}
 
 /**
  * Add markdown settings to VSCode settings.json.

@@ -1,6 +1,6 @@
 import type { Feature } from '../feature.types';
 import { applyMarkdown } from './markdown.apply';
-import { MARKDOWNLINT_VSCODE_EXTENSION } from './markdown.constants';
+import { MARKDOWNLINT_VSCODE_EXTENSIONS } from './markdown.constants';
 import { detectMarkdown } from './markdown.detect';
 
 /**
@@ -11,7 +11,7 @@ export const markdownFeature: Feature = {
   label: 'Markdown linting (eslint-plugin-markdownlint)',
   hint: 'recommended',
   vscode: {
-    extensions: [MARKDOWNLINT_VSCODE_EXTENSION],
+    extensions: [...MARKDOWNLINT_VSCODE_EXTENSIONS],
   },
   detect: detectMarkdown,
   apply: applyMarkdown,
