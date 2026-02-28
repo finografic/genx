@@ -2,7 +2,8 @@
   "recommendations": [
     "davidanson.vscode-markdownlint",
     "dbaeumer.vscode-eslint",
-    "dprint.dprint"
+    "dprint.dprint",
+    "yzhang.markdown-all-in-one"
   ],
   "unwantedRecommendations": []
 }

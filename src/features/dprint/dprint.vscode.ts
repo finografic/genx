@@ -49,7 +49,7 @@ export async function detectEnabledCategories(
  * Get the list of language IDs that should be configured for dprint
  * based on project dependencies.
  */
-export async function getDprintLanguages(targetDir: string): Promise<string[]> {
+async function getDprintLanguages(targetDir: string): Promise<string[]> {
   const categories = await detectEnabledCategories(targetDir);
   const languages: string[] = [];
 
