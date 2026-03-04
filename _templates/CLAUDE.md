@@ -14,6 +14,10 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 - [Variable Naming](/.github/instructions/07-variable-naming.instructions.md)
 - [README Standards](/.github/instructions/08-readme-standards.instructions.md)
 
+## Project Rules
+
+Project-specific rules live in `.github/instructions/project/`. Add `*.instructions.md` files there and link them here.
+
 ## Project-Specific
 
 - Do not include `Co-Authored-By` lines in commit messages.
