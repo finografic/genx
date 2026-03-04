@@ -22,7 +22,7 @@ import {
 /**
  * Determine which language categories should be enabled based on project dependencies.
  */
-export async function detectEnabledCategories(
+async function detectEnabledCategories(
   targetDir: string,
 ): Promise<DprintLanguageCategory[]> {
   const enabledCategories: DprintLanguageCategory[] = [];

@@ -1,8 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { isDependencyDeclared } from 'utils';
-import { fileExists } from 'utils/fs.utils';
+import { fileExists, isDependencyDeclared } from 'utils';
 import type { PackageJson } from 'types/package-json.types';
 import type { FeatureContext } from '../feature.types';
 import { VITEST_PACKAGE } from './vitest.constants';

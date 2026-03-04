@@ -11,7 +11,7 @@ export const markdownFeature: Feature = {
   label: 'Markdown linting (eslint-plugin-markdownlint)',
   hint: 'recommended',
   vscode: {
-    extensions: [...MARKDOWNLINT_VSCODE_EXTENSIONS],
+    extensions: MARKDOWNLINT_VSCODE_EXTENSIONS,
   },
   detect: detectMarkdown,
   apply: applyMarkdown,

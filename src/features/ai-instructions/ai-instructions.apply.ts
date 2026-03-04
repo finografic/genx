@@ -1,10 +1,10 @@
-import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { copyDir, copyTemplate, errorMessage, fileExists, spinner, successMessage } from 'utils';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+import { createDefaultTemplateVars } from '../feature.utils';
 import { AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
 
 /**
@@ -21,44 +21,35 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
   const cursorDest = resolve(context.targetDir, cursorDir);
 
   const copilotExists = fileExists(copilotDest);
-  const instructionsExist = existsSync(instructionsDest);
-  const cursorExists = existsSync(cursorDest);
+  const instructionsExist = fileExists(instructionsDest);
+  const cursorExists = fileExists(cursorDest);
 
   if (copilotExists && instructionsExist && cursorExists) {
     return { applied, noopMessage: 'AI instructions already installed. No changes made.' };
   }
 
-  // Get template directory
+  const templateVars = createDefaultTemplateVars();
+
   const fromDir = fileURLToPath(new URL('.', import.meta.url));
   const templateDir = getTemplatesDir(fromDir);
-
-  const templateVars = {
-    SCOPE: '',
-    NAME: '',
-    PACKAGE_NAME: '',
-    YEAR: new Date().getFullYear().toString(),
-    DESCRIPTION: '',
-    AUTHOR_NAME: '',
-    AUTHOR_EMAIL: '',
-  };
 
   const copySpin = spinner();
   copySpin.start('Copying AI instructions...');
 
   try {
-    // Copy copilot-instructions.md
+    // 1. Copy .github/copilot-instructions.md
     if (!copilotExists) {
       await copyTemplate(resolve(templateDir, copilotFile), copilotDest, templateVars);
       applied.push(copilotFile);
     }
 
-    // Copy instructions directory
+    // 2. Copy .github/instructions/ directory
     if (!instructionsExist) {
       await copyDir(resolve(templateDir, instructionsDir), instructionsDest, templateVars);
       applied.push(instructionsDir);
     }
 
-    // Copy .cursor/rules directory
+    // 3. Copy .cursor/rules/ directory
     if (!cursorExists) {
       await copyDir(resolve(templateDir, cursorDir), cursorDest, templateVars);
       applied.push(cursorDir);

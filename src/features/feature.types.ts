@@ -35,7 +35,7 @@ export interface FeatureApplyResult {
  */
 export interface FeatureVSCodeConfig {
   /** VSCode extension IDs to recommend (e.g., "dprint.dprint") */
-  extensions?: string[];
+  extensions?: readonly string[];
 }
 
 /**

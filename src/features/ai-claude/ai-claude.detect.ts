@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 
-import { fileExists } from 'utils/fs.utils';
+import { fileExists } from 'utils';
 import type { FeatureContext } from '../feature.types';
 import { AI_CLAUDE_FILES } from './ai-claude.constants';
 
