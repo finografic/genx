@@ -11,7 +11,14 @@ import tseslint from 'typescript-eslint';
 
 const config: Linter.Config[] = [
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/.cursor/**', '**/*.min.*', '**/*.map'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.cursor/**',
+      '**/.claude/**',
+      '**/*.min.*',
+      '**/*.map',
+    ],
   },
 
   js.configs.recommended,
@@ -78,7 +85,7 @@ const config: Linter.Config[] = [
       'stylistic/type-annotation-spacing': ['error', {
         before: false,
         after: true,
-        overrides: { arrow: { before: true, after: true } },
+        overrides: { arrow: 'ignore' },
       }],
 
       'simple-import-sort/imports': [
