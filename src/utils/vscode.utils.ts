@@ -22,6 +22,7 @@ const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'editor.formatOnSave': true,
   'eslint.enable': true,
   'eslint.useFlatConfig': true,
+  'typescript.tsdk': 'node_modules/typescript/lib',
 };
 
 /**
