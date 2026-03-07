@@ -22,7 +22,8 @@ These rules are specific to `@finografic/genx` and not shared with other project
 
 ## Project-Specific
 
-- Do not include `Co-Authored-By` lines in commit messages.
+- IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
+-
 
 <!-- NOTE: @finografic/genx only -->
 
