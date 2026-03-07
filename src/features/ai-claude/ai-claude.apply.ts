@@ -6,8 +6,12 @@ import { copyTemplate, errorMessage, fileExists, spinner, successMessage } from 
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { applyAiInstructions } from '../ai-instructions/ai-instructions.apply';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
-import { createDefaultTemplateVars } from '../feature.utils';
-import { AI_CLAUDE_FILES, AI_CLAUDE_GITIGNORE_LINES } from './ai-claude.constants';
+import { addEslintIgnorePatterns, createDefaultTemplateVars } from '../feature.utils';
+import {
+  AI_CLAUDE_ESLINT_IGNORES,
+  AI_CLAUDE_FILES,
+  AI_CLAUDE_GITIGNORE_LINES,
+} from './ai-claude.constants';
 
 /**
  * Read name and description from the target project's package.json.
@@ -99,6 +103,13 @@ export async function applyAiClaude(context: FeatureContext): Promise<FeatureApp
       successMessage('Added .claude entries to .gitignore');
     }
 
+    // Ensure eslint ignore even if all files exist
+    const eslintAdded = await addEslintIgnorePatterns(context.targetDir, AI_CLAUDE_ESLINT_IGNORES);
+    if (eslintAdded.length > 0) {
+      applied.push('eslint.config.ts (.claude ignore)');
+      successMessage('Added **/.claude/** to eslint.config.ts ignores');
+    }
+
     if (applied.length === 0) {
       return { applied, noopMessage: 'Claude Code support already installed. No changes made.' };
     }
@@ -168,6 +179,13 @@ export async function applyAiClaude(context: FeatureContext): Promise<FeatureApp
   if (gitignoreUpdated) {
     applied.push('.gitignore (.claude entries)');
     successMessage('Added .claude entries to .gitignore');
+  }
+
+  // 7. Add .claude ignore to eslint.config.ts
+  const eslintAdded = await addEslintIgnorePatterns(context.targetDir, AI_CLAUDE_ESLINT_IGNORES);
+  if (eslintAdded.length > 0) {
+    applied.push('eslint.config.ts (.claude ignore)');
+    successMessage('Added **/.claude/** to eslint.config.ts ignores');
   }
 
   return { applied };

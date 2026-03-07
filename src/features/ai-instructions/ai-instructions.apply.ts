@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { copyDir, copyTemplate, errorMessage, fileExists, spinner, successMessage } from 'utils';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
-import { createDefaultTemplateVars } from '../feature.utils';
-import { AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
+import { addEslintIgnorePatterns, createDefaultTemplateVars } from '../feature.utils';
+import { AI_INSTRUCTIONS_ESLINT_IGNORES, AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
 
 /**
  * Apply AI Instructions feature to an existing package.
@@ -25,7 +25,20 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
   const cursorExists = fileExists(cursorDest);
 
   if (copilotExists && instructionsExist && cursorExists) {
-    return { applied, noopMessage: 'AI instructions already installed. No changes made.' };
+    // Ensure eslint ignore even if all files exist
+    const eslintAdded = await addEslintIgnorePatterns(
+      context.targetDir,
+      AI_INSTRUCTIONS_ESLINT_IGNORES,
+    );
+    if (eslintAdded.length > 0) {
+      applied.push('eslint.config.ts (.cursor ignore)');
+      successMessage('Added **/.cursor/** to eslint.config.ts ignores');
+    }
+
+    if (applied.length === 0) {
+      return { applied, noopMessage: 'AI instructions already installed. No changes made.' };
+    }
+    return { applied };
   }
 
   const templateVars = createDefaultTemplateVars();
@@ -65,6 +78,16 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
     const error = err instanceof Error ? err : new Error('Unknown error');
     errorMessage(error.message);
     return { applied, error };
+  }
+
+  // 4. Add .cursor ignore to eslint.config.ts
+  const eslintAdded = await addEslintIgnorePatterns(
+    context.targetDir,
+    AI_INSTRUCTIONS_ESLINT_IGNORES,
+  );
+  if (eslintAdded.length > 0) {
+    applied.push('eslint.config.ts (.cursor ignore)');
+    successMessage('Added **/.cursor/** to eslint.config.ts ignores');
   }
 
   return { applied };

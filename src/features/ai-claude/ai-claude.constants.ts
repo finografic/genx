@@ -17,3 +17,6 @@ export const AI_CLAUDE_GITIGNORE_LINES = [
   '.claude/',
   '!.claude/settings.json',
 ] as const;
+
+/** ESLint ignore patterns added when this feature is installed */
+export const AI_CLAUDE_ESLINT_IGNORES = ['**/.claude/**'] as const;

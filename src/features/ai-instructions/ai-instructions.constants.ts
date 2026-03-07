@@ -10,3 +10,6 @@ export const AI_INSTRUCTIONS_FILES = [
   '.github/instructions',
   '.cursor/rules',
 ] as const;
+
+/** ESLint ignore patterns added when this feature is installed */
+export const AI_INSTRUCTIONS_ESLINT_IGNORES = ['**/.cursor/**'] as const;
