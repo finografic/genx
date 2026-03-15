@@ -50,10 +50,17 @@
   "[html]": {
     "editor.defaultFormatter": "dprint.dprint"
   },
+  "[markdown]": {
+    "editor.defaultFormatter": "dprint.dprint",
+    "editor.formatOnSave": true
+  },
 
   "markdownlint.config": {
     "default": true,
+    "MD013": { "line_length": 120, "tables": false, "code_blocks": false }, // Allow line length (useful for TODO files)
+    "MD024": false, // Allow duplicate headings (useful for TODO files)
     "MD025": false, // Allow multiple top-level headings (useful for TODO files)
+    "MD040": false, // Allow fenced code blocks (useful for TODO files)
     "MD041": false // Don't require first line to be a top-level heading
   },
   "markdown.styles": [

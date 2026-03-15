@@ -225,7 +225,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
   try {
     await execa('git', ['init'], { cwd: targetDir });
     await execa('git', ['add', '.'], { cwd: targetDir });
-    await execa('git', ['commit', '-m', 'chore: initial commit'], {
+    await execa('git', ['commit', '-m', '🌱 Genesis'], {
       cwd: targetDir,
     });
     gitSpin.stop('Git repository initialized');
