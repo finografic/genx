@@ -20,8 +20,10 @@ const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
 const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'npm.packageManager': 'pnpm',
   'editor.formatOnSave': true,
+  'editor.codeActionsOnSave': { 'source.fixAll.eslint': 'explicit' },
   'eslint.enable': true,
   'eslint.useFlatConfig': true,
+  'eslint.validate': ['javascript', 'typescript'],
   'typescript.tsdk': 'node_modules/typescript/lib',
 };
 

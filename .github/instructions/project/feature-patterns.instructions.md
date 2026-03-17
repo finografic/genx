@@ -6,11 +6,39 @@ These rules apply when adding or modifying features in `src/features/`. Each fea
 
 ```
 src/features/{feature}/
+  README.md                # Required — appears as a section in the root README
   {feature}.constants.ts   # All constants for the feature
   {feature}.detect.ts      # Detection: is this feature already installed?
   {feature}.feature.ts     # Feature definition: exports the Feature object
   {feature}.apply.ts       # Apply logic: installs/configures the feature
   {feature}.vscode.ts      # VSCode-specific logic (only if needed)
+```
+
+## `README.md` (required)
+
+Every feature folder **must** include a `README.md`. These are rendered as sections in the root `README.md` via `pnpm docs.usage`.
+
+Structure:
+
+```markdown
+# {feature}
+
+One-line description of what the feature provides.
+
+## What it does
+
+- Bullet list of side effects (installs, creates, configures)
+
+## Files
+
+| File                     | Purpose |
+| ------------------------ | ------- |
+| `{feature}.constants.ts` | ...     |
+| ...                      | ...     |
+
+## VSCode Extension ← only if applicable
+
+`publisher.extension-id`
 ```
 
 ## `{feature}.constants.ts`

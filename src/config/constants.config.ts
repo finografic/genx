@@ -25,6 +25,8 @@ export const COMMITLINT_CONFIG = 'commitlint.config.mjs';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PKG_ESLINT_MARKDOWNLINT = 'eslint-plugin-markdownlint';
+export const PKG_STYLELINT = 'stylelint';
+export const PKG_STYLELINT_STYLISTIC = '@stylistic/stylelint-plugin';
 export const PKG_COMMITLINT_CLI = '@commitlint/cli';
 export const PKG_COMMITLINT_CONFIG = '@commitlint/config-conventional';
 export const PKG_LINT_STAGED = 'lint-staged';

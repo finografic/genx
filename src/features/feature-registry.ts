@@ -1,5 +1,6 @@
 import { aiClaudeFeature } from './ai-claude/ai-claude.feature';
 import { aiInstructionsFeature } from './ai-instructions/ai-instructions.feature';
+import { cssFeature } from './css/css.feature';
 import { dprintFeature } from './dprint/dprint.feature';
 import { gitHooksFeature } from './git-hooks/git-hooks.feature';
 import { markdownFeature } from './markdown/markdown.feature';
@@ -13,6 +14,7 @@ import type { Feature, FeatureId } from './feature.types';
 export const features: Feature[] = [
   dprintFeature,
   vitestFeature,
+  cssFeature,
   aiInstructionsFeature,
   aiClaudeFeature,
   markdownFeature,

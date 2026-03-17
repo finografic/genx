@@ -8,7 +8,8 @@ export type FeatureId =
   | 'aiClaude'
   | 'aiInstructions'
   | 'markdown'
-  | 'gitHooks';
+  | 'gitHooks'
+  | 'css';
 
 /**
  * Context passed to feature detection and application.
