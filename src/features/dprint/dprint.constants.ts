@@ -50,8 +50,8 @@ export const PRETTIER_CONFIG_FILES = [
 
 export const FORMATTING_SECTION_TITLE = '·········· FORMATTING';
 export const FORMATTING_SCRIPTS = {
-  format: 'dprint fmt --diff',
   'format.check': 'dprint check',
+  'format.fix': 'dprint fmt --diff',
 };
 
 /** Script to update @finografic/dprint-config to latest */

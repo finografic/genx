@@ -79,7 +79,8 @@ const config: Linter.Config[] = [
 
       'stylistic/semi': ['error'],
       'stylistic/quotes': ['error', 'single', { avoidEscape: true }],
-      'stylistic/indent': ['warn', 2, { SwitchCase: 1 }],
+      // TODO: REMOVE `ConditionalExpression` WHEN oxfmt IS ADDED TO
+      'stylistic/indent': ['warn', 2, { SwitchCase: 1, ignoredNodes: ['ConditionalExpression'] }],
       'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 1 }],
       'stylistic/no-multi-spaces': ['warn', { exceptions: { Property: true } }],
       'stylistic/no-trailing-spaces': 'warn',

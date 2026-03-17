@@ -4,5 +4,6 @@
   "excludes": [
     "_templates/**/*.md",
     "_templates/**/*.css",
+    ".github/instructions/**",
   ],
 }

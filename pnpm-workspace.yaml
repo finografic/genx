@@ -1,7 +1,2 @@
-onlyBuiltDependencies:
-  - dprint
-  - esbuild
-  - simple-git-hooks
-
-overrides:
-  "@finografic/genx": "link:"
+allowBuilds:
+  dprint: true

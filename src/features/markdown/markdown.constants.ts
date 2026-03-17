@@ -23,11 +23,12 @@ export const MARKDOWN_STYLES_KEY = 'markdown.styles';
 export const MARKDOWN_VSCODE_SETTINGS = {
   [MARKDOWNLINT_CONFIG_KEY]: {
     default: true,
-    MD013: { line_length: 120, tables: false, code_blocks: false }, // Allow line length (useful for TODO files)
-    MD024: false, // Allow duplicate headings (useful for TODO files)
-    MD025: false, // Allow multiple top-level headings (useful for TODO files)
-    MD040: false, // Allow fenced code blocks (useful for TODO files)
+    MD013: { line_length: 120, tables: false, code_blocks: false }, // Allow line length
+    MD024: false, // Allow duplicate headings
+    MD025: false, // Allow multiple top-level headings
+    MD040: false, // Allow fenced code blocks
     MD041: false, // Don't require first line to be a top-level heading
+    MD060: { style: 'aligned' }, // Allow heading indentation
   },
   [MARKDOWN_STYLES_KEY]: ['.vscode/markdown-github-light.css'],
 } as const;

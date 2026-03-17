@@ -78,8 +78,8 @@ async function copyMarkdownCssFile(
   const srcPath = fileExists(templatesPath)
     ? templatesPath
     : fileExists(distTemplatesPath)
-      ? distTemplatesPath
-      : null;
+    ? distTemplatesPath
+    : null;
   if (!srcPath) {
     return false;
   }

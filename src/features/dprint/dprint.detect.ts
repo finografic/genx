@@ -7,7 +7,7 @@ import type { FeatureContext } from '../feature.types';
 import { DPRINT_PACKAGE } from './dprint.constants';
 
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
-  return 'format' in scripts || 'format.check' in scripts;
+  return 'format.check' in scripts || 'format.fix' in scripts;
 }
 
 /**

@@ -20,7 +20,18 @@ npm run lint -- path/to/file.tsx
 
 ## dprint
 
-- Always use `--allow-no-files` when running `dprint check` or `dprint fmt` on specific paths (some paths may be excluded by config).
+**CRITICAL — dprint command semantics (agents get this wrong constantly):**
+
+| Command | Effect | Output |
+| ------- | ------ | ------ |
+| `dprint check` | **Check only** — never modifies files, exits non-zero if unformatted | Verbose diff by default |
+| `dprint fmt` | **Fix** — rewrites files in place, exits zero even when changes are made | Silent by default |
+| `dprint fmt --diff` | Fix + show diff of what changed | Verbose |
+
+- These two commands are NOT interchangeable. Never use `dprint fmt` to verify/gate —
+  it will silently fix and exit 0.
+- Use project scripts: `pnpm format.check` to verify (blocks on failure), `pnpm format.fix` to fix.
+- Always use `--allow-no-files` when running either command on specific paths (some paths may be excluded by config).
 
 ## Known Warnings (ignore)
 
