@@ -1,30 +1,10 @@
-# Claude Code Instructions
+@AGENTS.md
 
-Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
+# Claude-specific Instructions
 
-## Rule Files
+## Rules - Claude
 
-- [General](/.github/instructions/00-general.instructions.md)
-- [File Naming](/.github/instructions/01-file-naming.instructions.md)
-- [TypeScript Patterns](/.github/instructions/02-typescript-patterns.instructions.md)
-- [Provider & Context Patterns](/.github/instructions/03-provider-context-patterns.instructions.md)
-- [ESLint & Code Style](/.github/instructions/04-eslint-code-style.instructions.md)
-- [Documentation](/.github/instructions/05-documentation.instructions.md)
-- [Modern TypeScript Patterns](/.github/instructions/06-modern-typescript-patterns.instructions.md)
-- [Variable Naming](/.github/instructions/07-variable-naming.instructions.md)
-- [README Standards](/.github/instructions/08-readme-standards.instructions.md)
-
-## Project Rules
-
-Project-specific rules live in `.github/instructions/project/`. Add `*.instructions.md` files there and link them here.
-
-## Project-Specific
-
-- IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
--
-<!-- NOTE: CLI projects (genx:type:cli keyword in package.json) only -->
-
-- When adding a command, update the `commands` array in `src/[binary].help.ts` and add a matching entry to the `EXAMPLES` section.
+- Do not include `Co-Authored-By` lines in commit messages.
 
 ## Session Memory
 

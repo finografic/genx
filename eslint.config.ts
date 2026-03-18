@@ -150,7 +150,7 @@ const config: Linter.Config[] = [
       'markdownlint/md043': 'off', // Required heading structure
 
       // Formatting consistency
-      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
+      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 0 }],
       'stylistic/no-trailing-spaces': 'error',
       'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
     },
