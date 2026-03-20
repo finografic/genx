@@ -21,12 +21,12 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
+      "_templates/*": ["./_templates/*"],
       "commands/*": ["./src/commands/*"],
       "config/*": ["./src/config/*"],
       "features/*": ["./src/features/*"],
       "help/*": ["./src/help/*"],
-      "lib/*": ["src/lib/*"],
-      "_templates/*": ["./_templates/*"],
+      "lib/*": ["./src/lib/*"],
       "types": ["./src/types"],
       "types/*": ["./src/types/*"],
       "utils": ["./src/utils"],
@@ -37,5 +37,5 @@
     "src/**/*",
     "_templates/src/declarations.d.ts"
   ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "_templates", "!_templates/src/declarations.d.ts"]
 }

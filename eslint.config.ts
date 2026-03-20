@@ -2,6 +2,7 @@
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import type { Linter } from 'eslint';
+import { globalIgnores } from 'eslint/config';
 import markdownlintPlugin from 'eslint-plugin-markdownlint';
 import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -9,17 +10,24 @@ import globals from 'globals';
 
 import tseslint from 'typescript-eslint';
 
+// export default defineConfig([
 const config: Linter.Config[] = [
-  {
-    ignores: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.cursor/**',
-      '**/.claude/**',
-      '**/*.min.*',
-      '**/*.map',
-    ],
-  },
+  globalIgnores([
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/.cursor/**',
+    '**/.claude/**',
+    // '_templates/**/*.{ts,tsx}',
+  ]),
+
+  // {
+  //   ignores: [
+  //     '**/node_modules/**',
+  //     '**/dist/**',
+  //     '**/.cursor/**',
+  //     '**/.claude/**',
+  //   ],
+  // },
 
   js.configs.recommended,
 
@@ -36,6 +44,9 @@ const config: Linter.Config[] = [
 
   {
     files: ['**/*.{ts,tsx}'],
+    ignores: [
+      '_templates/feature/**',
+    ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -89,11 +100,11 @@ const config: Linter.Config[] = [
       'stylistic/comma-dangle': ['error', 'only-multiline'],
       'stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
       'stylistic/arrow-spacing': ['error', { before: true, after: true }],
-      'stylistic/type-annotation-spacing': ['error', {
-        before: false,
-        after: true,
-        overrides: { arrow: 'ignore' },
-      }],
+      // 'stylistic/type-annotation-spacing': ['error', {
+      //   before: false,
+      //   after: true,
+      //   // overrides: { 'arrow': 'ignore' },
+      // }],
 
       'simple-import-sort/imports': [
         'error',
@@ -124,8 +135,9 @@ const config: Linter.Config[] = [
     ignores: [
       'node_modules/**',
       'dist/**',
-      '.cursor/**',
-      '.github/instructions/**',
+      '.github/**/*.md',
+      '.claude/**/*.md',
+      '.cursor/**/*.md',
       '_templates/**/*.md',
       '**/CLAUDE.md',
     ],
@@ -136,8 +148,10 @@ const config: Linter.Config[] = [
       markdownlint: markdownlintPlugin as Linter.Processor,
       stylistic,
     },
+    // processor: markdownlintPlugin.processors.markdown,
     rules: {
       ...markdownlintPlugin.configs.recommended.rules,
+      'markdownlint/md004': 'off', // Unordered list style
       'markdownlint/md012': 'off', // Multiple consecutive blank lines
       'markdownlint/md013': 'off', // Line length
       'markdownlint/md024': 'off', // Duplicate headings
@@ -153,6 +167,36 @@ const config: Linter.Config[] = [
       'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 0 }],
       'stylistic/no-trailing-spaces': 'error',
       'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
+    },
+  },
+
+  // {
+  //   files: [
+  //     '.github/**/*.md',
+  //     '.claude/**/*.md',
+  //     '.cursor/**/*.md',
+  //     '_templates/**/*.md',
+  //   ],
+  //   rules: {
+  //     'markdownlint/md001': 'off', // Heading levels should only increment by one level at a time
+  //     'markdownlint/md031': 'off',
+  //     'markdownlint/md032': 'off',
+
+  //     'stylistic/no-multiple-empty-lines': 'off',
+  //     'stylistic/no-trailing-spaces': 'error',
+  //     'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
+  //   },
+  // },
+
+  {
+    files: ['_templates/feature/**'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+
+      'import/no-unresolved': 'off',
+      'no-undef': 'off',
     },
   },
 ];

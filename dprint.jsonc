@@ -5,5 +5,7 @@
     "_templates/**/*.md",
     "_templates/**/*.css",
     ".github/instructions/**",
+    ".github/skills/**",
+    "_templates/feature/**",
   ],
 }
