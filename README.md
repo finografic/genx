@@ -144,9 +144,10 @@ Pre-commit linting + conventional commits.
 
 - Installs `lint-staged`, `simple-git-hooks`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
-- Adds `lint-staged` config to package.json
+- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; dprint prepends `dprint fmt` when that feature is applied)
+- Adds `commitlint` config to package.json (`extends: @commitlint/config-conventional`)
 - Adds `simple-git-hooks` config to package.json
-- Creates `commitlint.config.mjs`
+- Removes legacy `commitlint.config.mjs` if present
 - Ensures `prepare` script runs `simple-git-hooks`
 
 <!-- GENERATED:FEATURES:END -->
@@ -189,7 +190,6 @@ my-package/
 ├── LICENSE
 ├── README.md
 ├── dprint.jsonc             (optional)
-├── commitlint.config.mjs   (optional)
 └── .github/                 (optional)
     ├── copilot-instructions.md
     └── instructions/

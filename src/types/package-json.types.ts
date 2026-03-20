@@ -3,4 +3,5 @@ export type PackageJson = Record<string, unknown> & {
   keywords?: unknown;
   scripts?: Record<string, string>;
   'lint-staged'?: Record<string, string[]>;
+  commitlint?: { extends?: string[] };
 };

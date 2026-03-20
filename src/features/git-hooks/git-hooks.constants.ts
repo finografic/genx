@@ -6,7 +6,6 @@
  */
 
 import {
-  COMMITLINT_CONFIG,
   PKG_COMMITLINT_CLI,
   PKG_COMMITLINT_CONFIG,
   PKG_LINT_STAGED,
@@ -22,27 +21,22 @@ export const GIT_HOOKS_PACKAGES = {
 
 /**
  * lint-staged configuration for package.json.
+ * Matches dprint’s code glob when that feature prepends `dprint fmt`.
  */
 export const LINT_STAGED_CONFIG: Record<string, string[]> = {
-  '*.{ts,tsx,js,mjs,cjs}': ['eslint --fix'],
+  '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'],
 };
 
 /**
  * simple-git-hooks configuration for package.json.
  */
 export const SIMPLE_GIT_HOOKS_CONFIG: Record<string, string> = {
-  'pre-commit': 'npx lint-staged',
+  'pre-commit': 'npx lint-staged --allow-empty',
 };
 
 /**
- * Commitlint config filename.
+ * commitlint configuration inlined in package.json (replaces commitlint.config.*).
  */
-export const COMMITLINT_CONFIG_FILE = COMMITLINT_CONFIG;
-
-/**
- * Commitlint config content.
- */
-export const COMMITLINT_CONFIG_CONTENT = `export default {
-  extends: ['${PKG_COMMITLINT_CONFIG}'],
-};
-`;
+export const COMMITLINT_PACKAGE_JSON_CONFIG = {
+  extends: [PKG_COMMITLINT_CONFIG],
+} as const;

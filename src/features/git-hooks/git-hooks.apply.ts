@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import {
@@ -9,71 +9,79 @@ import {
   successMessage,
   warnMessage,
 } from 'utils';
-import { PACKAGE_JSON } from 'config/constants.config';
+import { COMMITLINT_CONFIG, PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
-  COMMITLINT_CONFIG_CONTENT,
-  COMMITLINT_CONFIG_FILE,
+  COMMITLINT_PACKAGE_JSON_CONFIG,
   GIT_HOOKS_PACKAGES,
   LINT_STAGED_CONFIG,
   SIMPLE_GIT_HOOKS_CONFIG,
 } from './git-hooks.constants';
 
 /**
- * Add lint-staged and simple-git-hooks config to package.json.
- * Places them at the end of the file, with simple-git-hooks last.
+ * Keep `lint-staged`, `commitlint`, and `simple-git-hooks` at the end of package.json
+ * in that order (matches repo convention).
  */
-async function addPackageJsonConfigs(
-  targetDir: string,
-): Promise<{ addedLintStaged: boolean; addedSimpleGitHooks: boolean }> {
-  const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
-  const raw = await readFile(packageJsonPath, 'utf8');
-  const packageJson = JSON.parse(raw) as PackageJson;
+function reorderGitHookTailKeys(packageJson: PackageJson): PackageJson {
+  const { 'lint-staged': lintStaged, commitlint, 'simple-git-hooks': simpleGitHooks, ...rest } =
+    packageJson;
 
-  let addedLintStaged = false;
-  let addedSimpleGitHooks = false;
-
-  // Add lint-staged config if not present
-  if (!packageJson['lint-staged']) {
-    packageJson['lint-staged'] = LINT_STAGED_CONFIG;
-    addedLintStaged = true;
-  }
-
-  // Add simple-git-hooks config if not present
-  if (!packageJson['simple-git-hooks']) {
-    packageJson['simple-git-hooks'] = SIMPLE_GIT_HOOKS_CONFIG;
-    addedSimpleGitHooks = true;
-  }
-
-  if (addedLintStaged || addedSimpleGitHooks) {
-    // Reorder to ensure lint-staged comes before simple-git-hooks at the end
-    const { 'lint-staged': lintStaged, 'simple-git-hooks': simpleGitHooks, ...rest } = packageJson;
-
-    const reordered = {
-      ...rest,
-      ...(lintStaged ? { 'lint-staged': lintStaged } : {}),
-      ...(simpleGitHooks ? { 'simple-git-hooks': simpleGitHooks } : {}),
-    };
-
-    const formatted = `${JSON.stringify(reordered, null, 2)}\n`;
-    await writeFile(packageJsonPath, formatted, 'utf8');
-  }
-
-  return { addedLintStaged, addedSimpleGitHooks };
+  return {
+    ...rest,
+    ...(lintStaged !== undefined ? { 'lint-staged': lintStaged } : {}),
+    ...(commitlint !== undefined && commitlint !== null ? { commitlint } : {}),
+    ...(simpleGitHooks !== undefined ? { 'simple-git-hooks': simpleGitHooks } : {}),
+  };
 }
 
 /**
- * Create commitlint.config.mjs if it doesn't exist.
+ * Add lint-staged, commitlint, and simple-git-hooks to package.json when missing.
  */
-async function createCommitlintConfig(targetDir: string): Promise<boolean> {
-  const configPath = resolve(targetDir, COMMITLINT_CONFIG_FILE);
+async function addPackageJsonConfigs(
+  targetDir: string,
+): Promise<{ addedLintStaged: boolean; addedCommitlint: boolean; addedSimpleGitHooks: boolean }> {
+  const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
+  const raw = await readFile(packageJsonPath, 'utf8');
+  let packageJson = JSON.parse(raw) as PackageJson;
 
-  if (fileExists(configPath)) {
+  let addedLintStaged = false;
+  let addedCommitlint = false;
+  let addedSimpleGitHooks = false;
+
+  if (!packageJson['lint-staged']) {
+    packageJson['lint-staged'] = { ...LINT_STAGED_CONFIG };
+    addedLintStaged = true;
+  }
+
+  if (!packageJson.commitlint) {
+    packageJson.commitlint = { extends: [...COMMITLINT_PACKAGE_JSON_CONFIG.extends] };
+    addedCommitlint = true;
+  }
+
+  if (!packageJson['simple-git-hooks']) {
+    packageJson['simple-git-hooks'] = { ...SIMPLE_GIT_HOOKS_CONFIG };
+    addedSimpleGitHooks = true;
+  }
+
+  if (addedLintStaged || addedCommitlint || addedSimpleGitHooks) {
+    packageJson = reorderGitHookTailKeys(packageJson);
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  }
+
+  return { addedLintStaged, addedCommitlint, addedSimpleGitHooks };
+}
+
+/**
+ * Remove legacy commitlint.config.mjs when package.json carries commitlint config.
+ */
+async function removeLegacyCommitlintConfig(targetDir: string): Promise<boolean> {
+  const configPath = resolve(targetDir, COMMITLINT_CONFIG);
+  if (!fileExists(configPath)) {
     return false;
   }
 
-  await writeFile(configPath, COMMITLINT_CONFIG_CONTENT, 'utf8');
+  await unlink(configPath);
   return true;
 }
 
@@ -131,22 +139,26 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
     }
   }
 
-  // 2. Add lint-staged and simple-git-hooks config to package.json
+  // 2. Add lint-staged, commitlint (package.json), and simple-git-hooks
   const configResult = await addPackageJsonConfigs(context.targetDir);
   if (configResult.addedLintStaged) {
     applied.push('package.json (lint-staged config)');
     successMessage('Added lint-staged config to package.json');
+  }
+  if (configResult.addedCommitlint) {
+    applied.push('package.json (commitlint config)');
+    successMessage('Added commitlint config to package.json');
   }
   if (configResult.addedSimpleGitHooks) {
     applied.push('package.json (simple-git-hooks config)');
     successMessage('Added simple-git-hooks config to package.json');
   }
 
-  // 3. Create commitlint.config.mjs
-  const commitlintCreated = await createCommitlintConfig(context.targetDir);
-  if (commitlintCreated) {
-    applied.push(COMMITLINT_CONFIG_FILE);
-    successMessage(`Created ${COMMITLINT_CONFIG_FILE}`);
+  // 3. Drop legacy commitlint.config.mjs if present (config lives in package.json)
+  const legacyRemoved = await removeLegacyCommitlintConfig(context.targetDir);
+  if (legacyRemoved) {
+    applied.push(`${COMMITLINT_CONFIG} (removed)`);
+    successMessage(`Removed ${COMMITLINT_CONFIG}; using package.json "commitlint"`);
   }
 
   // 4. Ensure prepare script includes simple-git-hooks

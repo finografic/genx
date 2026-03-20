@@ -296,10 +296,14 @@ async function addDprintToLintStaged(packageJsonPath: string): Promise<boolean> 
   const lintStaged = (packageJson['lint-staged'] ?? {}) as Record<string, string[]>;
   let modified = false;
 
-  // Add dprint to TS/JS pattern (prepend so dprint formats before eslint fixes)
-  const codeCommands = lintStaged[DPRINT_LINT_STAGED_CODE_PATTERN];
-  if (Array.isArray(codeCommands) && !codeCommands.includes(DPRINT_LINT_STAGED_COMMAND)) {
-    lintStaged[DPRINT_LINT_STAGED_CODE_PATTERN] = [DPRINT_LINT_STAGED_COMMAND, ...codeCommands];
+  // TS/JS pattern: ensure dprint runs before eslint (create pattern if missing)
+  const codePattern = DPRINT_LINT_STAGED_CODE_PATTERN;
+  const codeCommands = lintStaged[codePattern];
+  if (!Array.isArray(codeCommands) || codeCommands.length === 0) {
+    lintStaged[codePattern] = [DPRINT_LINT_STAGED_COMMAND, 'eslint --fix'];
+    modified = true;
+  } else if (!codeCommands.includes(DPRINT_LINT_STAGED_COMMAND)) {
+    lintStaged[codePattern] = [DPRINT_LINT_STAGED_COMMAND, ...codeCommands];
     modified = true;
   }
 
