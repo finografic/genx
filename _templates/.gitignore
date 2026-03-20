@@ -20,11 +20,6 @@ build/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-Icon?
-
 # Logs
 *.log
 npm-debug.log*
@@ -42,3 +37,8 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+Icon?
