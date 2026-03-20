@@ -2,7 +2,7 @@
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import type { Linter } from 'eslint';
-import { globalIgnores } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import markdownlintPlugin from 'eslint-plugin-markdownlint';
 import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -10,24 +10,14 @@ import globals from 'globals';
 
 import tseslint from 'typescript-eslint';
 
-// export default defineConfig([
-const config: Linter.Config[] = [
+export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
     '**/dist/**',
-    '**/.cursor/**',
+    '**/.cursor/hooks/**',
+    '**/.cursor/chats/**',
     '**/.claude/**',
-    // '_templates/**/*.{ts,tsx}',
   ]),
-
-  // {
-  //   ignores: [
-  //     '**/node_modules/**',
-  //     '**/dist/**',
-  //     '**/.cursor/**',
-  //     '**/.claude/**',
-  //   ],
-  // },
 
   js.configs.recommended,
 
@@ -137,8 +127,10 @@ const config: Linter.Config[] = [
       'dist/**',
       '.github/**/*.md',
       '.claude/**/*.md',
-      '.cursor/**/*.md',
+      '.cursor/hooks/**',
+      '.cursor/chats/**',
       '_templates/**/*.md',
+      '!_templates/.cursor/rules/**/*.md', // Template handbooks often use placeholders; exempt the rules index only below
       '**/CLAUDE.md',
     ],
     languageOptions: {
@@ -164,29 +156,11 @@ const config: Linter.Config[] = [
       'markdownlint/md043': 'off', // Required heading structure
 
       // Formatting consistency
-      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 0 }],
+      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 1 }],
       'stylistic/no-trailing-spaces': 'error',
       'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
     },
   },
-
-  // {
-  //   files: [
-  //     '.github/**/*.md',
-  //     '.claude/**/*.md',
-  //     '.cursor/**/*.md',
-  //     '_templates/**/*.md',
-  //   ],
-  //   rules: {
-  //     'markdownlint/md001': 'off', // Heading levels should only increment by one level at a time
-  //     'markdownlint/md031': 'off',
-  //     'markdownlint/md032': 'off',
-
-  //     'stylistic/no-multiple-empty-lines': 'off',
-  //     'stylistic/no-trailing-spaces': 'error',
-  //     'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
-  //   },
-  // },
 
   {
     files: ['_templates/feature/**'],
@@ -199,6 +173,4 @@ const config: Linter.Config[] = [
       'no-undef': 'off',
     },
   },
-];
-
-export default config;
+]);

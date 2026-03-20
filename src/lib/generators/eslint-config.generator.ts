@@ -18,10 +18,16 @@ export function generateEslintConfig(options: EslintConfigOptions): string {
   return [
     imports,
     '',
-    'const config: Linter.Config[] = [',
-    '  {',
-    "    ignores: ['**/node_modules/**', '**/dist/**', '**/.cursor/**', '**/*.min.*', '**/*.map'],",
-    '  },',
+    'export default defineConfig([',
+    '  globalIgnores([',
+    "    '**/node_modules/**',",
+    "    '**/dist/**',",
+    "    '**/.cursor/hooks/**',",
+    "    '**/.cursor/chats/**',",
+    "    '**/.claude/**',",
+    "    '**/*.min.*',",
+    "    '**/*.map',",
+    '  ]),',
     '',
     '  js.configs.recommended,',
     '',
@@ -29,9 +35,7 @@ export function generateEslintConfig(options: EslintConfigOptions): string {
     '',
     tsBlock,
     markdownBlock,
-    '];',
-    '',
-    'export default config;',
+    ']);',
     '',
   ].join('\n');
 }
@@ -40,8 +44,13 @@ function buildImports(markdown: boolean): string {
   const lines: string[] = [
     "import js from '@eslint/js';",
     "import stylistic from '@stylistic/eslint-plugin';",
-    "import type { Linter } from 'eslint';",
   ];
+
+  if (markdown) {
+    lines.push("import type { Linter } from 'eslint';");
+  }
+
+  lines.push("import { defineConfig, globalIgnores } from 'eslint/config';");
 
   if (markdown) {
     lines.push(
@@ -178,8 +187,11 @@ function buildMarkdownBlock(): string {
     '    ignores: [',
     "      'node_modules/**',",
     "      'dist/**',",
-    "      '.cursor/**',",
+    "      '.cursor/hooks/**',",
+    "      '.cursor/chats/**',",
     "      '.github/instructions/**',",
+    "      '.claude/**/*.md',",
+    "      '**/CLAUDE.md',",
     '    ],',
     '    languageOptions: {',
     '      parser: markdownlintParser,',

@@ -26,6 +26,7 @@ export const MARKDOWN_VSCODE_SETTINGS = {
     MD013: { line_length: 120, tables: false, code_blocks: false }, // Allow line length
     MD024: false, // Allow duplicate headings
     MD025: false, // Allow multiple top-level headings
+    MD036: false, // No emphasis as heading
     MD040: false, // Allow fenced code blocks
     MD041: false, // Don't require first line to be a top-level heading
     MD060: { style: 'aligned' }, // Allow heading indentation
@@ -46,8 +47,10 @@ export const ESLINT_MARKDOWN_CONFIG_BLOCK = `
     ignores: [
       'node_modules/**',
       'dist/**',
-      '.cursor/chat/**',
+      '.cursor/hooks/**',
+      '.cursor/chats/**',
       '.github/instructions/**',
+      '.claude/**/*.md',
       '**/CLAUDE.md',
     ],
     languageOptions: {
@@ -55,10 +58,11 @@ export const ESLINT_MARKDOWN_CONFIG_BLOCK = `
     },
     plugins: {
       markdownlint: markdownlintPlugin as Linter.Processor,
-      stylistic: stylistic,
+      stylistic,
     },
     rules: {
       ...markdownlintPlugin.configs.recommended.rules,
+      'markdownlint/md004': 'off', // Unordered list style
       'markdownlint/md012': 'off', // Multiple consecutive blank lines
       'markdownlint/md013': 'off', // Line length
       'markdownlint/md024': 'off', // Duplicate headings
@@ -71,7 +75,7 @@ export const ESLINT_MARKDOWN_CONFIG_BLOCK = `
       'markdownlint/md043': 'off', // Required heading structure
 
       // Formatting consistency
-      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
+      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 1 }],
       'stylistic/no-trailing-spaces': 'error',
       'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
     },

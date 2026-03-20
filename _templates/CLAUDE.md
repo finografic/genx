@@ -48,6 +48,7 @@ This file bridges context between local development (Claude Code CLI) and extern
 8. `## Status` — Current implementation state: what's done, what's in progress, what's next. Plain prose, 3-5 lines max.
 
 **Rules:**
+
 - Do not duplicate content from `memory.md` — that file tracks session work, this file tracks project state.
 - Do not include code snippets or file contents — describe what exists, not how it's implemented.
 - Write in present tense ("The CLI uses X to do Y") not past tense.

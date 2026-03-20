@@ -32,7 +32,7 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
     );
     if (eslintAdded.length > 0) {
       applied.push('eslint.config.ts (.cursor ignore)');
-      successMessage('Added **/.cursor/** to eslint.config.ts ignores');
+      successMessage('Added .cursor hooks/chats paths to eslint.config.ts globalIgnores');
     }
 
     if (applied.length === 0) {
@@ -87,7 +87,7 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
   );
   if (eslintAdded.length > 0) {
     applied.push('eslint.config.ts (.cursor ignore)');
-    successMessage('Added **/.cursor/** to eslint.config.ts ignores');
+    successMessage('Added .cursor hooks/chats paths to eslint.config.ts globalIgnores');
   }
 
   return { applied };

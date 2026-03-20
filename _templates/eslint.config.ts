@@ -1,16 +1,22 @@
 /// <reference path="./src/declarations.d.ts" />
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
-import type { Linter } from 'eslint';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 
 import tseslint from 'typescript-eslint';
 
-const config: Linter.Config[] = [
-  {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/*.min.*', '**/*.map'],
-  },
+export default defineConfig([
+  globalIgnores([
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/.cursor/hooks/**',
+    '**/.cursor/chats/**',
+    '**/.claude/**',
+    '**/*.min.*',
+    '**/*.map',
+  ]),
 
   js.configs.recommended,
 
@@ -69,7 +75,7 @@ const config: Linter.Config[] = [
       ],
 
       'stylistic/semi': ['error'],
-      'stylistic/quotes': ['error', 'single'],
+      'stylistic/quotes': ['error', 'single', { avoidEscape: true }],
       // TODO: REMOVE `ConditionalExpression` WHEN oxfmt IS ADDED TO
       'stylistic/indent': ['warn', 2, { SwitchCase: 1, ignoredNodes: ['ConditionalExpression'] }],
       'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 1 }],
@@ -109,6 +115,4 @@ const config: Linter.Config[] = [
       'simple-import-sort/exports': 'error',
     },
   },
-];
-
-export default config;
+]);

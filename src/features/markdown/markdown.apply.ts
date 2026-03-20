@@ -68,26 +68,31 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
     }
   }
 
-  // Find the closing bracket of the config array and insert before it
-  // Look for the pattern `];` or `]` at the end
-  const configArrayEndRegex = /\n\];?\s*\n*export default/;
-  const configEndMatch = configArrayEndRegex.exec(updatedContent);
+  // Insert before `]);` that closes `defineConfig([` (preferred) or legacy `];` + `export default config`
+  const modernEnd = /\n\]\);\s*$/;
+  const legacyEnd = /\n\];\s*\n+export default\s+config\b/m;
 
-  if (configEndMatch) {
-    const insertPos = configEndMatch.index;
+  let insertPos: number | null = null;
+  const modernMatch = modernEnd.exec(updatedContent);
+  if (modernMatch) {
+    insertPos = modernMatch.index;
+  } else {
+    const legacyMatch = legacyEnd.exec(updatedContent);
+    if (legacyMatch) {
+      insertPos = legacyMatch.index;
+    } else {
+      const configArrayEndRegex = /\n\];?\s*\n*export default/;
+      const configEndMatch = configArrayEndRegex.exec(updatedContent);
+      if (configEndMatch) {
+        insertPos = configEndMatch.index;
+      }
+    }
+  }
+
+  if (insertPos !== null) {
     updatedContent = updatedContent.slice(0, insertPos)
       + '\n' + ESLINT_MARKDOWN_CONFIG_BLOCK
       + updatedContent.slice(insertPos);
-  } else {
-    // Try another pattern - just before `export default config`
-    const altRegex = /\n\];\n\nexport default/;
-    const altMatch = altRegex.exec(updatedContent);
-    if (altMatch) {
-      const insertPos = altMatch.index + 2; // After the newline, before ];
-      updatedContent = updatedContent.slice(0, insertPos)
-        + ESLINT_MARKDOWN_CONFIG_BLOCK + '\n'
-        + updatedContent.slice(insertPos);
-    }
   }
 
   if (updatedContent !== content) {

@@ -21,8 +21,8 @@ export function createDefaultTemplateVars(): TemplateVars {
 }
 
 /**
- * Add ESLint ignore patterns to the first `ignores: [...]` block in eslint.config.ts.
- * Skips patterns already present. Returns the list of patterns actually added.
+ * Add ESLint ignore patterns to `globalIgnores([...])` when present, otherwise the
+ * first legacy `ignores: [...]` block. Skips patterns already present.
  */
 export async function addEslintIgnorePatterns(
   targetDir: string,
@@ -37,7 +37,14 @@ export async function addEslintIgnorePatterns(
   if (missing.length === 0) return [];
 
   for (const pattern of missing) {
-    content = content.replace(/(ignores:\s*\[[^\]]*)\]/, `$1, '${pattern}']`);
+    if (/globalIgnores\s*\(\s*\[/.test(content)) {
+      content = content.replace(
+        /(globalIgnores\s*\(\s*\[[\s\S]*?)(\s*\]\s*\)\s*,)/,
+        `$1    '${pattern}',\n$2`,
+      );
+    } else {
+      content = content.replace(/(ignores:\s*\[[^\]]*)\]/, `$1, '${pattern}']`);
+    }
   }
 
   await writeFile(eslintConfigPath, content, 'utf8');
