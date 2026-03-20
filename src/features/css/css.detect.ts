@@ -1,11 +1,17 @@
+import { resolve } from 'node:path';
+
 import { fileExists } from 'utils';
 import type { FeatureContext } from '../feature.types';
-import { STYLELINTRC_FILENAME } from './css.constants';
+import { LEGACY_STYLELINTRC_FILENAME, STYLELINT_CONFIG_FILENAME } from './css.constants';
 
 /**
  * Detect if CSS linting is already configured.
- * Checks for .stylelintrc.json in the target directory.
+ * True when `stylelint.config.ts` or legacy `.stylelintrc.json` is present.
  */
 export function detectCss(context: FeatureContext): boolean {
-  return fileExists(`${context.targetDir}/${STYLELINTRC_FILENAME}`);
+  const root = context.targetDir;
+  return (
+    fileExists(resolve(root, STYLELINT_CONFIG_FILENAME))
+    || fileExists(resolve(root, LEGACY_STYLELINTRC_FILENAME))
+  );
 }

@@ -109,12 +109,14 @@ Testing via Vitest.
 - Installs `vitest`
 - Adds `test` / `test.run` / `test.coverage` scripts
 
-### ai-rules
+### ai-instructions
 
-AI coding assistant rules (GitHub Copilot instructions).
+Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 
-- Copies `.github/copilot-instructions.md`
-- Copies `.github/instructions/` folder
+- Creates `.github/copilot-instructions.md` — summary index for GitHub Copilot
+- Creates `.github/instructions/` — canonical rule files shared across all AI tools
+- Creates `.github/instructions/project/` — empty folder for project-specific rules
+- Creates `.cursor/rules/` — Cursor rules index referencing the shared instructions
 
 ### markdown
 
@@ -122,10 +124,19 @@ Markdown linting via `eslint-plugin-markdownlint`.
 
 - Installs `eslint-plugin-markdownlint`
 - Adds markdown block to `eslint.config.ts`
-- Adds `[markdown]` settings to `.vscode/settings.json`
 - Adds `markdownlint.config` to `.vscode/settings.json`
 - Adds VSCode extension recommendation
-- Copies `markdown-custom-dark.css` for preview styling
+- Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
+
+### css
+
+CSS linting via `stylelint` + `@stylistic/stylelint-plugin`.
+
+- Installs `stylelint` and `@stylistic/stylelint-plugin`
+- Creates `stylelint.config.ts` with stylistic indentation/spacing rules (`satisfies Config`)
+- Enables stylelint in `.vscode/settings.json` (disables built-in `css.validate`)
+- Configures dprint as the default formatter for `css` and `scss`
+- Adds VSCode extension recommendation
 
 ### git-hooks
 
@@ -157,8 +168,9 @@ Optional features (selected during `create` or added via `features`):
 - **dprint** — code formatting
 - **vitest** — unit testing
 - **git-hooks** — pre-commit linting + conventional commits
-- **ai-rules** — GitHub Copilot instructions
+- **ai-instructions** — shared AI rules (Copilot, Cursor, Claude)
 - **markdown** — markdown linting via ESLint
+- **css** — CSS linting via Stylelint + Stylistic plugin
 
 ---
 

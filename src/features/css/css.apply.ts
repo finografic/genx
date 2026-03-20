@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import {
@@ -10,12 +10,13 @@ import {
 } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
+  LEGACY_STYLELINTRC_FILENAME,
+  STYLELINT_CONFIG_FILENAME,
+  STYLELINT_CONFIG_TS_CONTENT,
   STYLELINT_PACKAGE,
   STYLELINT_PACKAGE_VERSION,
   STYLELINT_STYLISTIC_PACKAGE,
   STYLELINT_STYLISTIC_PACKAGE_VERSION,
-  STYLELINTRC_CONTENT,
-  STYLELINTRC_FILENAME,
 } from './css.constants';
 import { applyCssDprintSettings, applyCssExtensions, applyCssVSCodeSettings } from './css.vscode';
 
@@ -64,16 +65,19 @@ export async function applyCss(context: FeatureContext): Promise<FeatureApplyRes
     if (result.installed) applied.push(STYLELINT_STYLISTIC_PACKAGE);
   }
 
-  // 3. Write .stylelintrc.json
-  const stylelintrcPath = resolve(context.targetDir, STYLELINTRC_FILENAME);
-  if (!fileExists(stylelintrcPath)) {
-    await writeFile(
-      stylelintrcPath,
-      `${JSON.stringify(STYLELINTRC_CONTENT, null, 2)}\n`,
-      'utf8',
-    );
-    applied.push(STYLELINTRC_FILENAME);
-    successMessage('Created .stylelintrc.json');
+  // 3. Write stylelint.config.ts; drop legacy JSON if present
+  const stylelintConfigPath = resolve(context.targetDir, STYLELINT_CONFIG_FILENAME);
+  if (!fileExists(stylelintConfigPath)) {
+    await writeFile(stylelintConfigPath, STYLELINT_CONFIG_TS_CONTENT, 'utf8');
+    applied.push(STYLELINT_CONFIG_FILENAME);
+    successMessage('Created stylelint.config.ts');
+  }
+
+  const legacyStylelintPath = resolve(context.targetDir, LEGACY_STYLELINTRC_FILENAME);
+  if (fileExists(legacyStylelintPath)) {
+    await unlink(legacyStylelintPath);
+    applied.push(`${LEGACY_STYLELINTRC_FILENAME} (removed)`);
+    successMessage('Removed legacy .stylelintrc.json');
   }
 
   // 4. Configure VSCode settings (stylelint.enable, stylelint.validate, css.validate)

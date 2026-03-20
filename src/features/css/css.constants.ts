@@ -13,18 +13,24 @@ export const STYLELINT_STYLISTIC_PACKAGE_VERSION = 'latest';
 /** VSCode extension ID for stylelint */
 export const CSS_VSCODE_EXTENSIONS = ['stylelint.vscode-stylelint'] as const;
 
-/** Filename for the stylelint config */
-export const STYLELINTRC_FILENAME = '.stylelintrc.json';
+/** Primary stylelint config (flat TS module) */
+export const STYLELINT_CONFIG_FILENAME = 'stylelint.config.ts';
 
-/** Default .stylelintrc.json content */
-export const STYLELINTRC_CONTENT = {
+/** Legacy JSON config removed on apply when present */
+export const LEGACY_STYLELINTRC_FILENAME = '.stylelintrc.json';
+
+/** Default stylelint.config.ts body */
+export const STYLELINT_CONFIG_TS_CONTENT = `import type { Config } from 'stylelint';
+
+export default {
   plugins: ['@stylistic/stylelint-plugin'],
   rules: {
     '@stylistic/indentation': 2,
     '@stylistic/no-extra-semicolons': true,
     '@stylistic/max-empty-lines': 1,
   },
-};
+} satisfies Config;
+`;
 
 /** VSCode settings added by the CSS feature */
 export const CSS_VSCODE_SETTINGS = {
