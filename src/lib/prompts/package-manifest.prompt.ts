@@ -1,6 +1,5 @@
-import * as clack from '@clack/prompts';
-
-import { cancel } from 'utils/prompts.utils';
+import type { FlowContext } from 'utils/flow.utils';
+import { promptText } from 'utils/flow.utils';
 import { packageNameSchema, scopeSchema } from 'utils/validation.utils';
 import { descriptionSchema } from 'utils/validation.utils';
 
@@ -10,23 +9,25 @@ export interface PackageManifest {
   description: string;
 }
 
-export async function promptPackageManifest(defaults: {
-  scope: string;
-  description: string;
-}): Promise<PackageManifest | null> {
-  const scope = await clack.text({
+export async function promptPackageManifest(
+  defaults: {
+    scope: string;
+    description: string;
+  },
+  flow: FlowContext,
+): Promise<PackageManifest | null> {
+  const scope = await promptText(flow, {
     message: 'Package scope (finografic or @finografic):',
     placeholder: defaults.scope,
-    initialValue: defaults.scope,
+    default: defaults.scope,
     validate: (value) => {
       const result = scopeSchema.safeParse(value);
       return result.success ? undefined : result.error.issues[0].message;
     },
   });
 
-  if (clack.isCancel(scope)) return cancel();
-
-  const name = await clack.text({
+  const name = await promptText(flow, {
+    flagKey: 'name',
     message: 'Package name:',
     placeholder: 'my-package',
     validate: (value) => {
@@ -38,19 +39,15 @@ export async function promptPackageManifest(defaults: {
     },
   });
 
-  if (clack.isCancel(name)) return cancel();
-
-  const description = await clack.text({
+  const description = await promptText(flow, {
     message: 'Package description:',
     placeholder: defaults.description,
-    initialValue: defaults.description,
+    default: defaults.description,
     validate: (value) => {
       const result = descriptionSchema.safeParse(value);
       return result.success ? undefined : result.error.issues[0].message;
     },
   });
-
-  if (clack.isCancel(description)) return cancel();
 
   return {
     scope,

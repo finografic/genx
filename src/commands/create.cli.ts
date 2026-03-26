@@ -23,6 +23,7 @@ import {
   validateTargetDir,
 } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
+import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
 import { renderHelp } from 'utils/render-help/render-help.utils';
@@ -40,6 +41,12 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
     return;
   }
 
+  const flow = createFlowContext(argv, {
+    y: { type: 'boolean' },
+    type: { type: 'string' },
+    name: { type: 'string' },
+  });
+
   intro('Create new @finografic package');
 
   // Helpful debug info (always on in dev)
@@ -50,7 +57,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
   }
 
   // 1. Prompt for ALL creation input (manifest + author + features)
-  const config = await promptCreatePackage();
+  const config = await promptCreatePackage(flow);
   if (!config) {
     safeExit(0);
     return;

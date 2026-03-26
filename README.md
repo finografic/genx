@@ -32,14 +32,26 @@ pnpm dlx @finografic/genx <command> [options]
 ### `genx create`
 
 ```bash
-genx create
+genx create [options]
 ```
+
+| Flag           | Description                       |
+| -------------- | --------------------------------- |
+| `--type <id>`  | Package type (skips type prompt)  |
+| `--name <pkg>` | Package name (skips name prompt)  |
+| `-y`           | Auto-accept all remaining prompts |
 
 **Examples:**
 
 ```bash
 # Create a new package interactively
 genx create
+
+# Skip prompts for type and name
+genx create --type cli --name my-tool
+
+# Fully non-interactive
+genx create --type lib --name my-lib -y
 ```
 
 ### `genx migrate`

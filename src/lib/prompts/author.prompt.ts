@@ -1,5 +1,6 @@
 import * as clack from '@clack/prompts';
 
+import type { FlowContext } from 'utils/flow.utils';
 import { emailSchema } from 'utils/validation.utils';
 
 export type Author = {
@@ -13,8 +14,18 @@ type AuthorField = 'name' | 'email' | 'url';
 export async function promptAuthor(
   defaults: Author,
   scope: string,
+  flow: FlowContext,
 ): Promise<Author | null> {
   const scopeClean = scope.replace('@', '');
+
+  // In yes-mode, use configured defaults without prompting
+  if (flow.yesMode) {
+    return {
+      name: defaults.name,
+      email: defaults.email,
+      url: defaults.url || `https://github.com/${scopeClean}`,
+    };
+  }
   const urlSuggestion = defaults.url || `https://github.com/${scopeClean}`;
 
   const fields = await clack.autocompleteMultiselect<AuthorField>({
