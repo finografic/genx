@@ -4,7 +4,7 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 
 ## Rules - General
 
-- IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
+- IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages.
 
 ## Rules - Markdown Tables
 
@@ -40,7 +40,6 @@ These rules are specific to `@finografic/genx` and not shared with other project
 
 - This is a **standalone installable package** (`@finografic/design-system`), not a monorepo workspace.
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
-- Do not include `Co-Authored-By` lines in commit messages.
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
 - The `panda.preset` entry must always build with `platform: 'node'` in tsdown.
 - Never add `watch: true` to `panda.config.ts` — it causes `panda codegen` to hang.
