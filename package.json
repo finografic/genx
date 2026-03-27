@@ -83,7 +83,7 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.1",
+    "@clack/prompts": "1.1.0",
     "@finografic/core": "^0.9.2",
     "@finografic/genx": "link:",
     "clack-tree-select": "^1.0.8",
@@ -114,7 +114,7 @@
     "typescript-eslint": "^8.51.0",
     "vitest": "^4.0.18"
   },
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "packageManager": "pnpm@10.32.1",
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "dprint fmt --allow-no-files",

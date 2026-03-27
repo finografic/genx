@@ -1,2 +1,4 @@
 allowBuilds:
   dprint: true
+  esbuild: true
+  simple-git-hooks: true
