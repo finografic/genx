@@ -83,7 +83,7 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.0",
+    "@clack/prompts": "1.0.1",
     "@finografic/core": "^0.9.2",
     "@finografic/genx": "link:",
     "clack-tree-select": "^1.0.8",
