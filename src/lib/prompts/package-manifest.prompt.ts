@@ -10,19 +10,19 @@ export interface PackageManifest {
 }
 
 export async function promptPackageManifest(
+  flow: FlowContext,
   defaults: {
     scope: string;
     description: string;
   },
-  flow: FlowContext,
-): Promise<PackageManifest | null> {
+): Promise<PackageManifest> {
   const scope = await promptText(flow, {
     message: 'Package scope (finografic or @finografic):',
     placeholder: defaults.scope,
     default: defaults.scope,
     validate: (value) => {
       const result = scopeSchema.safeParse(value);
-      return result.success ? undefined : result.error.issues[0].message;
+      return result.success ? undefined : result.error.issues[0]?.message;
     },
   });
 
@@ -35,7 +35,7 @@ export async function promptPackageManifest(
         return 'Enter the package name only (no scope). Example: my-package';
       }
       const result = packageNameSchema.safeParse(value);
-      return result.success ? undefined : result.error.issues[0].message;
+      return result.success ? undefined : result.error.issues[0]?.message;
     },
   });
 
@@ -45,13 +45,9 @@ export async function promptPackageManifest(
     default: defaults.description,
     validate: (value) => {
       const result = descriptionSchema.safeParse(value);
-      return result.success ? undefined : result.error.issues[0].message;
+      return result.success ? undefined : result.error.issues[0]?.message;
     },
   });
 
-  return {
-    scope,
-    name,
-    description,
-  };
+  return { scope, name, description };
 }

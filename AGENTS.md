@@ -54,6 +54,7 @@ These rules are specific to `@finografic/genx` and not shared with other project
 - Use Panda MCP for design-system questions (breakpoints, tokens, recipes) when relevant without explicit user ask
 - When hooks seem to skip formatting that `dprint check` catches, confirm files are staged; use `npx lint-staged --debug` and verify paths under the “staged files” list
 - For Clack `text` validators, normalize once with `const trimmed = value?.trim() ?? ''`, require non-empty `trimmed`, then run regex tests on `trimmed` (covers undefined and satisfies narrowing)
+- For complex `pnpm-lock.yaml` conflicts, resolve `package.json` first, then run `pnpm install` to regenerate the lockfile instead of hand-merging
 
 ## Learned Workspace Facts
 

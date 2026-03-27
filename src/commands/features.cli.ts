@@ -5,6 +5,7 @@ import { featuresHelp } from 'help/features.help';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
+import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { renderHelp } from 'utils/render-help/render-help.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
@@ -29,6 +30,8 @@ export async function addFeatures(
     infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
   }
 
+  const flow = createFlowContext(argv, { y: { type: 'boolean' } });
+
   const { targetDir } = options;
 
   // 1. Validate we're in an existing package
@@ -40,7 +43,7 @@ export async function addFeatures(
   }
 
   // 2. Prompt for features
-  const selectedFeatureIds = await promptFeatures();
+  const selectedFeatureIds = await promptFeatures(flow);
   if (!selectedFeatureIds) {
     safeExit(0);
     return;

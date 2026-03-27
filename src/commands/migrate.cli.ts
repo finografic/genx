@@ -39,6 +39,7 @@ import {
 } from 'lib/prompts/migrate.prompt';
 import { errorMessage, infoMessage, intro, renderHelp, spinner, successMessage } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
+import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
@@ -60,6 +61,8 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     infoMessage(`execPath: ${process.execPath}`);
     infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
   }
+
+  const flow = createFlowContext(argv, { y: { type: 'boolean' } });
 
   const { targetDir, write, only } = parseMigrateArgs(argv, context.cwd);
 
@@ -90,7 +93,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   }
 
   // Prompt for features (after confirmation, before planning)
-  const selectedFeatureIds = await promptFeatures();
+  const selectedFeatureIds = await promptFeatures(flow);
   if (!selectedFeatureIds) {
     safeExit(0);
     return;

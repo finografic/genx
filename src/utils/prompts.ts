@@ -9,7 +9,6 @@ import { promptPackageType } from 'lib/prompts/package-type.prompt';
 import { defaultValuesConfig } from 'config/values.config';
 import type { PackageType } from 'types/package-type.types';
 import type { FlowContext } from './flow.utils';
-import { cancel } from './prompts.utils';
 
 interface PackageConfigWithFeatures extends PackageConfig {
   features: FeatureId[];
@@ -24,21 +23,12 @@ interface PackageConfigWithFeatures extends PackageConfig {
  * - no clack primitives
  * - uniform cancellation
  */
-export async function promptCreatePackage(
-  flow: FlowContext,
-): Promise<PackageConfigWithFeatures | null> {
+export async function promptCreatePackage(flow: FlowContext): Promise<PackageConfigWithFeatures> {
   const packageType = await promptPackageType(flow);
-  if (!packageType) return cancel();
-
-  const manifest = await promptPackageManifest(defaultValuesConfig, flow);
-  if (!manifest) return cancel();
-
+  const manifest = await promptPackageManifest(flow, defaultValuesConfig);
   const scope = manifest.scope;
-  const author = await promptAuthor(defaultValuesConfig.author, scope, flow);
-  if (!author) return cancel();
-
-  const features = await promptFeatures(packageType.defaultFeatures, flow);
-  if (!features) return cancel();
+  const author = await promptAuthor(flow, defaultValuesConfig.author, scope);
+  const features = await promptFeatures(flow, packageType.defaultFeatures);
 
   return {
     ...manifest,

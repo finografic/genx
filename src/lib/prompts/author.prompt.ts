@@ -1,6 +1,5 @@
-import * as clack from '@clack/prompts';
-
 import type { FlowContext } from 'utils/flow.utils';
+import { promptAutocompleteMultiSelect, promptText } from 'utils/flow.utils';
 import { emailSchema } from 'utils/validation.utils';
 
 export type Author = {
@@ -12,23 +11,14 @@ export type Author = {
 type AuthorField = 'name' | 'email' | 'url';
 
 export async function promptAuthor(
+  flow: FlowContext,
   defaults: Author,
   scope: string,
-  flow: FlowContext,
-): Promise<Author | null> {
+): Promise<Author> {
   const scopeClean = scope.replace('@', '');
-
-  // In yes-mode, use configured defaults without prompting
-  if (flow.yesMode) {
-    return {
-      name: defaults.name,
-      email: defaults.email,
-      url: defaults.url || `https://github.com/${scopeClean}`,
-    };
-  }
   const urlSuggestion = defaults.url || `https://github.com/${scopeClean}`;
 
-  const fields = await clack.autocompleteMultiselect<AuthorField>({
+  const fields = await promptAutocompleteMultiSelect<AuthorField>(flow, {
     message: 'Select author fields to edit',
     options: [
       { value: 'name', label: 'Name', hint: defaults.name },
@@ -39,11 +29,6 @@ export async function promptAuthor(
     initialValues: ['name', 'email', 'url'],
   });
 
-  if (clack.isCancel(fields)) {
-    clack.cancel('Operation cancelled');
-    return null;
-  }
-
   // Defensive but explicit: clack returns AuthorField[]
   const selected = new Set(fields);
 
@@ -52,43 +37,30 @@ export async function promptAuthor(
   let url = defaults.url;
 
   if (selected.has('name')) {
-    const value = await clack.text({
+    name = await promptText(flow, {
       message: 'Author name:',
-      initialValue: name,
+      default: name,
     });
-
-    if (clack.isCancel(value)) return cancel();
-    name = value;
   }
 
   if (selected.has('email')) {
-    const value = await clack.text({
+    email = await promptText(flow, {
       message: 'Author email:',
-      initialValue: email,
+      default: email,
       validate: (v) =>
         emailSchema.safeParse(v).success
           ? undefined
           : 'Invalid email address',
     });
-
-    if (clack.isCancel(value)) return cancel();
-    email = value;
   }
 
   if (selected.has('url')) {
-    const value = await clack.text({
+    url = await promptText(flow, {
       message: 'Author URL (leave blank to omit):',
-      initialValue: urlSuggestion,
+      default: urlSuggestion,
     });
-
-    if (clack.isCancel(value)) return cancel();
-    url = value.trim();
+    url = url.trim();
   }
 
   return { name, email, url };
-}
-
-function cancel(): null {
-  clack.cancel('Operation cancelled');
-  return null;
 }
