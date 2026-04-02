@@ -20,7 +20,7 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
   /* ────────────────────────────────────────────────────────── */
-  /* Root help / version                                         */
+  /* Root help / version                                        */
   /* ────────────────────────────────────────────────────────── */
 
   if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   const args = argv.slice(1);
 
   /* ────────────────────────────────────────────────────────── */
-  /* Command registry                                            */
+  /* Command registry                                           */
   /* ────────────────────────────────────────────────────────── */
 
   const commands: Record<string, CommandHandler> = {
@@ -69,14 +69,14 @@ async function main(): Promise<void> {
   }
 
   /* ────────────────────────────────────────────────────────── */
-  /* Execute                                                     */
+  /* Execute                                                    */
   /* ────────────────────────────────────────────────────────── */
 
   await commands[command](args, { cwd });
 }
 
 /* ────────────────────────────────────────────────────────── */
-/* Bootstrap                                                    */
+/* Bootstrap                                                  */
 /* ────────────────────────────────────────────────────────── */
 
 main().catch((error) => {
