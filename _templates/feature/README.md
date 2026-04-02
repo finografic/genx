@@ -1,4 +1,4 @@
-# __FEATURE_LABEL__
+# **FEATURE_LABEL**
 
 <!-- TODO: One-line description of what this feature provides. -->
 
@@ -8,9 +8,9 @@
 
 ## Files
 
-| File | Purpose |
-| --- | --- |
+| File                                    | Purpose                                |
+| --------------------------------------- | -------------------------------------- |
 | `__FOLDER_NAME__.constants.ts.template` | Package names, versions, config values |
-| `__FOLDER_NAME__.detect.ts.template` | Checks if feature is already installed |
-| `__FOLDER_NAME__.feature.ts.template` | Feature definition and metadata |
-| `__FOLDER_NAME__.apply.ts.template` | Installation and configuration logic |
+| `__FOLDER_NAME__.detect.ts.template`    | Checks if feature is already installed |
+| `__FOLDER_NAME__.feature.ts.template`   | Feature definition and metadata        |
+| `__FOLDER_NAME__.apply.ts.template`     | Installation and configuration logic   |

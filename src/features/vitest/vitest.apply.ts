@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import {
   errorMessage,
   fileExists,
@@ -10,13 +9,14 @@ import {
   spinner,
   successMessage,
 } from 'utils';
+import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
 import { findPackageRoot } from 'utils/package-root.utils';
 import {
   PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER,
   PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
   TEST_SCRIPTS,
   TESTING_SECTION_TITLE,
@@ -75,9 +75,7 @@ function findTestingInsertionPoint(scripts: Record<string, string>): number {
  * Add testing scripts to package.json.
  * Inserts the testing section after the build section if it doesn't already exist.
  */
-async function addTestingScripts(
-  packageJsonPath: string,
-): Promise<{ added: boolean; changes: string[] }> {
+async function addTestingScripts(packageJsonPath: string): Promise<{ added: boolean; changes: string[] }> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
 
@@ -174,9 +172,7 @@ export async function applyVitest(context: FeatureContext): Promise<FeatureApply
         VITEST_PACKAGE_VERSION,
       );
       installSpin.stop(
-        installResult.installed
-          ? `Installed ${VITEST_PACKAGE}`
-          : `${VITEST_PACKAGE} already installed`,
+        installResult.installed ? `Installed ${VITEST_PACKAGE}` : `${VITEST_PACKAGE} already installed`,
       );
       if (installResult.installed) {
         applied.push(VITEST_PACKAGE);

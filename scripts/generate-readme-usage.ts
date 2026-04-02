@@ -13,14 +13,7 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 
 // ── Feature READMEs ──────────────────────────────────────────────────
 
-const FEATURE_DIRS = [
-  'dprint',
-  'vitest',
-  'ai-instructions',
-  'markdown',
-  'css',
-  'git-hooks',
-] as const;
+const FEATURE_DIRS = ['dprint', 'vitest', 'ai-instructions', 'markdown', 'css', 'git-hooks'] as const;
 
 interface FeatureInfo {
   name: string;
@@ -34,7 +27,7 @@ function parseFeatureReadme(dir: string): FeatureInfo {
   const lines = content.split('\n');
 
   // h1 title
-  const h1Line = lines.find(l => l.startsWith('# '));
+  const h1Line = lines.find((l) => l.startsWith('# '));
   const name = h1Line ? h1Line.replace(/^#\s+/, '').trim() : dir;
 
   // description = first non-empty line after h1
@@ -50,7 +43,7 @@ function parseFeatureReadme(dir: string): FeatureInfo {
 
   // bullets under "## What it does"
   const bullets: string[] = [];
-  const whatIndex = lines.findIndex(l => /^##\s+What it does/.test(l));
+  const whatIndex = lines.findIndex((l) => /^##\s+What it does/.test(l));
   if (whatIndex !== -1) {
     for (let i = whatIndex + 1; i < lines.length; i++) {
       const line = lines[i]!;

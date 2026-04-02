@@ -46,9 +46,9 @@ export async function confirmMerges(files: Array<{ file: string }>): Promise<boo
 
 export async function confirmReleasesRename(): Promise<boolean | null> {
   const ok = await clack.confirm({
-    message: `Rename ${pc.yellow('docs/RELEASES.md')} ${pc.white('to')} ${
-      pc.greenBright('docs/process/RELEASE_PROCESS.md')
-    }${pc.white('?')}`,
+    message: `Rename ${pc.yellow('docs/RELEASES.md')} ${pc.white('to')} ${pc.greenBright(
+      'docs/process/RELEASE_PROCESS.md',
+    )}${pc.white('?')}`,
     initialValue: true,
   });
 

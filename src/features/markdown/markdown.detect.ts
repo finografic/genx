@@ -1,5 +1,6 @@
 import { isDependencyDeclared } from 'utils';
 import type { FeatureContext } from '../feature.types';
+
 import { MARKDOWNLINT_PACKAGE } from './markdown.constants';
 
 /**

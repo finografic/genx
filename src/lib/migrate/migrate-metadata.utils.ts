@@ -29,7 +29,10 @@ export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
     }
     if (arg.startsWith('--only=')) {
       const raw = arg.slice('--only='.length);
-      const parts = raw.split(',').map((s) => s.trim()).filter(Boolean);
+      const parts = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       only = new Set(parts as MigrateOnlySection[]);
       continue;
     }
@@ -41,19 +44,14 @@ export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
   return { targetDir, write, only };
 }
 
-export function shouldRunSection(
-  only: Set<MigrateOnlySection> | null,
-  section: MigrateOnlySection,
-): boolean {
+export function shouldRunSection(only: Set<MigrateOnlySection> | null, section: MigrateOnlySection): boolean {
   if (!only) return true;
   return only.has(section);
 }
 
 // ------------------------------------------------------------------------ //
 
-export function getScopeAndName(
-  pkgName: string | undefined,
-): { scope: string; name: string } | null {
+export function getScopeAndName(pkgName: string | undefined): { scope: string; name: string } | null {
   if (!pkgName) return null;
   if (pkgName.startsWith('@') && pkgName.includes('/')) {
     const [scope, name] = pkgName.split('/');
@@ -62,10 +60,7 @@ export function getScopeAndName(
   return { scope: migrateConfig.defaultScope, name: pkgName };
 }
 
-export function ensureKeyword(
-  keywords: string[],
-  keyword: string,
-): { keywords: string[]; changed: boolean } {
+export function ensureKeyword(keywords: string[], keyword: string): { keywords: string[]; changed: boolean } {
   if (keywords.some((k) => k.toLowerCase() === keyword.toLowerCase())) {
     return { keywords, changed: false };
   }

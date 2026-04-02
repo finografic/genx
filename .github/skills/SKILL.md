@@ -19,6 +19,7 @@ Before proceeding, read the feature patterns instruction file at `.github/instru
 ## Step 1 — Validate the Feature ID
 
 The feature ID must be:
+
 - camelCase (e.g. `tailwind`, `gitHooks`, `aiClaude`)
 - Unique — not already present in `src/features/feature.types.ts` under the `FeatureId` union
 - The folder name uses kebab-case derived from the id (e.g. `gitHooks` → `git-hooks`, `aiClaude` → `ai-claude`)
@@ -111,7 +112,7 @@ export async function apply__FEATURE_PASCAL__(context: FeatureContext): Promise<
 ### `README.md`
 
 ```markdown
-# __FEATURE_LABEL__
+# **FEATURE_LABEL**
 
 One-line description of what this feature provides.
 
@@ -121,12 +122,12 @@ One-line description of what this feature provides.
 
 ## Files
 
-| File | Purpose |
-| --- | --- |
+| File                           | Purpose                                |
+| ------------------------------ | -------------------------------------- |
 | `__FOLDER_NAME__.constants.ts` | Package names, versions, config values |
-| `__FOLDER_NAME__.detect.ts` | Checks if feature is already installed |
-| `__FOLDER_NAME__.feature.ts` | Feature definition and metadata |
-| `__FOLDER_NAME__.apply.ts` | Installation and configuration logic |
+| `__FOLDER_NAME__.detect.ts`    | Checks if feature is already installed |
+| `__FOLDER_NAME__.feature.ts`   | Feature definition and metadata        |
+| `__FOLDER_NAME__.apply.ts`     | Installation and configuration logic   |
 ```
 
 ## Step 4 — Wire the Registry
@@ -134,6 +135,7 @@ One-line description of what this feature provides.
 In `src/features/feature-registry.ts`:
 
 1. Add the import (maintain alphabetical order by feature variable name):
+
    ```ts
    import { __FEATURE_ID__Feature } from './__FOLDER_NAME__/__FOLDER_NAME__.feature';
    ```
@@ -163,6 +165,7 @@ pnpm build
 ```
 
 If either fails, check:
+
 - Import paths use `.js` extension for local imports (ESM convention)
 - The `FeatureId` union includes the new ID
 - The feature export name matches what `feature-registry.ts` imports

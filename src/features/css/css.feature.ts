@@ -1,4 +1,5 @@
 import type { Feature } from '../feature.types';
+
 import { applyCss } from './css.apply';
 import { CSS_VSCODE_EXTENSIONS } from './css.constants';
 import { detectCss } from './css.detect';

@@ -30,10 +30,7 @@ export function planRenames(existingFiles: Set<string>, rules: RenameRule[]): Re
  * Get set of existing files in target directory.
  * Checks for all canonical files and their alternatives from rename rules.
  */
-export async function getExistingFiles(
-  targetDir: string,
-  renameRules: RenameRule[],
-): Promise<Set<string>> {
+export async function getExistingFiles(targetDir: string, renameRules: RenameRule[]): Promise<Set<string>> {
   const files = new Set<string>();
   const filesToCheck = new Set<string>();
 

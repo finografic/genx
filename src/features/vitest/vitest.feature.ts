@@ -1,4 +1,5 @@
 import type { Feature } from '../feature.types';
+
 import { applyVitest } from './vitest.apply';
 import { detectVitest } from './vitest.detect';
 

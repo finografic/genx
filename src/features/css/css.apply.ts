@@ -1,14 +1,8 @@
 import { unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
-import {
-  fileExists,
-  installDevDependency,
-  isDependencyDeclared,
-  spinner,
-  successMessage,
-} from 'utils';
+import { fileExists, installDevDependency, isDependencyDeclared, spinner, successMessage } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
 import {
   LEGACY_STYLELINTRC_FILENAME,
   STYLELINT_CONFIG_FILENAME,
@@ -36,19 +30,12 @@ export async function applyCss(context: FeatureContext): Promise<FeatureApplyRes
       STYLELINT_PACKAGE,
       STYLELINT_PACKAGE_VERSION,
     );
-    spin.stop(
-      result.installed
-        ? `Installed ${STYLELINT_PACKAGE}`
-        : `${STYLELINT_PACKAGE} already installed`,
-    );
+    spin.stop(result.installed ? `Installed ${STYLELINT_PACKAGE}` : `${STYLELINT_PACKAGE} already installed`);
     if (result.installed) applied.push(STYLELINT_PACKAGE);
   }
 
   // 2. Install @stylistic/stylelint-plugin
-  const stylisticDeclared = await isDependencyDeclared(
-    context.targetDir,
-    STYLELINT_STYLISTIC_PACKAGE,
-  );
+  const stylisticDeclared = await isDependencyDeclared(context.targetDir, STYLELINT_STYLISTIC_PACKAGE);
   if (!stylisticDeclared) {
     const spin = spinner();
     spin.start(`Installing ${STYLELINT_STYLISTIC_PACKAGE}...`);

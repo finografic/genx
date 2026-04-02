@@ -17,9 +17,7 @@ export function renderHelp({ main, commands, examples, footer }: HelpConfig): vo
     lines.push(pc.bold(commands.title.toUpperCase()));
     const maxLen = Math.max(...commands.list.map((c) => c.label.length));
     for (const item of commands.list) {
-      lines.push(
-        `  ${pc.cyan(item.label)}${' '.repeat(maxLen - item.label.length + 4)}${item.description}`,
-      );
+      lines.push(`  ${pc.cyan(item.label)}${' '.repeat(maxLen - item.label.length + 4)}${item.description}`);
     }
     lines.push('');
   }

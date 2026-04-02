@@ -12,7 +12,4 @@ export const AI_INSTRUCTIONS_FILES = [
 ] as const;
 
 /** ESLint global-ignore patterns added when this feature is installed (keep `.cursor/rules` lintable) */
-export const AI_INSTRUCTIONS_ESLINT_IGNORES = [
-  '**/.cursor/hooks/**',
-  '**/.cursor/chats/**',
-] as const;
+export const AI_INSTRUCTIONS_ESLINT_IGNORES = ['**/.cursor/hooks/**', '**/.cursor/chats/**'] as const;

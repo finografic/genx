@@ -1,4 +1,5 @@
 import type { Feature } from '../feature.types';
+
 import { applyAiInstructions } from './ai-instructions.apply';
 import { detectAiInstructions } from './ai-instructions.detect';
 

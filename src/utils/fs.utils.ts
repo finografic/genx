@@ -8,11 +8,7 @@ import { applyTemplate } from './template.utils';
 /**
  * Copy a template file with token replacement.
  */
-export async function copyTemplate(
-  src: string,
-  dest: string,
-  vars: TemplateVars,
-): Promise<void> {
+export async function copyTemplate(src: string, dest: string, vars: TemplateVars): Promise<void> {
   const content = await readFile(src, 'utf8');
   const result = applyTemplate(content, vars);
 
@@ -76,8 +72,8 @@ async function copyDirInternal(
       await mkdir(destPath, { recursive: true });
       await copyDirInternal(srcPath, destPath, vars, options, rootSrc);
     } else if (entry.isFile()) {
-      const shouldTemplate = templateExtensions.some((ext) => entry.name.endsWith(ext))
-        || templateFiles.includes(entry.name);
+      const shouldTemplate =
+        templateExtensions.some((ext) => entry.name.endsWith(ext)) || templateFiles.includes(entry.name);
 
       if (shouldTemplate) {
         await copyTemplate(srcPath, destPath, vars);

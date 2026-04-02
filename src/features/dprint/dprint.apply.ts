@@ -1,6 +1,5 @@
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
-
 import {
   errorMessage,
   fileExists,
@@ -10,6 +9,8 @@ import {
   spinner,
   successMessage,
 } from 'utils';
+import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
 import {
   ESLINT_CONFIG_FILES,
   PACKAGE_JSON,
@@ -17,7 +18,6 @@ import {
   PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
   DPRINT_CI_STEP,
   DPRINT_CLI_PACKAGE,
@@ -194,9 +194,7 @@ function findFormattingInsertionPoint(scripts: Record<string, string>): number {
  * Add formatting scripts to package.json.
  * Inserts the formatting section after the linting section if it doesn't already exist.
  */
-async function addFormattingScripts(
-  packageJsonPath: string,
-): Promise<{ added: boolean; changes: string[] }> {
+async function addFormattingScripts(packageJsonPath: string): Promise<{ added: boolean; changes: string[] }> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
 
@@ -399,20 +397,16 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
 
   // 1. Install dprint CLI + @finografic/dprint-config
   try {
-    for (
-      const [pkg, version] of [
-        [DPRINT_CLI_PACKAGE, DPRINT_CLI_VERSION],
-        [DPRINT_PACKAGE, DPRINT_PACKAGE_VERSION],
-      ] as const
-    ) {
+    for (const [pkg, version] of [
+      [DPRINT_CLI_PACKAGE, DPRINT_CLI_VERSION],
+      [DPRINT_PACKAGE, DPRINT_PACKAGE_VERSION],
+    ] as const) {
       const alreadyDeclared = await isDependencyDeclared(context.targetDir, pkg);
       if (!alreadyDeclared) {
         const installSpin = spinner();
         installSpin.start(`Installing ${pkg}...`);
         const installResult = await installDevDependency(context.targetDir, pkg, version);
-        installSpin.stop(
-          installResult.installed ? `Installed ${pkg}` : `${pkg} already installed`,
-        );
+        installSpin.stop(installResult.installed ? `Installed ${pkg}` : `${pkg} already installed`);
         if (installResult.installed) {
           applied.push(pkg);
         }
@@ -480,9 +474,7 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
       successMessage('Disabled Prettier in VSCode settings');
     }
     if (settingsResult.addedLanguages.length > 0) {
-      successMessage(
-        `Configured dprint as formatter for: ${settingsResult.addedLanguages.join(', ')}`,
-      );
+      successMessage(`Configured dprint as formatter for: ${settingsResult.addedLanguages.join(', ')}`);
     }
   }
 

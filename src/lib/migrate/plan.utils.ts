@@ -1,21 +1,16 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
+import { errorMessage, fileExists, findPackageRoot, getTemplatesDir, infoMessage } from 'utils';
+import type { FeatureId } from 'features/feature.types';
 
 import { planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { planMerges } from 'lib/migrate/merge.utils';
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
-import {
-  detectCurrentNodeState,
-  planNodeRuntimeChanges,
-  planNodeTypesChange,
-} from 'lib/migrate/node.utils';
+import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from 'lib/migrate/node.utils';
 import { patchPackageJson } from 'lib/migrate/package-json.utils';
 import { getExistingFiles, planRenames } from 'lib/migrate/rename.utils';
-import { errorMessage, fileExists, findPackageRoot, getTemplatesDir, infoMessage } from 'utils';
 import { safeExit } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { dependencyRules } from 'config/dependencies.rules';
@@ -75,9 +70,7 @@ export async function planMigration(
     const depChanges = planDependencyChanges(packageJson, dependencyRules);
     if (depChanges.length > 0) {
       plan.push(
-        `${pc.cyan('dependencies')}: ${
-          depChanges.map((c) => `${c.name} (${c.operation})`).join(', ')
-        }`,
+        `${pc.cyan('dependencies')}: ${depChanges.map((c) => `${c.name} (${c.operation})`).join(', ')}`,
       );
     }
   }
@@ -106,9 +99,9 @@ export async function planMigration(
     renameChanges = planRenames(existingFiles, renameRules);
     if (renameChanges.length > 0) {
       plan.push(
-        `${pc.yellow('renames')}: ${
-          renameChanges.map((nameChange) => `${nameChange.from} → ${nameChange.to}`).join(', ')
-        }`,
+        `${pc.yellow('renames')}: ${renameChanges
+          .map((nameChange) => `${nameChange.from} → ${nameChange.to}`)
+          .join(', ')}`,
       );
     }
   }

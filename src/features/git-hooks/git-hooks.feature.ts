@@ -1,4 +1,5 @@
 import type { Feature } from '../feature.types';
+
 import { applyGitHooks } from './git-hooks.apply';
 import { detectGitHooks } from './git-hooks.detect';
 

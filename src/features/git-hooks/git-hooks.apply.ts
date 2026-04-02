@@ -1,6 +1,5 @@
 import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
 import {
   fileExists,
   installDevDependency,
@@ -9,9 +8,10 @@ import {
   successMessage,
   warnMessage,
 } from 'utils';
+import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
 import { COMMITLINT_CONFIG, PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import {
   COMMITLINT_PACKAGE_JSON_CONFIG,
   GIT_HOOKS_PACKAGES,
@@ -24,8 +24,7 @@ import {
  * in that order (matches repo convention).
  */
 function reorderGitHookTailKeys(packageJson: PackageJson): PackageJson {
-  const { 'lint-staged': lintStaged, commitlint, 'simple-git-hooks': simpleGitHooks, ...rest } =
-    packageJson;
+  const { 'lint-staged': lintStaged, commitlint, 'simple-git-hooks': simpleGitHooks, ...rest } = packageJson;
 
   return {
     ...rest,
@@ -129,9 +128,7 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
       installSpin.start(`Installing ${packageName}...`);
       const installResult = await installDevDependency(context.targetDir, packageName, version);
       installSpin.stop(
-        installResult.installed
-          ? `Installed ${packageName}`
-          : `${packageName} already installed`,
+        installResult.installed ? `Installed ${packageName}` : `${packageName} already installed`,
       );
       if (installResult.installed) {
         applied.push(packageName);

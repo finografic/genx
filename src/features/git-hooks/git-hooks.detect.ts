@@ -1,6 +1,7 @@
 import { isDependencyDeclared } from 'utils';
-import { PKG_LINT_STAGED } from 'config/constants.config';
 import type { FeatureContext } from '../feature.types';
+
+import { PKG_LINT_STAGED } from 'config/constants.config';
 
 /**
  * Detect if git hooks are already configured.

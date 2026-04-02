@@ -1,6 +1,5 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
 import { fileExists } from 'utils';
 
 const DPRINT_CONFIG_FILENAME = 'dprint.jsonc';

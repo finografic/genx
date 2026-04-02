@@ -163,7 +163,6 @@ A generated package should:
 - Have the correct dependency installed
 - Run `pnpm lint` successfully without manual changes
 - If dprint option is selected:
-
   - have a `dprint.json`
   - support editor format-on-save
 

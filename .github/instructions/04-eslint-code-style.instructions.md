@@ -22,11 +22,11 @@ npm run lint -- path/to/file.tsx
 
 **CRITICAL — dprint command semantics (agents get this wrong constantly):**
 
-| Command | Effect | Output |
-| ------- | ------ | ------ |
-| `dprint check` | **Check only** — never modifies files, exits non-zero if unformatted | Verbose diff by default |
-| `dprint fmt` | **Fix** — rewrites files in place, exits zero even when changes are made | Silent by default |
-| `dprint fmt --diff` | Fix + show diff of what changed | Verbose |
+| Command             | Effect                                                                   | Output                  |
+| ------------------- | ------------------------------------------------------------------------ | ----------------------- |
+| `dprint check`      | **Check only** — never modifies files, exits non-zero if unformatted     | Verbose diff by default |
+| `dprint fmt`        | **Fix** — rewrites files in place, exits zero even when changes are made | Silent by default       |
+| `dprint fmt --diff` | Fix + show diff of what changed                                          | Verbose                 |
 
 - These two commands are NOT interchangeable. Never use `dprint fmt` to verify/gate —
   it will silently fix and exit 0.

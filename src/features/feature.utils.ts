@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
 import { fileExists } from 'utils';
+
 import type { TemplateVars } from 'types/template.types';
 
 /**

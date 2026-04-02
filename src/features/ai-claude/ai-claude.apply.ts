@@ -1,25 +1,19 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import { copyTemplate, errorMessage, fileExists, spinner, successMessage } from 'utils';
+import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { applyAiInstructions } from '../ai-instructions/ai-instructions.apply';
-import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 import { addEslintIgnorePatterns, createDefaultTemplateVars } from '../feature.utils';
-import {
-  AI_CLAUDE_ESLINT_IGNORES,
-  AI_CLAUDE_FILES,
-  AI_CLAUDE_GITIGNORE_LINES,
-} from './ai-claude.constants';
+import { AI_CLAUDE_ESLINT_IGNORES, AI_CLAUDE_FILES, AI_CLAUDE_GITIGNORE_LINES } from './ai-claude.constants';
 
 /**
  * Read name and description from the target project's package.json.
  * Returns empty strings if the file is missing or unparseable.
  */
-async function readPackageVars(
-  targetDir: string,
-): Promise<{ PACKAGE_NAME: string; DESCRIPTION: string }> {
+async function readPackageVars(targetDir: string): Promise<{ PACKAGE_NAME: string; DESCRIPTION: string }> {
   try {
     const content = await readFile(resolve(targetDir, 'package.json'), 'utf8');
     const pkg = JSON.parse(content) as { name?: string; description?: string };
@@ -44,18 +38,14 @@ async function ensureGitignoreLines(targetDir: string): Promise<boolean> {
     content = await readFile(gitignorePath, 'utf8');
   }
 
-  const missingLines = AI_CLAUDE_GITIGNORE_LINES.filter(
-    (line) => !content.includes(line),
-  );
+  const missingLines = AI_CLAUDE_GITIGNORE_LINES.filter((line) => !content.includes(line));
 
   if (missingLines.length === 0) {
     return false;
   }
 
   const linesToAdd = missingLines.join('\n');
-  const updatedContent = content.endsWith('\n')
-    ? `${content}${linesToAdd}\n`
-    : `${content}\n${linesToAdd}\n`;
+  const updatedContent = content.endsWith('\n') ? `${content}${linesToAdd}\n` : `${content}\n${linesToAdd}\n`;
 
   await writeFile(gitignorePath, updatedContent, 'utf8');
   return true;

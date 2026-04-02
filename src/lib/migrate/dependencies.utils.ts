@@ -9,10 +9,7 @@ export interface DependencyChange {
   section: DependencySection;
 }
 
-export function planDependencyChanges(
-  packageJson: PackageJson,
-  rules: DependencyRule[],
-): DependencyChange[] {
+export function planDependencyChanges(packageJson: PackageJson, rules: DependencyRule[]): DependencyChange[] {
   const changes: DependencyChange[] = [];
 
   for (const rule of rules) {
@@ -51,10 +48,7 @@ const DEPENDENCY_SECTIONS: DependencySection[] = ['dependencies', 'devDependenci
  * When adding/updating in one section, removes the dep from the other section
  * (so a dep can be moved from dependencies to devDependencies or vice versa).
  */
-export function applyDependencyChanges(
-  packageJson: PackageJson,
-  changes: DependencyChange[],
-): PackageJson {
+export function applyDependencyChanges(packageJson: PackageJson, changes: DependencyChange[]): PackageJson {
   const next = { ...packageJson };
 
   for (const change of changes) {

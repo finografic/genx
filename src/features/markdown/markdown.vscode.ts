@@ -8,13 +8,8 @@
 import { copyFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addExtensionRecommendations, fileExists, readSettingsJson, writeSettingsJson } from 'utils';
 
-import {
-  addExtensionRecommendations,
-  fileExists,
-  readSettingsJson,
-  writeSettingsJson,
-} from 'utils';
 import {
   MARKDOWN_STYLES_KEY,
   MARKDOWN_VSCODE_SETTINGS,
@@ -78,8 +73,8 @@ async function copyMarkdownCssFile(
   const srcPath = fileExists(templatesPath)
     ? templatesPath
     : fileExists(distTemplatesPath)
-    ? distTemplatesPath
-    : null;
+      ? distTemplatesPath
+      : null;
   if (!srcPath) {
     return false;
   }

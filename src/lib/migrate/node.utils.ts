@@ -62,10 +62,7 @@ export async function detectCurrentNodeState(targetDir: string): Promise<Current
 /**
  * Plan Node runtime changes (.nvmrc, GitHub Actions).
  */
-export function planNodeRuntimeChanges(
-  current: CurrentNodeState,
-  policy: NodePolicy,
-): NodeChange[] {
+export function planNodeRuntimeChanges(current: CurrentNodeState, policy: NodePolicy): NodeChange[] {
   const changes: NodeChange[] = [];
 
   if (current.nvmrc !== policy.local.nvmrc) {
@@ -107,10 +104,7 @@ export function planNodeTypesChange(
 /**
  * Apply Node runtime changes to filesystem.
  */
-export async function applyNodeRuntimeChanges(
-  targetDir: string,
-  changes: NodeChange[],
-): Promise<void> {
+export async function applyNodeRuntimeChanges(targetDir: string, changes: NodeChange[]): Promise<void> {
   for (const change of changes) {
     if (change.target === '.nvmrc') {
       const nvmrcPath = resolve(targetDir, '.nvmrc');
@@ -119,10 +113,7 @@ export async function applyNodeRuntimeChanges(
       const workflowPath = resolve(targetDir, '.github/workflows/release.yml');
       if (fileExists(workflowPath)) {
         const content = await readFile(workflowPath, 'utf8');
-        const updated = content.replace(
-          /node-version:\s*.+/,
-          `node-version: ${change.to}`,
-        );
+        const updated = content.replace(/node-version:\s*.+/, `node-version: ${change.to}`);
         await writeFile(workflowPath, updated, 'utf8');
       }
     }
@@ -132,10 +123,7 @@ export async function applyNodeRuntimeChanges(
 /**
  * Apply @types/node change to package.json.
  */
-export function applyNodeTypesChange(
-  packageJson: PackageJson,
-  change: NodeChange,
-): PackageJson {
+export function applyNodeTypesChange(packageJson: PackageJson, change: NodeChange): PackageJson {
   const next = { ...packageJson };
   const devDeps = (next.devDependencies as Record<string, string> | undefined) ?? {};
   devDeps['@types/node'] = change.to;

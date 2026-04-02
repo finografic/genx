@@ -1,14 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
 import { execa } from 'execa';
 
 import type { PackageJson } from 'types/package-json.types';
 
-export async function isDependencyDeclared(
-  targetDir: string,
-  packageName: string,
-): Promise<boolean> {
+export async function isDependencyDeclared(targetDir: string, packageName: string): Promise<boolean> {
   const packageJsonPath = resolve(targetDir, 'package.json');
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
@@ -24,8 +20,8 @@ export async function isDependencyDeclared(
       : {};
 
   return (
-    Object.prototype.hasOwnProperty.call(dependencies, packageName)
-    || Object.prototype.hasOwnProperty.call(devDependencies, packageName)
+    Object.prototype.hasOwnProperty.call(dependencies, packageName) ||
+    Object.prototype.hasOwnProperty.call(devDependencies, packageName)
   );
 }
 
@@ -82,10 +78,7 @@ export async function removeDependency(
  * Check if any of the given dependencies are declared in package.json.
  * Useful for detecting feature categories (e.g., "has react" for frontend).
  */
-export async function hasAnyDependency(
-  targetDir: string,
-  packageNames: string[],
-): Promise<boolean> {
+export async function hasAnyDependency(targetDir: string, packageNames: string[]): Promise<boolean> {
   for (const name of packageNames) {
     if (await isDependencyDeclared(targetDir, name)) {
       return true;

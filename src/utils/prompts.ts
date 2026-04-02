@@ -1,5 +1,5 @@
 import type { PackageConfig } from '@finografic/core';
-
+import type { FlowContext } from './flow.utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { promptAuthor } from 'lib/prompts/author.prompt';
@@ -8,7 +8,6 @@ import { promptPackageManifest } from 'lib/prompts/package-manifest.prompt';
 import { promptPackageType } from 'lib/prompts/package-type.prompt';
 import { defaultValuesConfig } from 'config/values.config';
 import type { PackageType } from 'types/package-type.types';
-import type { FlowContext } from './flow.utils';
 
 interface PackageConfigWithFeatures extends PackageConfig {
   features: FeatureId[];

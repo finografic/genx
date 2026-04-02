@@ -12,6 +12,7 @@ import {
   readSettingsJson,
   writeSettingsJson,
 } from 'utils';
+
 import {
   DPRINT_CATEGORY_DEPENDENCIES,
   DPRINT_LANGUAGE_CATEGORIES,
@@ -22,9 +23,7 @@ import {
 /**
  * Determine which language categories should be enabled based on project dependencies.
  */
-async function detectEnabledCategories(
-  targetDir: string,
-): Promise<DprintLanguageCategory[]> {
+async function detectEnabledCategories(targetDir: string): Promise<DprintLanguageCategory[]> {
   const enabledCategories: DprintLanguageCategory[] = [];
 
   for (const [category, dependencies] of Object.entries(DPRINT_CATEGORY_DEPENDENCIES)) {
@@ -87,9 +86,7 @@ export async function applyDprintFormatterSettings(
 /**
  * Apply dprint-specific VSCode settings (experimentalLsp, verbose).
  */
-export async function applyDprintVSCodeSettings(
-  targetDir: string,
-): Promise<boolean> {
+export async function applyDprintVSCodeSettings(targetDir: string): Promise<boolean> {
   const settings = await readSettingsJson(targetDir);
   let modified = false;
 

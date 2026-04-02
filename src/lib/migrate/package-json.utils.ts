@@ -44,8 +44,7 @@ export function patchPackageJson(
     : [];
   let changedKeywords = false;
 
-  const includeFinograficKeyword =
-    migrateConfig.packageJson.ensureKeywords.includeFinograficKeyword;
+  const includeFinograficKeyword = migrateConfig.packageJson.ensureKeywords.includeFinograficKeyword;
   const finograficKeywordResult = ensureKeyword(keywords, includeFinograficKeyword);
   changedKeywords = changedKeywords || finograficKeywordResult.changed;
 

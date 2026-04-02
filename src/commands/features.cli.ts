@@ -1,9 +1,9 @@
-import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { featuresHelp } from 'help/features.help';
+import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';
+import type { FeatureId } from 'features/feature.types';
 
 import { promptFeatures } from 'lib/prompts/features.prompt';
-import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
@@ -13,10 +13,7 @@ import { validateExistingPackage } from 'utils/validation.utils';
 /**
  * Add optional features to an existing @finografic package.
  */
-export async function addFeatures(
-  argv: string[],
-  options: { targetDir: string },
-): Promise<void> {
+export async function addFeatures(argv: string[], options: { targetDir: string }): Promise<void> {
   if (argv.includes('--help') || argv.includes('-h')) {
     renderHelp(featuresHelp);
     return;
@@ -63,9 +60,7 @@ export async function addFeatures(
     if (feature.detect) {
       const detected = await feature.detect({ targetDir });
       if (detected) {
-        noopMessages.push(
-          `${feature.label} already installed. No changes made.`,
-        );
+        noopMessages.push(`${feature.label} already installed. No changes made.`);
         continue;
       }
     }
@@ -79,9 +74,7 @@ export async function addFeatures(
     if (result.applied.length > 0) {
       appliedFeatures.push(featureId);
     } else {
-      noopMessages.push(
-        result.noopMessage ?? `${feature.label} already installed. No changes made.`,
-      );
+      noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
     }
   }
 

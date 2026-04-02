@@ -1,4 +1,5 @@
 import type { Feature } from '../feature.types';
+
 import { applyMarkdown } from './markdown.apply';
 import { MARKDOWNLINT_VSCODE_EXTENSIONS } from './markdown.constants';
 import { detectMarkdown } from './markdown.detect';

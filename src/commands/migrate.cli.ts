@@ -1,43 +1,26 @@
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
 import * as clack from '@clack/prompts';
 import { execa } from 'execa';
-import type { FeatureId } from 'features/feature.types';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
+import { errorMessage, infoMessage, intro, renderHelp, spinner, successMessage } from 'utils';
+import type { FeatureId } from 'features/feature.types';
 
-import {
-  generateCliHelpContent,
-  getBinName,
-  isCliPackage,
-} from 'lib/generators/cli-help.generator';
+import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { restructureDocs } from 'lib/migrate/docs-restructure.utils';
 import { applyMerges } from 'lib/migrate/merge.utils';
 import { parseMigrateArgs } from 'lib/migrate/migrate-metadata.utils';
 import { getScopeAndName, shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
-import {
-  applyNodeRuntimeChanges,
-  applyNodeTypesChange,
-  detectNodeMajor,
-} from 'lib/migrate/node.utils';
-import {
-  patchPackageJson,
-  readPackageJson,
-  writePackageJson,
-} from 'lib/migrate/package-json.utils';
+import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from 'lib/migrate/node.utils';
+import { patchPackageJson, readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
 import { planMigration } from 'lib/migrate/plan.utils';
 import { applyRenames } from 'lib/migrate/rename.utils';
 import { copyLicenseIfMissing, syncFromTemplate } from 'lib/migrate/template-sync.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
-import {
-  confirmMerges,
-  confirmMigrateTarget,
-  confirmNodeVersionUpgrade,
-} from 'lib/prompts/migrate.prompt';
-import { errorMessage, infoMessage, intro, renderHelp, spinner, successMessage } from 'utils';
+import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from 'lib/prompts/migrate.prompt';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
@@ -147,9 +130,9 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     }
 
     infoMessage(
-      `${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${
-        pc.greenBright('--write')
-      } ${pc.white('to apply changes.')}\n`,
+      `${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${pc.greenBright(
+        '--write',
+      )} ${pc.white('to apply changes.')}\n`,
     );
     return;
   }
@@ -257,9 +240,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     if (feature.detect) {
       const detected = await feature.detect({ targetDir });
       if (detected) {
-        noopMessages.push(
-          `${feature.label} already installed. No changes made.`,
-        );
+        noopMessages.push(`${feature.label} already installed. No changes made.`);
         continue;
       }
     }
@@ -274,9 +255,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     if (result.applied.length > 0) {
       appliedFeatures.push(featureId);
     } else {
-      noopMessages.push(
-        result.noopMessage ?? `${feature.label} already installed. No changes made.`,
-      );
+      noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
     }
   }
 

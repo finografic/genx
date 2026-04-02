@@ -1,26 +1,16 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
-import {
-  fileExists,
-  installDevDependency,
-  isDependencyDeclared,
-  spinner,
-  successMessage,
-} from 'utils';
-import { ESLINT_CONFIG_FILES } from 'config/constants.config';
+import { fileExists, installDevDependency, isDependencyDeclared, spinner, successMessage } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
+import { ESLINT_CONFIG_FILES } from 'config/constants.config';
 import {
   ESLINT_MARKDOWN_CONFIG_BLOCK,
   ESLINT_MARKDOWN_IMPORTS,
   MARKDOWNLINT_PACKAGE,
   MARKDOWNLINT_PACKAGE_VERSION,
 } from './markdown.constants';
-import {
-  applyMarkdownExtensions,
-  applyMarkdownVSCodeSettings,
-  copyMarkdownCss,
-} from './markdown.vscode';
+import { applyMarkdownExtensions, applyMarkdownVSCodeSettings, copyMarkdownCss } from './markdown.vscode';
 
 /**
  * Find the eslint config file in the target directory.
@@ -62,9 +52,8 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
 
     if (lastImportMatch) {
       const insertPos = lastImportMatch.index + lastImportMatch[0].length;
-      updatedContent = updatedContent.slice(0, insertPos)
-        + '\n' + ESLINT_MARKDOWN_IMPORTS
-        + updatedContent.slice(insertPos);
+      updatedContent =
+        updatedContent.slice(0, insertPos) + '\n' + ESLINT_MARKDOWN_IMPORTS + updatedContent.slice(insertPos);
     }
   }
 
@@ -90,9 +79,11 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
   }
 
   if (insertPos !== null) {
-    updatedContent = updatedContent.slice(0, insertPos)
-      + '\n' + ESLINT_MARKDOWN_CONFIG_BLOCK
-      + updatedContent.slice(insertPos);
+    updatedContent =
+      updatedContent.slice(0, insertPos) +
+      '\n' +
+      ESLINT_MARKDOWN_CONFIG_BLOCK +
+      updatedContent.slice(insertPos);
   }
 
   if (updatedContent !== content) {

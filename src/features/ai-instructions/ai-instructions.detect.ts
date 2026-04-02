@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
-
 import { fileExists } from 'utils';
 import type { FeatureContext } from '../feature.types';
+
 import { AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
 
 /**
@@ -11,8 +11,8 @@ import { AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
 export async function detectAiInstructions(context: FeatureContext): Promise<boolean> {
   const [copilotFile, instructionsDir, cursorDir] = AI_INSTRUCTIONS_FILES;
   return (
-    fileExists(resolve(context.targetDir, copilotFile))
-    && fileExists(resolve(context.targetDir, instructionsDir))
-    && fileExists(resolve(context.targetDir, cursorDir))
+    fileExists(resolve(context.targetDir, copilotFile)) &&
+    fileExists(resolve(context.targetDir, instructionsDir)) &&
+    fileExists(resolve(context.targetDir, cursorDir))
   );
 }

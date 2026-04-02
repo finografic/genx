@@ -3,12 +3,12 @@
 import { createRequire } from 'node:module';
 import process from 'node:process';
 
+import { safeExit } from './utils/env.utils.js';
 import { renderHelp } from 'utils/render-help/render-help.utils.js';
 import { createPackage } from './commands/create.cli.js';
 import { addFeatures } from './commands/features.cli.js';
 import { migratePackage } from './commands/migrate.cli.js';
 import { rootHelp } from './help/root.help.js';
-import { safeExit } from './utils/env.utils.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };

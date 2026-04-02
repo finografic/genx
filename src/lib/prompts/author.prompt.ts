@@ -10,11 +10,7 @@ export type Author = {
 
 type AuthorField = 'name' | 'email' | 'url';
 
-export async function promptAuthor(
-  flow: FlowContext,
-  defaults: Author,
-  scope: string,
-): Promise<Author> {
+export async function promptAuthor(flow: FlowContext, defaults: Author, scope: string): Promise<Author> {
   const scopeClean = scope.replace('@', '');
   const urlSuggestion = defaults.url || `https://github.com/${scopeClean}`;
 
@@ -47,10 +43,7 @@ export async function promptAuthor(
     email = await promptText(flow, {
       message: 'Author email:',
       default: email,
-      validate: (v) =>
-        emailSchema.safeParse(v).success
-          ? undefined
-          : 'Invalid email address',
+      validate: (v) => (emailSchema.safeParse(v).success ? undefined : 'Invalid email address'),
     });
   }
 

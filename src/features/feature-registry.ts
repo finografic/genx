@@ -1,3 +1,5 @@
+import type { Feature, FeatureId } from './feature.types';
+
 import { aiClaudeFeature } from './ai-claude/ai-claude.feature';
 import { aiInstructionsFeature } from './ai-instructions/ai-instructions.feature';
 import { cssFeature } from './css/css.feature';
@@ -5,7 +7,6 @@ import { dprintFeature } from './dprint/dprint.feature';
 import { gitHooksFeature } from './git-hooks/git-hooks.feature';
 import { markdownFeature } from './markdown/markdown.feature';
 import { vitestFeature } from './vitest/vitest.feature';
-import type { Feature, FeatureId } from './feature.types';
 
 /**
  * Registry of all available features.

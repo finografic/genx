@@ -49,10 +49,10 @@ One-line description of what the feature provides.
 
 ## Files
 
-| File                          | Purpose |
-| ----------------------------- | ------- |
+| File                         | Purpose |
+| ---------------------------- | ------- |
 | `{folder-name}.constants.ts` | ...     |
-| ...                           | ...     |
+| ...                          | ...     |
 
 ## VSCode Extension ← only if applicable
 

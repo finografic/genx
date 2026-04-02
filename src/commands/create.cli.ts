@@ -2,13 +2,9 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { createHelp } from 'help/create.help';
-
-import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
-import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
 import {
   buildTemplateVars,
   copyDir,
@@ -22,6 +18,9 @@ import {
   spinner,
   validateTargetDir,
 } from 'utils';
+
+import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
+import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
 import { isDevelopment, safeExit } from 'utils/env.utils';
 import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
@@ -122,9 +121,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
     for (const [key, value] of Object.entries(config.packageType.packageJsonDefaults)) {
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         // Replace __PKG_NAME__ placeholder in nested objects
-        const resolved = JSON.parse(
-          JSON.stringify(value).replace(/__PKG_NAME__/g, config.name),
-        );
+        const resolved = JSON.parse(JSON.stringify(value).replace(/__PKG_NAME__/g, config.name));
         pkgJson[key] = resolved;
       } else {
         pkgJson[key] = value;
@@ -140,10 +137,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
 
     // Add package type keywords
     const existingKeywords = (pkgJson['keywords'] as string[]) || [];
-    const typeKeywords = [
-      `genx:type:${config.packageType.id}`,
-      ...config.packageType.keywords,
-    ];
+    const typeKeywords = [`genx:type:${config.packageType.id}`, ...config.packageType.keywords];
     pkgJson['keywords'] = [...existingKeywords, ...typeKeywords];
 
     // Conditionally add author.url to package.json
@@ -158,10 +152,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
     const readmePath = resolve(targetDir, 'README.md');
     if (!config.author.url) {
       const readmeContent = await readFile(readmePath, 'utf8');
-      const updated = readmeContent.replace(
-        /\[(\*\*[^*]+\*\*)\]\(__AUTHOR_URL__\)/,
-        '$1',
-      );
+      const updated = readmeContent.replace(/\[(\*\*[^*]+\*\*)\]\(__AUTHOR_URL__\)/, '$1');
       await writeFile(readmePath, updated, 'utf8');
     }
 

@@ -1,10 +1,9 @@
 import { rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-
 import * as clack from '@clack/prompts';
+import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils';
 
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
-import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils';
 import { migrateConfig } from 'config/migrate.config';
 import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
@@ -19,9 +18,7 @@ export async function syncFromTemplate(
   vars: TemplateVars,
   only: Set<MigrateOnlySection> | null,
 ): Promise<void> {
-  const syncTasks = migrateConfig.syncFromTemplate.filter((item) =>
-    shouldRunSection(only, item.section)
-  );
+  const syncTasks = migrateConfig.syncFromTemplate.filter((item) => shouldRunSection(only, item.section));
 
   if (syncTasks.length === 0) {
     return;

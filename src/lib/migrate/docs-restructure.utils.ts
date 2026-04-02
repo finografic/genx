@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs';
 import { rename } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { ensureDir, fileExists, infoMessage } from 'utils';
 
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { confirmReleasesRename } from 'lib/prompts/migrate.prompt';
-import { ensureDir, fileExists, infoMessage } from 'utils';
 import type { MigrateOnlySection } from 'types/migrate.types';
 
 /**

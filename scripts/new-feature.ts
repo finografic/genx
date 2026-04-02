@@ -11,7 +11,6 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import process from 'node:process';
-
 import * as clack from '@clack/prompts';
 
 import { ensureDir, fileExists } from '../src/utils/fs.utils';
@@ -170,10 +169,7 @@ async function main(): Promise<void> {
   if (hint) {
     const featureFilePath = resolve(featureDir, `${folderName}.feature.ts`);
     let featureContent = await readFile(featureFilePath, 'utf8');
-    featureContent = featureContent.replace(
-      'hint: undefined,',
-      `hint: '${hint}',`,
-    );
+    featureContent = featureContent.replace('hint: undefined,', `hint: '${hint}',`);
     await writeFile(featureFilePath, featureContent, 'utf8');
   }
 
@@ -212,10 +208,7 @@ export async function apply${pascalName}Extensions(targetDir: string): Promise<s
   const unionMatch = typesContent.match(unionEntryRegex);
 
   if (unionMatch) {
-    typesContent = typesContent.replace(
-      unionEntryRegex,
-      `$1\n  | '${featureId}';`,
-    );
+    typesContent = typesContent.replace(unionEntryRegex, `$1\n  | '${featureId}';`);
     await writeFile(typesPath, typesContent, 'utf8');
   }
 
@@ -235,12 +228,8 @@ export async function apply${pascalName}Extensions(targetDir: string): Promise<s
   const lastImportMatch = registryContent.match(lastImportRegex);
 
   if (lastImportMatch) {
-    const newImport =
-      `import { ${featureId}Feature } from './${folderName}/${folderName}.feature';`;
-    registryContent = registryContent.replace(
-      lastImportRegex,
-      `$1\n${newImport}\n$2`,
-    );
+    const newImport = `import { ${featureId}Feature } from './${folderName}/${folderName}.feature';`;
+    registryContent = registryContent.replace(lastImportRegex, `$1\n${newImport}\n$2`);
   }
 
   // Add to features array — insert before the closing bracket
@@ -248,10 +237,7 @@ export async function apply${pascalName}Extensions(targetDir: string): Promise<s
   const arrayMatch = registryContent.match(arrayEndRegex);
 
   if (arrayMatch) {
-    registryContent = registryContent.replace(
-      arrayEndRegex,
-      `$1,\n  ${featureId}Feature,\n];`,
-    );
+    registryContent = registryContent.replace(arrayEndRegex, `$1,\n  ${featureId}Feature,\n];`);
   }
 
   await writeFile(registryPath, registryContent, 'utf8');
@@ -276,7 +262,9 @@ export async function apply${pascalName}Extensions(targetDir: string): Promise<s
       `${pc.cyan('Updated:')}`,
       `  src/features/feature.types.ts   ${pc.dim('(FeatureId union)')}`,
       `  src/features/feature-registry.ts ${pc.dim('(import + array entry)')}`,
-    ].filter(Boolean).join('\n'),
+    ]
+      .filter(Boolean)
+      .join('\n'),
     `Feature scaffolded: ${featureLabel}`,
   );
 

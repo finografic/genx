@@ -34,9 +34,7 @@ export const migrateHelp: HelpConfig = {
   },
   footer: {
     title: 'Show Help',
-    list: [
-      { label: 'genx migrate --help', description: 'Show this help message' },
-    ],
+    list: [{ label: 'genx migrate --help', description: 'Show this help message' }],
   },
   minWidth: defaultHelpOptions.minWidth,
 };

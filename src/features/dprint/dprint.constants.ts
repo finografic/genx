@@ -22,20 +22,14 @@ export const DPRINT_VSCODE_EXTENSIONS = ['dprint.dprint'] as const;
 /**
  * Exact Prettier-related package names to uninstall when replacing with dprint.
  */
-export const PRETTIER_PACKAGES = [
-  'prettier',
-  'eslint-config-prettier',
-  'eslint-plugin-prettier',
-] as const;
+export const PRETTIER_PACKAGES = ['prettier', 'eslint-config-prettier', 'eslint-plugin-prettier'] as const;
 
 /**
  * Glob patterns to match Prettier-related packages (e.g., "*prettier-plugin-*").
  * Patterns use simple wildcards: * matches any characters.
  * For scoped packages like @scope/name, the pattern matches against the full name.
  */
-export const PRETTIER_PACKAGE_PATTERNS = [
-  '*prettier-plugin-*',
-] as const;
+export const PRETTIER_PACKAGE_PATTERNS = ['*prettier-plugin-*'] as const;
 
 /** Prettier config filenames to detect and backup when replacing with dprint. */
 export const PRETTIER_CONFIG_FILES = [

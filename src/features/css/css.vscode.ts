@@ -8,6 +8,7 @@ import {
   readSettingsJson,
   writeSettingsJson,
 } from 'utils';
+
 import { CSS_DPRINT_LANGUAGES, CSS_VSCODE_EXTENSIONS, CSS_VSCODE_SETTINGS } from './css.constants';
 
 /**

@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import { copyDir, copyTemplate, errorMessage, fileExists, spinner, successMessage } from 'utils';
-import { getTemplatesDir } from 'utils/package-root.utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
+import { getTemplatesDir } from 'utils/package-root.utils';
 import { addEslintIgnorePatterns, createDefaultTemplateVars } from '../feature.utils';
 import { AI_INSTRUCTIONS_ESLINT_IGNORES, AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
 
@@ -26,10 +26,7 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
 
   if (copilotExists && instructionsExist && cursorExists) {
     // Ensure eslint ignore even if all files exist
-    const eslintAdded = await addEslintIgnorePatterns(
-      context.targetDir,
-      AI_INSTRUCTIONS_ESLINT_IGNORES,
-    );
+    const eslintAdded = await addEslintIgnorePatterns(context.targetDir, AI_INSTRUCTIONS_ESLINT_IGNORES);
     if (eslintAdded.length > 0) {
       applied.push('eslint.config.ts (.cursor ignore)');
       successMessage('Added .cursor hooks/chats paths to eslint.config.ts globalIgnores');
@@ -81,10 +78,7 @@ export async function applyAiInstructions(context: FeatureContext): Promise<Feat
   }
 
   // 4. Add .cursor ignore to eslint.config.ts
-  const eslintAdded = await addEslintIgnorePatterns(
-    context.targetDir,
-    AI_INSTRUCTIONS_ESLINT_IGNORES,
-  );
+  const eslintAdded = await addEslintIgnorePatterns(context.targetDir, AI_INSTRUCTIONS_ESLINT_IGNORES);
   if (eslintAdded.length > 0) {
     applied.push('eslint.config.ts (.cursor ignore)');
     successMessage('Added .cursor hooks/chats paths to eslint.config.ts globalIgnores');

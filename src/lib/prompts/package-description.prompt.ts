@@ -3,9 +3,7 @@ import * as clack from '@clack/prompts';
 import { cancel } from 'utils/prompts.utils';
 import { descriptionSchema } from 'utils/validation.utils';
 
-export async function promptPackageDescription(defaults: {
-  description: string;
-}): Promise<string | null> {
+export async function promptPackageDescription(defaults: { description: string }): Promise<string | null> {
   const description = await clack.text({
     message: 'Package description:',
     placeholder: defaults.description,

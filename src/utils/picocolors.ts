@@ -6,7 +6,9 @@
 import * as ns from 'picocolors';
 
 const withDefault = (ns as { default?: unknown }).default;
-export const pc = typeof withDefault === 'object' && withDefault !== null
-    && typeof (withDefault as { black?: unknown }).black === 'function'
-  ? (withDefault as typeof ns)
-  : ns;
+export const pc =
+  typeof withDefault === 'object' &&
+  withDefault !== null &&
+  typeof (withDefault as { black?: unknown }).black === 'function'
+    ? (withDefault as typeof ns)
+    : ns;

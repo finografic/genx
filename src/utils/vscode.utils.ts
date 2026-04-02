@@ -52,10 +52,7 @@ export async function readExtensionsJson(targetDir: string): Promise<VSCodeExten
 /**
  * Write the .vscode/extensions.json file.
  */
-export async function writeExtensionsJson(
-  targetDir: string,
-  content: VSCodeExtensionsJson,
-): Promise<void> {
+export async function writeExtensionsJson(targetDir: string, content: VSCodeExtensionsJson): Promise<void> {
   await ensureVSCodeDir(targetDir);
   const filePath = resolve(targetDir, '.vscode', 'extensions.json');
   const formatted = `${JSON.stringify(content, null, 2)}\n`;
@@ -106,10 +103,7 @@ export async function readSettingsJson(targetDir: string): Promise<VSCodeSetting
 /**
  * Write the .vscode/settings.json file.
  */
-export async function writeSettingsJson(
-  targetDir: string,
-  content: VSCodeSettingsJson,
-): Promise<void> {
+export async function writeSettingsJson(targetDir: string, content: VSCodeSettingsJson): Promise<void> {
   await ensureVSCodeDir(targetDir);
   const filePath = resolve(targetDir, '.vscode', 'settings.json');
   const formatted = `${JSON.stringify(content, null, 2)}\n`;

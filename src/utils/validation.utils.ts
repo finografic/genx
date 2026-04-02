@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-
 import { z } from 'zod';
 
 import { fileExists } from './fs.utils';
@@ -37,9 +36,7 @@ export const emailSchema = z.string().email({ message: 'Invalid email address' }
 /**
  * Check if a directory is safe to use as a project target.
  */
-export async function validateTargetDir(
-  targetPath: string,
-): Promise<{ ok: boolean; reason?: string }> {
+export async function validateTargetDir(targetPath: string): Promise<{ ok: boolean; reason?: string }> {
   if (fileExists(targetPath)) {
     const packageJsonPath = join(targetPath, 'package.json');
     if (fileExists(packageJsonPath)) {
