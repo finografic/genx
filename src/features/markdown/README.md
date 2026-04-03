@@ -5,7 +5,7 @@ Markdown linting via `eslint-plugin-markdownlint`.
 ## What it does
 
 - Installs `eslint-plugin-markdownlint`
-- Splits lint-staged so `*.md` runs `oxfmt` then `eslint --fix` (base template uses a single `*.{json,…,md}` glob with oxfmt only)
+- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
 - Adds markdown block to `eslint.config.ts`
 - Adds `markdownlint.config` to `.vscode/settings.json`
 - Adds VSCode extension recommendation

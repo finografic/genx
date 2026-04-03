@@ -63,6 +63,8 @@ export const OXFMT_UPDATE_SCRIPT = {
 
 export const OXFMT_LINT_STAGED_COMMAND = 'oxfmt --no-error-on-unmatched-pattern';
 export const OXFMT_LINT_STAGED_CODE_PATTERN = '*.{ts,tsx,js,jsx,mjs,cjs}';
+/** lint-staged: ESLint only on Markdown (oxfmt for `*.md` runs via the data glob). */
+export const OXFMT_LINT_STAGED_MD_PATTERN = '*.md';
 export const OXFMT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,md,yml,yaml,toml}';
 
 /** CI workflow format check step (appended to ci.yml) */

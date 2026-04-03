@@ -32,6 +32,7 @@ import {
   OXFMT_LINT_STAGED_COMMAND,
   OXFMT_LINT_STAGED_DATA_PATTERN,
   OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES,
+  OXFMT_LINT_STAGED_MD_PATTERN,
   OXFMT_UPDATE_SCRIPT,
   PRETTIER_CONFIG_FILES,
   PRETTIER_PACKAGE_PATTERNS,
@@ -225,6 +226,25 @@ function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | strin
   lintStaged[pattern] = eslint ? [OXFMT_LINT_STAGED_COMMAND, eslint] : [OXFMT_LINT_STAGED_COMMAND];
 }
 
+const LINT_STAGED_KEY_ORDER = [
+  OXFMT_LINT_STAGED_CODE_PATTERN,
+  OXFMT_LINT_STAGED_MD_PATTERN,
+  OXFMT_LINT_STAGED_DATA_PATTERN,
+] as const;
+
+function reorderLintStagedKeys(
+  lintStaged: Record<string, string[] | string>,
+): Record<string, string[] | string> {
+  const next: Record<string, string[] | string> = {};
+  for (const k of LINT_STAGED_KEY_ORDER) {
+    if (k in lintStaged) next[k] = lintStaged[k];
+  }
+  for (const k of Object.keys(lintStaged)) {
+    if (!(k in next)) next[k] = lintStaged[k];
+  }
+  return next;
+}
+
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
   return 'format' in scripts || 'format.check' in scripts;
 }
@@ -239,6 +259,11 @@ function findFormattingInsertionPoint(scripts: Record<string, string>): number {
   }
 
   const scriptKeys = Object.keys(scripts);
+  const formattingTitleIdx = scriptKeys.indexOf(FORMATTING_SECTION_TITLE);
+
+  if (formattingTitleIdx !== -1) {
+    return formattingTitleIdx + 1;
+  }
 
   const lintingIndex = scriptKeys.findIndex((key) => key.includes('LINTING'));
   if (lintingIndex !== -1) {
@@ -254,6 +279,44 @@ function findFormattingInsertionPoint(scripts: Record<string, string>): number {
   }
 
   return scriptKeys.length;
+}
+
+/**
+ * Move `format.check` / `format.fix` to immediately after the FORMATTING section divider when misplaced (e.g. above the divider).
+ */
+function ensureFormattingScriptsUnderFormattingHeader(scripts: Record<string, string>): {
+  next: Record<string, string>;
+  changed: boolean;
+} {
+  const keys = Object.keys(scripts);
+  const titleIdx = keys.indexOf(FORMATTING_SECTION_TITLE);
+  if (titleIdx === -1) {
+    return { next: scripts, changed: false };
+  }
+
+  const formatKeys = (['format.check', 'format.fix'] as const).filter((k) => k in scripts);
+  if (formatKeys.length === 0) {
+    return { next: scripts, changed: false };
+  }
+
+  const firstFmtIdx = Math.min(...formatKeys.map((k) => keys.indexOf(k)));
+  if (firstFmtIdx > titleIdx) {
+    return { next: scripts, changed: false };
+  }
+
+  const baseKeys = keys.filter((k) => k !== 'format.check' && k !== 'format.fix');
+  const titlePos = baseKeys.indexOf(FORMATTING_SECTION_TITLE);
+  if (titlePos === -1) {
+    return { next: scripts, changed: false };
+  }
+
+  const newKeys = [...baseKeys.slice(0, titlePos + 1), ...formatKeys, ...baseKeys.slice(titlePos + 1)];
+  const next: Record<string, string> = {};
+  for (const k of newKeys) {
+    next[k] = scripts[k];
+  }
+
+  return { next, changed: true };
 }
 
 async function addFormattingScripts(packageJsonPath: string): Promise<{ added: boolean; changes: string[] }> {
@@ -302,6 +365,16 @@ async function addFormattingScripts(packageJsonPath: string): Promise<{ added: b
   await writeFile(packageJsonPath, formatted, 'utf8');
 
   return { added: changes.length > 0, changes };
+}
+
+async function ensureFormattingScriptsPlacement(packageJsonPath: string): Promise<boolean> {
+  const raw = await readFile(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(raw) as PackageJson;
+  const { next, changed } = ensureFormattingScriptsUnderFormattingHeader(packageJson.scripts ?? {});
+  if (!changed) return false;
+  packageJson.scripts = next;
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  return true;
 }
 
 async function addUpdateScript(packageJsonPath: string): Promise<boolean> {
@@ -369,9 +442,13 @@ async function addOxfmtToLintStaged(packageJsonPath: string): Promise<boolean> {
     lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
   }
 
-  if (before === JSON.stringify(lintStaged)) return false;
+  lintStaged[OXFMT_LINT_STAGED_MD_PATTERN] = ['eslint --fix'];
 
-  packageJson['lint-staged'] = lintStaged as Record<string, string[]>;
+  const reordered = reorderLintStagedKeys(lintStaged);
+
+  if (before === JSON.stringify(reordered)) return false;
+
+  packageJson['lint-staged'] = reordered as Record<string, string[]>;
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
   return true;
 }
@@ -480,6 +557,12 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   if (scriptsResult.added) {
     applied.push('formatting scripts');
     successMessage('Added formatting scripts to package.json');
+  }
+
+  const formatScriptsMoved = await ensureFormattingScriptsPlacement(packageJsonPath);
+  if (formatScriptsMoved) {
+    applied.push('package.json (format scripts under FORMATTING section)');
+    successMessage('Ensured format scripts are under the FORMATTING section');
   }
 
   const addedUpdateScript = await addUpdateScript(packageJsonPath);

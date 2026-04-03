@@ -5,6 +5,7 @@ import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { ESLINT_CONFIG_FILES, PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+import { OXFMT_LINT_STAGED_DATA_PATTERN } from '../oxfmt/oxfmt.constants';
 import {
   ESLINT_MARKDOWN_CONFIG_BLOCK,
   ESLINT_MARKDOWN_IMPORTS,
@@ -100,8 +101,8 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
 }
 
 /**
- * Split `*.{…,md}` lint-staged (oxfmt only) into data glob + `*.md` with eslint --fix
- * once markdownlint is configured.
+ * Split `*.{…,md}` lint-staged (oxfmt only) into data glob without `md` + `*.md` with `eslint --fix`
+ * (oxfmt for Markdown runs via the data glob that includes `md`).
  */
 async function addMarkdownLintStaged(targetDir: string): Promise<boolean> {
   const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
@@ -111,13 +112,26 @@ async function addMarkdownLintStaged(targetDir: string): Promise<boolean> {
   if (!lintStaged || Object.keys(lintStaged).length === 0) return false;
 
   const mdCommands = lintStaged[LINT_STAGED_MD_PATTERN];
-  if (mdCommands?.includes('eslint --fix')) return false;
+  if (mdCommands && mdCommands.includes('eslint --fix') && !mdCommands.some((c) => c.includes('oxfmt'))) {
+    return false;
+  }
 
-  const combined = lintStaged[LINT_STAGED_DATA_WITH_MD_PATTERN];
-  if (combined && combined.includes(LINT_STAGED_OXFMT_CMD) && !combined.includes('eslint --fix')) {
-    lintStaged[LINT_STAGED_DATA_ONLY_PATTERN] = [...combined];
-    delete lintStaged[LINT_STAGED_DATA_WITH_MD_PATTERN];
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+  if (mdCommands?.some((c) => c.includes('oxfmt'))) {
+    lintStaged[LINT_STAGED_MD_PATTERN] = ['eslint --fix'];
+    packageJson['lint-staged'] = lintStaged;
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+    return true;
+  }
+
+  const combinedKey = [LINT_STAGED_DATA_WITH_MD_PATTERN, OXFMT_LINT_STAGED_DATA_PATTERN].find(
+    (k) => lintStaged[k] && Array.isArray(lintStaged[k]),
+  );
+  const combined = combinedKey ? (lintStaged[combinedKey] as string[]) : undefined;
+
+  if (combined && combined.includes(LINT_STAGED_OXFMT_CMD) && !combined.some((c) => c.includes('eslint'))) {
+    lintStaged[LINT_STAGED_DATA_ONLY_PATTERN] = [LINT_STAGED_OXFMT_CMD];
+    if (combinedKey) delete lintStaged[combinedKey];
+    lintStaged[LINT_STAGED_MD_PATTERN] = ['eslint --fix'];
     packageJson['lint-staged'] = lintStaged;
     await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
     return true;
@@ -125,7 +139,7 @@ async function addMarkdownLintStaged(targetDir: string): Promise<boolean> {
 
   const dataOnly = lintStaged[LINT_STAGED_DATA_ONLY_PATTERN];
   if (dataOnly && !lintStaged[LINT_STAGED_MD_PATTERN]) {
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+    lintStaged[LINT_STAGED_MD_PATTERN] = ['eslint --fix'];
     packageJson['lint-staged'] = lintStaged;
     await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
     return true;
