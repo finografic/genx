@@ -72,7 +72,11 @@ export default defineConfig([
       ],
 
       '@stylistic/indent': ['warn', 2, { SwitchCase: 1, ignoredNodes: ['ConditionalExpression'] }],
-      '@stylistic/operator-linebreak': ['warn', 'after', { overrides: { '?': 'ignore', ':': 'ignore' } }],
+      '@stylistic/operator-linebreak': [
+        'warn',
+        'after',
+        { overrides: { '?': 'ignore', ':': 'ignore', '|': 'ignore' } },
+      ],
       '@stylistic/multiline-ternary': ['warn', 'always-multiline'],
     },
   },

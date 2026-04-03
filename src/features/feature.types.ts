@@ -2,14 +2,14 @@
  * Feature ID type - must match the feature folder name.
  */
 export type FeatureId =
-  | 'oxfmt' |
-  'vitest' |
-  'githubWorkflow' |
-  'aiClaude' |
-  'aiInstructions' |
-  'markdown' |
-  'gitHooks' |
-  'css';
+  | 'oxfmt'
+  | 'vitest'
+  | 'githubWorkflow'
+  | 'aiClaude'
+  | 'aiInstructions'
+  | 'markdown'
+  | 'gitHooks'
+  | 'css';
 
 /**
  * Context passed to feature detection and application.
