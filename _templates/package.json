@@ -48,6 +48,9 @@
     "·········· LINTING": "···················································",
     "lint": "eslint .",
     "lint.fix": "eslint . --fix",
+    "·········· FORMATTING": "················································",
+    "format.check": "oxfmt --check",
+    "format.fix": "oxfmt",
     "·········· PUBLISH.GITHUB": "············································",
     "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
     "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
@@ -58,6 +61,7 @@
     "view.registry.github": "pnpm view __PACKAGE_NAME__ --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
     "update.eslint-config": "pnpm update @finografic/eslint-config --latest",
+    "update.oxfmt-config": "pnpm update @finografic/oxfmt-config --latest && pnpm update oxfmt --latest",
     "upgrade.deps.all": "pnpm update --latest",
     "·········· UTILS": "·····················································",
     "tsc.debug": "tsc --pretty --project tsconfig.json",
@@ -69,14 +73,15 @@
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.2",
+    "@finografic/oxfmt-config": "^1.0.3",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
     "eslint": "9.39.2",
     "globals": "^17.3.0",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
     "lint-staged": "^16.2.7",
+    "oxfmt": "^0.43.0",
     "simple-git-hooks": "^2.13.1",
     "tsdown": "^0.20.3",
     "typescript": "^5.9.3",
@@ -85,7 +90,15 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "oxfmt --no-error-on-unmatched-pattern",
       "eslint --fix"
+    ],
+    "*.md": [
+      "oxfmt --no-error-on-unmatched-pattern",
+      "eslint --fix"
+    ],
+    "*.{json,jsonc,yml,yaml,toml}": [
+      "oxfmt --no-error-on-unmatched-pattern"
     ]
   },
   "commitlint": {
@@ -94,6 +107,6 @@
     ]
   },
   "simple-git-hooks": {
-    "pre-commit": "npx lint-staged --allow-empty && dprint check && pnpm exec eslint \"**/*.md\""
+    "pre-commit": "npx lint-staged --allow-empty"
   }
 }

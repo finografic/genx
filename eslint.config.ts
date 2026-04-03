@@ -3,7 +3,6 @@ import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import markdownlintPlugin from 'eslint-plugin-markdownlint';
 import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -48,7 +47,6 @@ export default defineConfig([
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
-      'simple-import-sort': simpleImportSort,
       '@stylistic': stylistic,
     },
     rules: {

@@ -1,7 +1,6 @@
 /// <reference path="./src/declarations.d.ts" />
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -46,7 +45,6 @@ export default defineConfig([
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
-      'simple-import-sort': simpleImportSort,
       '@stylistic': stylistic,
     },
     rules: {

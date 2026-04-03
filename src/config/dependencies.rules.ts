@@ -25,7 +25,6 @@ export const dependencyRules: DependencyRule[] = [
   { name: '@typescript-eslint/parser', section: 'devDependencies' },
   { name: '@typescript-eslint/eslint-plugin', section: 'devDependencies' },
   { name: 'typescript-eslint', section: 'devDependencies' },
-  { name: 'eslint-plugin-simple-import-sort', section: 'devDependencies' },
 
   // formatting
   { name: '@finografic/dprint-config', section: 'devDependencies' },

@@ -2,8 +2,6 @@
 
 ## Import Sorting
 
-- Use `simple-import-sort` and group imports logically (external → internal → relative → side-effects)
-  separated by blank lines.
 - Prefer auto-fix via ESLint; avoid manual reordering.
 
 ## JSX Formatting
