@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import * as clack from '@clack/prompts';
 import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils';
 
+import { isCliPackage } from 'lib/generators/cli-help.generator';
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { migrateConfig } from 'config/migrate.config';
 import { renameRules } from 'config/rename.rules';
@@ -11,12 +12,15 @@ import type { TemplateVars } from 'types/template.types';
 
 /**
  * Sync files from template to target directory.
+ *
+ * `packageJson` is used to omit `docs/spec/` (CLI core spec snapshot) when the target is not a CLI package.
  */
 export async function syncFromTemplate(
   targetDir: string,
   templateDir: string,
   vars: TemplateVars,
   only: Set<MigrateOnlySection> | null,
+  packageJson: Record<string, unknown>,
 ): Promise<void> {
   const syncTasks = migrateConfig.syncFromTemplate.filter((item) => shouldRunSection(only, item.section));
 
@@ -49,10 +53,11 @@ export async function syncFromTemplate(
       }
     }
 
-    // Directory copy
+    // Directory copy — `docs/spec/` is only for CLI packages (see docs/spec/CLI_CORE.md)
     if (item.templatePath === 'docs') {
       await ensureDir(destinationPath);
-      await copyDir(sourcePath, destinationPath, vars);
+      const ignoreSpec = isCliPackage(packageJson) ? [] : ['spec'];
+      await copyDir(sourcePath, destinationPath, vars, { ignore: ignoreSpec });
       continue;
     }
 

@@ -219,7 +219,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   await restructureDocs(targetDir, only);
 
   // Apply template sync
-  await syncFromTemplate(targetDir, templateDir, vars, only);
+  await syncFromTemplate(targetDir, templateDir, vars, only, updatedPackageJson);
 
   // Copy LICENSE if missing
   await copyLicenseIfMissing(targetDir, templateDir, vars, shouldCopyLicense);

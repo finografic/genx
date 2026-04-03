@@ -103,9 +103,11 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
 
     const vars = buildTemplateVars(config);
 
+    const isCli = config.packageType.entryPoints.includes('src/cli.ts');
     const ignorePatterns = [
       ...(selectedFeatures.has('aiInstructions') ? [] : createConfig.ignorePatterns.aiInstructions),
       ...(selectedFeatures.has('aiClaude') ? [] : createConfig.ignorePatterns.aiClaude),
+      ...(!isCli ? ['docs/spec'] : []),
     ];
 
     await copyDir(templateDir, targetDir, vars, {
