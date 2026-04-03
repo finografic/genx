@@ -3,7 +3,6 @@
 import { createRequire } from 'node:module';
 import process from 'node:process';
 
-import { safeExit } from './utils/env.utils.js';
 import { renderHelp } from 'utils/render-help/render-help.utils.js';
 import { cliHelp } from './cli.help.js';
 import { createPackage } from './commands/create.cli.js';
@@ -64,7 +63,7 @@ async function main(): Promise<void> {
   if (!commands[command]) {
     console.error(`Unknown command: ${command}`);
     renderHelp(cliHelp);
-    safeExit(1);
+    process.exit(1);
     return;
   }
 
@@ -81,5 +80,5 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   console.error(error);
-  safeExit(1);
+  process.exit(1);
 });

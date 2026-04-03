@@ -11,7 +11,6 @@ import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from 'lib/migrate/node.utils';
 import { patchPackageJson } from 'lib/migrate/package-json.utils';
 import { getExistingFiles, planRenames } from 'lib/migrate/rename.utils';
-import { safeExit } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { dependencyRules } from 'config/dependencies.rules';
 import { mergeConfig } from 'config/merge.rules';
@@ -143,7 +142,6 @@ export async function planMigration(
         'If running a linked build, re-run `pnpm build` in @finografic/genx.',
       ].join('\n'),
     );
-    safeExit(1);
     throw new Error('Template directory not found');
   }
   for (const item of migrateConfig.syncFromTemplate) {

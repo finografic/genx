@@ -21,7 +21,7 @@ import { applyRenames } from 'lib/migrate/rename.utils';
 import { copyLicenseIfMissing, syncFromTemplate } from 'lib/migrate/template-sync.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from 'lib/prompts/migrate.prompt';
-import { isDevelopment, safeExit } from 'utils/env.utils';
+import { isDevelopment } from 'utils/env.utils';
 import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
@@ -52,7 +52,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
-    safeExit(1);
+    process.exit(1);
     return;
   }
 
@@ -61,7 +61,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   const parsed = getScopeAndName(packageJson.name);
   if (!parsed) {
     errorMessage('Unable to read package name from package.json');
-    safeExit(1);
+    process.exit(1);
     return;
   }
 
@@ -71,14 +71,14 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     expectedScope: migrateConfig.defaultScope,
   });
   if (!ok) {
-    safeExit(0);
+    process.exit(0);
     return;
   }
 
   // Prompt for features (after confirmation, before planning)
   const selectedFeatureIds = await promptFeatures(flow);
   if (!selectedFeatureIds) {
-    safeExit(0);
+    process.exit(0);
     return;
   }
 
@@ -148,7 +148,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
         nvmrc: nodePolicy.local.nvmrc,
       });
       if (!confirmed) {
-        safeExit(0);
+        process.exit(0);
         return;
       }
     }
@@ -158,7 +158,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   if (shouldRunSection(only, 'merges') && mergeChanges.length > 0) {
     const confirmed = await confirmMerges(mergeChanges);
     if (!confirmed) {
-      safeExit(0);
+      process.exit(0);
       return;
     }
   }
@@ -248,7 +248,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     const result = await feature.apply({ targetDir });
     if (result.error) {
       errorMessage(result.error.message);
-      safeExit(1);
+      process.exit(1);
       return;
     }
 

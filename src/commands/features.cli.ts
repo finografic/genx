@@ -4,7 +4,7 @@ import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { promptFeatures } from 'lib/prompts/features.prompt';
-import { isDevelopment, safeExit } from 'utils/env.utils';
+import { isDevelopment } from 'utils/env.utils';
 import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { renderHelp } from 'utils/render-help/render-help.utils';
@@ -35,14 +35,14 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
-    safeExit(1);
+    process.exit(1);
     return;
   }
 
   // 2. Prompt for features
   const selectedFeatureIds = await promptFeatures(flow);
   if (!selectedFeatureIds) {
-    safeExit(0);
+    process.exit(0);
     return;
   }
 
@@ -67,7 +67,7 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
 
     const result = await feature.apply({ targetDir });
     if (result.error) {
-      safeExit(1);
+      process.exit(1);
       return;
     }
 

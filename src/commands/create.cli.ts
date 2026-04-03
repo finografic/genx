@@ -21,7 +21,7 @@ import {
 
 import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
 import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
-import { isDevelopment, safeExit } from 'utils/env.utils';
+import { isDevelopment } from 'utils/env.utils';
 import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
@@ -67,7 +67,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
   const validation = await validateTargetDir(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Target directory is not valid');
-    safeExit(1);
+    process.exit(1);
     return;
   }
 
@@ -189,7 +189,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
   } catch (err) {
     spin.stop('Failed to create project structure');
     errorMessage(err instanceof Error ? err.message : 'Unknown error');
-    safeExit(1);
+    process.exit(1);
     return;
   }
 

@@ -26,14 +26,3 @@ export function isDevelopment(): boolean {
 
   return false;
 }
-
-/**
- * Exit the process with a code, but only in production mode.
- * In development mode, just return to allow natural exit.
- */
-export function safeExit(code: number): void {
-  if (isDevelopment()) {
-    return;
-  }
-  process.exit(code);
-}
