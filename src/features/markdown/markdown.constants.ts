@@ -58,7 +58,7 @@ export const ESLINT_MARKDOWN_CONFIG_BLOCK = `
     },
     plugins: {
       markdownlint: markdownlintPlugin as Linter.Processor,
-      stylistic,
+      '@stylistic': stylistic,
     },
     rules: {
       ...markdownlintPlugin.configs.recommended.rules,
@@ -75,8 +75,8 @@ export const ESLINT_MARKDOWN_CONFIG_BLOCK = `
       'markdownlint/md043': 'off', // Required heading structure
 
       // Formatting consistency
-      'stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 1 }],
-      'stylistic/no-trailing-spaces': 'error',
-      'stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
+      '@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 1 }],
+      '@stylistic/no-trailing-spaces': 'error',
+      '@stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
     },
   },`;

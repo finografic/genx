@@ -104,10 +104,10 @@ export const DPRINT_CATEGORY_DEPENDENCIES: Record<DprintLanguageCategory, string
  * These are removed from eslint.config.ts when dprint is installed.
  */
 export const DPRINT_COVERED_STYLISTIC_RULES = [
-  'stylistic/semi',
-  'stylistic/quotes',
-  'stylistic/indent',
-  'stylistic/comma-dangle',
-  'stylistic/no-trailing-spaces',
-  'stylistic/no-multiple-empty-lines',
+  '@stylistic/semi',
+  '@stylistic/quotes',
+  '@stylistic/indent',
+  '@stylistic/comma-dangle',
+  '@stylistic/no-trailing-spaces',
+  '@stylistic/no-multiple-empty-lines',
 ];
