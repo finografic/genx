@@ -1,6 +1,5 @@
+import pc from 'picocolors';
 import type { HelpConfig } from './help.types.js';
-
-import { pc } from 'utils/picocolors';
 
 function colorizeArgs(str: string): string {
   return str.replace(/<[^>]+>/g, (m) => pc.dim(pc.cyan(m)));
@@ -36,7 +35,7 @@ export function renderHelp({ main, commands, examples, footer }: HelpConfig): vo
     lines.push('');
   }
 
-  // Footer / GET HELP section (label = text, description = optional note)
+  // Footer / show help section (label = text, description = optional note)
   if (footer && footer.list.length > 0) {
     lines.push(pc.bold(footer.title.toUpperCase()));
     for (const item of footer.list) {

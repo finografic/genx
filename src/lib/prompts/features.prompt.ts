@@ -1,8 +1,7 @@
+import { promptMultiSelect } from 'core/flow';
 import { features } from 'features/feature-registry';
+import type { FlowContext } from 'core/flow';
 import type { FeatureId } from 'features/feature.types';
-
-import type { FlowContext } from 'utils/flow.utils';
-import { promptMultiSelect } from 'utils/flow.utils';
 
 /**
  * Prompt user to select features.

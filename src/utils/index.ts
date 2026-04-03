@@ -3,7 +3,6 @@ export * from './jsonc.utils.js';
 export * from './package-manager.utils.js';
 export * from './package-root.utils.js';
 export * from './prompts.utils.js';
-export * from './render-help/render-help.utils.js';
 export * from './template.utils.js';
 export * from './validation.utils.js';
 export * from './vscode-jsonc.utils.js';

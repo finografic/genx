@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createFlowContext } from 'core/flow';
+import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { createHelp } from 'help/create.help';
@@ -22,10 +24,8 @@ import {
 import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
 import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
 import { isDevelopment } from 'utils/env.utils';
-import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
-import { renderHelp } from 'utils/render-help/render-help.utils';
 import { createConfig } from 'config/create.config';
 
 // NOTE: This command never prompts directly.

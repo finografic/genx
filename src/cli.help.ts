@@ -1,4 +1,5 @@
-import type { HelpConfig } from 'utils/render-help';
+import type { HelpConfig } from 'core/render-help';
+
 import { defaultHelpOptions } from 'config/help.config';
 
 export const cliHelp: HelpConfig = {

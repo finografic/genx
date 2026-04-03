@@ -1,3 +1,5 @@
+import { createFlowContext } from 'core/flow';
+import { renderHelp } from 'core/render-help';
 import { getFeature } from 'features/feature-registry';
 import { featuresHelp } from 'help/features.help';
 import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';
@@ -5,9 +7,7 @@ import type { FeatureId } from 'features/feature.types';
 
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
-import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
-import { renderHelp } from 'utils/render-help/render-help.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 
 /**

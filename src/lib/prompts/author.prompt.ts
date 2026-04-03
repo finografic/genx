@@ -1,5 +1,6 @@
-import type { FlowContext } from 'utils/flow.utils';
-import { promptAutocompleteMultiSelect, promptText } from 'utils/flow.utils';
+import { promptAutocompleteMultiSelect, promptText } from 'core/flow';
+import type { FlowContext } from 'core/flow';
+
 import { emailSchema } from 'utils/validation.utils';
 
 export type Author = {

@@ -2,8 +2,8 @@
 
 import { createRequire } from 'node:module';
 import process from 'node:process';
+import { renderHelp } from 'core/render-help/render-help.utils.js';
 
-import { renderHelp } from 'utils/render-help/render-help.utils.js';
 import { cliHelp } from './cli.help.js';
 import { createPackage } from './commands/create.cli.js';
 import { addFeatures } from './commands/features.cli.js';

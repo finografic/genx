@@ -1,5 +1,6 @@
-import type { FlowContext } from 'utils/flow.utils';
-import { promptSelect } from 'utils/flow.utils';
+import { promptSelect } from 'core/flow';
+import type { FlowContext } from 'core/flow';
+
 import { PACKAGE_TYPES } from 'config/package-types.config';
 import type { PackageType } from 'types/package-type.types';
 

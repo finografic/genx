@@ -1,5 +1,6 @@
-import type { FlowContext } from 'utils/flow.utils';
-import { promptText } from 'utils/flow.utils';
+import { promptText } from 'core/flow';
+import type { FlowContext } from 'core/flow';
+
 import { packageNameSchema, scopeSchema } from 'utils/validation.utils';
 import { descriptionSchema } from 'utils/validation.utils';
 

@@ -2,10 +2,12 @@ import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import * as clack from '@clack/prompts';
+import { createFlowContext } from 'core/flow';
+import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
-import { errorMessage, infoMessage, intro, renderHelp, spinner, successMessage } from 'utils';
+import { errorMessage, infoMessage, intro, spinner, successMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
@@ -22,7 +24,6 @@ import { copyLicenseIfMissing, syncFromTemplate } from 'lib/migrate/template-syn
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from 'lib/prompts/migrate.prompt';
 import { isDevelopment } from 'utils/env.utils';
-import { createFlowContext } from 'utils/flow.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';

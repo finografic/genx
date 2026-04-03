@@ -1,5 +1,5 @@
 import type { PackageConfig } from '@finografic/core';
-import type { FlowContext } from './flow.utils';
+import type { FlowContext } from 'core/flow';
 import type { FeatureId } from 'features/feature.types';
 
 import { promptAuthor } from 'lib/prompts/author.prompt';
