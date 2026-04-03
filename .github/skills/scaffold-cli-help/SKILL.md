@@ -69,15 +69,3 @@ Keep this skill **procedural**; link to `docs/spec/CLI_CORE.md` for authoritativ
 - Root help stays **declarative data** (`HelpConfig`); rendering is centralized in `core/render-help`.
 - Do not duplicate `renderHelp` logic in application code.
 
----
-
-## Note for Claude (review)
-
-Please **re-read and reconcile** this skill with:
-
-1. `.github/instructions/project/cli-help-patterns.instructions.md` (this repo).
-2. `docs/spec/CLI_CORE.md` § **`core/render-help/`** — authoritative `HelpConfig` interface and export table.
-3. Optional: `REPORT_CLI_NORMALIZATION.md` in a staging tree — historical context and **open work** (e.g. future `renderCommandHelp`); do not duplicate report text here — link concepts only.
-4. Live reference: `src/cli.help.ts` and `src/cli.ts` in **this** repository.
-
-If instructions and `docs/spec/CLI_CORE.md` ever diverge, prefer **updating the instruction file in genx** and then aligning other repos; keep skills procedural, not a second copy of the full spec.

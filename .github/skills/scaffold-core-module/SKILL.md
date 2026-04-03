@@ -88,15 +88,3 @@ Before considering a module “done”:
 - [ ] Documented in `docs/spec/CLI_CORE.md` (genx)
 - [ ] Propagated to other repos as needed
 
----
-
-## Note for Claude (review)
-
-Please **re-read and reconcile** this skill with:
-
-1. `.github/instructions/project/core-module-patterns.instructions.md` (this repo).
-2. `docs/spec/CLI_CORE.md` in full — especially **Module Structure**, **TypeScript Standards for `core/`**, **Consuming `core/`**, **Current Modules**, and **Adding a New `core/` Module**.
-3. Optional: `REPORT_CLI_NORMALIZATION.md` in a staging tree — table of what moved and **open work** (do not reimplement deferred items unless the user asks).
-4. Live tree: `src/core/` in **this** repo and, if available, sibling `@finografic-gli` for parity checks.
-
-If anything in the instruction file conflicts with `docs/spec/CLI_CORE.md`, flag it for the human and prefer updating **genx instructions + `docs/spec/CLI_CORE.md`** together so all repos stay aligned.
