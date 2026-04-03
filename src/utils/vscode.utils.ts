@@ -10,7 +10,11 @@ import { resolve } from 'node:path';
 import type { VSCodeExtensionsJson, VSCodeSettingsJson } from 'types/vscode.types';
 import { fileExists } from './fs.utils';
 import { parseJsoncObject } from './jsonc.utils';
-import { setLanguageFormatterBlock, setRootPropertyJsonc } from './vscode-jsonc.utils';
+import {
+  ensureMarkdownlintConfigAndStylesAtEnd,
+  setLanguageFormatterBlock,
+  setRootPropertyJsonc,
+} from './vscode-jsonc.utils';
 
 /** Base template for .vscode/extensions.json */
 const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
@@ -28,9 +32,6 @@ export const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'eslint.validate': ['javascript', 'typescript'],
   'typescript.tsdk': 'node_modules/typescript/lib',
 };
-
-/** Insert `[markdown]` before this root key so oxfmt + markdownlint stay grouped. */
-const MARKDOWNLINT_BLOCK_ANCHOR = 'markdownlint.config';
 
 /**
  * Ensure the .vscode directory exists.
@@ -150,13 +151,18 @@ export async function addLanguageFormatterSettings(
   }
 
   for (const lang of languages) {
-    const insertBefore = lang === 'markdown' ? MARKDOWNLINT_BLOCK_ANCHOR : undefined;
-    const r = setLanguageFormatterBlock(t, lang, formatterId, insertBefore);
+    const r = setLanguageFormatterBlock(t, lang, formatterId);
     if (r.changed) {
       t = r.text;
       anyChange = true;
       addedLanguages.push(lang);
     }
+  }
+
+  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  if (tail.changed) {
+    t = tail.text;
+    anyChange = true;
   }
 
   if (anyChange) {

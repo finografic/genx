@@ -8,6 +8,7 @@ import {
   addExtensionRecommendations,
   addLanguageFormatterSettings,
   BASE_SETTINGS_JSON,
+  ensureMarkdownlintConfigAndStylesAtEnd,
   ensureOxfmtSharedSettingsBeforePrettier,
   ensureVSCodeDir,
   fileExists,
@@ -101,7 +102,12 @@ export async function applyOxfmtSharedVSCodeSettings(targetDir: string): Promise
     text = await readFile(filePath, 'utf8');
   }
 
-  const { text: next, changed } = ensureOxfmtSharedSettingsBeforePrettier(text, OXFMT_FORMATTER_ID);
+  let { text: next, changed } = ensureOxfmtSharedSettingsBeforePrettier(text, OXFMT_FORMATTER_ID);
+  const tail = ensureMarkdownlintConfigAndStylesAtEnd(next);
+  if (tail.changed) {
+    next = tail.text;
+    changed = true;
+  }
   if (changed) {
     await writeFile(filePath, next, 'utf8');
   }

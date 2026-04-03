@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import {
   addExtensionRecommendations,
   BASE_SETTINGS_JSON,
+  ensureMarkdownlintConfigAndStylesAtEnd,
   ensureVSCodeDir,
   fileExists,
   insertRootPropertyBefore,
@@ -74,6 +75,12 @@ export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<bo
 
   if (!parseJsoncObject(t)[MARKDOWN_STYLES_KEY]) {
     t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]]);
+    modified = true;
+  }
+
+  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  if (tail.changed) {
+    t = tail.text;
     modified = true;
   }
 

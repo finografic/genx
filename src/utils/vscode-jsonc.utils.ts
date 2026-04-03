@@ -1,7 +1,11 @@
-import { applyEdits, modify } from 'jsonc-parser';
+import { applyEdits, getNodeValue, modify, parseTree } from 'jsonc-parser';
 import type { ModificationOptions } from 'jsonc-parser';
+import type { Node } from 'jsonc-parser';
 
 import { parseJsoncObject } from './jsonc.utils';
+
+/** Root keys that must appear last in `.vscode/settings.json` (markdownlint first, then styles). */
+export const VSCODE_MARKDOWN_TAIL_KEYS = ['markdownlint.config', 'markdown.styles'] as const;
 
 const formattingOptions: NonNullable<ModificationOptions['formattingOptions']> = {
   tabSize: 2,
@@ -13,8 +17,8 @@ function modOptsInsertBefore(beforeKey: string): ModificationOptions {
   return {
     formattingOptions,
     getInsertionIndex: (properties: string[]) => {
-      const idx = properties.indexOf(beforeKey);
-      return idx === -1 ? properties.length : idx;
+      const index = properties.indexOf(beforeKey);
+      return index === -1 ? properties.length : index;
     },
   };
 }
@@ -43,6 +47,84 @@ export function insertRootPropertyBefore(
 export function removeRootPropertyJsonc(text: string, key: string): string {
   const edits = modify(text, [key], undefined, { formattingOptions });
   return applyEdits(text, edits);
+}
+
+function rootPropertyKeyNames(root: Node): string[] {
+  if (root.type !== 'object' || !root.children) return [];
+  const names: string[] = [];
+  for (const prop of root.children) {
+    if (prop.type !== 'property' || !prop.children?.[0]) continue;
+    const keyNode = prop.children[0];
+    if (keyNode.type === 'string') {
+      names.push(getNodeValue(keyNode) as string);
+    }
+  }
+  return names;
+}
+
+function collectRootPropertySnippet(raw: string, key: string): string | undefined {
+  const tree = parseTree(raw);
+  if (!tree || tree.type !== 'object' || !tree.children) return undefined;
+  for (const prop of tree.children) {
+    if (prop.type !== 'property' || !prop.children?.[0]) continue;
+    const keyNode = prop.children[0];
+    if (keyNode.type !== 'string' || (getNodeValue(keyNode) as string) !== key) continue;
+    return raw.slice(prop.offset, prop.offset + prop.length);
+  }
+  return undefined;
+}
+
+/**
+ * Move `markdownlint.config` and `markdown.styles` to the end of the root object (in that order),
+ * preserving the exact source text of each property (including `//` comments inside `markdownlint.config`).
+ */
+export function ensureMarkdownlintConfigAndStylesAtEnd(raw: string): { text: string; changed: boolean } {
+  const before = raw;
+  const tree = parseTree(raw);
+  if (!tree || tree.type !== 'object' || !tree.children) {
+    return { text: raw, changed: false };
+  }
+
+  const rootKeys = rootPropertyKeyNames(tree);
+  const presentTailKeys = VSCODE_MARKDOWN_TAIL_KEYS.filter((k) => rootKeys.includes(k));
+  if (presentTailKeys.length === 0) {
+    return { text: raw, changed: false };
+  }
+
+  const tailOfFile = rootKeys.slice(-presentTailKeys.length);
+  if (tailOfFile.length === presentTailKeys.length && presentTailKeys.every((k, i) => tailOfFile[i] === k)) {
+    return { text: raw, changed: false };
+  }
+
+  const snippets: string[] = [];
+  for (const key of VSCODE_MARKDOWN_TAIL_KEYS) {
+    const sn = collectRootPropertySnippet(raw, key);
+    if (sn !== undefined) snippets.push(sn.trimEnd());
+  }
+  if (snippets.length === 0) {
+    return { text: raw, changed: false };
+  }
+
+  let t = raw;
+  for (const key of [...VSCODE_MARKDOWN_TAIL_KEYS].reverse()) {
+    if (rootKeys.includes(key)) {
+      t = removeRootPropertyJsonc(t, key);
+    }
+  }
+
+  const tree2 = parseTree(t);
+  if (!tree2 || tree2.type !== 'object') {
+    return { text: before, changed: false };
+  }
+
+  const insertPos = tree2.offset + tree2.length - 1;
+  const head = t.slice(0, insertPos).trimEnd();
+  const tail = t.slice(insertPos);
+  const sep = head.endsWith('{') ? '' : ',';
+  const body = snippets.join(',\n');
+  const next = `${head}${body ? `${sep}\n${body}\n` : ''}${tail}`;
+
+  return { text: next, changed: next !== before };
 }
 
 /**
@@ -94,49 +176,31 @@ export function removeRootKeysWithPrefix(raw: string, prefix: string): { text: s
 }
 
 /**
- * Set `editor.defaultFormatter` on a `[language]` block, inserting that block before a root key when (re)creating it.
+ * Set `editor.defaultFormatter` on a `[language]` block (`markdownlint.config` / `markdown.styles` are finalized separately via {@link ensureMarkdownlintConfigAndStylesAtEnd}).
  */
 export function setLanguageFormatterBlock(
   raw: string,
   language: string,
   formatterId: string,
-  insertBeforeRootKey?: string,
 ): { text: string; changed: boolean } {
   const blockKey = `[${language}]`;
   const before = raw;
-  let t = raw;
-  const root = parseJsoncObject(t) as Record<string, unknown>;
+  const root = parseJsoncObject(raw) as Record<string, unknown>;
   const existing = root[blockKey] as Record<string, unknown> | undefined;
   const nextBlock = {
     ...(existing && typeof existing === 'object' && !Array.isArray(existing) ? existing : {}),
     'editor.defaultFormatter': formatterId,
   };
 
-  const keys = Object.keys(root);
-  const blockIdx = keys.indexOf(blockKey);
-  const anchorIdx = insertBeforeRootKey ? keys.indexOf(insertBeforeRootKey) : -1;
-
   if (existing?.['editor.defaultFormatter'] === formatterId) {
-    if (!insertBeforeRootKey) {
-      return { text: t, changed: false };
-    }
-    if (anchorIdx === -1) {
-      return { text: t, changed: false };
-    }
-    if (blockIdx !== -1 && blockIdx < anchorIdx) {
-      return { text: t, changed: false };
-    }
+    return { text: raw, changed: false };
   }
 
+  let t = raw;
   if (blockKey in root) {
     t = removeRootPropertyJsonc(t, blockKey);
   }
-
-  if (insertBeforeRootKey) {
-    t = insertRootPropertyBefore(t, blockKey, nextBlock, insertBeforeRootKey);
-  } else {
-    t = setRootPropertyJsonc(t, blockKey, nextBlock);
-  }
+  t = setRootPropertyJsonc(t, blockKey, nextBlock);
 
   return { text: t, changed: t !== before };
 }
@@ -161,7 +225,7 @@ export function replaceDprintLanguageFormatters(
       if ((block as Record<string, unknown>)['editor.defaultFormatter'] !== DPRINT_FORMATTER_ID) continue;
 
       const language = key.slice(1, -1);
-      t = setLanguageFormatterBlock(t, language, formatterId, undefined).text;
+      t = setLanguageFormatterBlock(t, language, formatterId).text;
       updated = true;
       break;
     }

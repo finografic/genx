@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { ensureOxfmtSharedSettingsBeforePrettier } from './vscode-jsonc.utils';
+import {
+  ensureMarkdownlintConfigAndStylesAtEnd,
+  ensureOxfmtSharedSettingsBeforePrettier,
+} from './vscode-jsonc.utils';
 
 describe('vscode-jsonc.utils — preserves comments in untouched regions', () => {
   it('keeps // comments inside markdownlint.config when adding oxfmt globals', () => {
@@ -18,5 +21,22 @@ describe('vscode-jsonc.utils — preserves comments in untouched regions', () =>
     expect(text).toContain('"MD024": false');
     expect(text).toContain('"prettier.enable": false');
     expect(text).toContain('"oxc.typeAware": true');
+  });
+});
+
+describe('ensureMarkdownlintConfigAndStylesAtEnd', () => {
+  it('moves markdownlint + styles to the final two root properties', () => {
+    const raw = `{
+  "markdown.styles": ["a.css"],
+  "a": 1,
+  "markdownlint.config": { "MD013": false, // keep
+  }
+}
+`;
+    const { text, changed } = ensureMarkdownlintConfigAndStylesAtEnd(raw);
+    expect(changed).toBe(true);
+    expect(text.indexOf('"markdownlint.config"')).toBeGreaterThan(text.indexOf('"a"'));
+    expect(text.lastIndexOf('"markdown.styles"')).toBeGreaterThan(text.lastIndexOf('"markdownlint.config"'));
+    expect(text).toContain('// keep');
   });
 });

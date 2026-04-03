@@ -9,6 +9,7 @@ import {
   addLanguageFormatterSettings,
   ensureVSCodeDir,
   fileExists,
+  ensureMarkdownlintConfigAndStylesAtEnd,
   parseJsoncObject,
   setRootPropertyJsonc,
 } from 'utils';
@@ -56,7 +57,12 @@ export async function applyCssVSCodeSettings(targetDir: string): Promise<boolean
     t = setRootPropertyJsonc(t, 'scss.validate', false);
   }
 
-  const changed = t !== before;
+  let changed = t !== before;
+  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  if (tail.changed) {
+    t = tail.text;
+    changed = true;
+  }
   if (changed) {
     await writeFile(filePath, t, 'utf8');
   }

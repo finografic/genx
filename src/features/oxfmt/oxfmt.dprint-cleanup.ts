@@ -5,6 +5,7 @@ import {
   isDependencyDeclared,
   readExtensionsJson,
   removeDependency,
+  ensureMarkdownlintConfigAndStylesAtEnd,
   replaceDprintLanguageFormatters,
   removeRootKeysWithPrefix,
   writeExtensionsJson,
@@ -124,7 +125,9 @@ export async function removeDprintIfPresent(targetDir: string): Promise<{ applie
     raw = r1.text;
     const r2 = replaceDprintLanguageFormatters(raw, OXFMT_FORMATTER_ID);
     raw = r2.text;
-    if (r1.changed || r2.changed) {
+    const r3 = ensureMarkdownlintConfigAndStylesAtEnd(raw);
+    raw = r3.text;
+    if (r1.changed || r2.changed || r3.changed) {
       await writeFile(settingsPath, raw, 'utf8');
       applied.push('.vscode/settings.json (removed dprint formatter / keys)');
     }
