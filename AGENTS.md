@@ -28,7 +28,7 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 
 ## Project-Specific
 
-Project-specific rules live in `.github/instructions/project/`. Add `*.instructions.md` files there and link them here.
+Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
 These rules are specific to `@finografic/genx` and not shared with other projects.
 
 <!-- NOTE: @finografic/genx only -->
@@ -38,21 +38,11 @@ These rules are specific to `@finografic/genx` and not shared with other project
 
 - [Feature Patterns](/.github/instructions/project/feature-patterns.instructions.md)
 
-- This is a **standalone installable package** (`@finografic/design-system`), not a monorepo workspace.
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
-- The `panda.preset` entry must always build with `platform: 'node'` in tsdown.
-- Never add `watch: true` to `panda.config.ts` — it causes `panda codegen` to hang.
 
 ## Learned User Preferences
 
-- Follow existing recipe patterns for naming, structure, and variant conventions
-- Apply recipes inside design-system components; client uses `<Button variant="..." />` without calling the recipe
-- Use cva for single-element components (e.g. Button); use sva for multi-slot components (Checkbox, Card, Dialog)
-- Use @stylistic/stylelint-plugin for Stylelint 17; stylelint-stylistic is deprecated and incompatible
-- Ignore .cursor/chats and .cursor/hooks; commit .cursor/mcp.json
-- Use Panda MCP for design-system questions (breakpoints, tokens, recipes) when relevant without explicit user ask
-- When hooks seem to skip formatting that `dprint check` catches, confirm files are staged; use `npx lint-staged --debug` and verify paths under the “staged files” list
 - For Clack `text` validators, normalize once with `const trimmed = value?.trim() ?? ''`, require non-empty `trimmed`, then run regex tests on `trimmed` (covers undefined and satisfies narrowing)
 - For complex `pnpm-lock.yaml` conflicts, resolve `package.json` first, then run `pnpm install` to regenerate the lockfile instead of hand-merging
 

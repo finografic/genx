@@ -28,23 +28,18 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 
 ## Project-Specific
 
-Project-specific rules live in `.github/instructions/project/`. Add `*.instructions.md` files there and link them here.
+Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
 
 <!-- NOTE: CLI projects (genx:type:cli keyword in package.json) only -->
 
 - Generated README sections are managed by `pnpm docs.usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
 
-- This is a **standalone installable package** (`@finografic/design-system`), not a monorepo workspace.
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
-- The `panda.preset` entry must always build with `platform: 'node'` in tsdown.
-- Never add `watch: true` to `panda.config.ts` — it causes `panda codegen` to hang.
 
 ## Learned User Preferences
 
-- Follow existing recipe patterns for naming, structure, and variant conventions
-- Apply recipes inside design-system components; client uses `<Button variant="..." />` without calling the recipe
-- Use cva for single-element components (e.g. Button); use sva for multi-slot components (Checkbox, Card, Dialog)
-- Use @stylistic/stylelint-plugin for Stylelint 17; stylelint-stylistic is deprecated and incompatible
-- Ignore .cursor/chats and .cursor/hooks; commit .cursor/mcp.json
-- Use Panda MCP for design-system questions (breakpoints, tokens, recipes) when relevant without explicit user ask
+- Cursor loads rules under `.cursor/rules/` recursively, including nested folders; mixed flat-plus-subfolder layouts are a known pain point in multi-root workspaces
+- The `create` command copies `_templates/` with relative paths preserved into the new package; extra directory tiers (e.g. `root/`) land under those names in the target unless copy logic is changed
+- `path.resolve('src/...', …)` in scripts follows the process cwd; pnpm/npm scripts run with the package root as cwd, so repo-relative paths match the real tree when invoked that way
+- This repo can surface multiple `lint-staged` configs (root and `_templates/package.json`); grouped tasks follow the nearest config per staged file
