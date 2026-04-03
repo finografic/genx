@@ -5,10 +5,10 @@ import process from 'node:process';
 
 import { safeExit } from './utils/env.utils.js';
 import { renderHelp } from 'utils/render-help/render-help.utils.js';
+import { cliHelp } from './cli.help.js';
 import { createPackage } from './commands/create.cli.js';
 import { addFeatures } from './commands/features.cli.js';
 import { migratePackage } from './commands/migrate.cli.js';
-import { rootHelp } from './help/root.help.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };
@@ -24,7 +24,7 @@ async function main(): Promise<void> {
   /* ────────────────────────────────────────────────────────── */
 
   if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
-    renderHelp(rootHelp);
+    renderHelp(cliHelp);
     return;
   }
 
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
     },
 
     help: () => {
-      renderHelp(rootHelp);
+      renderHelp(cliHelp);
     },
   };
 
@@ -63,7 +63,7 @@ async function main(): Promise<void> {
 
   if (!commands[command]) {
     console.error(`Unknown command: ${command}`);
-    renderHelp(rootHelp);
+    renderHelp(cliHelp);
     safeExit(1);
     return;
   }

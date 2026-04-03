@@ -1,7 +1,7 @@
 import { defaultHelpOptions } from 'config/help.config';
 import type { HelpConfig } from 'types/help.types';
 
-export const rootHelp: HelpConfig = {
+export const cliHelp: HelpConfig = {
   main: {
     bin: 'genx',
     args: '<command> [options]',

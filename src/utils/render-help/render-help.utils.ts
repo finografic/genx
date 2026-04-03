@@ -1,8 +1,9 @@
 import { pc } from 'utils/picocolors';
 import type { HelpConfig } from 'types/help.types';
 
-/** Colorize <placeholder> tokens in dim cyan. */
-const colorizeArgs = (str: string): string => str.replace(/<[^>]+>/g, (m) => pc.dim(pc.cyan(m)));
+function colorizeArgs(str: string): string {
+  return str.replace(/<[^>]+>/g, (m) => pc.dim(pc.cyan(m)));
+}
 
 export function renderHelp({ main, commands, examples, footer }: HelpConfig): void {
   const lines: string[] = [];
