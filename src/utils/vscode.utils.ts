@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 
 import type { VSCodeExtensionsJson, VSCodeSettingsJson } from 'types/vscode.types';
 import { fileExists } from './fs.utils';
+import { parseJsoncObject } from './jsonc.utils';
 
 /** Base template for .vscode/extensions.json */
 const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
@@ -46,7 +47,7 @@ export async function readExtensionsJson(targetDir: string): Promise<VSCodeExten
   }
 
   const raw = await readFile(filePath, 'utf8');
-  return JSON.parse(raw) as VSCodeExtensionsJson;
+  return parseJsoncObject(raw) as VSCodeExtensionsJson;
 }
 
 /**
@@ -97,7 +98,7 @@ export async function readSettingsJson(targetDir: string): Promise<VSCodeSetting
   }
 
   const raw = await readFile(filePath, 'utf8');
-  return JSON.parse(raw) as VSCodeSettingsJson;
+  return parseJsoncObject(raw) as VSCodeSettingsJson;
 }
 
 /**

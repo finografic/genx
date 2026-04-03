@@ -10,9 +10,6 @@ import {
 } from '@finografic/oxfmt-config';
 import { defineConfig } from 'oxfmt';
 
-/**
- * Default oxfmt config — CSS/SCSS overrides are added by the **css** genx feature when applied.
- */
 export default defineConfig({
   $schema: './node_modules/oxfmt/configuration_schema.json',
   ignorePatterns: [...ignorePatterns],

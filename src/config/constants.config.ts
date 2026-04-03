@@ -38,3 +38,7 @@ export const PKG_SIMPLE_GIT_HOOKS = 'simple-git-hooks';
 
 export const PACKAGE_JSON_SCRIPTS_SECTION_PREFIX = '·'.repeat(10);
 export const PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER = '·'.repeat(50);
+
+/** Match `_templates/package.json` scripts section keys */
+export const PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION = `${PACKAGE_JSON_SCRIPTS_SECTION_PREFIX} PACKAGES`;
+export const PACKAGE_JSON_SCRIPTS_UTILS_SECTION = `${PACKAGE_JSON_SCRIPTS_SECTION_PREFIX} UTILS`;

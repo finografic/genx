@@ -11,10 +11,6 @@ import {
 } from '@finografic/oxfmt-config';
 import { defineConfig } from 'oxfmt';
 
-/**
- * Workspace root oxfmt config — Panda `styled-system/` and generated icon registry
- * are excluded so generated output stays stable.
- */
 export default defineConfig({
   $schema: './node_modules/oxfmt/configuration_schema.json',
   ignorePatterns: [...ignorePatterns],

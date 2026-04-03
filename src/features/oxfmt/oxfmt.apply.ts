@@ -15,6 +15,7 @@ import {
   ESLINT_CONFIG_FILES,
   PACKAGE_JSON,
   PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER,
+  PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION,
   PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
@@ -30,17 +31,20 @@ import {
   OXFMT_LINT_STAGED_CODE_PATTERN,
   OXFMT_LINT_STAGED_COMMAND,
   OXFMT_LINT_STAGED_DATA_PATTERN,
+  OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES,
   OXFMT_UPDATE_SCRIPT,
   PRETTIER_CONFIG_FILES,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
 } from './oxfmt.constants';
+import { removeDprintIfPresent } from './oxfmt.dprint-cleanup';
 import { ensureOxfmtConfig } from './oxfmt.template';
 import {
   applyOxfmtExtensions,
   applyOxfmtFormatterSettings,
   applyOxfmtSharedVSCodeSettings,
 } from './oxfmt.vscode';
+import { scrubDprintFromGithubWorkflows } from './oxfmt.workflows';
 
 function patternToRegex(pattern: string): RegExp {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
@@ -117,6 +121,108 @@ async function replacePrettierIfPresent(
   }
 
   return { removedPackages, backedUp };
+}
+
+function findNextScriptsSectionDividerIndex(keys: string[], sectionKeyIndex: number): number {
+  const prefix = PACKAGE_JSON_SCRIPTS_SECTION_PREFIX;
+  const current = keys[sectionKeyIndex];
+  for (let i = sectionKeyIndex + 1; i < keys.length; i++) {
+    const k = keys[i];
+    if (k.startsWith(prefix) && k !== current) {
+      return i;
+    }
+  }
+  return keys.length;
+}
+
+/**
+ * Place `update.oxfmt-config` in the PACKAGES scripts section (after `update.eslint-config` when present).
+ */
+function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
+  next: Record<string, string>;
+  changed: boolean;
+} {
+  const key = OXFMT_UPDATE_SCRIPT.key;
+  const value = OXFMT_UPDATE_SCRIPT.value;
+  const keys = Object.keys(scripts);
+
+  const packagesIdx = keys.indexOf(PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION);
+  if (packagesIdx === -1) {
+    if (scripts[key] === value) {
+      return { next: scripts, changed: false };
+    }
+    return { next: { ...scripts, [key]: value }, changed: true };
+  }
+
+  const nextSectionIdx = findNextScriptsSectionDividerIndex(keys, packagesIdx);
+  const sectionKeys = keys.slice(packagesIdx + 1, nextSectionIdx);
+
+  let insertAfter: string;
+  if (sectionKeys.includes('update.eslint-config')) {
+    insertAfter = 'update.eslint-config';
+  } else {
+    const updateKeys = sectionKeys.filter((k) => k.startsWith('update.'));
+    insertAfter =
+      updateKeys.length > 0 ? updateKeys[updateKeys.length - 1]! : PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
+  }
+
+  const without = keys.filter((k) => k !== key);
+  const insertAt = without.indexOf(insertAfter) + 1;
+  const newKeys = [...without.slice(0, insertAt), key, ...without.slice(insertAt)];
+
+  const next: Record<string, string> = {};
+  for (const k of newKeys) {
+    next[k] = k === key ? value : scripts[k];
+  }
+
+  const changed = scripts[key] !== value || JSON.stringify(keys) !== JSON.stringify(newKeys);
+
+  return { next, changed };
+}
+
+function coerceLintStagedStringValuesToArrays(lintStaged: Record<string, string[] | string>): void {
+  for (const k of Object.keys(lintStaged)) {
+    const v = lintStaged[k];
+    if (typeof v === 'string') {
+      lintStaged[k] = [v];
+    }
+  }
+}
+
+function mergeDataGlobAliasesIntoCanonical(lintStaged: Record<string, string[] | string>): void {
+  const canonical = OXFMT_LINT_STAGED_DATA_PATTERN;
+  let oxfmtCmd = OXFMT_LINT_STAGED_COMMAND;
+
+  for (const key of OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES) {
+    const cmds = lintStaged[key];
+    if (!Array.isArray(cmds)) continue;
+    const found = cmds.find((c) => c.includes('oxfmt'));
+    if (found) oxfmtCmd = found;
+  }
+
+  const canCmds = lintStaged[canonical];
+  if (Array.isArray(canCmds)) {
+    const found = canCmds.find((c) => c.includes('oxfmt'));
+    if (found) oxfmtCmd = found;
+  }
+
+  for (const key of OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES) {
+    delete lintStaged[key];
+  }
+
+  const finalCmds = [oxfmtCmd].filter((c) => !c.includes('eslint'));
+  lintStaged[canonical] = finalCmds.length > 0 ? finalCmds : [OXFMT_LINT_STAGED_COMMAND];
+}
+
+function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | string>): void {
+  const pattern = OXFMT_LINT_STAGED_CODE_PATTERN;
+  const cmds = lintStaged[pattern];
+  if (!Array.isArray(cmds) || cmds.length === 0) return;
+
+  const eslintFix = cmds.find((c) => c === 'eslint --fix');
+  const eslintOther = cmds.find((c) => c.includes('eslint') && !eslintFix);
+  const eslint = eslintFix ?? eslintOther;
+  lintStaged[pattern] = eslint ? [OXFMT_LINT_STAGED_COMMAND, eslint] : [OXFMT_LINT_STAGED_COMMAND];
 }
 
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
@@ -203,11 +309,10 @@ async function addUpdateScript(packageJsonPath: string): Promise<boolean> {
   const packageJson = JSON.parse(raw) as PackageJson;
 
   const scripts = packageJson.scripts ?? {};
-  if (scripts[OXFMT_UPDATE_SCRIPT.key]) return false;
+  const { next, changed } = ensureUpdateOxfmtScriptPlacement(scripts);
+  if (!changed) return false;
 
-  scripts[OXFMT_UPDATE_SCRIPT.key] = OXFMT_UPDATE_SCRIPT.value;
-  packageJson.scripts = scripts;
-
+  packageJson.scripts = next;
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
   return true;
 }
@@ -231,30 +336,44 @@ async function addOxfmtToLintStaged(packageJsonPath: string): Promise<boolean> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
 
-  const lintStaged = (packageJson['lint-staged'] ?? {}) as Record<string, string[]>;
-  let modified = false;
+  const lintStaged = {
+    ...((packageJson['lint-staged'] ?? {}) as Record<string, string[] | string>),
+  };
+  const before = JSON.stringify(lintStaged);
+
+  coerceLintStagedStringValuesToArrays(lintStaged);
+  mergeDataGlobAliasesIntoCanonical(lintStaged);
 
   const codePattern = OXFMT_LINT_STAGED_CODE_PATTERN;
   const codeCommands = lintStaged[codePattern];
   if (!Array.isArray(codeCommands) || codeCommands.length === 0) {
     lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
-    modified = true;
-  } else if (!codeCommands.includes(OXFMT_LINT_STAGED_COMMAND)) {
-    lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, ...codeCommands];
-    modified = true;
+  } else if (!codeCommands.some((c) => c.includes('oxfmt'))) {
+    lintStaged[codePattern] = [
+      OXFMT_LINT_STAGED_COMMAND,
+      ...codeCommands.filter((c) => !c.includes('dprint')),
+    ];
+  }
+  normalizeCodeGlobOxfmtFirst(lintStaged);
+
+  const dataPattern = OXFMT_LINT_STAGED_DATA_PATTERN;
+  const dataCmds = lintStaged[dataPattern];
+  if (!Array.isArray(dataCmds) || dataCmds.length === 0) {
+    lintStaged[dataPattern] = [OXFMT_LINT_STAGED_COMMAND];
+  } else if (!dataCmds.some((c) => c.includes('oxfmt'))) {
+    lintStaged[dataPattern] = [OXFMT_LINT_STAGED_COMMAND, ...dataCmds.filter((c) => !c.includes('eslint'))];
+    const stripped = (lintStaged[dataPattern] as string[]).filter((c) => !c.includes('eslint'));
+    lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
+  } else {
+    const stripped = dataCmds.filter((c) => !c.includes('eslint'));
+    lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
   }
 
-  if (!lintStaged[OXFMT_LINT_STAGED_DATA_PATTERN]) {
-    lintStaged[OXFMT_LINT_STAGED_DATA_PATTERN] = [OXFMT_LINT_STAGED_COMMAND];
-    modified = true;
-  }
+  if (before === JSON.stringify(lintStaged)) return false;
 
-  if (modified) {
-    packageJson['lint-staged'] = lintStaged;
-    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
-  }
-
-  return modified;
+  packageJson['lint-staged'] = lintStaged as Record<string, string[]>;
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  return true;
 }
 
 async function addFormatCheckToCI(targetDir: string): Promise<boolean> {
@@ -322,6 +441,12 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
     successMessage(`Backed up Prettier config: ${replaceResult.backedUp.join(', ')}`);
   }
 
+  const dprintCleanup = await removeDprintIfPresent(context.targetDir);
+  if (dprintCleanup.applied.length > 0) {
+    applied.push(...dprintCleanup.applied);
+    successMessage('Removed legacy formatter (dprint) from project');
+  }
+
   try {
     for (const [pkg, version] of [
       [OXFMT_CLI_PACKAGE, OXFMT_CLI_VERSION],
@@ -371,6 +496,12 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   if (addedToLintStaged) {
     applied.push('lint-staged (oxfmt entries)');
     successMessage('Added oxfmt to lint-staged config');
+  }
+
+  const workflowScrub = await scrubDprintFromGithubWorkflows(context.targetDir);
+  if (workflowScrub.applied.length > 0) {
+    applied.push(...workflowScrub.applied);
+    successMessage('Updated GitHub workflows (dprint → pnpm format.check)');
   }
 
   const addedToCI = await addFormatCheckToCI(context.targetDir);

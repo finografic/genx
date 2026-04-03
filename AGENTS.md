@@ -45,6 +45,7 @@ These rules are specific to `@finografic/genx` and not shared with other project
 
 - For Clack `text` validators, normalize once with `const trimmed = value?.trim() ?? ''`, require non-empty `trimmed`, then run regex tests on `trimmed` (covers undefined and satisfies narrowing)
 - For complex `pnpm-lock.yaml` conflicts, resolve `package.json` first, then run `pnpm install` to regenerate the lockfile instead of hand-merging
+- When using the shared ESLint stack, keep `@finografic/eslint-config` as a devDependency alongside ESLint
 
 ## Learned Workspace Facts
 
@@ -52,3 +53,6 @@ These rules are specific to `@finografic/genx` and not shared with other project
 - The `create` command copies `_templates/` with relative paths preserved into the new package; extra directory tiers (e.g. `root/`) land under those names in the target unless copy logic is changed
 - `path.resolve('src/...', …)` in scripts follows the process cwd; pnpm/npm scripts run with the package root as cwd, so repo-relative paths match the real tree when invoked that way
 - This repo can surface multiple `lint-staged` configs (root and `_templates/package.json`); grouped tasks follow the nearest config per staged file
+- `_templates/feature/` scaffold files are named `__FOLDER_NAME__.*.ts.template`; `scripts/new-feature.ts` strips the `.template` suffix when generating real files under `src/features/<name>/`
+- Default formatting for genx and generated scaffolds is `oxfmt` with `@finografic/oxfmt-config`; the `oxfmt` feature is for migrating existing packages (e.g. from Prettier or older setups)
+- `.cursor/` is gitignored except `.cursor/rules/`; hook state and files like `mcp.json` stay untracked unless force-added or you add a narrower un-ignore for team sharing

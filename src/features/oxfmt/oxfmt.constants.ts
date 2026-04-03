@@ -27,6 +27,18 @@ export const PRETTIER_PACKAGES = ['prettier', 'eslint-config-prettier', 'eslint-
  */
 export const PRETTIER_PACKAGE_PATTERNS = ['*prettier-plugin-*'] as const;
 
+/** Legacy formatter packages to remove when migrating to oxfmt. */
+export const DPRINT_PACKAGES = ['dprint', '@finografic/dprint-config'] as const;
+
+/** Legacy formatter config files to delete when migrating away. */
+export const DPRINT_CONFIG_FILES = ['dprint.jsonc', 'dprint.json', 'dprint.config.jsonc'] as const;
+
+/** Alternate lint-staged data globs merged into {@link OXFMT_LINT_STAGED_DATA_PATTERN}. */
+export const OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES = [
+  '*.{json,jsonc,yml,yaml,toml}',
+  '*.{json,jsonc,yml,yaml,toml,md}',
+] as const;
+
 /** Prettier config filenames to detect and backup when replacing with oxfmt. */
 export const PRETTIER_CONFIG_FILES = [
   '.prettierrc',
