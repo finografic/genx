@@ -12,7 +12,8 @@ import {
   STYLELINT_STYLISTIC_PACKAGE,
   STYLELINT_STYLISTIC_PACKAGE_VERSION,
 } from './css.constants';
-import { applyCssDprintSettings, applyCssExtensions, applyCssVSCodeSettings } from './css.vscode';
+import { patchOxfmtConfigForCss } from './css.oxfmt';
+import { applyCssExtensions, applyCssOxfmtSettings, applyCssVSCodeSettings } from './css.vscode';
 
 /**
  * Apply CSS linting feature to an existing package.
@@ -74,11 +75,18 @@ export async function applyCss(context: FeatureContext): Promise<FeatureApplyRes
     successMessage('Added stylelint settings to VSCode');
   }
 
-  // 5. Configure dprint as CSS/SCSS formatter
-  const addedDprintLanguages = await applyCssDprintSettings(context.targetDir);
-  if (addedDprintLanguages.length > 0) {
-    applied.push(`.vscode/settings.json (dprint: ${addedDprintLanguages.join(', ')})`);
-    successMessage(`Configured dprint for: ${addedDprintLanguages.join(', ')}`);
+  // 5. Configure oxfmt (oxc) as CSS/SCSS formatter
+  const addedOxfmtLanguages = await applyCssOxfmtSettings(context.targetDir);
+  if (addedOxfmtLanguages.length > 0) {
+    applied.push(`.vscode/settings.json (oxfmt: ${addedOxfmtLanguages.join(', ')})`);
+    successMessage(`Configured oxfmt for: ${addedOxfmtLanguages.join(', ')}`);
+  }
+
+  // 5b. Add CSS/SCSS `...css` override to oxfmt.config.ts when missing
+  const oxfmtConfigPatched = await patchOxfmtConfigForCss(context.targetDir);
+  if (oxfmtConfigPatched) {
+    applied.push('oxfmt.config.ts (css override)');
+    successMessage('Added CSS/SCSS override to oxfmt.config.ts');
   }
 
   // 6. Add VSCode extension recommendation

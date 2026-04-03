@@ -3,10 +3,15 @@ import { resolve } from 'node:path';
 import { fileExists, installDevDependency, isDependencyDeclared, spinner, successMessage } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
-import { ESLINT_CONFIG_FILES } from 'config/constants.config';
+import { ESLINT_CONFIG_FILES, PACKAGE_JSON } from 'config/constants.config';
+import type { PackageJson } from 'types/package-json.types';
 import {
   ESLINT_MARKDOWN_CONFIG_BLOCK,
   ESLINT_MARKDOWN_IMPORTS,
+  LINT_STAGED_DATA_ONLY_PATTERN,
+  LINT_STAGED_DATA_WITH_MD_PATTERN,
+  LINT_STAGED_MD_PATTERN,
+  LINT_STAGED_OXFMT_CMD,
   MARKDOWNLINT_PACKAGE,
   MARKDOWNLINT_PACKAGE_VERSION,
 } from './markdown.constants';
@@ -95,6 +100,41 @@ async function addMarkdownToEslintConfig(eslintConfigPath: string): Promise<bool
 }
 
 /**
+ * Split `*.{…,md}` lint-staged (oxfmt only) into data glob + `*.md` with eslint --fix
+ * once markdownlint is configured.
+ */
+async function addMarkdownLintStaged(targetDir: string): Promise<boolean> {
+  const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
+  const raw = await readFile(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(raw) as PackageJson;
+  const lintStaged = { ...(packageJson['lint-staged'] as Record<string, string[]> | undefined) };
+  if (!lintStaged || Object.keys(lintStaged).length === 0) return false;
+
+  const mdCommands = lintStaged[LINT_STAGED_MD_PATTERN];
+  if (mdCommands?.includes('eslint --fix')) return false;
+
+  const combined = lintStaged[LINT_STAGED_DATA_WITH_MD_PATTERN];
+  if (combined && combined.includes(LINT_STAGED_OXFMT_CMD) && !combined.includes('eslint --fix')) {
+    lintStaged[LINT_STAGED_DATA_ONLY_PATTERN] = [...combined];
+    delete lintStaged[LINT_STAGED_DATA_WITH_MD_PATTERN];
+    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+    packageJson['lint-staged'] = lintStaged;
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+    return true;
+  }
+
+  const dataOnly = lintStaged[LINT_STAGED_DATA_ONLY_PATTERN];
+  if (dataOnly && !lintStaged[LINT_STAGED_MD_PATTERN]) {
+    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+    packageJson['lint-staged'] = lintStaged;
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Apply markdown feature to an existing package.
  */
 export async function applyMarkdown(context: FeatureContext): Promise<FeatureApplyResult> {
@@ -149,6 +189,13 @@ export async function applyMarkdown(context: FeatureContext): Promise<FeatureApp
   if (cssCopied) {
     applied.push('.vscode/markdown CSS files');
     successMessage('Copied markdown CSS files to .vscode');
+  }
+
+  // 6. lint-staged: add eslint --fix for *.md when using merged data+md glob (base template)
+  const lintStagedModified = await addMarkdownLintStaged(context.targetDir);
+  if (lintStagedModified) {
+    applied.push('lint-staged (*.md eslint --fix)');
+    successMessage('Updated lint-staged for markdown + ESLint');
   }
 
   if (applied.length === 0) {

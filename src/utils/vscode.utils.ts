@@ -114,7 +114,7 @@ export async function writeSettingsJson(targetDir: string, content: VSCodeSettin
  * Add language-specific formatter settings to .vscode/settings.json.
  * @param targetDir - Target directory
  * @param languages - Array of language IDs (e.g., "typescript", "javascript")
- * @param formatterId - VSCode formatter ID (e.g., "dprint.dprint")
+ * @param formatterId - VSCode formatter ID (e.g., "oxc.oxc-vscode")
  * @returns Object with added languages and whether prettier was disabled
  */
 export async function addLanguageFormatterSettings(

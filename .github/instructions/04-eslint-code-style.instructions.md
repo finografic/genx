@@ -6,7 +6,7 @@
 
 ## JSX Formatting
 
-- Let Prettier control parentheses and multiline formatting; avoid manual tweaks.
+- Let the formatter (oxc / oxfmt) and ESLint control parentheses and multiline layout; avoid manual tweaks that fight the toolchain.
 
 ## Fixing
 
@@ -16,20 +16,18 @@ npm run lint.fix -- "src/**/*.tsx"
 npm run lint -- path/to/file.tsx
 ```
 
-## dprint
+## oxfmt (formatting)
 
-**CRITICAL — dprint command semantics (agents get this wrong constantly):**
+**Check vs write:**
 
-| Command             | Effect                                                                   | Output                  |
-| ------------------- | ------------------------------------------------------------------------ | ----------------------- |
-| `dprint check`      | **Check only** — never modifies files, exits non-zero if unformatted     | Verbose diff by default |
-| `dprint fmt`        | **Fix** — rewrites files in place, exits zero even when changes are made | Silent by default       |
-| `dprint fmt --diff` | Fix + show diff of what changed                                          | Verbose                 |
+| Script / command    | Effect                                                            |
+| ------------------- | ----------------------------------------------------------------- |
+| `pnpm format.check` | `oxfmt --check` — verify only, fails if anything needs formatting |
+| `pnpm format.fix`   | `oxfmt` — writes formatted output in place                        |
 
-- These two commands are NOT interchangeable. Never use `dprint fmt` to verify/gate —
-  it will silently fix and exit 0.
-- Use project scripts: `pnpm format.check` to verify (blocks on failure), `pnpm format.fix` to fix.
-- Always use `--allow-no-files` when running either command on specific paths (some paths may be excluded by config).
+- Use **`format.check`** in CI and when you only want verification.
+- Use **`format.fix`** when you intend to modify files.
+- Staged workflows use `oxfmt --no-error-on-unmatched-pattern` where appropriate so empty globs do not fail.
 
 ## Known Warnings (ignore)
 
@@ -37,5 +35,5 @@ npm run lint -- path/to/file.tsx
 
 ## Disabled Rules (intentional)
 
-- `style/jsx-wrap-multilines`, `react/jsx-wrap-multilines` (Prettier governs formatting)
+- `style/jsx-wrap-multilines`, `react/jsx-wrap-multilines` when the formatter governs layout
 - `ts/no-unused-vars` in favor of import cleanup

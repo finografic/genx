@@ -19,44 +19,35 @@ import {
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
 import {
-  DPRINT_CI_STEP,
-  DPRINT_CLI_PACKAGE,
-  DPRINT_CLI_VERSION,
-  DPRINT_COVERED_STYLISTIC_RULES,
-  DPRINT_LINT_STAGED_CODE_PATTERN,
-  DPRINT_LINT_STAGED_COMMAND,
-  DPRINT_LINT_STAGED_DATA_PATTERN,
-  DPRINT_PACKAGE,
-  DPRINT_PACKAGE_VERSION,
-  DPRINT_UPDATE_SCRIPT,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
+  OXFMT_CI_STEP,
+  OXFMT_CLI_PACKAGE,
+  OXFMT_CLI_VERSION,
+  OXFMT_COVERED_STYLISTIC_RULES,
+  OXFMT_CONFIG_PACKAGE,
+  OXFMT_CONFIG_PACKAGE_VERSION,
+  OXFMT_LINT_STAGED_CODE_PATTERN,
+  OXFMT_LINT_STAGED_COMMAND,
+  OXFMT_LINT_STAGED_DATA_PATTERN,
+  OXFMT_UPDATE_SCRIPT,
   PRETTIER_CONFIG_FILES,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
-} from './dprint.constants';
-import { ensureDprintConfig } from './dprint.template';
+} from './oxfmt.constants';
+import { ensureOxfmtConfig } from './oxfmt.template';
 import {
-  applyDprintExtensions,
-  applyDprintFormatterSettings,
-  applyDprintVSCodeSettings,
-} from './dprint.vscode';
+  applyOxfmtExtensions,
+  applyOxfmtFormatterSettings,
+  applyOxfmtSharedVSCodeSettings,
+} from './oxfmt.vscode';
 
-/**
- * Convert a glob pattern (e.g., "*prettier-plugin-*") to a regex for matching package names.
- * Supports * as wildcard. For scoped packages, matches against the full name.
- */
 function patternToRegex(pattern: string): RegExp {
-  // Escape special regex chars except *
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-  // Replace * with .* for regex
   const regexStr = `^${escaped.replace(/\*/g, '.*')}$`;
   return new RegExp(regexStr);
 }
 
-/**
- * Check if a package name matches any of the Prettier patterns.
- */
 function matchesPrettierPattern(packageName: string): boolean {
   return PRETTIER_PACKAGE_PATTERNS.some((pattern) => {
     const regex = patternToRegex(pattern);
@@ -64,9 +55,6 @@ function matchesPrettierPattern(packageName: string): boolean {
   });
 }
 
-/**
- * Find all Prettier-related packages in package.json (exact matches + pattern matches).
- */
 async function findPrettierPackages(targetDir: string): Promise<string[]> {
   const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
   const raw = await readFile(packageJsonPath, 'utf8');
@@ -74,31 +62,26 @@ async function findPrettierPackages(targetDir: string): Promise<string[]> {
 
   const allDeps = new Set<string>();
 
-  // Collect from dependencies
   if (packageJson.dependencies && typeof packageJson.dependencies === 'object') {
     for (const name of Object.keys(packageJson.dependencies)) {
       allDeps.add(name);
     }
   }
 
-  // Collect from devDependencies
   if (packageJson.devDependencies && typeof packageJson.devDependencies === 'object') {
     for (const name of Object.keys(packageJson.devDependencies)) {
       allDeps.add(name);
     }
   }
 
-  // Find matches
   const matches: string[] = [];
 
   for (const dep of allDeps) {
-    // Exact match
     if (PRETTIER_PACKAGES.includes(dep as (typeof PRETTIER_PACKAGES)[number])) {
       matches.push(dep);
       continue;
     }
 
-    // Pattern match
     if (matchesPrettierPattern(dep)) {
       matches.push(dep);
     }
@@ -107,17 +90,12 @@ async function findPrettierPackages(targetDir: string): Promise<string[]> {
   return matches;
 }
 
-/**
- * If Prettier is present, uninstall it and backup Prettier config files so dprint
- * can take over. Returns what was done so applyDprint can report it.
- */
 async function replacePrettierIfPresent(
   targetDir: string,
 ): Promise<{ removedPackages: string[]; backedUp: string[] }> {
   const backedUp: string[] = [];
   const removedPackages: string[] = [];
 
-  // 1. Find and uninstall all Prettier-related packages
   const prettierPackages = await findPrettierPackages(targetDir);
   for (const pkg of prettierPackages) {
     const result = await removeDependency(targetDir, pkg);
@@ -126,7 +104,6 @@ async function replacePrettierIfPresent(
     }
   }
 
-  // 2. Backup each Prettier config file that exists
   for (const file of PRETTIER_CONFIG_FILES) {
     const filePath = resolve(targetDir, file);
     if (fileExists(filePath)) {
@@ -142,42 +119,26 @@ async function replacePrettierIfPresent(
   return { removedPackages, backedUp };
 }
 
-/**
- * Check if formatting scripts section already exists in package.json.
- */
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
   return 'format' in scripts || 'format.check' in scripts;
 }
 
-/**
- * Check if formatting section title exists in scripts.
- * Looks for the decorative title line that precedes formatting scripts.
- */
 function hasFormattingSectionTitle(scripts: Record<string, string>): boolean {
   return Object.keys(scripts).some((key) => key === FORMATTING_SECTION_TITLE);
 }
 
-/**
- * Find the insertion point for formatting scripts in package.json scripts.
- * Returns the index after the last script before where formatting should go,
- * or -1 if formatting section already exists.
- */
 function findFormattingInsertionPoint(scripts: Record<string, string>): number {
-  // If formatting already exists, don't insert
   if (hasFormattingScripts(scripts)) {
     return -1;
   }
 
   const scriptKeys = Object.keys(scripts);
 
-  // Find the index after "·········· LINTING" section
   const lintingIndex = scriptKeys.findIndex((key) => key.includes('LINTING'));
   if (lintingIndex !== -1) {
-    // Find the last script in the linting section
     let insertAfter = lintingIndex;
     for (let i = lintingIndex + 1; i < scriptKeys.length; i++) {
       const key = scriptKeys[i];
-      // Stop if we hit another section title
       if (key.startsWith(PACKAGE_JSON_SCRIPTS_SECTION_PREFIX)) {
         break;
       }
@@ -186,21 +147,15 @@ function findFormattingInsertionPoint(scripts: Record<string, string>): number {
     return insertAfter + 1;
   }
 
-  // If no linting section, insert after the last script
   return scriptKeys.length;
 }
 
-/**
- * Add formatting scripts to package.json.
- * Inserts the formatting section after the linting section if it doesn't already exist.
- */
 async function addFormattingScripts(packageJsonPath: string): Promise<{ added: boolean; changes: string[] }> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
 
   const scripts = { ...(packageJson.scripts ?? {}) };
 
-  // Check if formatting scripts already exist
   if (hasFormattingScripts(scripts)) {
     return { added: false, changes: [] };
   }
@@ -213,16 +168,13 @@ async function addFormattingScripts(packageJsonPath: string): Promise<{ added: b
     return { added: false, changes: [] };
   }
 
-  // Build new scripts object with formatting section inserted
   const newScripts: Record<string, string> = {};
 
-  // Copy scripts up to insertion point
   for (let i = 0; i < insertionPoint; i++) {
     const key = scriptKeys[i];
     newScripts[key] = scripts[key];
   }
 
-  // Insert formatting section
   if (!hasFormattingSectionTitle(scripts)) {
     newScripts[FORMATTING_SECTION_TITLE] = PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER;
     changes.push(`scripts.${FORMATTING_SECTION_TITLE}`);
@@ -233,7 +185,6 @@ async function addFormattingScripts(packageJsonPath: string): Promise<{ added: b
     changes.push(`scripts.${scriptKey}`);
   }
 
-  // Copy remaining scripts after insertion point
   for (let i = insertionPoint; i < scriptKeys.length; i++) {
     const key = scriptKeys[i];
     newScripts[key] = scripts[key];
@@ -247,26 +198,20 @@ async function addFormattingScripts(packageJsonPath: string): Promise<{ added: b
   return { added: changes.length > 0, changes };
 }
 
-/**
- * Add the update.dprint-config script to the PACKAGES section of package.json.
- */
 async function addUpdateScript(packageJsonPath: string): Promise<boolean> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
 
   const scripts = packageJson.scripts ?? {};
-  if (scripts[DPRINT_UPDATE_SCRIPT.key]) return false;
+  if (scripts[OXFMT_UPDATE_SCRIPT.key]) return false;
 
-  scripts[DPRINT_UPDATE_SCRIPT.key] = DPRINT_UPDATE_SCRIPT.value;
+  scripts[OXFMT_UPDATE_SCRIPT.key] = OXFMT_UPDATE_SCRIPT.value;
   packageJson.scripts = scripts;
 
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
   return true;
 }
 
-/**
- * Add `pnpm format.check &&` to the release.check script if not already present.
- */
 async function addFormatToReleaseCheck(packageJsonPath: string): Promise<boolean> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
@@ -282,32 +227,25 @@ async function addFormatToReleaseCheck(packageJsonPath: string): Promise<boolean
   return true;
 }
 
-/**
- * Add dprint commands to lint-staged config in package.json.
- * - Prepends `dprint fmt --allow-no-files` to the TS/JS pattern
- * - Adds a new pattern for non-code files (json, md, yaml, toml)
- */
-async function addDprintToLintStaged(packageJsonPath: string): Promise<boolean> {
+async function addOxfmtToLintStaged(packageJsonPath: string): Promise<boolean> {
   const raw = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(raw) as PackageJson;
 
   const lintStaged = (packageJson['lint-staged'] ?? {}) as Record<string, string[]>;
   let modified = false;
 
-  // TS/JS pattern: ensure dprint runs before eslint (create pattern if missing)
-  const codePattern = DPRINT_LINT_STAGED_CODE_PATTERN;
+  const codePattern = OXFMT_LINT_STAGED_CODE_PATTERN;
   const codeCommands = lintStaged[codePattern];
   if (!Array.isArray(codeCommands) || codeCommands.length === 0) {
-    lintStaged[codePattern] = [DPRINT_LINT_STAGED_COMMAND, 'eslint --fix'];
+    lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
     modified = true;
-  } else if (!codeCommands.includes(DPRINT_LINT_STAGED_COMMAND)) {
-    lintStaged[codePattern] = [DPRINT_LINT_STAGED_COMMAND, ...codeCommands];
+  } else if (!codeCommands.includes(OXFMT_LINT_STAGED_COMMAND)) {
+    lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, ...codeCommands];
     modified = true;
   }
 
-  // Add non-code file pattern if not present
-  if (!lintStaged[DPRINT_LINT_STAGED_DATA_PATTERN]) {
-    lintStaged[DPRINT_LINT_STAGED_DATA_PATTERN] = [DPRINT_LINT_STAGED_COMMAND];
+  if (!lintStaged[OXFMT_LINT_STAGED_DATA_PATTERN]) {
+    lintStaged[OXFMT_LINT_STAGED_DATA_PATTERN] = [OXFMT_LINT_STAGED_COMMAND];
     modified = true;
   }
 
@@ -319,25 +257,23 @@ async function addDprintToLintStaged(packageJsonPath: string): Promise<boolean> 
   return modified;
 }
 
-/**
- * Add the format check step to ci.yml if present and not already there.
- */
 async function addFormatCheckToCI(targetDir: string): Promise<boolean> {
   const ciPath = resolve(targetDir, '.github/workflows/ci.yml');
   if (!fileExists(ciPath)) return false;
 
   const content = await readFile(ciPath, 'utf8');
-  if (content.includes('dprint check') || content.includes('format.check')) return false;
+  if (
+    content.includes('oxfmt --check') ||
+    content.includes('pnpm format.check') ||
+    content.includes('format.check')
+  )
+    return false;
 
-  const updated = content.trimEnd() + DPRINT_CI_STEP;
+  const updated = content.trimEnd() + OXFMT_CI_STEP;
   await writeFile(ciPath, updated, 'utf8');
   return true;
 }
 
-/**
- * Strip formatting-focused stylistic rules from eslint.config.ts.
- * dprint handles these; keeping them causes duplicate/conflicting enforcement.
- */
 async function stripFormattingStylisticRules(targetDir: string): Promise<boolean> {
   let eslintConfigPath: string | null = null;
   for (const candidate of ESLINT_CONFIG_FILES) {
@@ -353,18 +289,13 @@ async function stripFormattingStylisticRules(targetDir: string): Promise<boolean
   const content = await readFile(eslintConfigPath, 'utf8');
   let updated = content;
 
-  // Remove lines for each covered rule (handles single-line and multi-line array values)
-  for (const rule of DPRINT_COVERED_STYLISTIC_RULES) {
-    // Match the full line(s) for the rule, including multi-line values like ['error', 2, { ... }]
+  for (const rule of OXFMT_COVERED_STYLISTIC_RULES) {
     const escaped = rule.replace(/\//g, '\\/');
     const regex = new RegExp(`^\\s*'${escaped}':.+\\n`, 'gm');
     updated = updated.replace(regex, '');
   }
 
-  // Remove the "// Stylistic" comment line
   updated = updated.replace(/^\s*\/\/ Stylistic\n/gm, '');
-
-  // Clean up triple+ blank lines to double
   updated = updated.replace(/\n{3,}/g, '\n\n');
 
   if (updated !== content) {
@@ -376,15 +307,11 @@ async function stripFormattingStylisticRules(targetDir: string): Promise<boolean
 }
 
 /**
- * Apply dprint feature to an existing package.
- * Replaces Prettier if present (uninstall + backup configs), then installs
- * dprint + @finografic/dprint-config, creates dprint.jsonc, adds formatting scripts,
- * configures lint-staged and CI, and configures VSCode settings.
+ * Apply oxfmt to an existing package (Prettier → oxfmt migration path).
  */
-export async function applyDprint(context: FeatureContext): Promise<FeatureApplyResult> {
+export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyResult> {
   const applied: string[] = [];
 
-  // 0. Replace Prettier if present (uninstall, backup config files)
   const replaceResult = await replacePrettierIfPresent(context.targetDir);
   if (replaceResult.removedPackages.length > 0) {
     applied.push('removed Prettier packages');
@@ -395,11 +322,10 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     successMessage(`Backed up Prettier config: ${replaceResult.backedUp.join(', ')}`);
   }
 
-  // 1. Install dprint CLI + @finografic/dprint-config
   try {
     for (const [pkg, version] of [
-      [DPRINT_CLI_PACKAGE, DPRINT_CLI_VERSION],
-      [DPRINT_PACKAGE, DPRINT_PACKAGE_VERSION],
+      [OXFMT_CLI_PACKAGE, OXFMT_CLI_VERSION],
+      [OXFMT_CONFIG_PACKAGE, OXFMT_CONFIG_PACKAGE_VERSION],
     ] as const) {
       const alreadyDeclared = await isDependencyDeclared(context.targetDir, pkg);
       if (!alreadyDeclared) {
@@ -418,14 +344,12 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     return { applied, error };
   }
 
-  // 2. Create dprint.jsonc
-  const result = await ensureDprintConfig(context.targetDir);
-  if (result.wrote) {
-    applied.push('dprint.jsonc');
-    successMessage('Created dprint.jsonc');
+  const configResult = await ensureOxfmtConfig(context.targetDir);
+  if (configResult.wrote) {
+    applied.push('oxfmt.config.ts');
+    successMessage('Created oxfmt.config.ts');
   }
 
-  // 3. Add formatting scripts to package.json
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
   const scriptsResult = await addFormattingScripts(packageJsonPath);
   if (scriptsResult.added) {
@@ -433,69 +357,61 @@ export async function applyDprint(context: FeatureContext): Promise<FeatureApply
     successMessage('Added formatting scripts to package.json');
   }
 
-  // 4. Add update.dprint-config script
   const addedUpdateScript = await addUpdateScript(packageJsonPath);
   if (addedUpdateScript) {
-    successMessage('Added update.dprint-config script');
+    successMessage(`Added ${OXFMT_UPDATE_SCRIPT.key} script`);
   }
 
-  // 5. Add pnpm format.check to release.check script
   const addedFormatToRelease = await addFormatToReleaseCheck(packageJsonPath);
   if (addedFormatToRelease) {
     successMessage('Added format.check to release.check script');
   }
 
-  // 6. Add dprint to lint-staged config
-  const addedToLintStaged = await addDprintToLintStaged(packageJsonPath);
+  const addedToLintStaged = await addOxfmtToLintStaged(packageJsonPath);
   if (addedToLintStaged) {
-    applied.push('lint-staged (dprint entries)');
-    successMessage('Added dprint to lint-staged config');
+    applied.push('lint-staged (oxfmt entries)');
+    successMessage('Added oxfmt to lint-staged config');
   }
 
-  // 7. Add format check step to CI workflow
   const addedToCI = await addFormatCheckToCI(context.targetDir);
   if (addedToCI) {
     applied.push('ci.yml (format check step)');
     successMessage('Added format check step to CI workflow');
   }
 
-  // 8. Configure VSCode extension recommendation
-  const addedExtensions = await applyDprintExtensions(context.targetDir);
+  const addedExtensions = await applyOxfmtExtensions(context.targetDir);
   if (addedExtensions.length > 0) {
     applied.push('.vscode/extensions.json');
     successMessage(`Added extension recommendation: ${addedExtensions.join(', ')}`);
   }
 
-  // 9. Configure VSCode language formatter settings (based on project dependencies)
-  const settingsResult = await applyDprintFormatterSettings(context.targetDir);
+  const settingsResult = await applyOxfmtFormatterSettings(context.targetDir);
   if (settingsResult.addedLanguages.length > 0 || settingsResult.disabledPrettier) {
     applied.push('.vscode/settings.json');
     if (settingsResult.disabledPrettier) {
       successMessage('Disabled Prettier in VSCode settings');
     }
     if (settingsResult.addedLanguages.length > 0) {
-      successMessage(`Configured dprint as formatter for: ${settingsResult.addedLanguages.join(', ')}`);
+      successMessage(`Configured oxfmt for: ${settingsResult.addedLanguages.join(', ')}`);
     }
   }
 
-  // 10. Add dprint-specific VSCode settings
-  const dprintSettingsModified = await applyDprintVSCodeSettings(context.targetDir);
-  if (dprintSettingsModified) {
+  const sharedSettingsModified = await applyOxfmtSharedVSCodeSettings(context.targetDir);
+  if (sharedSettingsModified) {
     if (!applied.includes('.vscode/settings.json')) {
       applied.push('.vscode/settings.json');
     }
-    successMessage('Added dprint settings to VSCode');
+    successMessage('Added oxfmt editor defaults to VSCode');
   }
 
-  // 11. Strip formatting stylistic rules from eslint config (dprint handles these)
   const strippedRules = await stripFormattingStylisticRules(context.targetDir);
   if (strippedRules) {
-    applied.push('eslint.config.ts (removed dprint-covered stylistic rules)');
-    successMessage('Removed formatting stylistic rules from ESLint config');
+    applied.push('eslint.config.ts (removed oxfmt-covered stylistic rules)');
+    successMessage('Removed redundant stylistic rules from ESLint config');
   }
 
   if (applied.length === 0) {
-    return { applied, noopMessage: 'dprint already installed. No changes made.' };
+    return { applied, noopMessage: 'oxfmt already installed. No changes made.' };
   }
 
   return { applied };

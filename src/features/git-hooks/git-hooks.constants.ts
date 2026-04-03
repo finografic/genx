@@ -21,7 +21,7 @@ export const GIT_HOOKS_PACKAGES = {
 
 /**
  * lint-staged configuration for package.json.
- * Matches dprint’s code glob when that feature prepends `dprint fmt`.
+ * Matches the code glob used when oxfmt prepends its command in lint-staged.
  */
 export const LINT_STAGED_CONFIG: Record<string, string[]> = {
   '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'],

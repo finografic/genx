@@ -9,7 +9,7 @@ import {
   writeSettingsJson,
 } from 'utils';
 
-import { CSS_DPRINT_LANGUAGES, CSS_VSCODE_EXTENSIONS, CSS_VSCODE_SETTINGS } from './css.constants';
+import { CSS_OXFMT_LANGUAGES, CSS_VSCODE_EXTENSIONS, CSS_VSCODE_SETTINGS } from './css.constants';
 
 /**
  * Add stylelint extension recommendation to .vscode/extensions.json.
@@ -53,13 +53,13 @@ export async function applyCssVSCodeSettings(targetDir: string): Promise<boolean
 }
 
 /**
- * Configure dprint as the default formatter for CSS/SCSS in .vscode/settings.json.
+ * Configure oxfmt (oxc) as the default formatter for CSS/SCSS in .vscode/settings.json.
  */
-export async function applyCssDprintSettings(targetDir: string): Promise<string[]> {
+export async function applyCssOxfmtSettings(targetDir: string): Promise<string[]> {
   const { addedLanguages } = await addLanguageFormatterSettings(
     targetDir,
-    [...CSS_DPRINT_LANGUAGES],
-    'dprint.dprint',
+    [...CSS_OXFMT_LANGUAGES],
+    'oxc.oxc-vscode',
   );
   return addedLanguages;
 }

@@ -32,26 +32,14 @@ pnpm dlx @finografic/genx <command> [options]
 ### `genx create`
 
 ```bash
-genx create [options]
+genx create
 ```
-
-| Flag           | Description                       |
-| -------------- | --------------------------------- |
-| `--type <id>`  | Package type (skips type prompt)  |
-| `--name <pkg>` | Package name (skips name prompt)  |
-| `-y`           | Auto-accept all remaining prompts |
 
 **Examples:**
 
 ```bash
 # Create a new package interactively
 genx create
-
-# Skip prompts for type and name
-genx create --type cli --name my-tool
-
-# Fully non-interactive
-genx create --type lib --name my-lib -y
 ```
 
 ### `genx migrate`
@@ -103,16 +91,18 @@ genx features
 
 <!-- GENERATED:FEATURES:START -->
 
-### dprint
+### oxfmt
 
-Code formatting via `@finografic/dprint-config`.
+Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos not created from the latest genx template).
 
-- Installs `@finografic/dprint-config`
-- Creates `dprint.jsonc`
-- Adds `format` / `format.check` scripts
+- Installs `oxfmt` and `@finografic/oxfmt-config`
+- Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
+- Adds `format.check` / `format.fix` and `update.oxfmt-config` scripts
 - Replaces Prettier if present (uninstall + backup configs)
-- Adds VSCode extension recommendation
-- Configures language formatters in `.vscode/settings.json`
+- Prepends oxfmt to `lint-staged`, adds format check to `release.check` / CI when missing
+- Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
+- Configures per-language default formatter and oxc editor settings in `.vscode/settings.json`
+- Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers
 
 ### vitest
 
@@ -147,7 +137,7 @@ CSS linting via `stylelint` + `@stylistic/stylelint-plugin`.
 - Installs `stylelint` and `@stylistic/stylelint-plugin`
 - Creates `stylelint.config.ts` with stylistic indentation/spacing rules (`satisfies Config`)
 - Enables stylelint in `.vscode/settings.json` (disables built-in `css.validate`)
-- Configures dprint as the default formatter for `css` and `scss`
+- Configures oxfmt (oxc) as the default formatter for `css` and `scss`
 - Adds VSCode extension recommendation
 
 ### git-hooks
@@ -156,7 +146,7 @@ Pre-commit linting + conventional commits.
 
 - Installs `lint-staged`, `simple-git-hooks`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
-- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; dprint prepends `dprint fmt` when that feature is applied)
+- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; the **oxfmt** feature prepends `oxfmt` when applied)
 - Adds `commitlint` config to package.json (`extends: @commitlint/config-conventional`)
 - Adds `simple-git-hooks` config to package.json
 - Removes legacy `commitlint.config.mjs` if present
@@ -178,7 +168,7 @@ Every scaffolded package includes:
 
 Optional features (selected during `create` or added via `features`):
 
-- **dprint** — code formatting
+- **oxfmt** — migrate older repos to oxfmt + `@finografic/oxfmt-config`
 - **vitest** — unit testing
 - **git-hooks** — pre-commit linting + conventional commits
 - **ai-instructions** — shared AI rules (Copilot, Cursor, Claude)
@@ -201,7 +191,7 @@ my-package/
 ├── .gitignore
 ├── LICENSE
 ├── README.md
-├── dprint.jsonc             (optional)
+├── oxfmt.config.ts          (optional migration feature)
 └── .github/                 (optional)
     ├── copilot-instructions.md
     └── instructions/

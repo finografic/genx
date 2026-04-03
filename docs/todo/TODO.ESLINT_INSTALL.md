@@ -5,7 +5,7 @@
 Update `@finografic/genx` (and `migrate`) so that newly generated packages use the **canonical ESLint config template** shipped inside:
 
 - `@finografic/eslint-config`
-- (and optionally, formatting config from `@finografic/dprint-config`)
+- (and formatting via `@finografic/oxfmt-config` + `oxfmt`, already wired in `_templates/`)
 
 This replaces the current behavior where `eslint.config.ts` is copied from local `templates/` inside `@finografic/genx`.
 
@@ -101,41 +101,17 @@ Migration should be non-destructive and reversible.
 
 ---
 
-## dprint integration (optional)
+## oxfmt (formatting)
 
-If the user selects formatting via dprint in `@finografic/genx`:
+Formatting is standardized on **`oxfmt`** + **`@finografic/oxfmt-config`**. New packages already include `oxfmt.config.ts` in `_templates/`; the **`oxfmt`** genx feature migrates older repos.
 
-Install:
+Install (if adding manually):
 
 ```bash
-pnpm add -D dprint @finografic/dprint-config
+pnpm add -D oxfmt @finografic/oxfmt-config
 ```
 
-Then either:
-
-### Option A (recommended): copy config file
-
-Copy from installed dependency:
-
-```txt
-node_modules/@finografic/dprint-config/dprint.json
-```
-
-To:
-
-```txt
-<new-package>/dprint.json
-```
-
-### Option B (advanced): use `extends`
-
-Generate a lightweight `dprint.json`:
-
-```json
-{
-  "extends": "node_modules/@finografic/dprint-config/dprint.json"
-}
-```
+Config lives at the repo root as `oxfmt.config.ts` (see `_templates/oxfmt.config.ts`).
 
 ---
 
@@ -162,9 +138,7 @@ A generated package should:
 - Have `eslint.config.ts` created from `@finografic/eslint-config/templates/`
 - Have the correct dependency installed
 - Run `pnpm lint` successfully without manual changes
-- If dprint option is selected:
-  - have a `dprint.json`
-  - support editor format-on-save
+- Have `oxfmt.config.ts` and formatter scripts consistent with `_templates/`
 
 ---
 
@@ -177,12 +151,3 @@ Blocked until:
 - the package is ready to be depended on by `@finografic/genx`
 
 ---
-
-## Next tasks (when ready)
-
-- [ ] Add `templates/` folder to `@finografic/eslint-config` package output (`files` whitelist)
-- [ ] Add canonical `eslint.config.ts` template (layered)
-- [ ] Add optional `eslint.config.fino.ts` template (bridge)
-- [ ] Update `@finografic/genx` to install dependency first, then copy template
-- [ ] Update `migrate` to back up existing config and replace using canonical template
-- [ ] Add a verification step (`pnpm lint`) to validate output

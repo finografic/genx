@@ -19,6 +19,7 @@ export const dependencyRules: DependencyRule[] = [
 
   // eslint stack
   { name: 'eslint', section: 'devDependencies' },
+  { name: '@finografic/eslint-config', section: 'devDependencies' },
   { name: '@eslint/js', section: 'devDependencies' },
   { name: 'eslint-plugin-markdownlint', section: 'devDependencies' },
   { name: '@stylistic/eslint-plugin', section: 'devDependencies' },
@@ -27,7 +28,8 @@ export const dependencyRules: DependencyRule[] = [
   { name: 'typescript-eslint', section: 'devDependencies' },
 
   // formatting
-  { name: '@finografic/dprint-config', section: 'devDependencies' },
+  { name: 'oxfmt', section: 'devDependencies' },
+  { name: '@finografic/oxfmt-config', section: 'devDependencies' },
 
   // commitlint
   { name: '@commitlint/cli', section: 'devDependencies' },

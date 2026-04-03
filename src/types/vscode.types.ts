@@ -31,8 +31,6 @@ export interface VSCodeSettingsJson {
   'eslint.format.enable'?: boolean;
   'eslint.validate'?: string[];
   'prettier.enable'?: boolean;
-  'dprint.experimentalLsp'?: boolean;
-  'dprint.verbose'?: boolean;
   'npm.packageManager'?: 'npm' | 'yarn' | 'pnpm';
   'markdownlint.config'?: Record<string, unknown>;
   'stylelint.enable'?: boolean;

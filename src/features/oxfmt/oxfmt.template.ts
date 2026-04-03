@@ -1,4 +1,10 @@
-import {
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileExists } from 'utils';
+
+const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
+
+const OXFMT_CONFIG_BODY = `import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
   base,
@@ -10,9 +16,6 @@ import {
 } from '@finografic/oxfmt-config';
 import { defineConfig } from 'oxfmt';
 
-/**
- * Default oxfmt config — CSS/SCSS overrides are added by the **css** genx feature when applied.
- */
 export default defineConfig({
   $schema: './node_modules/oxfmt/configuration_schema.json',
   ignorePatterns: [...ignorePatterns],
@@ -34,3 +37,26 @@ export default defineConfig({
     },
   ],
 } satisfies ReturnType<typeof defineConfig>);
+`;
+
+export interface EnsureOxfmtConfigOptions {
+  force?: boolean;
+}
+
+/**
+ * Ensure \`oxfmt.config.ts\` exists in the target directory (base preset — no CSS override;
+ * the css feature adds CSS when applied).
+ */
+export async function ensureOxfmtConfig(
+  targetDir: string,
+  options: EnsureOxfmtConfigOptions = {},
+): Promise<{ wrote: boolean; path: string }> {
+  const path = join(targetDir, OXFMT_CONFIG_FILENAME);
+
+  if (!options.force && fileExists(path)) {
+    return { wrote: false, path };
+  }
+
+  await writeFile(path, `${OXFMT_CONFIG_BODY}\n`, 'utf8');
+  return { wrote: true, path };
+}

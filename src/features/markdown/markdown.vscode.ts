@@ -32,7 +32,7 @@ export async function applyMarkdownExtensions(targetDir: string): Promise<string
 
 /**
  * Add markdown settings to VSCode settings.json.
- * Only adds markdownlint.config and markdown.styles (no [markdown] / dprint.dprint).
+ * Only adds markdownlint.config and markdown.styles (no [markdown] / oxc.oxc-vscode).
  */
 export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   const settings = await readSettingsJson(targetDir);

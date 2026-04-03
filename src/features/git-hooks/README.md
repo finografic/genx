@@ -6,7 +6,7 @@ Pre-commit linting + conventional commits.
 
 - Installs `lint-staged`, `simple-git-hooks`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
-- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; dprint prepends `dprint fmt` when that feature is applied)
+- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; the **oxfmt** feature prepends `oxfmt` when applied)
 - Adds `commitlint` config to package.json (`extends: @commitlint/config-conventional`)
 - Adds `simple-git-hooks` config to package.json
 - Removes legacy `commitlint.config.mjs` if present
@@ -27,6 +27,6 @@ Run `pnpm prepare` to activate git hooks.
 
 ## How it works
 
-1. **lint-staged**: runs `eslint --fix` on staged `*.{ts,tsx,js,jsx,mjs,cjs}` (and `dprint fmt` first when dprint is enabled)
+1. **lint-staged**: runs `eslint --fix` on staged `*.{ts,tsx,js,jsx,mjs,cjs}` (and `oxfmt` first when the oxfmt feature is applied)
 2. **commitlint**: validates commit messages via `package.json` → `commitlint.extends`
 3. **simple-git-hooks**: wires up `.git/hooks/pre-commit`

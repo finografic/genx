@@ -148,7 +148,7 @@ In `src/features/feature.types.ts`, add the new ID to the `FeatureId` union:
 
 ```ts
 export type FeatureId =
-  | 'dprint'
+  | 'oxfmt'
   // ... existing entries ...
   | '__FEATURE_ID__';
 ```

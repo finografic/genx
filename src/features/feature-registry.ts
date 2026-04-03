@@ -3,9 +3,9 @@ import type { Feature, FeatureId } from './feature.types';
 import { aiClaudeFeature } from './ai-claude/ai-claude.feature';
 import { aiInstructionsFeature } from './ai-instructions/ai-instructions.feature';
 import { cssFeature } from './css/css.feature';
-import { dprintFeature } from './dprint/dprint.feature';
 import { gitHooksFeature } from './git-hooks/git-hooks.feature';
 import { markdownFeature } from './markdown/markdown.feature';
+import { oxfmtFeature } from './oxfmt/oxfmt.feature';
 import { vitestFeature } from './vitest/vitest.feature';
 
 /**
@@ -13,7 +13,7 @@ import { vitestFeature } from './vitest/vitest.feature';
  * Add new features here as they are implemented.
  */
 export const features: Feature[] = [
-  dprintFeature,
+  oxfmtFeature,
   vitestFeature,
   cssFeature,
   aiInstructionsFeature,

@@ -73,6 +73,7 @@
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.2",
+    "@finografic/eslint-config": "^9.18.4",
     "@finografic/oxfmt-config": "^1.0.3",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/node": "^24.0.0",
@@ -93,11 +94,7 @@
       "oxfmt --no-error-on-unmatched-pattern",
       "eslint --fix"
     ],
-    "*.md": [
-      "oxfmt --no-error-on-unmatched-pattern",
-      "eslint --fix"
-    ],
-    "*.{json,jsonc,yml,yaml,toml}": [
+    "*.{json,jsonc,yml,yaml,toml,md}": [
       "oxfmt --no-error-on-unmatched-pattern"
     ]
   },

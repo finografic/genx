@@ -2,14 +2,14 @@
  * Feature ID type - must match the feature folder name.
  */
 export type FeatureId =
-  | 'dprint'
-  | 'vitest'
-  | 'githubWorkflow'
-  | 'aiClaude'
-  | 'aiInstructions'
-  | 'markdown'
-  | 'gitHooks'
-  | 'css';
+  | 'oxfmt' |
+  'vitest' |
+  'githubWorkflow' |
+  'aiClaude' |
+  'aiInstructions' |
+  'markdown' |
+  'gitHooks' |
+  'css';
 
 /**
  * Context passed to feature detection and application.
@@ -35,7 +35,7 @@ export interface FeatureApplyResult {
  * VSCode-specific configuration for a feature.
  */
 export interface FeatureVSCodeConfig {
-  /** VSCode extension IDs to recommend (e.g., "dprint.dprint") */
+  /** VSCode extension IDs to recommend (e.g., "oxc.oxc-vscode") */
   extensions?: readonly string[];
 }
 
