@@ -1,5 +1,5 @@
+import type { HelpConfig } from 'utils/render-help';
 import { defaultHelpOptions } from 'config/help.config';
-import type { HelpConfig } from 'types/help.types';
 
 export const featuresHelp: HelpConfig = {
   main: {

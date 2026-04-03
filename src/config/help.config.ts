@@ -1,4 +1,4 @@
-import type { HelpNoteOptions } from 'types/help.types';
+import type { HelpNoteOptions } from 'utils/render-help';
 
 export const defaultHelpOptions: HelpNoteOptions = {
   labels: {
