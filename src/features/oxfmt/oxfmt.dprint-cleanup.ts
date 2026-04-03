@@ -4,16 +4,15 @@ import {
   fileExists,
   isDependencyDeclared,
   readExtensionsJson,
-  readSettingsJson,
   removeDependency,
+  replaceDprintLanguageFormatters,
+  removeRootKeysWithPrefix,
   writeExtensionsJson,
-  writeSettingsJson,
 } from 'utils';
 
 import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import type { VSCodeSettingsJson } from 'types/vscode.types';
-import { DPRINT_CONFIG_FILES, DPRINT_PACKAGES } from './oxfmt.constants';
+import { DPRINT_CONFIG_FILES, DPRINT_PACKAGES, OXFMT_FORMATTER_ID } from './oxfmt.constants';
 
 const DPRINT_EXT_ID = 'dprint.dprint';
 
@@ -70,17 +69,6 @@ function stripDprintFromScripts(scripts: Record<string, string>): boolean {
   return modified;
 }
 
-function stripDprintKeysFromSettings(settings: Record<string, unknown>): boolean {
-  let modified = false;
-  for (const key of Object.keys(settings)) {
-    if (key.startsWith('dprint.')) {
-      delete settings[key];
-      modified = true;
-    }
-  }
-  return modified;
-}
-
 /**
  * Uninstall legacy formatter packages, delete config files, and scrub package.json / VS Code metadata.
  */
@@ -131,10 +119,14 @@ export async function removeDprintIfPresent(targetDir: string): Promise<{ applie
 
   const settingsPath = resolve(targetDir, '.vscode', 'settings.json');
   if (fileExists(settingsPath)) {
-    const settings = (await readSettingsJson(targetDir)) as unknown as Record<string, unknown>;
-    if (stripDprintKeysFromSettings(settings)) {
-      await writeSettingsJson(targetDir, settings as VSCodeSettingsJson);
-      applied.push('.vscode/settings.json (removed dprint.* keys)');
+    let raw = await readFile(settingsPath, 'utf8');
+    const r1 = removeRootKeysWithPrefix(raw, 'dprint.');
+    raw = r1.text;
+    const r2 = replaceDprintLanguageFormatters(raw, OXFMT_FORMATTER_ID);
+    raw = r2.text;
+    if (r1.changed || r2.changed) {
+      await writeFile(settingsPath, raw, 'utf8');
+      applied.push('.vscode/settings.json (removed dprint formatter / keys)');
     }
   }
 

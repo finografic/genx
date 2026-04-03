@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import type { VSCodeExtensionsJson, VSCodeSettingsJson } from 'types/vscode.types';
 import { fileExists } from './fs.utils';
 import { parseJsoncObject } from './jsonc.utils';
+import { setLanguageFormatterBlock, setRootPropertyJsonc } from './vscode-jsonc.utils';
 
 /** Base template for .vscode/extensions.json */
 const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
@@ -18,7 +19,7 @@ const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
 };
 
 /** Base template for .vscode/settings.json */
-const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
+export const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'npm.packageManager': 'pnpm',
   'editor.formatOnSave': true,
   'editor.codeActionsOnSave': { 'source.fixAll.eslint': 'explicit' },
@@ -27,6 +28,9 @@ const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'eslint.validate': ['javascript', 'typescript'],
   'typescript.tsdk': 'node_modules/typescript/lib',
 };
+
+/** Insert `[markdown]` before this root key so oxfmt + markdownlint stay grouped. */
+const MARKDOWNLINT_BLOCK_ANCHOR = 'markdownlint.config';
 
 /**
  * Ensure the .vscode directory exists.
@@ -123,32 +127,40 @@ export async function addLanguageFormatterSettings(
   languages: string[],
   formatterId: string,
 ): Promise<{ addedLanguages: string[]; disabledPrettier: boolean }> {
-  const content = await readSettingsJson(targetDir);
-  const addedLanguages: string[] = [];
-  let disabledPrettier = false;
+  const filePath = resolve(targetDir, '.vscode', 'settings.json');
+  await ensureVSCodeDir(targetDir);
 
-  // Disable prettier if not already disabled
-  if (content['prettier.enable'] !== false) {
-    content['prettier.enable'] = false;
+  let text: string;
+  if (!fileExists(filePath)) {
+    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
+  } else {
+    text = await readFile(filePath, 'utf8');
+  }
+
+  const addedLanguages: string[] = [];
+  let t = text;
+  let anyChange = false;
+
+  const root0 = parseJsoncObject(t) as Record<string, unknown>;
+  let disabledPrettier = false;
+  if (root0['prettier.enable'] !== false) {
+    t = setRootPropertyJsonc(t, 'prettier.enable', false);
     disabledPrettier = true;
+    anyChange = true;
   }
 
   for (const lang of languages) {
-    const key = `[${lang}]` as const;
-    const existing = content[key] ?? {};
-
-    // Only add if formatter not already set
-    if (!existing['editor.defaultFormatter']) {
-      content[key] = {
-        ...existing,
-        'editor.defaultFormatter': formatterId,
-      };
+    const insertBefore = lang === 'markdown' ? MARKDOWNLINT_BLOCK_ANCHOR : undefined;
+    const r = setLanguageFormatterBlock(t, lang, formatterId, insertBefore);
+    if (r.changed) {
+      t = r.text;
+      anyChange = true;
       addedLanguages.push(lang);
     }
   }
 
-  if (addedLanguages.length > 0 || disabledPrettier) {
-    await writeSettingsJson(targetDir, content);
+  if (anyChange) {
+    await writeFile(filePath, t, 'utf8');
   }
 
   return { addedLanguages, disabledPrettier };

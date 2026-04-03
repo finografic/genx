@@ -5,10 +5,18 @@
  * and markdown CSS file copying.
  */
 
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { addExtensionRecommendations, fileExists, readSettingsJson, writeSettingsJson } from 'utils';
+import {
+  addExtensionRecommendations,
+  BASE_SETTINGS_JSON,
+  ensureVSCodeDir,
+  fileExists,
+  insertRootPropertyBefore,
+  parseJsoncObject,
+  setRootPropertyJsonc,
+} from 'utils';
 
 import {
   MARKDOWN_STYLES_KEY,
@@ -35,21 +43,42 @@ export async function applyMarkdownExtensions(targetDir: string): Promise<string
  * Only adds markdownlint.config and markdown.styles (no [markdown] / oxc.oxc-vscode).
  */
 export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
-  const settings = await readSettingsJson(targetDir);
-  let modified = false;
+  const filePath = resolve(targetDir, '.vscode', 'settings.json');
+  await ensureVSCodeDir(targetDir);
 
-  if (!settings[MARKDOWNLINT_CONFIG_KEY]) {
-    settings[MARKDOWNLINT_CONFIG_KEY] = MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY];
+  let text: string;
+  if (!fileExists(filePath)) {
+    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
+    await writeFile(filePath, text, 'utf8');
+  } else {
+    text = await readFile(filePath, 'utf8');
+  }
+
+  let t = text;
+  let modified = false;
+  const root = () => parseJsoncObject(t) as Record<string, unknown>;
+
+  if (!root()[MARKDOWNLINT_CONFIG_KEY]) {
+    if (root()[MARKDOWN_STYLES_KEY]) {
+      t = insertRootPropertyBefore(
+        t,
+        MARKDOWNLINT_CONFIG_KEY,
+        MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY],
+        MARKDOWN_STYLES_KEY,
+      );
+    } else {
+      t = setRootPropertyJsonc(t, MARKDOWNLINT_CONFIG_KEY, MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY]);
+    }
     modified = true;
   }
 
-  if (!settings[MARKDOWN_STYLES_KEY]) {
-    settings[MARKDOWN_STYLES_KEY] = [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]];
+  if (!parseJsoncObject(t)[MARKDOWN_STYLES_KEY]) {
+    t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]]);
     modified = true;
   }
 
   if (modified) {
-    await writeSettingsJson(targetDir, settings);
+    await writeFile(filePath, t, 'utf8');
   }
 
   return modified;

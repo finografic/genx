@@ -13,7 +13,7 @@ Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos n
 - Normalizes `lint-staged`: `*.{ts,…,cjs}` → `oxfmt` then `eslint --fix`; `*.md` → `eslint --fix` only; `*.{json,jsonc,md,yml,yaml,toml}` → `oxfmt` only (legacy data globs are merged)
 - Adds format check to `release.check` / CI when missing
 - Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
-- Configures per-language default formatter and oxc editor settings in `.vscode/settings.json`
+- Updates `.vscode/settings.json` with JSONC-aware patches (keeps `//` comments and unrelated keys): global oxc options sit just before `prettier.enable`; `[markdown]` is inserted before `markdownlint.config` when present
 - Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers
 
 Dependency adds/removes use `pnpm add` / `pnpm remove`, so the lockfile updates during the feature (same idea as **`genx create`**, which runs `pnpm install` once after scaffolding). No extra install step is required unless you edit `package.json` by hand afterward.

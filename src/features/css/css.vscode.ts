@@ -2,11 +2,15 @@
  * CSS feature VSCode configuration utilities.
  */
 
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import {
   addExtensionRecommendations,
   addLanguageFormatterSettings,
-  readSettingsJson,
-  writeSettingsJson,
+  ensureVSCodeDir,
+  fileExists,
+  parseJsoncObject,
+  setRootPropertyJsonc,
 } from 'utils';
 
 import { CSS_OXFMT_LANGUAGES, CSS_VSCODE_EXTENSIONS, CSS_VSCODE_SETTINGS } from './css.constants';
@@ -22,34 +26,42 @@ export async function applyCssExtensions(targetDir: string): Promise<string[]> {
  * Add stylelint settings to .vscode/settings.json.
  */
 export async function applyCssVSCodeSettings(targetDir: string): Promise<boolean> {
-  const settings = await readSettingsJson(targetDir);
-  let modified = false;
+  const filePath = resolve(targetDir, '.vscode', 'settings.json');
+  await ensureVSCodeDir(targetDir);
 
-  if (settings['stylelint.enable'] !== true) {
-    settings['stylelint.enable'] = true;
-    modified = true;
+  let text: string;
+  if (!fileExists(filePath)) {
+    text = '{}\n';
+    await writeFile(filePath, text, 'utf8');
+  } else {
+    text = await readFile(filePath, 'utf8');
   }
 
-  if (!settings['stylelint.validate']) {
-    settings['stylelint.validate'] = [...CSS_VSCODE_SETTINGS['stylelint.validate']];
-    modified = true;
+  let t = text;
+  const before = t;
+
+  if ((parseJsoncObject(t) as Record<string, unknown>)['stylelint.enable'] !== true) {
+    t = setRootPropertyJsonc(t, 'stylelint.enable', true);
   }
 
-  if (settings['css.validate'] !== false) {
-    settings['css.validate'] = false;
-    modified = true;
+  if (!(parseJsoncObject(t) as Record<string, unknown>)['stylelint.validate']) {
+    t = setRootPropertyJsonc(t, 'stylelint.validate', [...CSS_VSCODE_SETTINGS['stylelint.validate']]);
   }
 
-  if (settings['scss.validate'] !== false) {
-    settings['scss.validate'] = false;
-    modified = true;
+  if ((parseJsoncObject(t) as Record<string, unknown>)['css.validate'] !== false) {
+    t = setRootPropertyJsonc(t, 'css.validate', false);
   }
 
-  if (modified) {
-    await writeSettingsJson(targetDir, settings);
+  if ((parseJsoncObject(t) as Record<string, unknown>)['scss.validate'] !== false) {
+    t = setRootPropertyJsonc(t, 'scss.validate', false);
   }
 
-  return modified;
+  const changed = t !== before;
+  if (changed) {
+    await writeFile(filePath, t, 'utf8');
+  }
+
+  return changed;
 }
 
 /**

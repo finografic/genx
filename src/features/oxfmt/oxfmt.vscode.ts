@@ -2,14 +2,18 @@
  * oxfmt VSCode configuration — oxc.oxc-vscode as formatter by language.
  */
 
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import {
   addExtensionRecommendations,
   addLanguageFormatterSettings,
+  BASE_SETTINGS_JSON,
+  ensureOxfmtSharedSettingsBeforePrettier,
+  ensureVSCodeDir,
+  fileExists,
   hasAnyDependency,
   readExtensionsJson,
-  readSettingsJson,
   writeExtensionsJson,
-  writeSettingsJson,
 } from 'utils';
 
 import {
@@ -86,29 +90,21 @@ export async function applyOxfmtFormatterSettings(
  * Core editor settings aligned with oxfmt + ESLint flat config.
  */
 export async function applyOxfmtSharedVSCodeSettings(targetDir: string): Promise<boolean> {
-  const settings = await readSettingsJson(targetDir);
-  let modified = false;
+  const filePath = resolve(targetDir, '.vscode', 'settings.json');
+  await ensureVSCodeDir(targetDir);
 
-  if (settings['editor.formatOnSaveMode'] !== 'file') {
-    settings['editor.formatOnSaveMode'] = 'file';
-    modified = true;
-  }
-  if (settings['editor.defaultFormatter'] !== OXFMT_FORMATTER_ID) {
-    settings['editor.defaultFormatter'] = OXFMT_FORMATTER_ID;
-    modified = true;
-  }
-  if (settings['prettier.enable'] !== false) {
-    settings['prettier.enable'] = false;
-    modified = true;
-  }
-  if (settings['oxc.typeAware'] !== true) {
-    settings['oxc.typeAware'] = true;
-    modified = true;
+  let text: string;
+  if (!fileExists(filePath)) {
+    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
+    await writeFile(filePath, text, 'utf8');
+  } else {
+    text = await readFile(filePath, 'utf8');
   }
 
-  if (modified) {
-    await writeSettingsJson(targetDir, settings);
+  const { text: next, changed } = ensureOxfmtSharedSettingsBeforePrettier(text, OXFMT_FORMATTER_ID);
+  if (changed) {
+    await writeFile(filePath, next, 'utf8');
   }
 
-  return modified;
+  return changed;
 }
