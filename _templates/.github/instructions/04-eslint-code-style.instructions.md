@@ -11,8 +11,8 @@
 ## Fixing
 
 ```bash
-npm run lint.fix -- path/to/file.tsx
-npm run lint.fix -- "src/**/*.tsx"
+npm run lint:fix -- path/to/file.tsx
+npm run lint:fix -- "src/**/*.tsx"
 npm run lint -- path/to/file.tsx
 ```
 

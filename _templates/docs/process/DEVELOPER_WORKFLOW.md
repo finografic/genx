@@ -17,7 +17,7 @@ pnpm test          # Watch mode for testing
 
 ```bash
 pnpm lint          # Check code style
-pnpm lint.fix      # Auto-fix issues
+pnpm lint:fix      # Auto-fix issues
 pnpm typecheck     # Type check without building
 ```
 
@@ -50,16 +50,16 @@ git commit -m "feat: add new feature"
 ### The Complete Flow
 
 ```bash
-pnpm release.github.patch  # or .minor or .major
+pnpm release:github:patch  # or .minor or .major
 ```
 
 **What happens automatically:**
 
 ```
-1. release.check runs:
-   ├─ pnpm lint.fix      # Lint entire codebase
+1. release:check runs:
+   ├─ pnpm lint:fix      # Lint entire codebase
    ├─ pnpm typecheck     # Type check entire codebase
-   └─ pnpm test.run      # Run ALL tests (non-watch mode)
+   └─ pnpm test:run      # Run ALL tests (non-watch mode)
 
 2. If checks pass:
    ├─ Version bumps in package.json
@@ -90,16 +90,16 @@ pnpm release.github.patch  # or .minor or .major
     // Development
     "dev": "tsdown --watch",
     "test": "vitest", // Watch mode
-    "test.run": "vitest run", // Run once (CI/releases)
+    "test:run": "vitest run", // Run once (CI/releases)
 
     // Quality checks
     "lint": "eslint .",
-    "lint.fix": "eslint . --fix",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --project tsconfig.json --noEmit",
 
     // Releases
-    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
-    "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run"
+    "release:github:patch": "pnpm run release:check && pnpm version patch && git push --follow-tags",
+    "release:check": "pnpm lint:fix && pnpm typecheck && pnpm test:run"
   }
 }
 ```
@@ -109,13 +109,13 @@ pnpm release.github.patch  # or .minor or .major
 ```javascript
 export default {
   'pre-commit': 'npx lint-staged',
-  // No pre-push - tests run in release.check
+  // No pre-push - tests run in release:check
 };
 ```
 
 **Why no pre-push?**
 
-- Tests already run in `release.check` before version bump
+- Tests already run in `release:check` before version bump
 - Avoids redundancy (tests run twice)
 - Faster pushes
 - Developers can push WIP branches
@@ -145,8 +145,8 @@ export default {
 
 ```bash
 pnpm test          # vitest (watch mode for dev)
-pnpm test.run      # vitest run (run once and exit)
-pnpm test.coverage # vitest run --coverage
+pnpm test:run      # vitest run (run once and exit)
+pnpm test:coverage # vitest run --coverage
 ```
 
 **Why the distinction?**
@@ -154,10 +154,10 @@ pnpm test.coverage # vitest run --coverage
 | Context     | Command         | Behavior                                |
 | ----------- | --------------- | --------------------------------------- |
 | Development | `pnpm test`     | ⏱️ Watch mode - re-runs on file changes |
-| Releases    | `pnpm test.run` | ✅ Runs once and exits - doesn't block  |
-| CI/CD       | `pnpm test.run` | ✅ Runs once and exits                  |
+| Releases    | `pnpm test:run` | ✅ Runs once and exits - doesn't block  |
+| CI/CD       | `pnpm test:run` | ✅ Runs once and exits                  |
 
-**Important:** `vitest` alone enters watch mode when run from terminal, but `vitest run` always runs once and exits. Use `test.run` in scripts that need to continue after tests complete.
+**Important:** `vitest` alone enters watch mode when run from terminal, but `vitest run` always runs once and exits. Use `test:run` in scripts that need to continue after tests complete.
 
 ---
 
@@ -180,7 +180,7 @@ npx lint-staged
 
 ### No pre-push Hook
 
-**Deliberately omitted** to avoid redundancy. All checks run in `release.check` before version bump.
+**Deliberately omitted** to avoid redundancy. All checks run in `release:check` before version bump.
 
 ---
 
@@ -188,14 +188,14 @@ npx lint-staged
 
 ### Tests Hang in Watch Mode
 
-**Problem:** `pnpm release.github.patch` hangs after tests
+**Problem:** `pnpm release:github:patch` hangs after tests
 
-**Cause:** Using `pnpm test` instead of `pnpm test.run`
+**Cause:** Using `pnpm test` instead of `pnpm test:run`
 
-**Solution:** Ensure `release.check` uses `test.run`:
+**Solution:** Ensure `release:check` uses `test:run`:
 
 ```json
-"release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run"
+"release:check": "pnpm lint:fix && pnpm typecheck && pnpm test:run"
 ```
 
 ### Commits Blocked by Lint
@@ -205,21 +205,21 @@ npx lint-staged
 **Solution:**
 
 ```bash
-pnpm lint.fix       # Auto-fix issues
+pnpm lint:fix       # Auto-fix issues
 git add .           # Re-stage fixed files
 git commit -m "..."
 ```
 
 ### Release Fails
 
-**Problem:** `release.check` fails
+**Problem:** `release:check` fails
 
 **Solution:** Fix issues before trying again:
 
 ```bash
-pnpm lint.fix       # Fix lint issues
+pnpm lint:fix       # Fix lint issues
 pnpm typecheck      # Check types
-pnpm test.run       # Verify tests pass
+pnpm test:run       # Verify tests pass
 ```
 
 ---
@@ -228,15 +228,15 @@ pnpm test.run       # Verify tests pass
 
 - [ ] All changes committed
 - [ ] On `master` branch
-- [ ] `pnpm lint.fix` passes
+- [ ] `pnpm lint:fix` passes
 - [ ] `pnpm typecheck` passes
-- [ ] `pnpm test.run` passes
+- [ ] `pnpm test:run` passes
 - [ ] Ready to publish
 
 Then run:
 
 ```bash
-pnpm release.github.patch
+pnpm release:github:patch
 ```
 
 ---

@@ -27,7 +27,7 @@ pnpm dev
 pnpm build
 
 # Run tests
-pnpm test.run
+pnpm test:run
 
 # Lint
 pnpm lint

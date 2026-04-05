@@ -6,12 +6,12 @@ Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos n
 
 - Installs `oxfmt` and `@finografic/oxfmt-config`
 - Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
-- Adds `format.check` / `format.fix` and `update.oxfmt-config` in the **PACKAGES** scripts section
+- Adds `format:check` / `format:fix` and `update:oxfmt-config` in the **PACKAGES** scripts section
 - Replaces Prettier if present (uninstall + backup configs)
 - Removes **dprint** / `@finografic/dprint-config` if still present (deps, `dprint.json(c)` / `dprint.config.jsonc`, lint-staged, scripts, VS Code `dprint.*` settings)
-- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` / `pnpm dprint check` steps use `pnpm format.check` instead
+- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` / `pnpm dprint check` steps use `pnpm format:check` instead
 - Normalizes `lint-staged`: `*.{ts,…,cjs}` → `oxfmt` then `eslint --fix`; `*.md` → `eslint --fix` only; `*.{json,jsonc,md,yml,yaml,toml}` → `oxfmt` only (legacy data globs are merged)
-- Adds format check to `release.check` / CI when missing
+- Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
 - Updates `.vscode/settings.json` with JSONC-aware patches (keeps `//` comments and unrelated keys): global oxc options sit just before `prettier.enable`; `[markdown]` is inserted before `markdownlint.config` when present
 - Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers

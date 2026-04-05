@@ -34,7 +34,7 @@ src/features/{folder-name}/
 
 ## `README.md` (required)
 
-Every feature folder **must** include a `README.md`. These are rendered as sections in the root `README.md` via `pnpm docs.usage`.
+Every feature folder **must** include a `README.md`. These are rendered as sections in the root `README.md` via `pnpm docs:usage`.
 
 Structure:
 

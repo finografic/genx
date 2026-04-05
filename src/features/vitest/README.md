@@ -5,7 +5,7 @@ Testing via Vitest.
 ## What it does
 
 - Installs `vitest`
-- Adds `test` / `test.run` / `test.coverage` scripts
+- Adds `test` / `test:run` / `test:coverage` scripts
 
 ## Files
 

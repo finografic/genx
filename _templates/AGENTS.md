@@ -32,7 +32,7 @@ Project-specific rules live in `.github/instructions/project/**/*.instructions.m
 
 <!-- NOTE: CLI projects (genx:type:cli keyword in package.json) only -->
 
-- Generated README sections are managed by `pnpm docs.usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
+- Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
 
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` — all imports and deps must use published package names.

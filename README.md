@@ -97,9 +97,9 @@ Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos n
 
 - Installs `oxfmt` and `@finografic/oxfmt-config`
 - Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
-- Adds `format.check` / `format.fix` and `update.oxfmt-config` scripts
+- Adds `format:check` / `format:fix` and `update:oxfmt-config` scripts
 - Replaces Prettier if present (uninstall + backup configs)
-- Prepends oxfmt to `lint-staged`, adds format check to `release.check` / CI when missing
+- Prepends oxfmt to `lint-staged`, adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
 - Configures per-language default formatter and oxc editor settings in `.vscode/settings.json`
 - Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers
@@ -109,7 +109,7 @@ Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos n
 Testing via Vitest.
 
 - Installs `vitest`
-- Adds `test` / `test.run` / `test.coverage` scripts
+- Adds `test` / `test:run` / `test:coverage` scripts
 
 ### ai-instructions
 
@@ -223,7 +223,7 @@ See `genx <command> --help` for detailed usage.
 git clone https://github.com/finografic/genx.git
 pnpm install
 pnpm build
-pnpm test.run
+pnpm test:run
 ```
 
 ### Testing the CLI locally

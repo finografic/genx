@@ -184,7 +184,7 @@ Include `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` in the install step even if 
 ### Step 6: Test the Release
 
 ```bash
-pnpm release.github.patch
+pnpm release:github:patch
 ```
 
 **Verify:**
