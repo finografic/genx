@@ -196,30 +196,30 @@ const packageType = await promptSelect(flow, {
 
 **Exports:**
 
-| Export                                   | Kind      | Description                                           |
-| ---------------------------------------- | --------- | ----------------------------------------------------- |
-| `renderHelp(config)`                     | function  | Render a `HelpConfig` to stdout with color            |
-| `renderCommandHelp(config)`              | function  | Render a `CommandHelpConfig` to stdout with color     |
-| `HelpConfig`                             | interface | Root type for a root-level help definition            |
-| `HelpNote`                               | interface | A titled section with a label/description list        |
-| `HelpNoteOptions`                        | interface | Column width options for a `HelpNote`                 |
-| `HelpMainNote`                           | interface | The `main` header block                               |
-| `HelpNoteReturn`                         | type      | Internal render tuple (rarely used externally)        |
-| `CommandHelpConfig`                      | interface | Root type for a per-command help definition           |
-| `CommandHelpSection`                     | interface | A custom section with a title and pre-formatted content |
+| Export                      | Kind      | Description                                             |
+| --------------------------- | --------- | ------------------------------------------------------- |
+| `renderHelp(config)`        | function  | Render a `HelpConfig` to stdout with color              |
+| `renderCommandHelp(config)` | function  | Render a `CommandHelpConfig` to stdout with color       |
+| `HelpConfig`                | interface | Root type for a root-level help definition              |
+| `HelpNote`                  | interface | A titled section with a label/description list          |
+| `HelpNoteOptions`           | interface | Column width options for a `HelpNote`                   |
+| `HelpMainNote`              | interface | The `main` header block                                 |
+| `HelpNoteReturn`            | type      | Internal render tuple (rarely used externally)          |
+| `CommandHelpConfig`         | interface | Root type for a per-command help definition             |
+| `CommandHelpSection`        | interface | A custom section with a title and pre-formatted content |
 
 **`HelpConfig` structure (root help):**
 
 ```ts
 interface HelpConfig {
   main: {
-    bin: string;    // CLI binary name, e.g. 'gli'
-    args?: string;  // Optional args hint, e.g. '<command> [options]'
+    bin: string; // CLI binary name, e.g. 'gli'
+    args?: string; // Optional args hint, e.g. '<command> [options]'
   };
-  commands?: HelpNote;  // Command listing section
-  examples?: HelpNote;  // Examples section
-  footer?: HelpNote;    // "Show help" / footer section
-  minWidth?: number;    // Minimum column width for alignment
+  commands?: HelpNote; // Command listing section
+  examples?: HelpNote; // Examples section
+  footer?: HelpNote; // "Show help" / footer section
+  minWidth?: number; // Minimum column width for alignment
 }
 
 interface HelpNote {
@@ -276,20 +276,20 @@ renderHelp(cliHelp);
 
 ```ts
 interface CommandHelpConfig {
-  command: string;       // Command name as displayed in the header, e.g. 'gli config'
-  description: string;   // Brief one-line description
-  usage: string;         // Usage pattern, e.g. 'gli config <subcommand>'
+  command: string; // Command name as displayed in the header, e.g. 'gli config'
+  description: string; // Brief one-line description
+  usage: string; // Usage pattern, e.g. 'gli config <subcommand>'
   subcommands?: Array<{ name: string; description: string }>;
   options?: Array<{ flag: string; description: string }>;
   examples?: Array<{ command: string; description: string }>;
-  requirements?: string[];   // Rendered as a bulleted list
-  howItWorks?: string[];     // Rendered as a numbered list
+  requirements?: string[]; // Rendered as a bulleted list
+  howItWorks?: string[]; // Rendered as a numbered list
   sections?: CommandHelpSection[];
 }
 
 interface CommandHelpSection {
   title: string;
-  content: string;  // Pre-formatted string; printed as-is
+  content: string; // Pre-formatted string; printed as-is
 }
 ```
 
@@ -316,11 +316,11 @@ function printHelp(): void {
     description: 'Manage multi-repo configuration',
     usage: 'gli config <subcommand>',
     subcommands: [
-      { name: 'add',  description: 'Add a repository to the config' },
+      { name: 'add', description: 'Add a repository to the config' },
       { name: 'list', description: 'List all configured repositories' },
     ],
     examples: [
-      { command: 'gli config add',  description: 'Add current directory' },
+      { command: 'gli config add', description: 'Add current directory' },
       { command: 'gli config list', description: 'Show all repos' },
     ],
   });

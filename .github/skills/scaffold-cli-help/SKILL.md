@@ -68,4 +68,3 @@ Keep this skill **procedural**; link to `docs/spec/CLI_CORE.md` for authoritativ
 
 - Root help stays **declarative data** (`HelpConfig`); rendering is centralized in `core/render-help`.
 - Do not duplicate `renderHelp` logic in application code.
-

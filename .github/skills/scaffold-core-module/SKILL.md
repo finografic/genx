@@ -87,4 +87,3 @@ Before considering a module “done”:
 - [ ] `core/*` path alias in `tsconfig.json`
 - [ ] Documented in `docs/spec/CLI_CORE.md` (genx)
 - [ ] Propagated to other repos as needed
-
