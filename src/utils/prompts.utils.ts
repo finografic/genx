@@ -22,6 +22,14 @@ export function successMessage(message: string): void {
   clack.log.success(pc.green(message));
 }
 
+export function successUpdatedMessage(message: string): void {
+  clack.log.success(pc.cyan(message));
+}
+
+export function successRemovedMessage(message: string): void {
+  clack.log.success(pc.yellow(message));
+}
+
 export function infoMessage(message: string): void {
   clack.log.info(pc.cyan(message));
 }

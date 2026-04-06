@@ -9,6 +9,8 @@ import {
   removeDependency,
   spinner,
   successMessage,
+  successRemovedMessage,
+  successUpdatedMessage,
 } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
@@ -520,7 +522,7 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   const dprintCleanup = await removeDprintIfPresent(context.targetDir);
   if (dprintCleanup.applied.length > 0) {
     applied.push(...dprintCleanup.applied);
-    successMessage('Removed legacy formatter (dprint) from project');
+    successRemovedMessage('Removed legacy formatter (dprint) from project');
   }
 
   try {
@@ -584,7 +586,7 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   const workflowScrub = await scrubDprintFromGithubWorkflows(context.targetDir);
   if (workflowScrub.applied.length > 0) {
     applied.push(...workflowScrub.applied);
-    successMessage('Updated GitHub workflows (dprint → pnpm format.check)');
+    successUpdatedMessage('Updated GitHub workflows (dprint → pnpm format.check)');
   }
 
   const addedToCI = await addFormatCheckToCI(context.targetDir);

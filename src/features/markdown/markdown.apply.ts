@@ -1,6 +1,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileExists, installDevDependency, isDependencyDeclared, spinner, successMessage } from 'utils';
+import {
+  fileExists,
+  installDevDependency,
+  isDependencyDeclared,
+  spinner,
+  successMessage,
+  successUpdatedMessage,
+} from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { ESLINT_CONFIG_FILES, PACKAGE_JSON } from 'config/constants.config';
@@ -209,7 +216,7 @@ export async function applyMarkdown(context: FeatureContext): Promise<FeatureApp
   const lintStagedModified = await addMarkdownLintStaged(context.targetDir);
   if (lintStagedModified) {
     applied.push('lint-staged (*.md eslint --fix)');
-    successMessage('Updated lint-staged for markdown + ESLint');
+    successUpdatedMessage('Updated lint-staged for markdown + ESLint');
   }
 
   if (applied.length === 0) {

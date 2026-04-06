@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
-import { errorMessage, infoMessage, intro, successMessage } from 'utils';
+import { errorMessage, infoMessage, intro, successMessage, successUpdatedMessage } from 'utils';
 
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
@@ -65,7 +65,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
 
   const updatedPackageJson = applyDependencyChanges(packageJson, changes);
   await writePackageJson(packageJsonPath, updatedPackageJson);
-  successMessage(`Updated ${changes.length} ${changes.length === 1 ? 'dependency' : 'dependencies'}`);
+  successUpdatedMessage(`Updated ${changes.length} ${changes.length === 1 ? 'dependency' : 'dependencies'}`);
 
   try {
     await execa('pnpm', ['install'], { cwd: targetDir });

@@ -1,6 +1,13 @@
 import { unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileExists, installDevDependency, isDependencyDeclared, spinner, successMessage } from 'utils';
+import {
+  fileExists,
+  installDevDependency,
+  isDependencyDeclared,
+  spinner,
+  successMessage,
+  successRemovedMessage,
+} from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import {
@@ -65,7 +72,7 @@ export async function applyCss(context: FeatureContext): Promise<FeatureApplyRes
   if (fileExists(legacyStylelintPath)) {
     await unlink(legacyStylelintPath);
     applied.push(`${LEGACY_STYLELINTRC_FILENAME} (removed)`);
-    successMessage('Removed legacy .stylelintrc.json');
+    successRemovedMessage('Removed legacy .stylelintrc.json');
   }
 
   // 4. Configure VSCode settings (stylelint.enable, stylelint.validate, css.validate)

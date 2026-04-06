@@ -185,6 +185,11 @@ Now fill in the skeleton:
    - Check before acting (idempotent)
    - Push a descriptive string to `applied[]` on success
    - Use utilities from the `'utils'` barrel (never deep imports)
+   - **Logging:** when you emit an immediate, user-visible success line during apply (not only entries in `applied[]`), import `successMessage`, `successUpdatedMessage`, and `successRemovedMessage` from `'utils'` and choose by **kind of change**:
+     - **`successMessage`** — new work (created file, new script, installed package) — green.
+     - **`successUpdatedMessage`** — modified existing files in place — cyan; prefer **“Updated …”** copy.
+     - **`successRemovedMessage`** — removed deps, deleted legacy config, or removal-style cleanup — yellow; prefer **“Removed …”** (or **“Backed up …”** when replacing) copy.
+       See `.github/instructions/project/feature-patterns.instructions.md` (**Shared Utilities**) for the full table. Reference implementations: `src/features/oxfmt/oxfmt.apply.ts`, `src/features/markdown/markdown.apply.ts`.
 
 4. **VSCode** (optional) — only create `__FOLDER_NAME__.vscode.ts` if the feature needs VSCode extensions or settings. Wrap `addExtensionRecommendations` / `addLanguageFormatterSettings` here — never call them directly from apply.
 

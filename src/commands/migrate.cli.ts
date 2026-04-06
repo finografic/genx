@@ -8,7 +8,7 @@ import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
-import { errorMessage, infoMessage, intro, spinner, successMessage } from 'utils';
+import { errorMessage, infoMessage, intro, spinner, successMessage, successUpdatedMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
@@ -194,7 +194,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     if (changes.length > 0) {
       updatedPackageJson = nextPackageJson;
       await writePackageJson(packageJsonPath, updatedPackageJson);
-      successMessage(`Updated package.json (${changes.length} changes)`);
+      successUpdatedMessage(`Updated package.json (${changes.length} changes)`);
     } else {
       infoMessage('package.json already aligned');
     }
@@ -204,12 +204,12 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   if (shouldRunSection(only, 'node')) {
     if (nodeRuntimeChanges.length > 0) {
       await applyNodeRuntimeChanges(targetDir, nodeRuntimeChanges);
-      successMessage('Updated Node version files');
+      successUpdatedMessage('Updated Node version files');
     }
     if (nodeTypesChange) {
       updatedPackageJson = applyNodeTypesChange(updatedPackageJson, nodeTypesChange);
       await writePackageJson(packageJsonPath, updatedPackageJson);
-      successMessage('Updated @types/node');
+      successUpdatedMessage('Updated @types/node');
     }
   }
 

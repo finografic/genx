@@ -166,7 +166,17 @@ export async function apply{Feature}Extensions(targetDir: string): Promise<strin
 - `createDefaultTemplateVars()` — `'../feature.utils'`. Use when copying template files.
 - `addExtensionRecommendations`, `addLanguageFormatterSettings`, `readSettingsJson`, `writeSettingsJson` — `'utils'`. Only call from `*.vscode.ts`.
 - `isDependencyDeclared`, `installDevDependency`, `removeDependency` — `'utils'`. Call from `*.apply.ts`.
-- `spinner`, `successMessage`, `errorMessage`, `infoMessage` — `'utils'`. For user feedback in apply.
+- `spinner`, `successMessage`, `successUpdatedMessage`, `successRemovedMessage`, `errorMessage`, `infoMessage` — `'utils'`. For **live** user feedback during apply (and in migrate/command code that mirrors the same UX). Use the right helper so `genx features` / `genx migrate` output stays consistent:
+
+  | Helper                  | When to use                                                                   | Typical wording                                                         |
+  | ----------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+  | `successMessage`        | Something **new** was added or installed (files, deps, scripts).              | Green — e.g. **Added …**, **Created …**, **Installed …**.               |
+  | `successUpdatedMessage` | Something **existing** was **changed in place** (config, workflows, scripts). | Cyan — prefer **Updated …**.                                            |
+  | `successRemovedMessage` | Something was **removed**, uninstalled, or backed up as part of cleanup.      | Yellow — prefer **Removed …** or **Backed up …** when removal-adjacent. |
+  | `infoMessage`           | Extra context, not a completed step line.                                     | Cyan (`clack.log.info`).                                                |
+  | `errorMessage`          | Failures.                                                                     | Red.                                                                    |
+
+  Still collect **`applied: string[]`** for the feature result; use these helpers when you need an **immediate** highlighted line (see `oxfmt.apply.ts`, `markdown.apply.ts`). Do not use `successMessage` for an in-place edit when `successUpdatedMessage` fits better.
 
 ## Import Conventions
 
