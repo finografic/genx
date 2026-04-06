@@ -5,7 +5,7 @@ Do not hardcode version strings in this repo — edit them in `deps-policy` and 
 
 ---
 
-## ## Getting started
+## Getting started
 
 `@finografic/deps-policy` is already wired as a dependency. During development it is referenced as a
 local `file:` path. Before publishing a `genx` release, switch it to a proper semver reference.
@@ -29,7 +29,7 @@ Commit: `deps: pin deps-policy to <version>`
 
 ---
 
-## ## Where versions are consumed
+## Where versions are consumed
 
 | File                                      | What it reads                                     |
 | ----------------------------------------- | ------------------------------------------------- |
@@ -40,7 +40,7 @@ Commit: `deps: pin deps-policy to <version>`
 
 ---
 
-## ## Ongoing: updating dependency versions
+## Ongoing: updating dependency versions
 
 1. Edit the version in `deps-policy/src/policy/base.ts` (or the relevant type file).
 2. Build and release `deps-policy` — see its [Release Process](../../_@finografic-deps-policy/docs/process/RELEASE_PROCESS.md).
@@ -50,7 +50,7 @@ Commit: `deps: pin deps-policy to <version>`
 
 ---
 
-## ## Ongoing: adding a new package to the migrate rules
+## Ongoing: adding a new package to the migrate rules
 
 1. Add the package to `deps-policy/src/policy/base.ts` with its version.
 2. Release `deps-policy`, update the reference here (step above).
@@ -64,7 +64,7 @@ Commit: `deps: pin deps-policy to <version>`
 
 ---
 
-## ## Related documentation
+## Related documentation
 
 | Doc                                                 | Purpose                   |
 | --------------------------------------------------- | ------------------------- |
