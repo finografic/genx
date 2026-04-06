@@ -229,6 +229,22 @@ function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | strin
   lintStaged[pattern] = eslint ? [OXFMT_LINT_STAGED_COMMAND, eslint] : [OXFMT_LINT_STAGED_COMMAND];
 }
 
+function normalizeMdGlobOxfmtFirst(lintStaged: Record<string, string[] | string>): void {
+  const pattern = OXFMT_LINT_STAGED_MD_PATTERN;
+  const cmds = lintStaged[pattern];
+  if (!Array.isArray(cmds) || cmds.length === 0) {
+    lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
+    return;
+  }
+
+  const filtered = cmds.filter((c) => !c.includes('dprint'));
+  const eslintFix = filtered.find((c) => c === 'eslint --fix');
+  const eslintOther = filtered.find((c) => c.includes('eslint') && !eslintFix);
+  const eslint = eslintFix ?? eslintOther ?? 'eslint --fix';
+
+  lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, eslint];
+}
+
 const LINT_STAGED_KEY_ORDER = [
   OXFMT_LINT_STAGED_CODE_PATTERN,
   OXFMT_LINT_STAGED_MD_PATTERN,
@@ -445,7 +461,7 @@ async function addOxfmtToLintStaged(packageJsonPath: string): Promise<boolean> {
     lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
   }
 
-  lintStaged[OXFMT_LINT_STAGED_MD_PATTERN] = ['eslint --fix'];
+  normalizeMdGlobOxfmtFirst(lintStaged);
 
   const reordered = reorderLintStagedKeys(lintStaged);
 

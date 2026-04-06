@@ -34,10 +34,13 @@ export const SIMPLE_IMPORT_SORT_PACKAGE = 'eslint-plugin-simple-import-sort' as 
 /** Legacy formatter config files to delete when migrating away. */
 export const DPRINT_CONFIG_FILES = ['dprint.jsonc', 'dprint.json', 'dprint.config.jsonc'] as const;
 
-/** Alternate lint-staged data globs merged into {@link OXFMT_LINT_STAGED_DATA_PATTERN}. */
+/**
+ * Legacy lint-staged keys merged into {@link OXFMT_LINT_STAGED_DATA_PATTERN} (data files only;
+ * `*.md` is handled separately).
+ */
 export const OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES = [
-  '*.{json,jsonc,yml,yaml,toml}',
   '*.{json,jsonc,yml,yaml,toml,md}',
+  '*.{json,jsonc,md,yml,yaml,toml}',
 ] as const;
 
 /** Prettier config filenames to detect and backup when replacing with oxfmt. */
@@ -64,9 +67,9 @@ export const OXFMT_UPDATE_SCRIPT = {
 
 export const OXFMT_LINT_STAGED_COMMAND = 'oxfmt --no-error-on-unmatched-pattern';
 export const OXFMT_LINT_STAGED_CODE_PATTERN = '*.{ts,tsx,js,jsx,mjs,cjs}';
-/** lint-staged: ESLint only on Markdown (oxfmt for `*.md` runs via the data glob). */
+/** lint-staged: `*.md` runs oxfmt then ESLint (data glob excludes `md`). */
 export const OXFMT_LINT_STAGED_MD_PATTERN = '*.md';
-export const OXFMT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,md,yml,yaml,toml}';
+export const OXFMT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,yml,yaml,toml}';
 
 /** CI workflow format check step (appended to ci.yml) */
 export const OXFMT_CI_STEP = `

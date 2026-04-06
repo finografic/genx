@@ -95,9 +95,10 @@
       "eslint --fix"
     ],
     "*.md": [
+      "oxfmt --no-error-on-unmatched-pattern",
       "eslint --fix"
     ],
-    "*.{json,jsonc,md,yml,yaml,toml}": [
+    "*.{json,jsonc,yml,yaml,toml}": [
       "oxfmt --no-error-on-unmatched-pattern"
     ]
   },

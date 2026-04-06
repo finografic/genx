@@ -7,7 +7,7 @@ import { PKG_ESLINT_MARKDOWNLINT } from 'config/constants.config';
 export const MARKDOWNLINT_PACKAGE = PKG_ESLINT_MARKDOWNLINT;
 export const MARKDOWNLINT_PACKAGE_VERSION = 'latest';
 
-/** lint-staged: oxfmt uses a data glob that includes `md` plus a separate `*.md` entry for `eslint --fix` only. */
+/** Legacy lint-staged glob that merged data files + `md` (split into data-only + `*.md` by the markdown feature). */
 export const LINT_STAGED_DATA_WITH_MD_PATTERN = '*.{json,jsonc,yml,yaml,toml,md}';
 export const LINT_STAGED_DATA_ONLY_PATTERN = '*.{json,jsonc,yml,yaml,toml}';
 export const LINT_STAGED_MD_PATTERN = '*.md';
