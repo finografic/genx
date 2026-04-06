@@ -18,7 +18,12 @@ import { applyMerges } from 'lib/migrate/merge.utils';
 import { parseMigrateArgs } from 'lib/migrate/migrate-metadata.utils';
 import { getScopeAndName, shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from 'lib/migrate/node.utils';
-import { patchPackageJson, readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
+import {
+  patchPackageJson,
+  readPackageJson,
+  stripCommitlintFromPackageJsonFile,
+  writePackageJson,
+} from 'lib/migrate/package-json.utils';
 import { planMigration } from 'lib/migrate/plan.utils';
 import { applyRenames } from 'lib/migrate/rename.utils';
 import { copyLicenseIfMissing, syncFromTemplate } from 'lib/migrate/template-sync.utils';
@@ -237,6 +242,14 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
 
   // Apply template sync
   await syncFromTemplate(targetDir, templateDir, vars, only, updatedPackageJson);
+
+  if (shouldRunSection(only, 'hooks')) {
+    const removedInlinedCommitlint = await stripCommitlintFromPackageJsonFile(packageJsonPath);
+    if (removedInlinedCommitlint) {
+      successUpdatedMessage('Removed inlined commitlint from package.json (use commitlint.config.mjs)');
+      updatedPackageJson = await readPackageJson(packageJsonPath);
+    }
+  }
 
   // Copy LICENSE if missing
   await copyLicenseIfMissing(targetDir, templateDir, vars, shouldCopyLicense);

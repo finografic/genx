@@ -175,9 +175,9 @@ Pre-commit linting + conventional commits.
 - Installs `lint-staged`, `simple-git-hooks`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
 - Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; the **oxfmt** feature prepends `oxfmt` when applied)
-- Adds `commitlint` config to package.json (`extends: @commitlint/config-conventional`)
 - Adds `simple-git-hooks` config to package.json
-- Removes legacy `commitlint.config.mjs` if present
+- Ensures `commitlint.config.mjs` exists (copies from genx `_templates/` when missing)
+- Removes an inlined `commitlint` key from package.json if present (config lives in `commitlint.config.mjs`)
 - Ensures `prepare` script runs `simple-git-hooks`
 
 <!-- GENERATED:FEATURES:END -->

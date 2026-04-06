@@ -1,8 +1,7 @@
 /**
  * Git Hooks feature configuration.
  *
- * This feature sets up lint-staged, commitlint, and simple-git-hooks
- * for enforcing code quality and conventional commit messages.
+ * Sets up lint-staged, commitlint (`commitlint.config.mjs`), and simple-git-hooks.
  */
 
 import {
@@ -33,10 +32,3 @@ export const LINT_STAGED_CONFIG: Record<string, string[]> = {
 export const SIMPLE_GIT_HOOKS_CONFIG: Record<string, string> = {
   'pre-commit': 'npx lint-staged --allow-empty',
 };
-
-/**
- * commitlint configuration inlined in package.json (replaces commitlint.config.*).
- */
-export const COMMITLINT_PACKAGE_JSON_CONFIG = {
-  extends: [PKG_COMMITLINT_CONFIG],
-} as const;

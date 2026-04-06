@@ -1,7 +1,10 @@
-import { readFile, unlink, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
+  copyFileDirect,
   fileExists,
+  findPackageRoot,
   installDevDependency,
   isDependencyDeclared,
   spinner,
@@ -10,42 +13,25 @@ import {
 } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
+import {
+  reorderGitHookTailKeys,
+  stripInlinedCommitlintFromPackageJson,
+} from 'lib/migrate/package-json.utils';
 import { COMMITLINT_CONFIG, PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import {
-  COMMITLINT_PACKAGE_JSON_CONFIG,
-  GIT_HOOKS_PACKAGES,
-  LINT_STAGED_CONFIG,
-  SIMPLE_GIT_HOOKS_CONFIG,
-} from './git-hooks.constants';
+import { GIT_HOOKS_PACKAGES, LINT_STAGED_CONFIG, SIMPLE_GIT_HOOKS_CONFIG } from './git-hooks.constants';
 
 /**
- * Keep `lint-staged`, `commitlint`, and `simple-git-hooks` at the end of package.json
- * in that order (matches repo convention).
+ * Add lint-staged and simple-git-hooks to package.json when missing.
  */
-function reorderGitHookTailKeys(packageJson: PackageJson): PackageJson {
-  const { 'lint-staged': lintStaged, commitlint, 'simple-git-hooks': simpleGitHooks, ...rest } = packageJson;
-
-  return {
-    ...rest,
-    ...(lintStaged !== undefined ? { 'lint-staged': lintStaged } : {}),
-    ...(commitlint !== undefined && commitlint !== null ? { commitlint } : {}),
-    ...(simpleGitHooks !== undefined ? { 'simple-git-hooks': simpleGitHooks } : {}),
-  };
-}
-
-/**
- * Add lint-staged, commitlint, and simple-git-hooks to package.json when missing.
- */
-async function addPackageJsonConfigs(
+async function addPackageJsonHooksConfigs(
   targetDir: string,
-): Promise<{ addedLintStaged: boolean; addedCommitlint: boolean; addedSimpleGitHooks: boolean }> {
+): Promise<{ addedLintStaged: boolean; addedSimpleGitHooks: boolean }> {
   const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
   const raw = await readFile(packageJsonPath, 'utf8');
   let packageJson = JSON.parse(raw) as PackageJson;
 
   let addedLintStaged = false;
-  let addedCommitlint = false;
   let addedSimpleGitHooks = false;
 
   if (!packageJson['lint-staged']) {
@@ -53,34 +39,51 @@ async function addPackageJsonConfigs(
     addedLintStaged = true;
   }
 
-  if (!packageJson.commitlint) {
-    packageJson.commitlint = { extends: [...COMMITLINT_PACKAGE_JSON_CONFIG.extends] };
-    addedCommitlint = true;
-  }
-
   if (!packageJson['simple-git-hooks']) {
     packageJson['simple-git-hooks'] = { ...SIMPLE_GIT_HOOKS_CONFIG };
     addedSimpleGitHooks = true;
   }
 
-  if (addedLintStaged || addedCommitlint || addedSimpleGitHooks) {
+  if (addedLintStaged || addedSimpleGitHooks) {
     packageJson = reorderGitHookTailKeys(packageJson);
     await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
   }
 
-  return { addedLintStaged, addedCommitlint, addedSimpleGitHooks };
+  return { addedLintStaged, addedSimpleGitHooks };
 }
 
 /**
- * Remove legacy commitlint.config.mjs when package.json carries commitlint config.
+ * Remove inlined `commitlint` from package.json when present (superseded by `commitlint.config.mjs`).
  */
-async function removeLegacyCommitlintConfig(targetDir: string): Promise<boolean> {
-  const configPath = resolve(targetDir, COMMITLINT_CONFIG);
-  if (!fileExists(configPath)) {
+async function stripPackageJsonCommitlint(targetDir: string): Promise<boolean> {
+  const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
+  const raw = await readFile(packageJsonPath, 'utf8');
+  let packageJson = JSON.parse(raw) as PackageJson;
+  const { packageJson: stripped, changed } = stripInlinedCommitlintFromPackageJson(packageJson);
+  if (!changed) {
+    return false;
+  }
+  packageJson = reorderGitHookTailKeys(stripped);
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  return true;
+}
+
+/**
+ * Copy `commitlint.config.mjs` from genx `_templates/` when the target repo does not have it.
+ */
+async function ensureCommitlintConfigFile(targetDir: string): Promise<boolean> {
+  const dest = resolve(targetDir, COMMITLINT_CONFIG);
+  if (fileExists(dest)) {
     return false;
   }
 
-  await unlink(configPath);
+  const fromDir = fileURLToPath(new URL('.', import.meta.url));
+  const packageRoot = findPackageRoot(fromDir);
+  const src = resolve(packageRoot, '_templates', COMMITLINT_CONFIG);
+  if (!fileExists(src)) {
+    throw new Error(`commitlint template not found: ${src}`);
+  }
+  await copyFileDirect(src, dest);
   return true;
 }
 
@@ -95,12 +98,10 @@ async function ensurePrepareScript(targetDir: string): Promise<boolean> {
   const scripts = packageJson.scripts ?? {};
   const prepare = scripts.prepare ?? '';
 
-  // Check if simple-git-hooks is already in prepare
   if (prepare.includes('simple-git-hooks')) {
     return false;
   }
 
-  // Add or update prepare script
   if (prepare) {
     scripts.prepare = `${prepare} && simple-git-hooks`;
   } else {
@@ -120,7 +121,6 @@ async function ensurePrepareScript(targetDir: string): Promise<boolean> {
 export async function applyGitHooks(context: FeatureContext): Promise<FeatureApplyResult> {
   const applied: string[] = [];
 
-  // 1. Install all required packages
   for (const [packageName, version] of Object.entries(GIT_HOOKS_PACKAGES)) {
     const alreadyDeclared = await isDependencyDeclared(context.targetDir, packageName);
     if (!alreadyDeclared) {
@@ -136,36 +136,34 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
     }
   }
 
-  // 2. Add lint-staged, commitlint (package.json), and simple-git-hooks
-  const configResult = await addPackageJsonConfigs(context.targetDir);
+  const strippedCommitlint = await stripPackageJsonCommitlint(context.targetDir);
+  if (strippedCommitlint) {
+    applied.push('package.json (removed inlined commitlint)');
+    successMessage('Removed commitlint key from package.json (use commitlint.config.mjs)');
+  }
+
+  const configResult = await addPackageJsonHooksConfigs(context.targetDir);
   if (configResult.addedLintStaged) {
     applied.push('package.json (lint-staged config)');
     successMessage('Added lint-staged config to package.json');
-  }
-  if (configResult.addedCommitlint) {
-    applied.push('package.json (commitlint config)');
-    successMessage('Added commitlint config to package.json');
   }
   if (configResult.addedSimpleGitHooks) {
     applied.push('package.json (simple-git-hooks config)');
     successMessage('Added simple-git-hooks config to package.json');
   }
 
-  // 3. Drop legacy commitlint.config.mjs if present (config lives in package.json)
-  const legacyRemoved = await removeLegacyCommitlintConfig(context.targetDir);
-  if (legacyRemoved) {
-    applied.push(`${COMMITLINT_CONFIG} (removed)`);
-    successMessage(`Removed ${COMMITLINT_CONFIG}; using package.json "commitlint"`);
+  const addedCommitlintFile = await ensureCommitlintConfigFile(context.targetDir);
+  if (addedCommitlintFile) {
+    applied.push(COMMITLINT_CONFIG);
+    successMessage(`Added ${COMMITLINT_CONFIG} from template`);
   }
 
-  // 4. Ensure prepare script includes simple-git-hooks
   const prepareAdded = await ensurePrepareScript(context.targetDir);
   if (prepareAdded) {
     applied.push('package.json (prepare script)');
     successMessage('Added simple-git-hooks to prepare script');
   }
 
-  // 5. Remind user to run prepare
   if (applied.length > 0) {
     warnMessage('Run "pnpm prepare" to activate git hooks');
   }

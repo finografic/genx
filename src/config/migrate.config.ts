@@ -11,6 +11,7 @@ export const migrateConfig: MigrateConfig = {
       templatePath: '.simple-git-hooks.mjs',
       targetPath: '.simple-git-hooks.mjs',
     },
+    { section: 'hooks', templatePath: 'commitlint.config.mjs', targetPath: 'commitlint.config.mjs' },
     { section: 'nvmrc', templatePath: '.nvmrc', targetPath: '.nvmrc' },
     { section: 'eslint', templatePath: 'eslint.config.ts', targetPath: 'eslint.config.ts' },
     {
