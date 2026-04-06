@@ -6,11 +6,9 @@
  */
 
 export const OXFMT_CONFIG_PACKAGE = '@finografic/oxfmt-config';
-export const OXFMT_CONFIG_PACKAGE_VERSION = 'latest';
 
 /** oxfmt CLI (peer-style; installed alongside @finografic/oxfmt-config) */
 export const OXFMT_CLI_PACKAGE = 'oxfmt';
-export const OXFMT_CLI_VERSION = 'latest';
 
 /** VSCode extension for oxfmt via Oxc */
 export const OXFMT_VSCODE_EXTENSIONS = ['oxc.oxc-vscode'] as const;
@@ -52,12 +50,12 @@ export const PRETTIER_CONFIG_FILES = [
 
 export const FORMATTING_SECTION_TITLE = '·········· FORMATTING';
 export const FORMATTING_SCRIPTS = {
-  'format.check': 'oxfmt --check',
-  'format.fix': 'oxfmt',
+  'format:check': 'oxfmt --check',
+  'format:fix': 'oxfmt',
 };
 
 export const OXFMT_UPDATE_SCRIPT = {
-  key: 'update.oxfmt-config',
+  key: 'update:oxfmt-config',
   value: 'pnpm update @finografic/oxfmt-config --latest && pnpm update oxfmt --latest',
 };
 
@@ -70,7 +68,7 @@ export const OXFMT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,md,yml,yaml,toml}';
 /** CI workflow format check step (appended to ci.yml) */
 export const OXFMT_CI_STEP = `
       - name: Format check
-        run: pnpm format.check
+        run: pnpm format:check
 `;
 
 /**

@@ -32,7 +32,7 @@ export async function isDependencyDeclared(targetDir: string, packageName: strin
 export async function installDevDependency(
   targetDir: string,
   packageName: string,
-  version: string = 'latest',
+  version?: string,
 ): Promise<{ installed: boolean }> {
   // If it's already declared in package.json, treat this as a no-op and don't
   // run pnpm. This keeps feature application output accurate and avoids
@@ -44,7 +44,8 @@ export async function installDevDependency(
   try {
     // Note: we intentionally run pnpm here instead of editing package.json
     // directly, so lockfiles stay consistent.
-    await execa('pnpm', ['add', '-D', `${packageName}@${version}`], {
+    const packageArg = version ? `${packageName}@${version}` : packageName;
+    await execa('pnpm', ['add', '-D', packageArg], {
       cwd: targetDir,
     });
     return { installed: true };

@@ -1,5 +1,6 @@
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
+import { policy } from '@finografic/deps-policy';
 import {
   errorMessage,
   fileExists,
@@ -24,10 +25,8 @@ import {
   FORMATTING_SECTION_TITLE,
   OXFMT_CI_STEP,
   OXFMT_CLI_PACKAGE,
-  OXFMT_CLI_VERSION,
   OXFMT_COVERED_STYLISTIC_RULES,
   OXFMT_CONFIG_PACKAGE,
-  OXFMT_CONFIG_PACKAGE_VERSION,
   OXFMT_LINT_STAGED_CODE_PATTERN,
   OXFMT_LINT_STAGED_COMMAND,
   OXFMT_LINT_STAGED_DATA_PATTERN,
@@ -525,9 +524,10 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   }
 
   try {
+    const dev = policy.base.devDependencies ?? {};
     for (const [pkg, version] of [
-      [OXFMT_CLI_PACKAGE, OXFMT_CLI_VERSION],
-      [OXFMT_CONFIG_PACKAGE, OXFMT_CONFIG_PACKAGE_VERSION],
+      [OXFMT_CLI_PACKAGE, dev['oxfmt']],
+      [OXFMT_CONFIG_PACKAGE, dev['@finografic/oxfmt-config']],
     ] as const) {
       const alreadyDeclared = await isDependencyDeclared(context.targetDir, pkg);
       if (!alreadyDeclared) {

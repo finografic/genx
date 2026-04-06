@@ -30,6 +30,7 @@ import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';
+import { MIGRATE_ONLY_SECTIONS } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
 
 export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
@@ -50,6 +51,17 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   const flow = createFlowContext(argv, { y: { type: 'boolean' } });
 
   const { targetDir, write, only } = parseMigrateArgs(argv, context.cwd);
+
+  if (only) {
+    const invalid = [...only].filter((section) => !MIGRATE_ONLY_SECTIONS.includes(section));
+    if (invalid.length > 0) {
+      errorMessage(
+        `Unknown --only section(s): ${invalid.join(', ')}. Valid values: ${MIGRATE_ONLY_SECTIONS.join(', ')}`,
+      );
+      process.exit(1);
+      return;
+    }
+  }
 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
@@ -77,11 +89,15 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     return;
   }
 
-  // Prompt for features (after confirmation, before planning)
-  const selectedFeatureIds = await promptFeatures(flow);
-  if (!selectedFeatureIds) {
-    process.exit(0);
-    return;
+  // Prompt for features — skipped when --only is set (sections-only run)
+  let selectedFeatureIds: FeatureId[] = [];
+  if (!only) {
+    const prompted = await promptFeatures(flow);
+    if (!prompted) {
+      process.exit(0);
+      return;
+    }
+    selectedFeatureIds = prompted;
   }
 
   const vars: TemplateVars = {
@@ -122,8 +138,8 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       clack.log.info(`- ${line}`);
     }
 
-    // CLI-type: check if help file needs to be created
-    if (isCliPackage(packageJson)) {
+    // CLI-type: check if help file needs to be created (skipped when --only is set)
+    if (!only && isCliPackage(packageJson)) {
       const binName = getBinName(packageJson, parsed.name);
       const helpFilePath = resolve(targetDir, `src/${binName}.help.ts`);
       if (!existsSync(helpFilePath)) {
@@ -273,8 +289,8 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     }
   }
 
-  // For CLI-type packages: ensure *.help.ts exists
-  if (isCliPackage(updatedPackageJson)) {
+  // For CLI-type packages: ensure *.help.ts exists (skipped when --only is set)
+  if (!only && isCliPackage(updatedPackageJson)) {
     const binName = getBinName(updatedPackageJson, parsed.name);
     const helpFilePath = resolve(targetDir, `src/${binName}.help.ts`);
 

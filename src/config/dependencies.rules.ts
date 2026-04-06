@@ -8,8 +8,8 @@ const dev = policy.base.devDependencies ?? {};
  * Dependency version rules for template migrations.
  * Versions are sourced from @finografic/deps-policy — edit versions there, not here.
  *
- * Entries without a version (eslint-plugin-markdownlint, @finografic/project-scripts)
- * are ecosystem-optional and install @latest.
+ * Entries without a version install @latest.
+ * Entries with optional: true are only aligned if already present — never force-added.
  */
 export const dependencyRules: DependencyRule[] = [
   // core tooling
@@ -28,8 +28,18 @@ export const dependencyRules: DependencyRule[] = [
     section: 'devDependencies',
   },
   { name: '@eslint/js', version: dev['@eslint/js'], section: 'devDependencies' },
-  { name: 'eslint-plugin-markdownlint', section: 'devDependencies' },
-  { name: '@stylistic/eslint-plugin', version: dev['@stylistic/eslint-plugin'], section: 'devDependencies' },
+  {
+    name: 'eslint-plugin-markdownlint',
+    version: dev['eslint-plugin-markdownlint'],
+    section: 'devDependencies',
+    optional: true,
+  },
+  {
+    name: '@stylistic/eslint-plugin',
+    version: dev['@stylistic/eslint-plugin'],
+    section: 'devDependencies',
+    optional: true,
+  },
   {
     name: '@typescript-eslint/parser',
     version: dev['@typescript-eslint/parser'],
@@ -43,9 +53,14 @@ export const dependencyRules: DependencyRule[] = [
   { name: 'typescript-eslint', version: dev['typescript-eslint'], section: 'devDependencies' },
   { name: 'globals', version: dev['globals'], section: 'devDependencies' },
 
-  // formatting
-  { name: 'oxfmt', version: dev['oxfmt'], section: 'devDependencies' },
-  { name: '@finografic/oxfmt-config', version: dev['@finografic/oxfmt-config'], section: 'devDependencies' },
+  // formatting (optional — only aligned if already present; not forced on dprint or other formatter projects)
+  { name: 'oxfmt', version: dev['oxfmt'], section: 'devDependencies', optional: true },
+  {
+    name: '@finografic/oxfmt-config',
+    version: dev['@finografic/oxfmt-config'],
+    section: 'devDependencies',
+    optional: true,
+  },
 
   // commitlint
   { name: '@commitlint/cli', version: dev['@commitlint/cli'], section: 'devDependencies' },
@@ -56,5 +71,9 @@ export const dependencyRules: DependencyRule[] = [
   },
 
   // finografic ecosystem
-  { name: '@finografic/project-scripts', section: 'devDependencies' },
+  {
+    name: '@finografic/project-scripts',
+    version: dev['@finografic/project-scripts'],
+    section: 'devDependencies',
+  },
 ];

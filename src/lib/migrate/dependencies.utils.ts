@@ -15,9 +15,11 @@ export function planDependencyChanges(packageJson: PackageJson, rules: Dependenc
   for (const rule of rules) {
     const section = packageJson[rule.section] ?? {};
     const current = section[rule.name as keyof typeof section];
-    const targetVersion = rule.version ?? 'latest';
+    if (rule.version === undefined) continue;
+    const targetVersion = rule.version;
 
     if (!current) {
+      if (rule.optional) continue;
       changes.push({
         name: rule.name,
         to: targetVersion,
@@ -69,6 +71,15 @@ export function applyDependencyChanges(packageJson: PackageJson, changes: Depend
     }
     const section = next[change.section] as Record<string, string>;
     section[change.name] = change.to;
+  }
+
+  // Sort each modified dependency section alphabetically
+  const modifiedSections = new Set(changes.map((change) => change.section));
+  for (const sectionName of modifiedSections) {
+    const section = next[sectionName] as Record<string, string> | undefined;
+    if (!section) continue;
+    const sorted = Object.fromEntries(Object.entries(section).sort(([a], [b]) => a.localeCompare(b)));
+    (next as Record<string, unknown>)[sectionName] = sorted;
   }
 
   return next;

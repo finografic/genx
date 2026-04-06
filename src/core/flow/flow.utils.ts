@@ -161,22 +161,22 @@ export function createFlowContext<F extends FlagDefs>(argv: string[], flagDefs: 
 
 // ─── Prompt Helpers ───────────────────────────────────────────────────────────
 
-export async function promptSelect<T>(flow: FlowContext, opts: PromptSelectOpts<T>): Promise<T> {
+export async function promptSelect<T>(flow: FlowContext, config: PromptSelectOpts<T>): Promise<T> {
   // Resolution chain: 1. explicit flag (with optional fromFlag resolver)  2. yes-mode default  3. prompt
-  if (opts.flagKey && flow.flags[opts.flagKey as keyof typeof flow.flags] !== undefined) {
-    const raw = String(flow.flags[opts.flagKey as keyof typeof flow.flags]);
-    const resolved = opts.fromFlag ? opts.fromFlag(raw) : (raw as unknown as T);
+  if (config.flagKey && flow.flags[config.flagKey as keyof typeof flow.flags] !== undefined) {
+    const raw = String(flow.flags[config.flagKey as keyof typeof flow.flags]);
+    const resolved = config.fromFlag ? config.fromFlag(raw) : (raw as unknown as T);
     if (resolved !== undefined) return resolved;
     // fromFlag returned undefined → unknown flag value, fall through to prompt
   }
 
-  if (!opts.required && flow.yesMode && opts.default !== undefined) {
-    return opts.default;
+  if (!config.required && flow.yesMode && config.default !== undefined) {
+    return config.default;
   }
 
   const result = await clack.select({
-    message: opts.message,
-    options: opts.options as clack.Option<T>[],
+    message: config.message,
+    options: config.options as clack.Option<T>[],
   });
 
   if (clack.isCancel(result)) {
@@ -187,33 +187,33 @@ export async function promptSelect<T>(flow: FlowContext, opts: PromptSelectOpts<
   return result as T;
 }
 
-export async function promptText(flow: FlowContext, opts: PromptTextOpts): Promise<string> {
+export async function promptText(flow: FlowContext, config: PromptTextOpts): Promise<string> {
   // Resolution chain: 1. explicit flag  2. yes-mode default  3. prompt
-  if (opts.flagKey && flow.flags[opts.flagKey as keyof typeof flow.flags] !== undefined) {
-    const value = String(flow.flags[opts.flagKey as keyof typeof flow.flags]);
-    if (opts.validate) {
-      const error = opts.validate(value);
+  if (config.flagKey && flow.flags[config.flagKey as keyof typeof flow.flags] !== undefined) {
+    const value = String(flow.flags[config.flagKey as keyof typeof flow.flags]);
+    if (config.validate) {
+      const error = config.validate(value);
       if (error) {
-        throw error instanceof Error ? error : new Error(`Invalid --${opts.flagKey}: ${error}`);
+        throw error instanceof Error ? error : new Error(`Invalid --${config.flagKey}: ${error}`);
       }
     }
     return value;
   }
 
-  if (!opts.required && flow.yesMode && opts.default !== undefined) {
-    return typeof opts.default === 'function' ? opts.default() : opts.default;
+  if (!config.required && flow.yesMode && config.default !== undefined) {
+    return typeof config.default === 'function' ? config.default() : config.default;
   }
 
   const result = await clack.text({
-    message: opts.message,
-    defaultValue: typeof opts.default === 'function' ? opts.default() : opts.default,
-    placeholder: opts.placeholder,
-    validate: opts.validate,
+    message: config.message,
+    defaultValue: typeof config.default === 'function' ? config.default() : config.default,
+    placeholder: config.placeholder,
+    validate: config.validate,
   });
 
   if (clack.isCancel(result)) {
-    if (opts.cancelBehavior === 'skip') {
-      const fallback = typeof opts.default === 'function' ? opts.default() : opts.default;
+    if (config.cancelBehavior === 'skip') {
+      const fallback = typeof config.default === 'function' ? config.default() : config.default;
       return fallback ?? '';
     }
     clack.cancel('Cancelled.');
@@ -223,18 +223,18 @@ export async function promptText(flow: FlowContext, opts: PromptTextOpts): Promi
   return result as string;
 }
 
-export async function promptConfirm(flow: FlowContext, opts: PromptConfirmOpts): Promise<boolean> {
+export async function promptConfirm(flow: FlowContext, config: PromptConfirmOpts): Promise<boolean> {
   // Resolution chain: 1. yes-mode default  2. prompt
-  if (!opts.required && flow.yesMode) {
-    if (opts.skipMessage) console.log(opts.skipMessage);
-    return opts.default ?? true;
+  if (!config.required && flow.yesMode) {
+    if (config.skipMessage) console.log(config.skipMessage);
+    return config.default ?? true;
   }
 
-  const result = await clack.confirm({ message: opts.message });
+  const result = await clack.confirm({ message: config.message });
 
   if (clack.isCancel(result)) {
-    if (opts.cancelBehavior === 'skip') {
-      return opts.default ?? false;
+    if (config.cancelBehavior === 'skip') {
+      return config.default ?? false;
     }
     clack.cancel('Cancelled.');
     process.exit(0);
@@ -243,22 +243,25 @@ export async function promptConfirm(flow: FlowContext, opts: PromptConfirmOpts):
   return result as boolean;
 }
 
-export async function promptMultiSelect<T>(flow: FlowContext, opts: PromptMultiSelectOpts<T>): Promise<T[]> {
+export async function promptMultiSelect<T>(
+  flow: FlowContext,
+  config: PromptMultiSelectOpts<T>,
+): Promise<T[]> {
   // Resolution chain: 1. explicit flag  2. yes-mode defaults  3. prompt
-  if (opts.flagKey && flow.flags[opts.flagKey as keyof typeof flow.flags] !== undefined) {
-    const raw = String(flow.flags[opts.flagKey as keyof typeof flow.flags]);
+  if (config.flagKey && flow.flags[config.flagKey as keyof typeof flow.flags] !== undefined) {
+    const raw = String(flow.flags[config.flagKey as keyof typeof flow.flags]);
     return raw.split(',').map((s) => s.trim()) as T[];
   }
 
-  if (!opts.required && flow.yesMode && opts.initialValues !== undefined) {
-    return opts.initialValues;
+  if (!config.required && flow.yesMode && config.initialValues !== undefined) {
+    return config.initialValues;
   }
 
   const result = await clack.multiselect({
-    message: opts.message,
-    options: opts.options as clack.Option<T>[],
-    initialValues: opts.initialValues,
-    required: opts.minOne,
+    message: config.message,
+    options: config.options as clack.Option<T>[],
+    initialValues: config.initialValues,
+    required: config.minOne ?? false,
   });
 
   if (clack.isCancel(result)) {
@@ -271,18 +274,18 @@ export async function promptMultiSelect<T>(flow: FlowContext, opts: PromptMultiS
 
 export async function promptAutocompleteMultiSelect<T>(
   flow: FlowContext,
-  opts: PromptAutocompleteMultiSelectOpts<T>,
+  config: PromptAutocompleteMultiSelectOpts<T>,
 ): Promise<T[]> {
   // Resolution chain: 1. yes-mode defaults  2. prompt
-  if (!opts.required && flow.yesMode && opts.initialValues !== undefined) {
-    return opts.initialValues;
+  if (!config.required && flow.yesMode && config.initialValues !== undefined) {
+    return config.initialValues;
   }
 
   const result = await clack.autocompleteMultiselect({
-    message: opts.message,
-    options: opts.options as clack.Option<T>[],
-    placeholder: opts.placeholder,
-    initialValues: opts.initialValues,
+    message: config.message,
+    options: config.options as clack.Option<T>[],
+    placeholder: config.placeholder,
+    initialValues: config.initialValues,
   });
 
   if (clack.isCancel(result)) {
