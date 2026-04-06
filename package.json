@@ -86,7 +86,7 @@
   "dependencies": {
     "@clack/prompts": "1.1.0",
     "@finografic/core": "^0.9.2",
-    "@finografic/deps-policy": "file:../_@finografic-deps-policy",
+    "@finografic/deps-policy": "^0.1.0",
     "@finografic/genx": "link:",
     "clack-tree-select": "^1.0.8",
     "execa": "^9.6.1",

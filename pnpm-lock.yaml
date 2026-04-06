@@ -15,8 +15,8 @@ importers:
         specifier: ^0.9.2
         version: 0.9.2
       '@finografic/deps-policy':
-        specifier: file:../_@finografic-deps-policy
-        version: file:../_@finografic-deps-policy
+        specifier: ^0.1.0
+        version: 0.1.0
       '@finografic/genx':
         specifier: 'link:'
         version: 'link:'
@@ -412,8 +412,8 @@ packages:
   '@finografic/core@0.9.2':
     resolution: {integrity: sha512-pvery4Vsi8WNprrD1FDq7pEl4VnTfkuUURK+VF/x7XSWc0RCunQKQwxbpo8tn0/7LG12D1TOQUTm61hoi9TjQw==, tarball: https://npm.pkg.github.com/download/@finografic/core/0.9.2/1c2a1033b2d6a4adc5ae33abd5abdb392daf0707}
 
-  '@finografic/deps-policy@file:../_@finografic-deps-policy':
-    resolution: {directory: ../_@finografic-deps-policy, type: directory}
+  '@finografic/deps-policy@0.1.0':
+    resolution: {integrity: sha512-E3or9NoUgEarTO4oxJGi9yQ2EFmfKpfUNoEDgnyQpiPeDR3/3VkrNEiea1f+Sk7o6H8tWluikErB1DjIXwpVKQ==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.1.0/0f8671f575bdd1adefc698029aeb016a0fb81f7a}
     engines: {node: '>=24.3.0'}
 
   '@finografic/oxfmt-config@1.0.3':
@@ -2467,7 +2467,7 @@ snapshots:
     dependencies:
       lodash: 4.17.21
 
-  '@finografic/deps-policy@file:../_@finografic-deps-policy': {}
+  '@finografic/deps-policy@0.1.0': {}
 
   '@finografic/oxfmt-config@1.0.3(oxfmt@0.43.0)':
     dependencies:
