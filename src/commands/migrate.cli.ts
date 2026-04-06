@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { policy } from '@finografic/deps-policy';
 import * as clack from '@clack/prompts';
 import { createFlowContext } from 'core/flow';
 import { renderHelp } from 'core/render-help';
@@ -284,7 +285,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       // Ensure picocolors is in dependencies (required by the help file)
       const deps = (updatedPackageJson['dependencies'] ?? {}) as Record<string, string>;
       if (!deps['picocolors']) {
-        deps['picocolors'] = '^1.1.1';
+        deps['picocolors'] = policy.cli.dependencies?.['picocolors'] ?? '^1.1.1';
         updatedPackageJson['dependencies'] = deps;
         await writePackageJson(packageJsonPath, updatedPackageJson);
         hasDependencyChanges = true;

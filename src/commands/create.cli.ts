@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { policy } from '@finografic/deps-policy';
 import { createFlowContext } from 'core/flow';
 import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
@@ -174,7 +175,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       // Ensure picocolors is in dependencies (required by the help file)
       const deps = (pkgJson['dependencies'] ?? {}) as Record<string, string>;
       if (!deps['picocolors']) {
-        deps['picocolors'] = '^1.1.1';
+        deps['picocolors'] = policy.cli.dependencies?.['picocolors'] ?? '^1.1.1';
         pkgJson['dependencies'] = deps;
         await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
       }
