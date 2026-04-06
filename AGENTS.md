@@ -1,5 +1,18 @@
 # AGENTS.md - AI Assistant Guide
 
+## Skills — Check Before Implementing
+
+Before writing code for any of the patterns below, invoke the paired skill.
+Skills encode the exact conventions and wiring steps for this repo — skipping them causes pattern drift.
+
+| Task                                   | Skill to invoke                                                       |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| Add or update CLI help / add a command | [scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)       |
+| Add a new genx feature module          | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)         |
+| Add a new `src/core/` module           | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md) |
+
+---
+
 ## Rules - General
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
@@ -26,7 +39,9 @@ These rules are specific to `@finografic/genx` and not shared with other project
 
 - **`docs/spec/CLI_CORE.md`** is the canonical **CLI `src/core/` module spec** for `@finografic` CLI packages. Use it when designing portable `core/` modules, help patterns, and when generating or migrating **CLI-shaped** projects so generated trees include the same conventions (see `create` / `migrate`; library and config package types do not use this `core/` layout — TBD whether they get an analogous doc).
 - Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-- When adding a command, update the `commands` array in `src/[binary].help.ts` and add a matching entry to the `EXAMPLES` section.
+- When adding a command, use the **[scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)** skill.
+  It covers wiring `src/cli.ts`, `src/cli.help.ts`, and the per-command help file.
+- After any change to commands, help text, or examples, run `pnpm docs:usage` to regenerate the README — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
 
 ### Instructions ↔ skills (repo-local)
 

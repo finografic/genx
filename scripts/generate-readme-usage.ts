@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { cliHelp as rootHelp } from '../src/cli.help';
 import { createHelp } from '../src/help/create.help';
+import { depsHelp } from '../src/help/deps.help';
 import { featuresHelp } from '../src/help/features.help';
 import { migrateHelp } from '../src/help/migrate.help';
-import { rootHelp } from '../src/help/root.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -83,6 +84,7 @@ function generateUsageSection(): string {
   const commandConfigs = [
     { name: 'create', help: createHelp },
     { name: 'migrate', help: migrateHelp },
+    { name: 'deps', help: depsHelp },
     { name: 'features', help: featuresHelp },
   ] as const;
 
@@ -165,6 +167,7 @@ function replaceBetweenMarkers(
 const COMMAND_OPTIONS: Record<string, string> = {
   create: 'Interactive prompts',
   migrate: '`--write`, `--only=<sections>`',
+  deps: '`--write`',
   features: 'Interactive prompts',
   help: '-',
 };

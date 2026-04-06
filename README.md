@@ -26,6 +26,7 @@ pnpm dlx @finografic/genx <command> [options]
 | ---------- | -------------------------------------------- |
 | `create`   | Scaffold a new @finografic package           |
 | `migrate`  | Sync conventions to an existing package      |
+| `deps`     | Sync dependencies to @finografic/deps-policy |
 | `features` | Add optional features to an existing package |
 | `help`     | Show this help message                       |
 
@@ -70,6 +71,28 @@ genx migrate --only=dependencies,node --write
 genx migrate --only=renames,merges --write
 ```
 
+### `genx deps`
+
+```bash
+genx deps [path]
+```
+
+**Examples:**
+
+```bash
+# Dry run in current directory
+genx deps
+
+# Dry run against a specific directory
+genx deps ../my-package
+
+# Apply changes to current directory
+genx deps --write
+
+# Apply changes to a specific directory
+genx deps ../my-package --write
+```
+
 ### `genx features`
 
 ```bash
@@ -97,11 +120,14 @@ Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos n
 
 - Installs `oxfmt` and `@finografic/oxfmt-config`
 - Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
-- Adds `format:check` / `format:fix` and `update:oxfmt-config` scripts
+- Adds `format:check` / `format:fix` and `update:oxfmt-config` in the **PACKAGES** scripts section
 - Replaces Prettier if present (uninstall + backup configs)
-- Prepends oxfmt to `lint-staged`, adds format check to `release:check` / CI when missing
+- Removes **dprint** / `@finografic/dprint-config` if still present (deps, `dprint.json(c)` / `dprint.config.jsonc`, lint-staged, scripts, VS Code `dprint.*` settings)
+- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` / `pnpm dprint check` steps use `pnpm format:check` instead
+- Normalizes `lint-staged`: `*.{ts,…,cjs}` → `oxfmt` then `eslint --fix`; `*.md` → `eslint --fix` only; `*.{json,jsonc,md,yml,yaml,toml}` → `oxfmt` only (legacy data globs are merged)
+- Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
-- Configures per-language default formatter and oxc editor settings in `.vscode/settings.json`
+- Updates `.vscode/settings.json` with JSONC-aware patches (keeps `//` comments and unrelated keys): global oxc options sit just before `prettier.enable`; `[markdown]` is inserted before `markdownlint.config` when present
 - Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers
 
 ### vitest
@@ -125,8 +151,9 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 Markdown linting via `eslint-plugin-markdownlint`.
 
 - Installs `eslint-plugin-markdownlint`
+- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
 - Adds markdown block to `eslint.config.ts`
-- Adds `markdownlint.config` to `.vscode/settings.json`
+- Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
 - Adds VSCode extension recommendation
 - Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
 
@@ -138,6 +165,7 @@ CSS linting via `stylelint` + `@stylistic/stylelint-plugin`.
 - Creates `stylelint.config.ts` with stylistic indentation/spacing rules (`satisfies Config`)
 - Enables stylelint in `.vscode/settings.json` (disables built-in `css.validate`)
 - Configures oxfmt (oxc) as the default formatter for `css` and `scss`
+- Patches `oxfmt.config.ts`: adds `css` import and `{ files: ['*.css', '*.scss'], options: { ...css } }` when missing (standard genx layout)
 - Adds VSCode extension recommendation
 
 ### git-hooks
@@ -207,6 +235,7 @@ my-package/
 | --------------- | -------------------------------------------- | ------------------------------ |
 | `create`        | Scaffold a new @finografic package           | Interactive prompts            |
 | `migrate`       | Sync conventions to an existing package      | `--write`, `--only=<sections>` |
+| `deps`          | Sync dependencies to @finografic/deps-policy | `--write`                      |
 | `features`      | Add optional features to an existing package | Interactive prompts            |
 | `help`          | Show this help message                       | -                              |
 | `--help` / `-h` | Show help (works with commands too)          | -                              |

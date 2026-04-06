@@ -6,6 +6,7 @@ import { renderHelp } from 'core/render-help/render-help.utils.js';
 
 import { cliHelp } from './cli.help.js';
 import { createPackage } from './commands/create.cli.js';
+import { syncDeps } from './commands/deps.cli.js';
 import { addFeatures } from './commands/features.cli.js';
 import { migratePackage } from './commands/migrate.cli.js';
 
@@ -45,6 +46,10 @@ async function main(): Promise<void> {
 
     migrate: async (argv, context) => {
       await migratePackage(argv, context);
+    },
+
+    deps: async (argv, context) => {
+      await syncDeps(argv, context);
     },
 
     features: async (argv, context) => {
