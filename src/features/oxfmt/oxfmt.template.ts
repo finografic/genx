@@ -8,6 +8,7 @@ const OXFMT_CONFIG_BODY = `import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
   base,
+  css,
   ignorePatterns,
   json,
   markdown,
@@ -35,6 +36,7 @@ export default defineConfig({
       excludeFiles: [],
       options: { ...agentMarkdown },
     },
+    { files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } },
   ],
 } satisfies ReturnType<typeof defineConfig>);
 `;
@@ -44,8 +46,8 @@ export interface EnsureOxfmtConfigOptions {
 }
 
 /**
- * Ensure \`oxfmt.config.ts\` exists in the target directory (base preset — no CSS override;
- * the css feature adds CSS when applied).
+ * Ensure \`oxfmt.config.ts\` exists in the target directory (aligned with repo \`_templates/\`;
+ * includes CSS/SCSS override — the **css** feature no-ops when already present).
  */
 export async function ensureOxfmtConfig(
   targetDir: string,

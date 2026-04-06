@@ -13,6 +13,11 @@ function hasCssNamedImport(content: string): boolean {
   return importMatch !== null && /\bcss\b/.test(importMatch[1]);
 }
 
+/** True when the standard genx CSS preset is already present (import + override). */
+function oxfmtConfigAlreadyHasCssPreset(content: string): boolean {
+  return hasCssOverride(content) && hasCssNamedImport(content);
+}
+
 /**
  * Ensure `css` is imported from `@finografic/oxfmt-config` (insert after `base,`).
  */
@@ -62,6 +67,10 @@ export async function patchOxfmtConfigForCss(targetDir: string): Promise<boolean
 
   const raw = await readFile(configPath, 'utf8');
   const normalized = raw.replace(/\r\n/g, '\n');
+  if (oxfmtConfigAlreadyHasCssPreset(normalized)) {
+    return false;
+  }
+
   let next = ensureCssImportInOxfmtConfig(normalized);
   next = insertCssOverrideInOxfmtConfig(next);
 

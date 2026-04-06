@@ -2,6 +2,7 @@ import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
   base,
+  css,
   ignorePatterns,
   json,
   markdown,
@@ -29,5 +30,6 @@ export default defineConfig({
       excludeFiles: [],
       options: { ...agentMarkdown },
     },
+    { files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } },
   ],
 } satisfies ReturnType<typeof defineConfig>);

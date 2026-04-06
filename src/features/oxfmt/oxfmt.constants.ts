@@ -28,6 +28,9 @@ export const PRETTIER_PACKAGE_PATTERNS = ['*prettier-plugin-*'] as const;
 /** Legacy formatter packages to remove when migrating to oxfmt. */
 export const DPRINT_PACKAGES = ['dprint', '@finografic/dprint-config'] as const;
 
+/** Import-sort plugin — redundant once formatting/import order is handled by oxfmt. */
+export const SIMPLE_IMPORT_SORT_PACKAGE = 'eslint-plugin-simple-import-sort' as const;
+
 /** Legacy formatter config files to delete when migrating away. */
 export const DPRINT_CONFIG_FILES = ['dprint.jsonc', 'dprint.json', 'dprint.config.jsonc'] as const;
 

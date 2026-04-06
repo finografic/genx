@@ -15,17 +15,48 @@ import {
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const baseTemplateOxfmtConfig = readFileSync(join(repoRoot, '_templates/oxfmt.config.ts'), 'utf8');
 
+/**
+ * Smallest config that still satisfies {@link insertCssOverrideInOxfmtConfig}’s `agentMarkdown`
+ * needle and {@link ensureCssImportInOxfmtConfig}’s `base` / `ignorePatterns` import shape —
+ * no full copy of an older `_templates` file.
+ */
+const MINIMAL_OXFMT_WITHOUT_CSS = `import {
+  AGENT_DOC_MARKDOWN_PATHS,
+  agentMarkdown,
+  base,
+  ignorePatterns,
+} from '@finografic/oxfmt-config';
+import { defineConfig } from 'oxfmt';
+
+export default defineConfig({
+  ignorePatterns: [...ignorePatterns],
+  ...base,
+  overrides: [
+    {
+      files: [...AGENT_DOC_MARKDOWN_PATHS],
+      excludeFiles: [],
+      options: { ...agentMarkdown },
+    },
+  ],
+} satisfies ReturnType<typeof defineConfig>);
+`;
+
 describe('css.oxfmt — ensureCssImportInOxfmtConfig', () => {
   it('inserts css import after base when missing', () => {
-    const out = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+    const out = ensureCssImportInOxfmtConfig(MINIMAL_OXFMT_WITHOUT_CSS);
     expect(out).toMatch(/\n {2}base,\n {2}css,\n {2}ignorePatterns,/);
-    expect(out).not.toBe(baseTemplateOxfmtConfig);
+    expect(out).not.toBe(MINIMAL_OXFMT_WITHOUT_CSS);
   });
 
   it('is a no-op when css is already imported', () => {
-    const withCss = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+    const withCss = ensureCssImportInOxfmtConfig(MINIMAL_OXFMT_WITHOUT_CSS);
     const again = ensureCssImportInOxfmtConfig(withCss);
     expect(again).toBe(withCss);
+  });
+
+  it('is a no-op for current _templates/oxfmt.config.ts (includes css by default)', () => {
+    const out = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+    expect(out).toBe(baseTemplateOxfmtConfig);
   });
 
   it('does nothing when @finografic/oxfmt-config is not imported', () => {
@@ -36,7 +67,7 @@ describe('css.oxfmt — ensureCssImportInOxfmtConfig', () => {
 
 describe('css.oxfmt — insertCssOverrideInOxfmtConfig', () => {
   it('appends CSS/SCSS override after agentMarkdown block (genx template)', () => {
-    const withImport = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+    const withImport = ensureCssImportInOxfmtConfig(MINIMAL_OXFMT_WITHOUT_CSS);
     const out = insertCssOverrideInOxfmtConfig(withImport);
 
     expect(out).toContain("files: ['*.css', '*.scss']");
@@ -46,20 +77,34 @@ describe('css.oxfmt — insertCssOverrideInOxfmtConfig', () => {
   });
 
   it('is a no-op when the override already exists', () => {
-    const patched = insertCssOverrideInOxfmtConfig(ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig));
+    const patched = insertCssOverrideInOxfmtConfig(ensureCssImportInOxfmtConfig(MINIMAL_OXFMT_WITHOUT_CSS));
     const again = insertCssOverrideInOxfmtConfig(patched);
     expect(again).toBe(patched);
+  });
+
+  it('is a no-op for current _templates/oxfmt.config.ts', () => {
+    const out = insertCssOverrideInOxfmtConfig(baseTemplateOxfmtConfig);
+    expect(out).toBe(baseTemplateOxfmtConfig);
   });
 });
 
 describe('css.oxfmt — full patch (import + override)', () => {
-  it('matches expected shape vs base _templates/oxfmt.config.ts', () => {
-    let next = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+  it('minimal config: patch produces a single css override and import', () => {
+    let next = ensureCssImportInOxfmtConfig(MINIMAL_OXFMT_WITHOUT_CSS);
     next = insertCssOverrideInOxfmtConfig(next);
 
     expect(next).toMatch(/import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s);
     expect(next).toContain(`{ files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } }`);
     expect(next.split('{ files:').filter((s) => s.includes('*.css')).length).toBe(1);
+  });
+
+  it('current template already matches expected shape', () => {
+    expect(baseTemplateOxfmtConfig).toMatch(
+      /import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s,
+    );
+    expect(baseTemplateOxfmtConfig).toContain(
+      `{ files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } }`,
+    );
   });
 });
 
@@ -78,7 +123,7 @@ describe('css.oxfmt — patchOxfmtConfigForCss', () => {
     const configPath = join(dir, OXFMT_CONFIG_FILENAME);
 
     try {
-      await writeFile(configPath, baseTemplateOxfmtConfig, 'utf8');
+      await writeFile(configPath, MINIMAL_OXFMT_WITHOUT_CSS, 'utf8');
 
       await expect(patchOxfmtConfigForCss(dir)).resolves.toBe(true);
 
@@ -90,6 +135,18 @@ describe('css.oxfmt — patchOxfmtConfigForCss', () => {
 
       const twice = await readFile(configPath, 'utf8');
       expect(twice).toBe(once);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('returns false when config already includes css import and override', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'genx-css-oxfmt-already-'));
+    const configPath = join(dir, OXFMT_CONFIG_FILENAME);
+
+    try {
+      await writeFile(configPath, baseTemplateOxfmtConfig, 'utf8');
+      await expect(patchOxfmtConfigForCss(dir)).resolves.toBe(false);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

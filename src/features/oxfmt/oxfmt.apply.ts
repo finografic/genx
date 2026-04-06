@@ -38,8 +38,10 @@ import {
   PRETTIER_CONFIG_FILES,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
+  SIMPLE_IMPORT_SORT_PACKAGE,
 } from './oxfmt.constants';
 import { removeDprintIfPresent } from './oxfmt.dprint-cleanup';
+import { stripSimpleImportSortFromEslintConfig } from './oxfmt.simple-import-sort';
 import { ensureOxfmtConfig } from './oxfmt.template';
 import {
   applyOxfmtExtensions,
@@ -624,6 +626,18 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   if (strippedRules) {
     applied.push('eslint.config.ts (removed oxfmt-covered stylistic rules)');
     successMessage('Removed redundant stylistic rules from ESLint config');
+  }
+
+  const strippedSimpleImportSort = await stripSimpleImportSortFromEslintConfig(context.targetDir);
+  if (strippedSimpleImportSort) {
+    applied.push('eslint.config (removed simple-import-sort)');
+    successMessage('Removed eslint-plugin-simple-import-sort rules from ESLint config');
+  }
+
+  const simpleImportSortRemove = await removeDependency(context.targetDir, SIMPLE_IMPORT_SORT_PACKAGE);
+  if (simpleImportSortRemove.removed) {
+    applied.push(SIMPLE_IMPORT_SORT_PACKAGE);
+    successMessage(`Uninstalled ${SIMPLE_IMPORT_SORT_PACKAGE}`);
   }
 
   if (applied.length === 0) {
