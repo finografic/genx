@@ -5,7 +5,7 @@ import { defaultHelpOptions } from 'config/help.config';
 export const depsHelp: HelpConfig = {
   main: {
     bin: 'genx deps',
-    args: '[path]',
+    args: '[path] [options]',
   },
 
   examples: {
@@ -26,6 +26,10 @@ export const depsHelp: HelpConfig = {
       {
         label: 'Apply changes to a specific directory',
         description: 'genx deps ../my-package --write',
+      },
+      {
+        label: 'Sync all managed targets',
+        description: 'genx deps --managed --write',
       },
     ],
   },

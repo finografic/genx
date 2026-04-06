@@ -69,12 +69,15 @@ genx migrate --only=dependencies,node --write
 
 # Normalize file names and merge configs
 genx migrate --only=renames,merges --write
+
+# Migrate all managed targets
+genx migrate --managed --write
 ```
 
 ### `genx deps`
 
 ```bash
-genx deps [path]
+genx deps [path] [options]
 ```
 
 **Examples:**
@@ -91,12 +94,15 @@ genx deps --write
 
 # Apply changes to a specific directory
 genx deps ../my-package --write
+
+# Sync all managed targets
+genx deps --managed --write
 ```
 
 ### `genx features`
 
 ```bash
-genx features
+genx features [path] [options]
 ```
 
 **Examples:**
@@ -104,6 +110,9 @@ genx features
 ```bash
 # Add features to current directory
 genx features
+
+# Add the same features across managed targets
+genx features --managed
 ```
 
 <!-- GENERATED:USAGE:END -->
@@ -231,14 +240,14 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                  | Options                        |
-| --------------- | -------------------------------------------- | ------------------------------ |
-| `create`        | Scaffold a new @finografic package           | Interactive prompts            |
-| `migrate`       | Sync conventions to an existing package      | `--write`, `--only=<sections>` |
-| `deps`          | Sync dependencies to @finografic/deps-policy | `--write`                      |
-| `features`      | Add optional features to an existing package | Interactive prompts            |
-| `help`          | Show this help message                       | -                              |
-| `--help` / `-h` | Show help (works with commands too)          | -                              |
+| Command         | Description                                  | Options                                              |
+| --------------- | -------------------------------------------- | ---------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package           | Interactive prompts                                  |
+| `migrate`       | Sync conventions to an existing package      | `--write`, `--only=<sections>`, `--managed`, `--yes` |
+| `deps`          | Sync dependencies to @finografic/deps-policy | `--write`, `--managed`, `--yes`                      |
+| `features`      | Add optional features to an existing package | `--managed`, `--yes`                                 |
+| `help`          | Show this help message                       | -                                                    |
+| `--help` / `-h` | Show help (works with commands too)          | -                                                    |
 
 See `genx <command> --help` for detailed usage.
 

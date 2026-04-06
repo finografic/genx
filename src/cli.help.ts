@@ -49,6 +49,10 @@ export const cliHelp: HelpConfig = {
         label: 'Add features to current directory',
         description: 'genx features',
       },
+      {
+        label: 'Run a command across managed targets',
+        description: 'genx deps --managed --write',
+      },
     ],
   },
 

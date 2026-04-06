@@ -9,6 +9,7 @@ import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
 import { errorMessage, infoMessage, intro, spinner, successMessage, successUpdatedMessage } from 'utils';
+import { GENX_CONFIG_PATH, hasManagedFlag, readManagedTargets } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
@@ -28,6 +29,7 @@ import { planMigration } from 'lib/migrate/plan.utils';
 import { applyRenames } from 'lib/migrate/rename.utils';
 import { copyLicenseIfMissing, syncFromTemplate } from 'lib/migrate/template-sync.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
+import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from 'lib/prompts/migrate.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
@@ -35,7 +37,9 @@ import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';
+import type { ManagedTarget } from 'types/managed.types';
 import { MIGRATE_ONLY_SECTIONS } from 'types/migrate.types';
+import type { MigrateOnlySection } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
 
 export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
@@ -54,8 +58,14 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   }
 
   const flow = createFlowContext(argv, { y: { type: 'boolean' } });
-
+  const managed = hasManagedFlag(argv);
   const { targetDir, write, only } = parseMigrateArgs(argv, context.cwd);
+
+  if (managed && targetDir !== context.cwd) {
+    errorMessage('Cannot combine [path] with --managed');
+    process.exit(1);
+    return;
+  }
 
   if (only) {
     const invalid = [...only].filter((section) => !MIGRATE_ONLY_SECTIONS.includes(section));
@@ -67,6 +77,99 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       return;
     }
   }
+
+  if (managed) {
+    let managedTargets: ManagedTarget[];
+    try {
+      managedTargets = await readManagedTargets();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to read managed config';
+      errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
+      process.exit(1);
+      return;
+    }
+
+    if (managedTargets.length === 0) {
+      infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
+      return;
+    }
+
+    let selectedFeatureIds: FeatureId[] = [];
+    if (!only) {
+      const prompted = await promptFeatures(flow);
+      if (!prompted) {
+        process.exit(0);
+        return;
+      }
+      selectedFeatureIds = prompted;
+    }
+
+    let appliedCount = 0;
+    let skippedCount = 0;
+
+    for (const [index, target] of managedTargets.entries()) {
+      if (write && !flow.yesMode) {
+        const action = await promptManagedTargetAction({
+          actionLabel: 'Migrate',
+          target,
+          currentIndex: index + 1,
+          total: managedTargets.length,
+        });
+
+        if (action === null) {
+          process.exit(0);
+          return;
+        }
+
+        if (action === 'skip') {
+          skippedCount += 1;
+          continue;
+        }
+      }
+
+      await migrateSingleTarget({
+        targetDir: target.path,
+        write,
+        only,
+        debug,
+        selectedFeatureIds,
+      });
+      appliedCount += 1;
+    }
+
+    successMessage(
+      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
+    );
+    return;
+  }
+
+  let selectedFeatureIds: FeatureId[] = [];
+  if (!only) {
+    const prompted = await promptFeatures(flow);
+    if (!prompted) {
+      process.exit(0);
+      return;
+    }
+    selectedFeatureIds = prompted;
+  }
+
+  await migrateSingleTarget({
+    targetDir,
+    write,
+    only,
+    debug,
+    selectedFeatureIds,
+  });
+}
+
+async function migrateSingleTarget(params: {
+  targetDir: string;
+  write: boolean;
+  only: Set<MigrateOnlySection> | null;
+  debug: boolean;
+  selectedFeatureIds: FeatureId[];
+}): Promise<void> {
+  const { targetDir, write, only, debug, selectedFeatureIds } = params;
 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
@@ -92,17 +195,6 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   if (!ok) {
     process.exit(0);
     return;
-  }
-
-  // Prompt for features — skipped when --only is set (sections-only run)
-  let selectedFeatureIds: FeatureId[] = [];
-  if (!only) {
-    const prompted = await promptFeatures(flow);
-    if (!prompted) {
-      process.exit(0);
-      return;
-    }
-    selectedFeatureIds = prompted;
   }
 
   const vars: TemplateVars = {

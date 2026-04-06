@@ -78,6 +78,7 @@
     "·········· DOCS": "······················································",
     "docs:usage": "tsx scripts/generate-readme-usage.ts",
     "·········· UTILS": "·····················································",
+    "list:managed-repos": "tsx --tsconfig tsconfig.scripts.json scripts/list-managed-repos.ts",
     "check:cli-core-spec": "node scripts/check-cli-core-template.mjs",
     "tsc:debug": "tsc --pretty --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",

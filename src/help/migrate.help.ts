@@ -31,6 +31,10 @@ export const migrateHelp: HelpConfig = {
         label: 'Normalize file names and merge configs',
         description: 'genx migrate --only=renames,merges --write',
       },
+      {
+        label: 'Migrate all managed targets',
+        description: 'genx migrate --managed --write',
+      },
     ],
   },
   footer: {

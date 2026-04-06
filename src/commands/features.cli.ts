@@ -2,13 +2,16 @@ import { createFlowContext } from 'core/flow';
 import { renderHelp } from 'core/render-help';
 import { getFeature } from 'features/feature-registry';
 import { featuresHelp } from 'help/features.help';
-import { errorMessage, infoMessage, intro, outro, outroDim } from 'utils';
+import { errorMessage, infoMessage, intro, outro, successMessage } from 'utils';
+import { GENX_CONFIG_PATH, getPathArg, hasManagedFlag, readManagedTargets, resolveTargetDir } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { promptFeatures } from 'lib/prompts/features.prompt';
+import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
+import type { ManagedTarget } from 'types/managed.types';
 
 /**
  * Add optional features to an existing @finografic package.
@@ -29,9 +32,72 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
 
   const flow = createFlowContext(argv, { y: { type: 'boolean' } });
 
-  const { targetDir } = options;
+  // 1. Validate arguments
+  const managed = hasManagedFlag(argv);
+  const pathArg = getPathArg(argv);
 
-  // 1. Validate we're in an existing package
+  if (managed && pathArg) {
+    errorMessage('Cannot combine [path] with --managed');
+    process.exit(1);
+    return;
+  }
+
+  if (managed) {
+    let managedTargets: ManagedTarget[];
+    try {
+      managedTargets = await readManagedTargets();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to read managed config';
+      errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
+      process.exit(1);
+      return;
+    }
+
+    if (managedTargets.length === 0) {
+      infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
+      return;
+    }
+
+    const selectedFeatureIds = await promptFeatures(flow);
+    if (!selectedFeatureIds) {
+      process.exit(0);
+      return;
+    }
+
+    let appliedCount = 0;
+    let skippedCount = 0;
+
+    for (const [index, target] of managedTargets.entries()) {
+      if (!flow.yesMode) {
+        const action = await promptManagedTargetAction({
+          actionLabel: 'Add features to',
+          target,
+          currentIndex: index + 1,
+          total: managedTargets.length,
+        });
+
+        if (action === null) {
+          process.exit(0);
+          return;
+        }
+
+        if (action === 'skip') {
+          skippedCount += 1;
+          continue;
+        }
+      }
+
+      await applyFeaturesToTarget(target.path, selectedFeatureIds);
+      appliedCount += 1;
+    }
+
+    outro(
+      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
+    );
+    return;
+  }
+
+  const targetDir = resolveTargetDir(options.targetDir, pathArg);
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
@@ -47,6 +113,18 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
   }
 
   // 3. Apply selected features
+  await applyFeaturesToTarget(targetDir, selectedFeatureIds);
+  outro('Feature run complete');
+}
+
+async function applyFeaturesToTarget(targetDir: string, selectedFeatureIds: FeatureId[]): Promise<void> {
+  const validation = validateExistingPackage(targetDir);
+  if (!validation.ok) {
+    errorMessage(validation.reason || 'Not a valid package directory');
+    process.exit(1);
+    return;
+  }
+
   const appliedFeatures: FeatureId[] = [];
   const noopMessages: string[] = [];
 
@@ -80,13 +158,12 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
 
   // 4. Done
   if (appliedFeatures.length > 0) {
-    outro('Features added successfully!');
-    console.log(pc.dim('Applied features:'), pc.cyan(appliedFeatures.join(', ')));
+    successMessage(`Applied features: ${appliedFeatures.join(', ')}`);
     for (const msg of noopMessages) {
       console.log(pc.dim(msg));
     }
   } else {
-    outroDim('No changes made');
+    infoMessage('No changes made');
     for (const msg of noopMessages) {
       console.log(pc.dim(msg));
     }

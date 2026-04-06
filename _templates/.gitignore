@@ -12,6 +12,7 @@ build/
 .env.*.local
 
 # Agents
+.codex/
 .claude/
 !.claude/settings.json
 

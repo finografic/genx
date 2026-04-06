@@ -3,13 +3,23 @@ import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
 import { errorMessage, infoMessage, intro, successMessage, successUpdatedMessage } from 'utils';
+import {
+  GENX_CONFIG_PATH,
+  getPathArg,
+  hasManagedFlag,
+  isYesMode,
+  readManagedTargets,
+  resolveTargetDir,
+} from 'utils';
 
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
+import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
+import type { ManagedTarget } from 'types/managed.types';
 
 export async function syncDeps(argv: string[], context: { cwd: string }): Promise<void> {
   if (argv.includes('--help') || argv.includes('-h')) {
@@ -26,9 +36,70 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   }
 
   const write = argv.includes('--write');
-  const pathArg = argv.find((arg) => !arg.startsWith('-'));
-  const targetDir = pathArg ? resolve(context.cwd, pathArg) : context.cwd;
+  const managed = hasManagedFlag(argv);
+  const yesMode = isYesMode(argv);
+  const pathArg = getPathArg(argv);
 
+  if (managed && pathArg) {
+    errorMessage('Cannot combine [path] with --managed');
+    process.exit(1);
+    return;
+  }
+
+  if (managed) {
+    let managedTargets: ManagedTarget[];
+    try {
+      managedTargets = await readManagedTargets();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to read managed config';
+      errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
+      process.exit(1);
+      return;
+    }
+
+    if (managedTargets.length === 0) {
+      infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
+      return;
+    }
+
+    let appliedCount = 0;
+    let skippedCount = 0;
+
+    for (const [index, target] of managedTargets.entries()) {
+      if (write && !yesMode) {
+        const action = await promptManagedTargetAction({
+          actionLabel: 'Sync dependencies for',
+          target,
+          currentIndex: index + 1,
+          total: managedTargets.length,
+        });
+
+        if (action === null) {
+          process.exit(0);
+          return;
+        }
+
+        if (action === 'skip') {
+          skippedCount += 1;
+          continue;
+        }
+      }
+
+      await syncDepsForTarget(target.path, write);
+      appliedCount += 1;
+    }
+
+    successMessage(
+      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
+    );
+    return;
+  }
+
+  const targetDir = resolveTargetDir(context.cwd, pathArg);
+  await syncDepsForTarget(targetDir, write);
+}
+
+async function syncDepsForTarget(targetDir: string, write: boolean): Promise<void> {
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');

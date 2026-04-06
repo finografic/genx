@@ -5,6 +5,7 @@ import { defaultHelpOptions } from 'config/help.config';
 export const featuresHelp: HelpConfig = {
   main: {
     bin: 'genx features',
+    args: '[path] [options]',
   },
 
   examples: {
@@ -13,6 +14,10 @@ export const featuresHelp: HelpConfig = {
       {
         label: 'Add features to current directory',
         description: 'genx features',
+      },
+      {
+        label: 'Add the same features across managed targets',
+        description: 'genx features --managed',
       },
     ],
   },

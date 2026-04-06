@@ -1,5 +1,6 @@
 export * from './fs.utils.js';
 export * from './jsonc.utils.js';
+export * from './managed.utils.js';
 export * from './package-manager.utils.js';
 export * from './package-root.utils.js';
 export * from './prompts.utils.js';

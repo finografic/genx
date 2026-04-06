@@ -99,6 +99,7 @@ Before writing any link:
 
 ## Learned User Preferences
 
+- For `clack.select`, after cancel checks use explicit `choice === 'apply' || choice === 'skip'` (or equivalent) so the return type narrows to the expected union instead of `string`
 - For Clack `text` validators, normalize once with `const trimmed = value?.trim() ?? ''`, require non-empty `trimmed`, then run regex tests on `trimmed` (covers undefined and satisfies narrowing)
 - When using the shared ESLint stack, keep `@finografic/eslint-config` as a devDependency alongside ESLint
 - Prefer `:` segment separators in `package.json` `scripts` keys and in docs (e.g. `lint:fix`, `dev:feature`); align with `_templates/package.json` rather than dot-separated names
@@ -106,8 +107,11 @@ Before writing any link:
 
 ## Learned Workspace Facts
 
+- Oxfmt lint-staged: canonical data glob is `*.{json,jsonc,yml,yaml,toml}` (no `md`); `*.md` runs oxfmt then `eslint --fix`; the oxfmt feature also removes `eslint-plugin-simple-import-sort` from package.json and strips its rules from `eslint.config.*`
 - VS Code settings writers (oxfmt, markdown, css, dprint cleanup) use JSONC-preserving edits and normalize `markdownlint.config` / `markdown.styles` to the last two root keys when present so existing `//` comments are not stripped
 - The `create` command copies `_templates/` with relative paths preserved into the new package; extra directory tiers (e.g. `root/`) land under those names in the target unless copy logic is changed
 - This repo can surface multiple `lint-staged` configs (root and `_templates/package.json`); grouped tasks follow the nearest config per staged file
 - `_templates/feature/` scaffold files are named `__FOLDER_NAME__.*.ts.template`; `scripts/new-feature.ts` strips the `.template` suffix when generating real files under `src/features/<name>/`
-- Commitlint is configured via root `commitlint.config.mjs` (template under `_templates/`); the git-hooks feature strips a legacy top-level `commitlint` key from `package.json` when present and ensures the config file exists
+- Commitlint is configured via root `commitlint.config.mjs` (template under `_templates/`); the git-hooks feature strips a legacy top-level `commitlint` key from `package.json` when present and ensures the config file exists — `detectGitHooks` / `isGitHooksFullyConfigured` treat lint-staged and commitlint independently so a correct `lint-staged` block alone does not skip migrating inlined commitlint to the file
+- `~/.config/genx/config.json` is read with `parseJsoncObject` (JSON or JSONC) for the managed-repos list
+- `pnpm list:managed-repos` runs `scripts/list-managed-repos.ts` to print prettified `{ "managed": [{ name, path }, ...] }` for immediate child folders under cwd that have `package.json`, `.git`, and a `name` starting with `@finografic/`
