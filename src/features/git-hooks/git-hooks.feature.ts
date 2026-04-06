@@ -8,6 +8,9 @@ import { detectGitHooks } from './git-hooks.detect';
  *
  * Sets up lint-staged for pre-commit linting and commitlint
  * for conventional commit message enforcement.
+ *
+ * Detection is granular: e.g. existing lint-staged does not block migrating inlined
+ * `commitlint` in package.json to `commitlint.config.mjs`.
  */
 export const gitHooksFeature: Feature = {
   id: 'gitHooks',
