@@ -131,7 +131,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       }
     }
 
-    // Merge type-specific scripts (e.g. dev.cli for CLI packages)
+    // Merge type-specific scripts (e.g. dev:cli for CLI packages)
     if (config.packageType.scripts) {
       const scripts = (pkgJson['scripts'] ?? {}) as Record<string, string>;
       Object.assign(scripts, config.packageType.scripts);

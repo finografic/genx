@@ -7,7 +7,7 @@ import type { PackageJson } from 'types/package-json.types';
 import { VITEST_PACKAGE } from './vitest.constants';
 
 function hasTestingScripts(scripts: Record<string, string>): boolean {
-  return 'test' in scripts || 'test.run' in scripts || 'test.coverage' in scripts;
+  return 'test' in scripts || 'test:run' in scripts || 'test:coverage' in scripts;
 }
 
 /**

@@ -7,7 +7,7 @@ These rules apply when adding or modifying features in `src/features/`. Each fea
 To scaffold a new feature with all skeleton files and registry wiring:
 
 ```bash
-pnpm new.feature
+pnpm dev:feature
 ```
 
 This runs the interactive scaffolding script. For the full procedural guide (including manual steps), see `.github/skills/scaffold-feature/SKILL.md`.
@@ -117,7 +117,7 @@ export const features: Feature[] = [
 ];
 ```
 
-The `pnpm new.feature` script handles both of these automatically.
+The `pnpm dev:feature` script handles both of these automatically.
 
 ## `{folder-name}.apply.ts`
 

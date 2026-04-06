@@ -138,7 +138,7 @@ function findNextScriptsSectionDividerIndex(keys: string[], sectionKeyIndex: num
 }
 
 /**
- * Place `update.oxfmt-config` in the PACKAGES scripts section (after `update.eslint-config` when present).
+ * Place `update:oxfmt-config` in the PACKAGES scripts section (after `update:eslint-config` when present).
  */
 function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
   next: Record<string, string>;
@@ -160,10 +160,10 @@ function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
   const sectionKeys = keys.slice(packagesIdx + 1, nextSectionIdx);
 
   let insertAfter: string;
-  if (sectionKeys.includes('update.eslint-config')) {
-    insertAfter = 'update.eslint-config';
+  if (sectionKeys.includes('update:eslint-config')) {
+    insertAfter = 'update:eslint-config';
   } else {
-    const updateKeys = sectionKeys.filter((k) => k.startsWith('update.'));
+    const updateKeys = sectionKeys.filter((k) => k.startsWith('update:'));
     insertAfter =
       updateKeys.length > 0 ? updateKeys[updateKeys.length - 1]! : PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
   }
@@ -247,7 +247,7 @@ function reorderLintStagedKeys(
 }
 
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
-  return 'format' in scripts || 'format.check' in scripts;
+  return 'format' in scripts || 'format:check' in scripts;
 }
 
 function hasFormattingSectionTitle(scripts: Record<string, string>): boolean {
@@ -283,7 +283,7 @@ function findFormattingInsertionPoint(scripts: Record<string, string>): number {
 }
 
 /**
- * Move `format.check` / `format.fix` to immediately after the FORMATTING section divider when misplaced (e.g. above the divider).
+ * Move `format:check` / `format:fix` to immediately after the FORMATTING section divider when misplaced (e.g. above the divider).
  */
 function ensureFormattingScriptsUnderFormattingHeader(scripts: Record<string, string>): {
   next: Record<string, string>;
@@ -295,7 +295,7 @@ function ensureFormattingScriptsUnderFormattingHeader(scripts: Record<string, st
     return { next: scripts, changed: false };
   }
 
-  const formatKeys = (['format.check', 'format.fix'] as const).filter((k) => k in scripts);
+  const formatKeys = (['format:check', 'format:fix'] as const).filter((k) => k in scripts);
   if (formatKeys.length === 0) {
     return { next: scripts, changed: false };
   }
@@ -305,7 +305,7 @@ function ensureFormattingScriptsUnderFormattingHeader(scripts: Record<string, st
     return { next: scripts, changed: false };
   }
 
-  const baseKeys = keys.filter((k) => k !== 'format.check' && k !== 'format.fix');
+  const baseKeys = keys.filter((k) => k !== 'format:check' && k !== 'format:fix');
   const titlePos = baseKeys.indexOf(FORMATTING_SECTION_TITLE);
   if (titlePos === -1) {
     return { next: scripts, changed: false };
@@ -396,10 +396,10 @@ async function addFormatToReleaseCheck(packageJsonPath: string): Promise<boolean
   const packageJson = JSON.parse(raw) as PackageJson;
 
   const scripts = packageJson.scripts ?? {};
-  const releaseCheck = scripts['release.check'];
-  if (!releaseCheck || releaseCheck.includes('format.check')) return false;
+  const releaseCheck = scripts['release:check'];
+  if (!releaseCheck || releaseCheck.includes('format:check')) return false;
 
-  scripts['release.check'] = `pnpm format.check && ${releaseCheck}`;
+  scripts['release:check'] = `pnpm format:check && ${releaseCheck}`;
   packageJson.scripts = scripts;
 
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
@@ -461,8 +461,8 @@ async function addFormatCheckToCI(targetDir: string): Promise<boolean> {
   const content = await readFile(ciPath, 'utf8');
   if (
     content.includes('oxfmt --check') ||
-    content.includes('pnpm format.check') ||
-    content.includes('format.check')
+    content.includes('pnpm format:check') ||
+    content.includes('format:check')
   )
     return false;
 
@@ -574,7 +574,7 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
 
   const addedFormatToRelease = await addFormatToReleaseCheck(packageJsonPath);
   if (addedFormatToRelease) {
-    successMessage('Added format.check to release.check script');
+    successMessage('Added format:check to release:check script');
   }
 
   const addedToLintStaged = await addOxfmtToLintStaged(packageJsonPath);
@@ -586,7 +586,7 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
   const workflowScrub = await scrubDprintFromGithubWorkflows(context.targetDir);
   if (workflowScrub.applied.length > 0) {
     applied.push(...workflowScrub.applied);
-    successUpdatedMessage('Updated GitHub workflows (dprint → pnpm format.check)');
+    successUpdatedMessage('Updated GitHub workflows (dprint → pnpm format:check)');
   }
 
   const addedToCI = await addFormatCheckToCI(context.targetDir);

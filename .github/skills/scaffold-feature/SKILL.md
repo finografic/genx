@@ -7,7 +7,7 @@ tools: [file-create, file-edit, terminal]
 
 # Scaffold a New Feature Module
 
-This skill creates a complete feature module for `@finografic/genx` following the established feature pattern. It can be run via `pnpm new.feature` (interactive) or executed manually by an agent.
+This skill creates a complete feature module for `@finografic/genx` following the established feature pattern. It can be run via `pnpm dev:feature` (interactive) or executed manually by an agent.
 
 Before proceeding, read the feature patterns instruction file at `.github/instructions/project/feature-patterns.instructions.md` — it defines the conventions this skill implements.
 
@@ -29,7 +29,7 @@ Check `src/features/feature.types.ts` to confirm the ID is not taken.
 ## Step 2 — Run the Scaffolding Script (preferred)
 
 ```bash
-pnpm new.feature
+pnpm dev:feature
 ```
 
 This creates all skeleton files and wires the registry. After it completes, skip to **Step 6**.

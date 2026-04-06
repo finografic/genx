@@ -24,7 +24,7 @@ export const PACKAGE_TYPES: PackageType[] = [
     entryPoints: ['src/cli.ts'],
     keywords: ['cli'],
     scripts: {
-      'dev.cli': 'NODE_ENV=development tsx src/cli.ts --',
+      'dev:cli': 'NODE_ENV=development tsx src/cli.ts --',
     },
     defaultFeatures: ['vitest'],
     eslint: { globals: ['node'] },

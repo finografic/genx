@@ -62,7 +62,7 @@ function stripDprintFromScripts(scripts: Record<string, string>): boolean {
   let modified = false;
   for (const key of [...Object.keys(scripts)]) {
     const value = scripts[key];
-    if (key === 'update.dprint-config' || (typeof value === 'string' && value.includes('dprint'))) {
+    if (key === 'update:dprint-config' || (typeof value === 'string' && value.includes('dprint'))) {
       delete scripts[key];
       modified = true;
     }

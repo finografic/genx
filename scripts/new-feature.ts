@@ -3,7 +3,7 @@
 /**
  * Scaffold a new feature module for @finografic/genx.
  *
- * Usage: pnpm new.feature
+ * Usage: pnpm dev:feature
  *
  * Creates the feature folder, skeleton files, and wires the registry + FeatureId type.
  */

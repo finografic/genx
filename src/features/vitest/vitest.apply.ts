@@ -28,7 +28,7 @@ import {
  * Check if testing scripts section already exists in package.json.
  */
 function hasTestingScripts(scripts: Record<string, string>): boolean {
-  return 'test' in scripts || 'test.run' in scripts || 'test.coverage' in scripts;
+  return 'test' in scripts || 'test:run' in scripts || 'test:coverage' in scripts;
 }
 
 /**
