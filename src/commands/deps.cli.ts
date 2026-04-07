@@ -22,6 +22,18 @@ import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import type { ManagedTarget } from 'types/managed.types';
 
+interface OperationColorMap {
+  add: typeof pc.green;
+  upgrade: typeof pc.cyan;
+  downgrade: typeof pc.yellow;
+}
+
+const OPERATION_COLOR: OperationColorMap = {
+  add: pc.green,
+  upgrade: pc.cyan,
+  downgrade: pc.yellow,
+};
+
 function dependencyChangeLabelInner(operation: DependencyChange['operation']): string {
   if (operation === 'add') return 'add';
   if (operation === 'downgrade') return 'downgrade';
@@ -31,10 +43,11 @@ function dependencyChangeLabelInner(operation: DependencyChange['operation']): s
 function formatDryRunDependencyLine(change: DependencyChange, labelColumnWidth: number): string {
   const inner = dependencyChangeLabelInner(change.operation);
   const plainLabel = `[${inner}]`;
+
   const pad = ' '.repeat(Math.max(0, labelColumnWidth - plainLabel.length));
-  const labelColor =
-    change.operation === 'downgrade' ? pc.yellow : change.operation === 'upgrade' ? pc.cyan : pc.green;
-  const labelPart = `${pad}${labelColor(plainLabel)}`;
+
+  const color = OPERATION_COLOR[change.operation];
+  const labelPart = `${pad}${color(plainLabel)}`;
   const afterLabel = '  ';
 
   if (change.operation === 'add') {
