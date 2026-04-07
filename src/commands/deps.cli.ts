@@ -22,40 +22,32 @@ import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import type { ManagedTarget } from 'types/managed.types';
 
-interface OperationColorMap {
-  add: typeof pc.green;
-  upgrade: typeof pc.cyan;
-  downgrade: typeof pc.yellow;
-}
-
-const OPERATION_COLOR: OperationColorMap = {
+const OPERATION_COLOR = {
   add: pc.green,
   upgrade: pc.cyan,
   downgrade: pc.yellow,
-};
+} satisfies Record<DependencyChange['operation'], (s: string) => string>;
 
-function dependencyChangeLabelInner(operation: DependencyChange['operation']): string {
-  if (operation === 'add') return 'add';
-  if (operation === 'downgrade') return 'downgrade';
-  return 'upgrade';
+const formatVersionChange = (c: DependencyChange) => `${c.name} ${pc.gray(c.from!)} → ${c.to}`;
+
+const FORMATTERS = {
+  add: (c: DependencyChange) => `${c.name} ${c.to}`,
+  upgrade: formatVersionChange,
+  downgrade: formatVersionChange,
+} satisfies Record<DependencyChange['operation'], (c: DependencyChange) => string>;
+
+function padLeft(value: string, width: number): string {
+  return ' '.repeat(Math.max(0, width - value.length)) + value;
 }
 
-function formatDryRunDependencyLine(change: DependencyChange, labelColumnWidth: number): string {
-  const inner = dependencyChangeLabelInner(change.operation);
-  const plainLabel = `[${inner}]`;
+function renderDependencyChangeLine(change: DependencyChange, labelColumnWidth: number): string {
+  const label = `[${change.operation}]`;
 
-  const pad = ' '.repeat(Math.max(0, labelColumnWidth - plainLabel.length));
-
-  const color = OPERATION_COLOR[change.operation];
-  const labelPart = `${pad}${color(plainLabel)}`;
-  const afterLabel = '  ';
-
-  if (change.operation === 'add') {
-    return `${labelPart}${afterLabel}${pc.white(`${change.name} ${change.to}`)}`;
-  }
-
-  const detail = `${pc.white(change.name)} ${pc.gray(change.from!)} ${pc.white('→')} ${pc.white(change.to)}`;
-  return `${labelPart}${afterLabel}${detail}`;
+  return (
+    OPERATION_COLOR[change.operation](padLeft(label, labelColumnWidth)) +
+    '  ' +
+    pc.white(FORMATTERS[change.operation](change))
+  );
 }
 
 export async function syncDeps(argv: string[], context: { cwd: string }): Promise<void> {
@@ -81,7 +73,6 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   if (managed && pathArg) {
     errorMessage('Cannot combine [path] with --managed');
     process.exit(1);
-    return;
   }
 
   if (managed) {
@@ -114,7 +105,6 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
 
         if (action === null) {
           process.exit(0);
-          return;
         }
 
         if (action === 'skip') {
@@ -146,7 +136,6 @@ async function syncDepsForTarget(
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
     process.exit(1);
-    return;
   }
 
   const packageJsonPath = resolve(targetDir, 'package.json');
@@ -161,13 +150,10 @@ async function syncDepsForTarget(
     if (changes.length === 0) {
       infoMessage('All dependencies already aligned with policy.');
     } else {
-      const maxLabelLen = Math.max(
-        ...changes.map((c) => `[${dependencyChangeLabelInner(c.operation)}]`.length),
-      );
-      // Width of the label column (right-align `[…]`); equals longest label so `|  [downgrade]` keeps exactly clack’s two spaces after the pipe.
+      const maxLabelLen = Math.max(...changes.map((c) => `[${c.operation}]`.length));
       const labelColumnWidth = maxLabelLen;
       for (const change of changes) {
-        logMessage(formatDryRunDependencyLine(change, labelColumnWidth));
+        logMessage(renderDependencyChangeLine(change, labelColumnWidth));
       }
     }
     infoMessage(
