@@ -68,7 +68,7 @@ a separate (internal) use of the same library for a completely different purpose
 
 ## 3. Diff-as-detection
 
-- [ ] status: pending
+- [x] status: **DONE**
 
 **Goal:** Replace hand-written `detect()` signal checks with a generate-and-diff approach:
 run the feature's `apply()` logic against a copy of the current state, diff the result against
@@ -112,8 +112,10 @@ become unnecessary if this lands (they solve the same class of problem different
 a few boolean checks. Acceptable for a developer CLI tool with a handful of features. If the
 feature count grows large, results can be cached per-file per-run.
 
-**Status:** Not started. Architectural — needs a dry-run / side-effect-free `apply()` contract
-before implementation. Plan carefully; touches every feature.
+**Status:** Done. Implemented via grouped preview utilities in `src/lib/feature-preview/`
+plus feature-local `*.preview.ts` modules. `detect()` now uses preview emptiness as the truth
+boundary, and `apply()` reuses the same preview result (including per-file confirmation and
+post-write install gating where needed).
 
 ---
 
