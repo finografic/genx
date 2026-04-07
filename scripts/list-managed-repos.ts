@@ -17,8 +17,7 @@ import type { ManagedConfig } from '../src/types/managed.types';
 const SCOPE_PREFIX = '@finografic/';
 
 async function main(): Promise<void> {
-  // const root = process.cwd();
-  const root = resolve(process.cwd(), '..');
+  const root = process.cwd();
   const entries = await readdir(root, { withFileTypes: true });
 
   const managed: ManagedConfig['managed'] = [];
