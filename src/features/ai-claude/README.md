@@ -8,7 +8,7 @@ Claude Code support: CLAUDE.md, session memory, handoff document, and settings.
 - Creates `.claude/memory.md` — session breadcrumb log (gitignored)
 - Creates `.claude/handoff.md` — project snapshot for bridging Claude Code ↔ Claude.ai (gitignored)
 - Creates `.claude/settings.json` — Claude Code permissions (checked in)
-- Creates `.claude/assets/` — working area for files shared with Claude sessions (gitignored)
+- Creates `.claude/assets/.gitkeep` — keeps the shared Claude assets area scaffolded even when empty
 - Adds `.claude/` to `.gitignore`, re-admitting `settings.json`
 - Auto-installs `ai-instructions` if `.github/instructions/` is missing
 

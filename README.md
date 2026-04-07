@@ -153,7 +153,6 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 - Creates `.github/copilot-instructions.md` — summary index for GitHub Copilot
 - Creates `.github/instructions/` — canonical rule files shared across all AI tools
 - Creates `.github/instructions/project/` — empty folder for project-specific rules
-- Creates `.cursor/rules/` — Cursor rules index referencing the shared instructions
 
 ### markdown
 
