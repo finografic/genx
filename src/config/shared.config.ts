@@ -38,21 +38,21 @@ export const sharedConfig: SharedConfig = {
    * These match what's in _templates/package.json.
    */
   packageJsonScripts: {
-    test: 'vitest',
+    'test': 'vitest',
     'test:run': 'vitest run',
     'test:coverage': 'vitest run --coverage',
-    lint: 'eslint .',
+    'lint': 'eslint .',
     'lint:fix': 'eslint . --fix',
-    typecheck: 'tsc --project tsconfig.json --noEmit',
+    'typecheck': 'tsc --project tsconfig.json --noEmit',
     'tsc:debug': 'tsc --pretty --project tsconfig.json',
     'release:check': 'pnpm lint:fix && pnpm typecheck && pnpm test:run',
     'release:github:patch': 'pnpm run release:check && pnpm version patch && git push --follow-tags',
     'release:github:minor': 'pnpm run release:check && pnpm version minor && git push --follow-tags',
     'release:github:major': 'pnpm run release:check && pnpm version major && git push --follow-tags',
-    link: 'pnpm build && pnpm link --global',
-    unlink: 'pnpm unlink --global',
-    prepack: 'pnpm build',
-    prepare: 'husky',
+    'link': 'pnpm build && pnpm link --global',
+    'unlink': 'pnpm unlink --global',
+    'prepack': 'pnpm build',
+    'prepare': 'husky',
   },
 
   /**

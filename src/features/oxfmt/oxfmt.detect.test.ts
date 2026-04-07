@@ -36,7 +36,7 @@ describe('detectOxfmt', () => {
     const base: PackageJson = {
       name: '@finografic/detect-pkg',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -59,7 +59,7 @@ describe('detectOxfmt', () => {
     const base: PackageJson = {
       name: '@finografic/clean-pkg',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),

@@ -60,7 +60,7 @@ describe('preview migration — drift vs canonical', () => {
       name: 'x',
       version: '1.0.0',
       devDependencies: { [VITEST_PACKAGE]: '1.0.0' },
-      scripts: { test: 'vitest', 'test:run': 'vitest run', 'test:coverage': 'vitest run --coverage' },
+      scripts: { 'test': 'vitest', 'test:run': 'vitest run', 'test:coverage': 'vitest run --coverage' },
     };
     await writeFile(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
     const templateCfg = join(repoRoot, '_templates/vitest.config.ts');

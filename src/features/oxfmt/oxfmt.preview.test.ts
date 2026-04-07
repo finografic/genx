@@ -40,7 +40,7 @@ describe('oxfmt.preview — package.json drift', () => {
       name: '@finografic/drift-pkg',
       version: '0.0.0',
       devDependencies: {
-        oxfmt: '0.0.0',
+        'oxfmt': '0.0.0',
         '@finografic/oxfmt-config': '0.0.0',
       },
       scripts: {
@@ -66,7 +66,7 @@ describe('oxfmt.preview — package.json drift', () => {
     const base: PackageJson = {
       name: '@finografic/ok-pkg',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     const canonical = computeCanonicalOxfmtPackageJson(base);
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(canonical), 'utf8');
@@ -85,7 +85,7 @@ describe('oxfmt.preview — non-package.json drift', () => {
     const base: PackageJson = {
       name: '@finografic/wf-pkg',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -114,7 +114,7 @@ describe('oxfmt.preview — Prettier config backup', () => {
     const base: PackageJson = {
       name: '@finografic/prettier-backup',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -140,7 +140,7 @@ describe('oxfmt.preview — Prettier config backup', () => {
     const base: PackageJson = {
       name: '@finografic/prettier-coll',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -168,7 +168,7 @@ describe('oxfmt.preview — converge + detection alignment', () => {
     const base: PackageJson = {
       name: '@finografic/conv-pkg',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -190,7 +190,7 @@ describe('oxfmt.preview — needsInstall', () => {
     const base: PackageJson = {
       name: '@finografic/needsinst-a',
       version: '0.0.0',
-      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     const canonical = computeCanonicalOxfmtPackageJson(base);
     const scripts = { ...(canonical.scripts ?? {}) };

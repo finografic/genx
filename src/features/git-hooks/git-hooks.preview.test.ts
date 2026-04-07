@@ -35,13 +35,13 @@ describe('git-hooks preview-driven detect', () => {
   it('matches isGitHooksFullyConfigured and detectGitHooks after applying canonical husky package.json + hook files', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-gh-'));
     const pkg = {
-      name: 'x',
-      version: '1.0.0',
-      scripts: { prepare: 'husky' },
-      devDependencies: {
+      'name': 'x',
+      'version': '1.0.0',
+      'scripts': { prepare: 'husky' },
+      'devDependencies': {
         '@commitlint/cli': 'latest',
         '@commitlint/config-conventional': 'latest',
-        husky: 'latest',
+        'husky': 'latest',
         'lint-staged': 'latest',
       },
       'lint-staged': { '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'] },
@@ -67,13 +67,13 @@ describe('git-hooks preview-driven detect', () => {
   it('treats legacy simple-git-hooks allowBuilds in pnpm-workspace.yaml as drift', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-gh-'));
     const pkg = {
-      name: 'x',
-      version: '1.0.0',
-      scripts: { prepare: 'husky' },
-      devDependencies: {
+      'name': 'x',
+      'version': '1.0.0',
+      'scripts': { prepare: 'husky' },
+      'devDependencies': {
         '@commitlint/cli': 'latest',
         '@commitlint/config-conventional': 'latest',
-        husky: 'latest',
+        'husky': 'latest',
         'lint-staged': 'latest',
       },
       'lint-staged': { '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'] },
