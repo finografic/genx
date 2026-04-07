@@ -162,7 +162,9 @@ async function syncDepsForTarget(
         logMessage(renderDependencyChangeLine(change, labelColumnWidth));
       }
     }
-    infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n`);
+    infoMessage(
+      `${pc.white(pc.dim('Re-run with'))} ${pc.yellow('--write')} ${pc.white(pc.dim('to apply changes.'))}\n`,
+    );
     return;
   }
 
