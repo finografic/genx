@@ -83,6 +83,9 @@ describe('feature-preview — hasPreviewChanges', () => {
   });
 });
 
+/** Matches `DELETE_CONFIRM_SENTINEL` in feature-preview.utils — empty-file delete must not use '' vs ''. */
+const DELETE_CONFIRM_SENTINEL = '\u200b';
+
 describe('feature-preview — applyPreviewChanges', () => {
   it('returns noop when no changed entries exist', async () => {
     const result = await applyPreviewChanges({
@@ -121,6 +124,22 @@ describe('feature-preview — applyPreviewChanges', () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it('uses summary in applied when provided for writes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'out.txt');
+    confirmFileWriteMock.mockResolvedValue('write');
+
+    const result = await applyPreviewChanges({
+      changes: [createWritePreviewChange(filePath, '', 'hello', 'add out.txt')],
+      applied: [],
+    });
+
+    expect(result.applied).toEqual(['add out.txt']);
+    expect(await readFile(filePath, 'utf8')).toBe('hello');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
   it('skips a file without mutating disk when confirmation returns skip', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'keep.txt');
@@ -150,6 +169,46 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result.applied).toEqual([filePath]);
+    await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('confirms and deletes an existing empty file (sentinel vs empty content)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'empty.txt');
+    await writeFile(filePath, '', 'utf8');
+    confirmFileWriteMock.mockResolvedValue('write');
+
+    const result = await applyPreviewChanges({
+      changes: [createDeletePreviewChange(filePath, '', true, 'remove empty config')],
+      applied: [],
+    });
+
+    expect(confirmFileWriteMock).toHaveBeenCalledWith(
+      filePath,
+      '',
+      DELETE_CONFIRM_SENTINEL,
+      expect.any(Object),
+    );
+    expect(result.applied).toEqual(['remove empty config']);
+    await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('uses summary in applied when provided for deletes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'prettier.config.js');
+    await writeFile(filePath, 'module.exports = {}', 'utf8');
+    confirmFileWriteMock.mockResolvedValue('write');
+
+    const result = await applyPreviewChanges({
+      changes: [createDeletePreviewChange(filePath, 'module.exports = {}', true, 'remove prettier config')],
+      applied: [],
+    });
+
+    expect(result.applied).toEqual(['remove prettier config']);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { FeatureApplyResult } from '../../features/feature.types.js';
 import type {
@@ -10,20 +10,33 @@ import type {
 
 import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/file-diff.utils.js';
 
+/**
+ * Passed to `confirmFileWrite` as the proposed side for empty-file deletes only.
+ * `confirmFileWrite` skips when current === proposed; empty vs empty would wrongly skip, so we use a
+ * non-empty sentinel (never written — delete still unlinks). Not used when the file has content.
+ */
+const DELETE_CONFIRM_SENTINEL = '\u200b';
+
 export function createWritePreviewChange(
   path: string,
   currentContent: string,
   proposedContent: string,
+  summary?: string,
 ): FeaturePreviewChangeWrite {
-  return { kind: 'write', path, currentContent, proposedContent };
+  return { kind: 'write', path, currentContent, proposedContent, summary };
 }
 
 export function createDeletePreviewChange(
   path: string,
   currentContent: string,
   exists: boolean,
+  summary?: string,
 ): FeaturePreviewChangeDelete {
-  return { kind: 'delete', path, currentContent, exists };
+  return { kind: 'delete', path, currentContent, exists, summary };
+}
+
+function appliedLabelForChange(change: FeaturePreviewChange): string {
+  return change.summary ?? change.path;
 }
 
 export function isPreviewChangeChanged(change: FeaturePreviewChange): boolean {
@@ -46,6 +59,15 @@ export function hasPreviewChanges(
     ? changesOrPreview
     : (changesOrPreview as FeaturePreviewResult).changes;
   return getChangedPreviewChanges(list).length > 0;
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function readUtf8(path: string): Promise<string> {
@@ -87,10 +109,14 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
       if (action === 'skip') continue;
       await mkdir(dirname(change.path), { recursive: true });
       await writeFile(change.path, change.proposedContent, 'utf8');
-      applied.push(change.path);
+      applied.push(appliedLabelForChange(change));
     } else {
+      if (!(await pathExists(change.path))) {
+        continue;
+      }
       const currentOnDisk = await readUtf8(change.path);
-      const action = await confirmFileWrite(change.path, currentOnDisk, '', state);
+      const proposedForConfirm = currentOnDisk === '' ? DELETE_CONFIRM_SENTINEL : '';
+      const action = await confirmFileWrite(change.path, currentOnDisk, proposedForConfirm, state);
       if (action === 'skip') continue;
       try {
         await unlink(change.path);
@@ -106,7 +132,7 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
           throw error;
         }
       }
-      applied.push(change.path);
+      applied.push(appliedLabelForChange(change));
     }
   }
 

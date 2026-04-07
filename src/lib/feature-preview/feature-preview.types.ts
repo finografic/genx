@@ -8,6 +8,8 @@ export interface FeaturePreviewChangeWrite {
   path: string;
   currentContent: string;
   proposedContent: string;
+  /** User-facing label for feedback (e.g. `remove prettier config`); falls back to `path` when applying. */
+  summary?: string;
 }
 
 /**
@@ -19,6 +21,8 @@ export interface FeaturePreviewChangeDelete {
   path: string;
   currentContent: string;
   exists: boolean;
+  /** User-facing label for feedback; falls back to `path` when applying. */
+  summary?: string;
 }
 
 export type FeaturePreviewChange = FeaturePreviewChangeWrite | FeaturePreviewChangeDelete;
