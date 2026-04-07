@@ -163,7 +163,7 @@ async function syncDepsForTarget(
       }
     }
     infoMessage(
-      `${pc.white(pc.dim('Re-run with'))} ${pc.yellow('--write')} ${pc.white(pc.dim('to apply changes.'))}\n`,
+      `${pc.white(pc.dim('Re-run with'))} ${pc.yellow('--write')} ${pc.white(pc.dim('to apply changes.'))}`,
     );
     return;
   }
