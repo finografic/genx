@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { policy } from '@finografic/deps-policy';
 import * as clack from '@clack/prompts';
+import { confirmFileWrite, createDiffConfirmState } from 'core/file-diff';
 import { createFlowContext } from 'core/flow';
 import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
@@ -170,6 +171,7 @@ async function migrateSingleTarget(params: {
   selectedFeatureIds: FeatureId[];
 }): Promise<void> {
   const { targetDir, write, only, debug, selectedFeatureIds } = params;
+  const diffState = createDiffConfirmState();
 
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
@@ -290,8 +292,13 @@ async function migrateSingleTarget(params: {
     const { packageJson: nextPackageJson, changes } = patchPackageJson(packageJson, parsed.name);
     if (changes.length > 0) {
       updatedPackageJson = nextPackageJson;
-      await writePackageJson(packageJsonPath, updatedPackageJson);
-      successUpdatedMessage(`Updated package.json (${changes.length} changes)`);
+      const currentContent = await readFile(packageJsonPath, 'utf8');
+      const proposedContent = `${JSON.stringify(updatedPackageJson, null, 2)}\n`;
+      const action = await confirmFileWrite(packageJsonPath, currentContent, proposedContent, diffState);
+      if (action !== 'skip') {
+        await writePackageJson(packageJsonPath, updatedPackageJson);
+        successUpdatedMessage(`Updated package.json (${changes.length} changes)`);
+      }
     } else {
       infoMessage('package.json already aligned');
     }
@@ -305,8 +312,13 @@ async function migrateSingleTarget(params: {
     }
     if (nodeTypesChange) {
       updatedPackageJson = applyNodeTypesChange(updatedPackageJson, nodeTypesChange);
-      await writePackageJson(packageJsonPath, updatedPackageJson);
-      successUpdatedMessage('Updated @types/node');
+      const currentContent = await readFile(packageJsonPath, 'utf8');
+      const proposedContent = `${JSON.stringify(updatedPackageJson, null, 2)}\n`;
+      const action = await confirmFileWrite(packageJsonPath, currentContent, proposedContent, diffState);
+      if (action !== 'skip') {
+        await writePackageJson(packageJsonPath, updatedPackageJson);
+        successUpdatedMessage('Updated @types/node');
+      }
     }
   }
 
@@ -316,9 +328,14 @@ async function migrateSingleTarget(params: {
     const depChanges = planDependencyChanges(updatedPackageJson, dependencyRules);
     if (depChanges.length > 0) {
       updatedPackageJson = applyDependencyChanges(updatedPackageJson, depChanges);
-      await writePackageJson(packageJsonPath, updatedPackageJson);
-      successMessage(`Updated ${depChanges.length} dependencies`);
-      hasDependencyChanges = true;
+      const currentContent = await readFile(packageJsonPath, 'utf8');
+      const proposedContent = `${JSON.stringify(updatedPackageJson, null, 2)}\n`;
+      const action = await confirmFileWrite(packageJsonPath, currentContent, proposedContent, diffState);
+      if (action !== 'skip') {
+        await writePackageJson(packageJsonPath, updatedPackageJson);
+        successMessage(`Updated ${depChanges.length} dependencies`);
+        hasDependencyChanges = true;
+      }
     }
   }
 

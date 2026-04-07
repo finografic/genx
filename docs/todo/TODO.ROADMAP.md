@@ -38,7 +38,7 @@ Each primitive (`hasDependency`, `hasScript`, `hasFile`, `hasConfigBlock`) retur
 
 ## 2. jsdiff — per-file diff display
 
-- [ ] status: pending
+- [x] status: **DONE**
 
 **Goal:** Before writing any file, show a per-file unified diff and ask the user to confirm
 (yes / no / yes-to-all). Applies to `migrate`, `deps`, and future write operations.

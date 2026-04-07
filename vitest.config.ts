@@ -8,6 +8,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const tsconfigPathsAlias = {
   config: path.join(root, 'src/config'),
   commands: path.join(root, 'src/commands'),
+  core: path.join(root, 'src/core'),
   features: path.join(root, 'src/features'),
   help: path.join(root, 'src/help'),
   lib: path.join(root, 'src/lib'),

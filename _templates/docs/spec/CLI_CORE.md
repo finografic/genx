@@ -331,6 +331,47 @@ function printHelp(): void {
 
 ---
 
+### `core/file-diff/`
+
+**Purpose:** Per-file unified diff display and confirmation prompt. Before any write operation, shows a coloured unified diff (`+` green, `-` red, `@@` cyan, `---`/`+++` bold) and asks the user to confirm: yes / skip / yes-to-all. Tracks yes-to-all state across multiple files in a single run.
+
+**Exports:**
+
+| Export                                                  | Kind      | Description                                                     |
+| ------------------------------------------------------- | --------- | --------------------------------------------------------------- |
+| `createDiffConfirmState()`                              | function  | Create a fresh `DiffConfirmState` for a command run             |
+| `renderFileDiff(filePath, current, proposed)`           | function  | Render a coloured unified diff to stdout (no prompt)            |
+| `confirmFileWrite(filePath, current, proposed, state?)` | function  | Show diff + prompt; returns `DiffAction`                        |
+| `DiffAction`                                            | type      | `'write' \| 'skip' \| 'write-all'`                              |
+| `DiffConfirmState`                                      | interface | `{ yesAll: boolean }` — mutable; pass the same instance per run |
+
+**Usage pattern:**
+
+```ts
+import { confirmFileWrite, createDiffConfirmState } from 'core/file-diff';
+
+const diffState = createDiffConfirmState();
+
+// For each file that would be written:
+const currentContent = await readFile(filePath, 'utf8');
+const proposedContent = formatContent(data);
+const action = await confirmFileWrite(filePath, currentContent, proposedContent, diffState);
+if (action !== 'skip') {
+  await writeFile(filePath, proposedContent, 'utf8');
+}
+```
+
+**Behaviour:**
+
+- Returns `'skip'` immediately (no prompt) when `currentContent === proposedContent`.
+- Renders the diff and returns `'write'` immediately (no prompt) when `state.yesAll` is true.
+- When the user picks `'write-all'`, sets `state.yesAll = true` for subsequent calls.
+- Treats a cancelled prompt (Ctrl-C) as `'skip'`.
+
+**Dependencies:** `diff` (jsdiff), `@clack/prompts`, `picocolors`
+
+---
+
 ## Adding a New `core/` Module
 
 Before adding a module to `core/`, verify it meets all of the following:
