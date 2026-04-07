@@ -5,12 +5,13 @@
 IMPORTANT: Before writing code for any of the patterns below, invoke the paired skill.
 Skills encode the exact conventions and wiring steps for this repo — skipping them causes pattern drift.
 
-| Task                                   | Skill to invoke                                                       |
-| -------------------------------------- | --------------------------------------------------------------------- |
-| Add or update CLI help / add a command | [scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)       |
-| Add a new genx feature module          | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)         |
-| Add a new `src/core/` module           | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md) |
-| Prune Learned sections in AGENTS.md    | [maintain-agents](/.github/skills/maintain-agents/SKILL.md)           |
+| Task                                   | Skill to invoke                                                               |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| Add or update CLI help / add a command | [scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)               |
+| Add a new genx feature module          | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)                 |
+| Convert a feature to preview diffs     | [scaffold-feature-preview](/.github/skills/scaffold-feature-preview/SKILL.md) |
+| Add a new `src/core/` module           | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md)         |
+| Prune Learned sections in AGENTS.md    | [maintain-agents](/.github/skills/maintain-agents/SKILL.md)                   |
 
 ---
 
