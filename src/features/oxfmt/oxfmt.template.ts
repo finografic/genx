@@ -4,7 +4,7 @@ import { fileExists } from 'utils';
 
 const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
 
-const OXFMT_CONFIG_BODY = `import {
+export const OXFMT_CONFIG_BODY = `import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
   base,
@@ -41,6 +41,11 @@ export default defineConfig({
 } satisfies ReturnType<typeof defineConfig>);
 `;
 
+/** File contents written by {@link ensureOxfmtConfig} — used by preview/detection. */
+export function getOxfmtConfigCanonicalFileContent(): string {
+  return `${OXFMT_CONFIG_BODY}\n`;
+}
+
 export interface EnsureOxfmtConfigOptions {
   force?: boolean;
 }
@@ -59,6 +64,6 @@ export async function ensureOxfmtConfig(
     return { wrote: false, path };
   }
 
-  await writeFile(path, `${OXFMT_CONFIG_BODY}\n`, 'utf8');
+  await writeFile(path, getOxfmtConfigCanonicalFileContent(), 'utf8');
   return { wrote: true, path };
 }
