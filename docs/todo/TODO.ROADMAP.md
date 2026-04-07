@@ -177,7 +177,7 @@ or two packages; tedious at ecosystem scale.
 
 ## 7. Structured markdown section management
 
-- [ ] status: pending
+- [x] status: **DONE**
 
 **Goal:** A generic utility for reading, diffing, reordering, adding, updating, and deleting
 named sections in structured markdown files (AGENTS.md, CLAUDE.md, and similar).
