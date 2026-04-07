@@ -13,6 +13,7 @@ import {
   getChangedPreviewChanges,
   hasPreviewChanges,
   isPreviewChangeChanged,
+  resolveFirstAvailableRenameBackupPath,
 } from './feature-preview.utils.js';
 
 vi.mock('../../core/file-diff/file-diff.utils.js', () => ({
@@ -36,6 +37,48 @@ beforeEach(() => {
   vi.clearAllMocks();
   createDiffConfirmStateMock.mockReturnValue({ yesAll: false });
   isCancelMock().mockReturnValue(false);
+});
+
+describe('feature-preview — resolveFirstAvailableRenameBackupPath', () => {
+  it('returns the preferred path when it does not exist', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-ub-'));
+    const from = join(root, 'prettier.config.js');
+    const preferred = join(root, 'prettier.config--backup.js');
+    await writeFile(from, 'x', 'utf8');
+
+    await expect(resolveFirstAvailableRenameBackupPath(from, preferred)).resolves.toBe(preferred);
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('returns --backup-2 when the default --backup path is already occupied', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-ub-'));
+    const from = join(root, 'prettier.config.js');
+    const preferred = join(root, 'prettier.config--backup.js');
+    await writeFile(from, 'x', 'utf8');
+    await writeFile(preferred, 'old backup', 'utf8');
+
+    await expect(resolveFirstAvailableRenameBackupPath(from, preferred)).resolves.toBe(
+      join(root, 'prettier.config--backup-2.js'),
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('skips occupied --backup-2 and returns --backup-3 when needed', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-ub-'));
+    const from = join(root, '.prettierrc');
+    const preferred = join(root, '.prettierrc--backup');
+    await writeFile(from, '{}', 'utf8');
+    await writeFile(preferred, 'a', 'utf8');
+    await writeFile(join(root, '.prettierrc--backup-2'), 'b', 'utf8');
+
+    await expect(resolveFirstAvailableRenameBackupPath(from, preferred)).resolves.toBe(
+      join(root, '.prettierrc--backup-3'),
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
 });
 
 describe('feature-preview — isPreviewChangeChanged', () => {

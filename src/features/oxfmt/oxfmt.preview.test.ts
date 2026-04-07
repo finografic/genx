@@ -134,6 +134,32 @@ describe('oxfmt.preview — Prettier config backup', () => {
       expect(prettierChange.backupPath).toBe(resolve(dir, '.prettierrc--backup'));
     }
   });
+
+  it('uses the next free backup name when `.prettierrc--backup` already exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-prettier-coll-'));
+    const base: PackageJson = {
+      name: '@finografic/prettier-coll',
+      version: '0.0.0',
+      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await writeFile(resolve(dir, '.prettierrc'), '{}\n', 'utf8');
+    await writeFile(resolve(dir, '.prettierrc--backup'), '{}\n', 'utf8');
+
+    const preview = await previewOxfmt({ targetDir: dir });
+    const prettierChange = getChangedPreviewChanges(preview.changes).find(
+      (c) => c.kind === 'renameBackup' && c.path.endsWith('.prettierrc'),
+    );
+    expect(prettierChange?.kind).toBe('renameBackup');
+    if (prettierChange?.kind === 'renameBackup') {
+      expect(prettierChange.backupPath).toBe(resolve(dir, '.prettierrc--backup-2'));
+    }
+  });
 });
 
 describe('oxfmt.preview — converge + detection alignment', () => {

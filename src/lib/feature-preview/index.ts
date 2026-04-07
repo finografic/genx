@@ -6,6 +6,7 @@ export {
   getChangedPreviewChanges,
   hasPreviewChanges,
   isPreviewChangeChanged,
+  resolveFirstAvailableRenameBackupPath,
 } from './feature-preview.utils.js';
 export type {
   FeatureApplyResult,

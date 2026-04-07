@@ -1,5 +1,5 @@
 import { access, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { basename, dirname, extname, resolve as resolvePath } from 'node:path';
 import * as clack from '@clack/prompts';
 import pc from 'picocolors';
 import type { DiffAction, DiffConfirmState } from '../../core/file-diff/file-diff.types.js';
@@ -141,6 +141,31 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
+/**
+ * Picks the first non-existing backup path: `preferredBackupPath`, else `basename(sourcePath)` with
+ * `--backup-2`, `--backup-3`, … suffix before the extension (same scheme as legacy Prettier migration).
+ * Avoids clobbering an existing `--backup` file when re-running or when a stale backup remains.
+ */
+export async function resolveFirstAvailableRenameBackupPath(
+  sourcePath: string,
+  preferredBackupPath: string,
+): Promise<string> {
+  if (!(await pathExists(preferredBackupPath))) {
+    return preferredBackupPath;
+  }
+  const dir = dirname(sourcePath);
+  const name = basename(sourcePath);
+  const ext = extname(name);
+  const base = basename(name, ext || undefined);
+  for (let i = 2; i < 100; i++) {
+    const candidate = resolvePath(dir, `${base}--backup-${i}${ext || ''}`);
+    if (!(await pathExists(candidate))) {
+      return candidate;
+    }
+  }
+  throw new Error(`Could not find a free backup path next to ${sourcePath}`);
+}
+
 async function readUtf8(path: string): Promise<string> {
   try {
     return await readFile(path, 'utf8');
@@ -187,10 +212,11 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
       if (!(await pathExists(change.path))) {
         continue;
       }
-      const action = await confirmRenameBackup(change.path, change.backupPath, state);
+      const destPath = await resolveFirstAvailableRenameBackupPath(change.path, change.backupPath);
+      const action = await confirmRenameBackup(change.path, destPath, state);
       if (action === 'skip') continue;
-      await mkdir(dirname(change.backupPath), { recursive: true });
-      await rename(change.path, change.backupPath);
+      await mkdir(dirname(destPath), { recursive: true });
+      await rename(change.path, destPath);
       applied.push(appliedLabelForChange(change));
       appliedTargetPaths.push(change.path);
     } else {

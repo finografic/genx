@@ -35,6 +35,7 @@ import {
   createDeletePreviewChange,
   createRenameBackupPreviewChange,
   createWritePreviewChange,
+  resolveFirstAvailableRenameBackupPath,
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
   DPRINT_CONFIG_FILES,
@@ -255,15 +256,17 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
     const body = await readFile(abs, 'utf8');
     const ext = extname(file);
     const base = basename(file, ext || undefined);
-    const backupName = base + '--backup' + (ext || '');
-    const backupAbs = resolve(targetDir, backupName);
+    const primaryBackupName = base + '--backup' + (ext || '');
+    const preferredBackupAbs = resolve(targetDir, primaryBackupName);
+    const backupAbs = await resolveFirstAvailableRenameBackupPath(abs, preferredBackupAbs);
+    const backupLabel = basename(backupAbs);
     changes.push(
       createRenameBackupPreviewChange(
         abs,
         backupAbs,
         body,
         true,
-        `Prettier config (${file} → ${backupName})`,
+        `Prettier config (${file} → ${backupLabel})`,
       ),
     );
   }
