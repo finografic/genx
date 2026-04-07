@@ -1,5 +1,6 @@
 import type { Feature, FeatureId } from './feature.types';
 
+import { aiAgentsFeature } from './ai-agents/ai-agents.feature';
 import { aiClaudeFeature } from './ai-claude/ai-claude.feature';
 import { aiInstructionsFeature } from './ai-instructions/ai-instructions.feature';
 import { cssFeature } from './css/css.feature';
@@ -16,6 +17,7 @@ export const features: Feature[] = [
   oxfmtFeature,
   vitestFeature,
   cssFeature,
+  aiAgentsFeature,
   aiInstructionsFeature,
   aiClaudeFeature,
   markdownFeature,

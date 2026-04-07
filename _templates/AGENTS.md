@@ -1,6 +1,6 @@
-# AGENTS.md - AI Assistant Guide
+# AGENTS.md — AI Assistant Guide
 
-## Rules - Project-Specific
+## Rules — Project-Specific
 
 Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
 
@@ -10,7 +10,7 @@ Project-specific rules live in `.github/instructions/project/**/*.instructions.m
 
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
 
-## Rules - General
+## Rules — General
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
 Follow general TypeScript, ESLint, and naming conventions from prior context.
@@ -27,12 +27,16 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - [Picocolors CLI styling](/.github/instructions/09-picocolors-cli-styling.instructions.md)
 - [Git Policy](/.github/instructions/10-git-policy.instructions.md)
 
-## Rules — Markdown Tables
+---
+
+## Rules — Markdown
+
+### Tables
 
 - Padded pipes: one space on each side of every `|`, including the separator row.
 - Align column widths so all cells in the same column are equal width.
 
-## Rules — Markdown Links
+### Links
 
 - Use markdown link syntax when referencing another document — not bare paths or backtick references.
 - Use absolute paths from the repo root (e.g. `[AGENTS.md](/AGENTS.md)`).
@@ -55,6 +59,8 @@ Before writing any link:
 
 1. Verify the target file exists.
 2. For anchor links: read the file, find the exact heading text, derive the slug — do not guess.
+
+---
 
 ## Git Policy
 

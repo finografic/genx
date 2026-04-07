@@ -5,6 +5,7 @@ export type FeatureId =
   | 'oxfmt'
   | 'vitest'
   | 'githubWorkflow'
+  | 'aiAgents'
   | 'aiClaude'
   | 'aiInstructions'
   | 'markdown'

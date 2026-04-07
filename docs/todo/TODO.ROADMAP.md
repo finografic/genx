@@ -220,7 +220,7 @@ need to be defined carefully (headings, code blocks, nested lists).
 
 ## 8. `ai-agents` feature — AGENTS.md + skills scaffold
 
-- [ ] status: pending
+- [x] status: **DONE**
 
 **Goal:** New genx feature that manages the **agent interface layer** of a project:
 `AGENTS.md` (the AI assistant guide and index) and `.github/skills/` (agent workflow procedures).
