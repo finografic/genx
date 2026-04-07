@@ -1,5 +1,8 @@
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import * as clack from '@clack/prompts';
+import pc from 'picocolors';
+import type { DiffAction, DiffConfirmState } from '../../core/file-diff/file-diff.types.js';
 import type { FeatureApplyResult } from '../../features/feature.types.js';
 import type {
   FeaturePreviewChange,
@@ -11,11 +14,33 @@ import type {
 import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/file-diff.utils.js';
 
 /**
- * Passed to `confirmFileWrite` as the proposed side for empty-file deletes only.
- * `confirmFileWrite` skips when current === proposed; empty vs empty would wrongly skip, so we use a
- * non-empty sentinel (never written — delete still unlinks). Not used when the file has content.
+ * Empty-file deletes cannot use `confirmFileWrite('', '')` (core skips as identical). Using a fake
+ * proposed string yields a misleading diff. Instead, show an explicit deletion preview and reuse the
+ * same yes / skip / yes-to-all prompt shape as `confirmFileWrite`.
  */
-const DELETE_CONFIRM_SENTINEL = '\u200b';
+async function confirmEmptyFileDelete(filePath: string, state?: DiffConfirmState): Promise<DiffAction> {
+  clack.log.message(`${pc.bold(pc.white(filePath))}\n${pc.red('- (empty file — will be deleted)')}`);
+
+  if (state?.yesAll) return 'write';
+
+  const choice = await clack.select({
+    message: `Apply changes to ${pc.cyan(filePath)}?`,
+    options: [
+      { value: 'write', label: 'Yes, write this file' },
+      { value: 'skip', label: 'No, skip this file' },
+      { value: 'write-all', label: 'Yes to all remaining files' },
+    ],
+  });
+
+  if (clack.isCancel(choice)) return 'skip';
+
+  if (choice === 'write-all' && state) {
+    state.yesAll = true;
+  }
+
+  if (choice === 'write' || choice === 'skip' || choice === 'write-all') return choice;
+  return 'skip';
+}
 
 export function createWritePreviewChange(
   path: string,
@@ -115,8 +140,10 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
         continue;
       }
       const currentOnDisk = await readUtf8(change.path);
-      const proposedForConfirm = currentOnDisk === '' ? DELETE_CONFIRM_SENTINEL : '';
-      const action = await confirmFileWrite(change.path, currentOnDisk, proposedForConfirm, state);
+      const action =
+        currentOnDisk === ''
+          ? await confirmEmptyFileDelete(change.path, state)
+          : await confirmFileWrite(change.path, currentOnDisk, '', state);
       if (action === 'skip') continue;
       try {
         await unlink(change.path);

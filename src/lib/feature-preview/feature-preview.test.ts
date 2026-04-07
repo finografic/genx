@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import * as clack from '@clack/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/file-diff.utils.js';
@@ -18,12 +19,22 @@ vi.mock('../../core/file-diff/file-diff.utils.js', () => ({
   createDiffConfirmState: vi.fn(() => ({ yesAll: false })),
 }));
 
+vi.mock('@clack/prompts', () => ({
+  log: { message: vi.fn() },
+  select: vi.fn(),
+  isCancel: vi.fn(() => false),
+}));
+
 const confirmFileWriteMock = vi.mocked(confirmFileWrite);
 const createDiffConfirmStateMock = vi.mocked(createDiffConfirmState);
+const logMessage = () => vi.mocked(clack.log.message);
+const selectMock = () => vi.mocked(clack.select);
+const isCancelMock = () => vi.mocked(clack.isCancel);
 
 beforeEach(() => {
   vi.clearAllMocks();
   createDiffConfirmStateMock.mockReturnValue({ yesAll: false });
+  isCancelMock().mockReturnValue(false);
 });
 
 describe('feature-preview — isPreviewChangeChanged', () => {
@@ -82,9 +93,6 @@ describe('feature-preview — hasPreviewChanges', () => {
     ).toBe(true);
   });
 });
-
-/** Matches `DELETE_CONFIRM_SENTINEL` in feature-preview.utils — empty-file delete must not use '' vs ''. */
-const DELETE_CONFIRM_SENTINEL = '\u200b';
 
 describe('feature-preview — applyPreviewChanges', () => {
   it('returns noop when no changed entries exist', async () => {
@@ -174,24 +182,45 @@ describe('feature-preview — applyPreviewChanges', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('confirms and deletes an existing empty file (sentinel vs empty content)', async () => {
+  it('confirms and deletes an existing empty file with a clear deletion preview', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'empty.txt');
     await writeFile(filePath, '', 'utf8');
-    confirmFileWriteMock.mockResolvedValue('write');
+    selectMock().mockResolvedValue('write');
 
     const result = await applyPreviewChanges({
       changes: [createDeletePreviewChange(filePath, '', true, 'remove empty config')],
       applied: [],
     });
 
-    expect(confirmFileWriteMock).toHaveBeenCalledWith(
-      filePath,
-      '',
-      DELETE_CONFIRM_SENTINEL,
-      expect.any(Object),
-    );
+    expect(confirmFileWriteMock).not.toHaveBeenCalled();
+    expect(logMessage()).toHaveBeenCalled();
+    const previewText = logMessage().mock.calls[0]?.[0] as string;
+    expect(previewText).toContain('empty.txt');
+    expect(previewText).toMatch(/empty file/i);
+    expect(previewText).toMatch(/deleted/i);
+    expect(selectMock()).toHaveBeenCalledOnce();
     expect(result.applied).toEqual(['remove empty config']);
+    await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('empty-file delete skips the prompt when yesAll is already set', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'empty.txt');
+    await writeFile(filePath, '', 'utf8');
+    createDiffConfirmStateMock.mockReturnValue({ yesAll: true });
+
+    const result = await applyPreviewChanges({
+      changes: [createDeletePreviewChange(filePath, '', true)],
+      applied: [],
+    });
+
+    expect(confirmFileWriteMock).not.toHaveBeenCalled();
+    expect(selectMock()).not.toHaveBeenCalled();
+    expect(logMessage()).toHaveBeenCalledOnce();
+    expect(result.applied).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });
