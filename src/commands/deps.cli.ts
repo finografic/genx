@@ -22,6 +22,8 @@ import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import type { ManagedTarget } from 'types/managed.types';
 
+const SEPARATOR = '—'.repeat(50);
+
 const OPERATION_COLOR = {
   add: pc.green,
   upgrade: pc.cyan,
@@ -56,6 +58,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     return;
   }
 
+  console.log('');
   intro('Sync dependencies to @finografic/deps-policy');
 
   const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
@@ -118,7 +121,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     }
 
     successMessage(
-      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
+      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})\n`,
     );
     return;
   }
@@ -146,7 +149,9 @@ async function syncDepsForTarget(
   });
 
   if (!write) {
-    infoMessage(`\nDRY RUN. Planned dependency changes for:\n${pc.cyan(targetDir)}\n`);
+    infoMessage(
+      `${pc.gray(pc.dim(SEPARATOR))}\n\n${pc.green('DRY RUN.')} ${pc.white('Planned dependency changes for:')}\n${pc.cyan(targetDir)}`,
+    );
     if (changes.length === 0) {
       infoMessage('All dependencies already aligned with policy.');
     } else {
@@ -156,9 +161,7 @@ async function syncDepsForTarget(
         logMessage(renderDependencyChangeLine(change, labelColumnWidth));
       }
     }
-    infoMessage(
-      `\n${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${pc.greenBright('--write')} ${pc.white('to apply changes.')}\n`,
-    );
+    infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n`);
     return;
   }
 

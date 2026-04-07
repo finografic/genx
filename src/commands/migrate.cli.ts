@@ -232,7 +232,7 @@ async function migrateSingleTarget(params: {
 
   // Dry-run default
   if (!write) {
-    infoMessage(`\nDRY RUN. Planned changes for:\n${pc.cyan(targetDir)}\n`);
+    infoMessage(`${pc.green('DRY RUN.')} ${pc.white('Planned changes for:')}\n${pc.cyan(targetDir)}`);
     for (const line of plan) {
       clack.log.info(`- ${line}`);
     }
@@ -246,11 +246,7 @@ async function migrateSingleTarget(params: {
       }
     }
 
-    infoMessage(
-      `${pc.greenBright('DRY RUN COMPLETE.')}\n\n${pc.white('Re-run with')} ${pc.greenBright(
-        '--write',
-      )} ${pc.white('to apply changes.')}\n`,
-    );
+    infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n\n`);
     return;
   }
 
