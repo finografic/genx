@@ -1,15 +1,10 @@
 /**
  * AI Instructions feature configuration.
  *
- * Installs GitHub Copilot instructions, shared .github/instructions/,
- * and Cursor rules (which reference the instructions).
+ * Installs GitHub Copilot instructions and shared `.github/instructions/`.
  */
 
-export const AI_INSTRUCTIONS_FILES = [
-  '.github/copilot-instructions.md',
-  '.github/instructions',
-  '.cursor/rules',
-] as const;
+export const AI_INSTRUCTIONS_FILES = ['.github/copilot-instructions.md', '.github/instructions'] as const;
 
-/** ESLint global-ignore patterns added when this feature is installed (keep `.cursor/rules` lintable) */
+/** ESLint global-ignore patterns added when this feature is installed */
 export const AI_INSTRUCTIONS_ESLINT_IGNORES = ['**/.cursor/hooks/**', '**/.cursor/chats/**'] as const;

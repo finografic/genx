@@ -22,8 +22,7 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
-  existsSync(join(repoRoot, '_templates/.github/instructions')) &&
-  existsSync(join(repoRoot, '_templates/.cursor/rules'));
+  existsSync(join(repoRoot, '_templates/.github/instructions'));
 
 describe('preview migration — drift vs canonical', () => {
   it('markdown: minimal package shows preview drift and detect false', async () => {
@@ -116,7 +115,6 @@ describe('preview migration — drift vs canonical', () => {
       await mkdir(join(root, '.github'), { recursive: true });
       await writeFile(join(root, '.github/copilot-instructions.md'), '# c\n');
       await mkdir(join(root, '.github/instructions'), { recursive: true });
-      await mkdir(join(root, '.cursor/rules'), { recursive: true });
 
       const preview = await previewAiInstructions({ targetDir: root });
       expect(hasPreviewChanges(preview)).toBe(false);

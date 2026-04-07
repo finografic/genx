@@ -49,7 +49,7 @@ async function collectDirWrites(
 }
 
 /**
- * Preview AI instructions: Copilot file, instructions + cursor dirs, ESLint ignores.
+ * Preview AI instructions: Copilot file, `.github/instructions/`, ESLint ignores.
  */
 export async function previewAiInstructions(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
@@ -69,7 +69,7 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
     AUTHOR_EMAIL: '',
   };
 
-  const [copilotFile, instructionsDir, cursorDir] = AI_INSTRUCTIONS_FILES;
+  const [copilotFile, instructionsDir] = AI_INSTRUCTIONS_FILES;
 
   const copilotDest = resolve(targetDir, copilotFile);
   if (!fileExists(copilotDest)) {
@@ -93,18 +93,6 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
     }
   } else {
     applied.push(instructionsDir);
-  }
-
-  const cursorDest = resolve(targetDir, cursorDir);
-  if (!fileExists(cursorDest)) {
-    const srcRoot = resolve(templateDir, cursorDir);
-    const files = await collectDirWrites(srcRoot, cursorDest, vars);
-    for (const { dest, body } of files) {
-      const rel = relative(targetDir, dest);
-      changes.push(createWritePreviewChange(dest, '', body, rel));
-    }
-  } else {
-    applied.push(cursorDir);
   }
 
   const eslintPath = resolve(targetDir, 'eslint.config.ts');
