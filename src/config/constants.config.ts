@@ -29,6 +29,7 @@ export const PKG_STYLELINT = 'stylelint';
 export const PKG_STYLELINT_STYLISTIC = '@stylistic/stylelint-plugin';
 export const PKG_COMMITLINT_CLI = '@commitlint/cli';
 export const PKG_COMMITLINT_CONFIG = '@commitlint/config-conventional';
+export const PKG_HUSKY = 'husky';
 export const PKG_LINT_STAGED = 'lint-staged';
 export const PKG_SIMPLE_GIT_HOOKS = 'simple-git-hooks';
 

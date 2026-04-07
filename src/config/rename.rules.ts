@@ -30,8 +30,4 @@ export const renameRules: RenameRule[] = [
       'commitlint.config.ts',
     ],
   },
-  {
-    canonical: '.simple-git-hooks.mjs',
-    alternatives: ['.simple-git-hooks.js'],
-  },
 ];

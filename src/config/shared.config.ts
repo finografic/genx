@@ -52,7 +52,7 @@ export const sharedConfig: SharedConfig = {
     link: 'pnpm build && pnpm link --global',
     unlink: 'pnpm unlink --global',
     prepack: 'pnpm build',
-    prepare: 'simple-git-hooks',
+    prepare: 'husky',
   },
 
   /**

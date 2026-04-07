@@ -8,8 +8,13 @@ export const migrateConfig: MigrateConfig = {
     { section: 'package-json', templatePath: '.npmrc', targetPath: '.npmrc' },
     {
       section: 'hooks',
-      templatePath: '.simple-git-hooks.mjs',
-      targetPath: '.simple-git-hooks.mjs',
+      templatePath: '.husky/pre-commit',
+      targetPath: '.husky/pre-commit',
+    },
+    {
+      section: 'hooks',
+      templatePath: '.husky/commit-msg',
+      targetPath: '.husky/commit-msg',
     },
     { section: 'hooks', templatePath: 'commitlint.config.mjs', targetPath: 'commitlint.config.mjs' },
     { section: 'nvmrc', templatePath: '.nvmrc', targetPath: '.nvmrc' },

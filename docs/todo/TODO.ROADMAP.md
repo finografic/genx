@@ -246,4 +246,4 @@ and which skills apply to which package types.
 
 ## Follow-up
 
-- [ ] Migrate `_templates/` and the `git-hooks` feature from `simple-git-hooks` to `husky`
+- [x] Migrate `_templates/` and the `git-hooks` feature from `simple-git-hooks` to `husky`

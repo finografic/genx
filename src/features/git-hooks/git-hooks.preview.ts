@@ -9,11 +9,24 @@ import {
   reorderGitHookTailKeys,
   stripInlinedCommitlintFromPackageJson,
 } from 'lib/migrate/package-json.utils';
-import { COMMITLINT_CONFIG, PACKAGE_JSON } from 'config/constants.config';
+import { COMMITLINT_CONFIG, PACKAGE_JSON, PKG_SIMPLE_GIT_HOOKS } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
+import {
+  createDeletePreviewChange,
+  createWritePreviewChange,
+} from '../../lib/feature-preview/feature-preview.utils.js';
 import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
-import { GIT_HOOKS_PACKAGES, LINT_STAGED_CONFIG, SIMPLE_GIT_HOOKS_CONFIG } from './git-hooks.constants';
+import {
+  GIT_HOOKS_PACKAGES,
+  HUSKY_COMMIT_MSG_CONTENT,
+  HUSKY_COMMIT_MSG_PATH,
+  HUSKY_PRE_COMMIT_CONTENT,
+  HUSKY_PRE_COMMIT_PATH,
+  LEGACY_SIMPLE_GIT_HOOK_FILES,
+  LINT_STAGED_CONFIG,
+} from './git-hooks.constants';
+
+const PNPM_WORKSPACE_YAML = 'pnpm-workspace.yaml';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -31,26 +44,33 @@ async function withGitHooksDependencies(targetDir: string, packageJson: PackageJ
   return next;
 }
 
+function stripLegacySimpleGitHooks(packageJson: PackageJson): PackageJson {
+  let next = { ...packageJson };
+
+  if (PKG_SIMPLE_GIT_HOOKS in next) {
+    delete next[PKG_SIMPLE_GIT_HOOKS];
+  }
+
+  if (next.devDependencies && PKG_SIMPLE_GIT_HOOKS in next.devDependencies) {
+    const devDependencies = { ...next.devDependencies };
+    delete devDependencies[PKG_SIMPLE_GIT_HOOKS];
+    next = { ...next, devDependencies };
+  }
+
+  return next;
+}
+
 function stripAndReorder(packageJson: PackageJson): PackageJson {
-  const stripped = stripInlinedCommitlintFromPackageJson(packageJson);
+  const withoutLegacyHooks = stripLegacySimpleGitHooks(packageJson);
+  const stripped = stripInlinedCommitlintFromPackageJson(withoutLegacyHooks);
   return reorderGitHookTailKeys(stripped.packageJson);
 }
 
 function addHooksConfigs(packageJson: PackageJson): PackageJson {
   let next = { ...packageJson };
-  let added = false;
 
   if (!next['lint-staged']) {
     next['lint-staged'] = { ...LINT_STAGED_CONFIG };
-    added = true;
-  }
-
-  if (!next['simple-git-hooks']) {
-    next['simple-git-hooks'] = { ...SIMPLE_GIT_HOOKS_CONFIG };
-    added = true;
-  }
-
-  if (added) {
     next = reorderGitHookTailKeys(next);
   }
 
@@ -61,22 +81,49 @@ function ensurePrepareScript(packageJson: PackageJson): PackageJson {
   const scripts = packageJson.scripts ?? {};
   const prepare = scripts.prepare ?? '';
 
-  if (prepare.includes('simple-git-hooks')) {
+  const parts = prepare
+    .split('&&')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => (part === 'simple-git-hooks' ? 'husky' : part));
+
+  if (parts.includes('husky') && !parts.includes('simple-git-hooks')) {
     return packageJson;
   }
 
   const nextScripts = { ...scripts };
-  if (prepare) {
-    nextScripts.prepare = `${prepare} && simple-git-hooks`;
-  } else {
-    nextScripts.prepare = 'simple-git-hooks';
+
+  if (!parts.includes('husky')) {
+    parts.push('husky');
   }
 
+  nextScripts.prepare = parts.join(' && ') || 'husky';
   return { ...packageJson, scripts: nextScripts };
 }
 
+async function readOptionalUtf8(path: string): Promise<string> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: string }).code === 'ENOENT'
+    ) {
+      return '';
+    }
+    throw error;
+  }
+}
+
+function stripLegacySimpleGitHooksAllowBuilds(workspaceYaml: string): string {
+  const next = workspaceYaml.replace(/^\s*simple-git-hooks:\s*true\s*\n?/m, '');
+  return next.replace(/\n{3,}/g, '\n\n');
+}
+
 /**
- * Preview git-hooks: package.json hooks + `commitlint.config.mjs` from template when missing.
+ * Preview git-hooks: package.json + Husky hooks + `commitlint.config.mjs`.
  */
 export async function previewGitHooks(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
@@ -99,7 +146,7 @@ export async function previewGitHooks(context: FeatureContext): Promise<FeatureP
         packageJsonPath,
         rawPkg,
         proposedPkgRaw,
-        'package.json (lint-staged, simple-git-hooks, prepare)',
+        'package.json (lint-staged, husky, prepare)',
       ),
     );
   } else {
@@ -120,9 +167,70 @@ export async function previewGitHooks(context: FeatureContext): Promise<FeatureP
     applied.push(COMMITLINT_CONFIG);
   }
 
+  const preCommitPath = resolve(targetDir, HUSKY_PRE_COMMIT_PATH);
+  const currentPreCommit = await readOptionalUtf8(preCommitPath);
+  if (currentPreCommit !== HUSKY_PRE_COMMIT_CONTENT) {
+    changes.push(
+      createWritePreviewChange(
+        preCommitPath,
+        currentPreCommit,
+        HUSKY_PRE_COMMIT_CONTENT,
+        HUSKY_PRE_COMMIT_PATH,
+      ),
+    );
+  } else {
+    applied.push(HUSKY_PRE_COMMIT_PATH);
+  }
+
+  const commitMsgPath = resolve(targetDir, HUSKY_COMMIT_MSG_PATH);
+  const currentCommitMsg = await readOptionalUtf8(commitMsgPath);
+  if (currentCommitMsg !== HUSKY_COMMIT_MSG_CONTENT) {
+    changes.push(
+      createWritePreviewChange(
+        commitMsgPath,
+        currentCommitMsg,
+        HUSKY_COMMIT_MSG_CONTENT,
+        HUSKY_COMMIT_MSG_PATH,
+      ),
+    );
+  } else {
+    applied.push(HUSKY_COMMIT_MSG_PATH);
+  }
+
+  for (const legacyRelativePath of LEGACY_SIMPLE_GIT_HOOK_FILES) {
+    const legacyPath = resolve(targetDir, legacyRelativePath);
+    if (!fileExists(legacyPath)) {
+      continue;
+    }
+    changes.push(
+      createDeletePreviewChange(
+        legacyPath,
+        await readOptionalUtf8(legacyPath),
+        true,
+        `remove legacy ${legacyRelativePath}`,
+      ),
+    );
+  }
+
+  const pnpmWorkspacePath = resolve(targetDir, PNPM_WORKSPACE_YAML);
+  if (fileExists(pnpmWorkspacePath)) {
+    const currentWorkspaceYaml = await readOptionalUtf8(pnpmWorkspacePath);
+    const proposedWorkspaceYaml = stripLegacySimpleGitHooksAllowBuilds(currentWorkspaceYaml);
+    if (proposedWorkspaceYaml !== currentWorkspaceYaml) {
+      changes.push(
+        createWritePreviewChange(
+          pnpmWorkspacePath,
+          currentWorkspaceYaml,
+          proposedWorkspaceYaml,
+          `${PNPM_WORKSPACE_YAML} (remove legacy simple-git-hooks allowBuilds)`,
+        ),
+      );
+    }
+  }
+
   const noopMessage =
     changes.length === 0
-      ? 'Git hooks already match canonical configuration (deps, package.json, commitlint file).'
+      ? 'Git hooks already match canonical configuration (deps, package.json, Husky hook files, commitlint file).'
       : undefined;
 
   const pkgWrite = changes.find((c) => c.kind === 'write' && c.path === packageJsonPath);

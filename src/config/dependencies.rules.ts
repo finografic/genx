@@ -17,7 +17,7 @@ export const dependencyRules: DependencyRule[] = [
   { name: 'tsdown', version: dev['tsdown'], section: 'devDependencies' },
   { name: '@types/node', version: dev['@types/node'], section: 'devDependencies' },
   { name: 'vitest', version: dev['vitest'], section: 'devDependencies' },
-  { name: 'simple-git-hooks', version: dev['simple-git-hooks'], section: 'devDependencies' },
+  { name: 'husky', version: dev['husky'], section: 'devDependencies' },
   { name: 'lint-staged', version: dev['lint-staged'], section: 'devDependencies' },
 
   // eslint stack

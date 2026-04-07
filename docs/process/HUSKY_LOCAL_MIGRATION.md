@@ -7,6 +7,7 @@ This repo now uses `husky` locally instead of `simple-git-hooks`.
 - `package.json` now uses `"prepare": "husky"`
 - the old top-level `"simple-git-hooks"` block is removed
 - pre-commit now lives in `.husky/pre-commit`
+- commit message validation now lives in `.husky/commit-msg`
 
 ## One-time refresh
 
@@ -19,14 +20,20 @@ pnpm prepare
 
 That installs Husky and re-writes the local Git hook wiring for this clone.
 
-## Current pre-commit hook
+## Current hooks
+
+### Pre-commit
 
 ```bash
 pnpm exec lint-staged --allow-empty
 ```
 
+### Commit-msg
+
+```bash
+pnpm exec commitlint --edit "$1"
+```
+
 ## Follow-up
 
-This change is local to this repo for now.
-
-`_templates/` and the `git-hooks` feature can be migrated later in a separate pass.
+This repo, `_templates/`, and the `git-hooks` feature now use the same Husky shape.

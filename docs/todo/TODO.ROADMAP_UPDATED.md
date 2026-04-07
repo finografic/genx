@@ -44,25 +44,17 @@ ecosystem matures, some package types legitimately need a different dep surface.
 
 ## 3. Husky template completion
 
-- [ ] status: pending
+- [x] status: **DONE**
 
 **Goal:** Finish the Husky migration outside this local repo so new scaffolds and feature-driven
 installs match the current local setup.
 
-**What remains:**
+**Why:** The local repo, generated templates, and the `git-hooks` feature all need to agree on one
+canonical hook system.
 
-- migrate `_templates/package.json` from `simple-git-hooks` to `husky`
-- scaffold `.husky/pre-commit` in `_templates/`
-- update the `git-hooks` feature so canonical output is Husky-based, not package.json
-  `simple-git-hooks`
-- update preview-driven detect/apply for `git-hooks` so detection checks the new Husky-owned files
-  and `apply()` uses the same preview/change-set truth
-- refresh docs/tests so `git-hooks` examples and expectations reference `husky`
-
-**Why:** The local repo now uses Husky successfully, but generated projects and the feature module
-still describe the old hook system. This is now mostly a parity/consistency pass.
-
-**Status:** Pending. Local migration is done; template + feature alignment remains.
+**Status:** Done. Root + `_templates/` now use Husky with `.husky/pre-commit` and
+`.husky/commit-msg`, the `git-hooks` feature preview/detect/apply flow is Husky-based, legacy
+`simple-git-hooks` config is cleaned up, and docs/tests were updated to match.
 
 ---
 

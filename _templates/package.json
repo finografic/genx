@@ -67,7 +67,7 @@
     "tsc:debug": "tsc --pretty --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "prepack": "pnpm build",
-    "prepare": "simple-git-hooks"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
@@ -81,9 +81,9 @@
     "@typescript-eslint/parser": "^8.51.0",
     "eslint": "9.39.2",
     "globals": "^17.3.0",
+    "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "oxfmt": "^0.43.0",
-    "simple-git-hooks": "^2.13.1",
     "tsdown": "^0.20.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.51.0",
@@ -101,8 +101,5 @@
     "*.{json,jsonc,yml,yaml,toml}": [
       "oxfmt --no-error-on-unmatched-pattern"
     ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged --allow-empty"
   }
 }
