@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { basename, extname, resolve } from 'node:path';
 import {
   BASE_SETTINGS_JSON,
   fileExists,
@@ -33,6 +33,7 @@ import {
 import type { PackageJson } from 'types/package-json.types';
 import {
   createDeletePreviewChange,
+  createRenameBackupPreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
@@ -252,12 +253,17 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
     const abs = resolve(targetDir, file);
     if (!fileExists(abs)) continue;
     const body = await readFile(abs, 'utf8');
+    const ext = extname(file);
+    const base = basename(file, ext || undefined);
+    const backupName = base + '--backup' + (ext || '');
+    const backupAbs = resolve(targetDir, backupName);
     changes.push(
-      createDeletePreviewChange(
+      createRenameBackupPreviewChange(
         abs,
+        backupAbs,
         body,
         true,
-        `Prettier config (removed from ${file} — apply renames to backup)`,
+        `Prettier config (${file} → ${backupName})`,
       ),
     );
   }

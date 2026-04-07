@@ -1,13 +1,11 @@
+import { resolve } from 'node:path';
 import { execa } from 'execa';
 import { errorMessage, spinner } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
+import { PACKAGE_JSON } from 'config/constants.config';
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewOxfmt } from './oxfmt.preview.js';
-
-function appliedIncludesPackageJsonWrite(applied: readonly string[]): boolean {
-  return applied.some((label) => label.includes('package.json'));
-}
 
 /**
  * Apply oxfmt to an existing package (Prettier → oxfmt migration path).
@@ -22,7 +20,9 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
     return result;
   }
 
-  const shouldRunInstall = preview.needsInstall === true && appliedIncludesPackageJsonWrite(result.applied);
+  const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
+  const shouldRunInstall =
+    preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
   if (!shouldRunInstall) {
     return result;
@@ -36,11 +36,12 @@ export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyR
     installSpin.stop('Dependencies installed');
     return {
       applied: [...result.applied, 'dependencies (pnpm install)'],
+      appliedTargetPaths: result.appliedTargetPaths,
     };
   } catch (err) {
     installSpin.stop('Failed to install dependencies');
     const error = err instanceof Error ? err : new Error(String(err));
     errorMessage(error.message);
-    return { applied: result.applied, error };
+    return { applied: result.applied, appliedTargetPaths: result.appliedTargetPaths, error };
   }
 }

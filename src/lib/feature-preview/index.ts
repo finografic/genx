@@ -1,6 +1,7 @@
 export {
   applyPreviewChanges,
   createDeletePreviewChange,
+  createRenameBackupPreviewChange,
   createWritePreviewChange,
   getChangedPreviewChanges,
   hasPreviewChanges,
@@ -10,6 +11,7 @@ export type {
   FeatureApplyResult,
   FeaturePreviewChange,
   FeaturePreviewChangeDelete,
+  FeaturePreviewChangeRenameBackup,
   FeaturePreviewChangeWrite,
   FeaturePreviewResult,
 } from './feature-preview.types.js';

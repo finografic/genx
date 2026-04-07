@@ -1,6 +1,8 @@
+import { resolve } from 'node:path';
 import { execa } from 'execa';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PACKAGE_JSON } from 'config/constants.config';
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { applyOxfmt } from './oxfmt.apply.js';
 import { previewOxfmt } from './oxfmt.preview.js';
@@ -29,6 +31,23 @@ const execaMock = vi.mocked(execa);
 describe('oxfmt.apply — preview-driven apply', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('calls previewOxfmt then applyPreviewChanges with that preview', async () => {
+    const preview = {
+      changes: [],
+      applied: [],
+      noopMessage: 'ok',
+    };
+    previewOxfmtMock.mockResolvedValue(preview);
+    applyPreviewChangesMock.mockResolvedValue({ applied: [], noopMessage: 'ok' });
+
+    await applyOxfmt({ targetDir: '/tmp/x' });
+
+    expect(previewOxfmtMock).toHaveBeenCalledTimes(1);
+    expect(previewOxfmtMock).toHaveBeenCalledWith({ targetDir: '/tmp/x' });
+    expect(applyPreviewChangesMock).toHaveBeenCalledTimes(1);
+    expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview);
   });
 
   it('returns noop when preview apply reports nothing written', async () => {
@@ -66,36 +85,43 @@ describe('oxfmt.apply — preview-driven apply', () => {
     expect(execaMock).not.toHaveBeenCalled();
   });
 
-  it('runs pnpm install when manifest dependency changes were applied to package.json', async () => {
-    previewOxfmtMock.mockResolvedValue({
+  it('runs pnpm install when needsInstall and appliedTargetPaths includes package.json (labels ignored)', async () => {
+    const targetDir = '/tmp/target';
+    const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
+    const preview = {
       changes: [],
       applied: [],
-      needsInstall: true,
-    });
+      needsInstall: true as const,
+    };
+    previewOxfmtMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({
-      applied: ['package.json (oxfmt, Prettier/dprint cleanup, scripts, lint-staged)'],
+      applied: ['label with no manifest substring'],
+      appliedTargetPaths: [packageJsonPath],
     });
     execaMock.mockResolvedValue({} as never);
 
-    const result = await applyOxfmt({ targetDir: '/tmp/target' });
-    expect(execaMock).toHaveBeenCalledWith('pnpm', ['install'], { cwd: '/tmp/target' });
-    expect(result.applied).toEqual([
-      'package.json (oxfmt, Prettier/dprint cleanup, scripts, lint-staged)',
-      'dependencies (pnpm install)',
-    ]);
+    const result = await applyOxfmt({ targetDir });
+
+    expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview);
+    expect(execaMock).toHaveBeenCalledWith('pnpm', ['install'], { cwd: targetDir });
+    expect(result.applied).toEqual(['label with no manifest substring', 'dependencies (pnpm install)']);
+    expect(result.appliedTargetPaths).toEqual([packageJsonPath]);
   });
 
-  it('does not run pnpm install when needsInstall is set but package.json was skipped', async () => {
-    previewOxfmtMock.mockResolvedValue({
+  it('does not run pnpm install when needsInstall but package.json was not in appliedTargetPaths', async () => {
+    const targetDir = '/tmp/target';
+    const preview = {
       changes: [],
       applied: [],
-      needsInstall: true,
-    });
+      needsInstall: true as const,
+    };
+    previewOxfmtMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({
       applied: ['eslint.config.ts (oxfmt-covered ESLint cleanup)'],
+      appliedTargetPaths: [resolve(targetDir, 'eslint.config.ts')],
     });
 
-    const result = await applyOxfmt({ targetDir: '/tmp/target' });
+    const result = await applyOxfmt({ targetDir });
     expect(execaMock).not.toHaveBeenCalled();
     expect(result.applied).toEqual(['eslint.config.ts (oxfmt-covered ESLint cleanup)']);
   });

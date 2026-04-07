@@ -8,6 +8,7 @@ import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/f
 import {
   applyPreviewChanges,
   createDeletePreviewChange,
+  createRenameBackupPreviewChange,
   createWritePreviewChange,
   getChangedPreviewChanges,
   hasPreviewChanges,
@@ -55,6 +56,16 @@ describe('feature-preview — isPreviewChangeChanged', () => {
 
   it('detects delete when the path existed', () => {
     const change = createDeletePreviewChange('x.ts', 'body', true);
+    expect(isPreviewChangeChanged(change)).toBe(true);
+  });
+
+  it('treats renameBackup as unchanged when the source did not exist at preview time', () => {
+    const change = createRenameBackupPreviewChange('a/.prettierrc', 'a/.prettierrc--backup', '', false);
+    expect(isPreviewChangeChanged(change)).toBe(false);
+  });
+
+  it('detects renameBackup when the source existed at preview time', () => {
+    const change = createRenameBackupPreviewChange('a/.prettierrc', 'a/.prettierrc--backup', '{}', true);
     expect(isPreviewChangeChanged(change)).toBe(true);
   });
 });
@@ -126,6 +137,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result.applied).toEqual([filePath]);
+    expect(result.appliedTargetPaths).toEqual([filePath]);
     expect(await readFile(filePath, 'utf8')).toBe('hello');
     expect(confirmFileWriteMock).toHaveBeenCalledOnce();
 
@@ -143,6 +155,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result.applied).toEqual(['add out.txt']);
+    expect(result.appliedTargetPaths).toEqual([filePath]);
     expect(await readFile(filePath, 'utf8')).toBe('hello');
 
     await rm(root, { recursive: true, force: true });
@@ -177,6 +190,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result.applied).toEqual([filePath]);
+    expect(result.appliedTargetPaths).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });
@@ -201,6 +215,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(previewText).toMatch(/deleted/i);
     expect(selectMock()).toHaveBeenCalledOnce();
     expect(result.applied).toEqual(['remove empty config']);
+    expect(result.appliedTargetPaths).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });
@@ -221,6 +236,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(selectMock()).not.toHaveBeenCalled();
     expect(logMessage()).toHaveBeenCalledOnce();
     expect(result.applied).toEqual([filePath]);
+    expect(result.appliedTargetPaths).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });
@@ -238,7 +254,38 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result.applied).toEqual(['remove prettier config']);
+    expect(result.appliedTargetPaths).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('renames an approved Prettier-style config to a sibling --backup path (non-destructive)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-rb-'));
+    const fromPath = join(root, 'prettier.config.js');
+    const backupPath = join(root, 'prettier.config--backup.js');
+    await writeFile(fromPath, 'module.exports = {}', 'utf8');
+    selectMock().mockResolvedValue('write');
+
+    const result = await applyPreviewChanges({
+      changes: [
+        createRenameBackupPreviewChange(
+          fromPath,
+          backupPath,
+          'module.exports = {}',
+          true,
+          'Prettier config (prettier.config.js → prettier.config--backup.js)',
+        ),
+      ],
+      applied: [],
+    });
+
+    expect(confirmFileWriteMock).not.toHaveBeenCalled();
+    expect(selectMock()).toHaveBeenCalledOnce();
+    expect(result.applied).toEqual(['Prettier config (prettier.config.js → prettier.config--backup.js)']);
+    expect(result.appliedTargetPaths).toEqual([fromPath]);
+    await expect(readFile(fromPath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(await readFile(backupPath, 'utf8')).toBe('module.exports = {}');
 
     await rm(root, { recursive: true, force: true });
   });
@@ -257,6 +304,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result.applied).toEqual([a, b]);
+    expect(result.appliedTargetPaths).toEqual([a, b]);
     expect(await readFile(a, 'utf8')).toBe('a1');
     expect(await readFile(b, 'utf8')).toBe('b1');
 

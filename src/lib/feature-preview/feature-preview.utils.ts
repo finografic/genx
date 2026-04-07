@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import * as clack from '@clack/prompts';
 import pc from 'picocolors';
@@ -7,6 +7,7 @@ import type { FeatureApplyResult } from '../../features/feature.types.js';
 import type {
   FeaturePreviewChange,
   FeaturePreviewChangeDelete,
+  FeaturePreviewChangeRenameBackup,
   FeaturePreviewChangeWrite,
   FeaturePreviewResult,
 } from './feature-preview.types.js';
@@ -42,6 +43,38 @@ async function confirmEmptyFileDelete(filePath: string, state?: DiffConfirmState
   return 'skip';
 }
 
+async function confirmRenameBackup(
+  fromPath: string,
+  backupPath: string,
+  state?: DiffConfirmState,
+): Promise<DiffAction> {
+  clack.log.message(
+    `${pc.bold(pc.white(fromPath))}\n${pc.cyan(`→ ${backupPath}`)}\n${pc.dim('(Prettier config preserved as backup; not deleted)')}`,
+  );
+
+  if (state?.yesAll) {
+    return 'write';
+  }
+
+  const choice = await clack.select({
+    message: `Apply rename to backup for ${pc.cyan(fromPath)}?`,
+    options: [
+      { value: 'write', label: 'Yes, rename this file' },
+      { value: 'skip', label: 'No, skip this file' },
+      { value: 'write-all', label: 'Yes to all remaining files' },
+    ],
+  });
+
+  if (clack.isCancel(choice)) return 'skip';
+
+  if (choice === 'write-all' && state) {
+    state.yesAll = true;
+  }
+
+  if (choice === 'write' || choice === 'skip' || choice === 'write-all') return choice;
+  return 'skip';
+}
+
 export function createWritePreviewChange(
   path: string,
   currentContent: string,
@@ -60,6 +93,16 @@ export function createDeletePreviewChange(
   return { kind: 'delete', path, currentContent, exists, summary };
 }
 
+export function createRenameBackupPreviewChange(
+  path: string,
+  backupPath: string,
+  currentContent: string,
+  exists: boolean,
+  summary?: string,
+): FeaturePreviewChangeRenameBackup {
+  return { kind: 'renameBackup', path, backupPath, currentContent, exists, summary };
+}
+
 function appliedLabelForChange(change: FeaturePreviewChange): string {
   return change.summary ?? change.path;
 }
@@ -67,6 +110,9 @@ function appliedLabelForChange(change: FeaturePreviewChange): string {
 export function isPreviewChangeChanged(change: FeaturePreviewChange): boolean {
   if (change.kind === 'write') {
     return change.currentContent !== change.proposedContent;
+  }
+  if (change.kind === 'renameBackup') {
+    return change.exists;
   }
   return change.exists;
 }
@@ -126,6 +172,7 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
 
   const state = createDiffConfirmState();
   const applied: string[] = [];
+  const appliedTargetPaths: string[] = [];
 
   for (const change of changed) {
     if (change.kind === 'write') {
@@ -135,6 +182,17 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
       await mkdir(dirname(change.path), { recursive: true });
       await writeFile(change.path, change.proposedContent, 'utf8');
       applied.push(appliedLabelForChange(change));
+      appliedTargetPaths.push(change.path);
+    } else if (change.kind === 'renameBackup') {
+      if (!(await pathExists(change.path))) {
+        continue;
+      }
+      const action = await confirmRenameBackup(change.path, change.backupPath, state);
+      if (action === 'skip') continue;
+      await mkdir(dirname(change.backupPath), { recursive: true });
+      await rename(change.path, change.backupPath);
+      applied.push(appliedLabelForChange(change));
+      appliedTargetPaths.push(change.path);
     } else {
       if (!(await pathExists(change.path))) {
         continue;
@@ -160,6 +218,7 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
         }
       }
       applied.push(appliedLabelForChange(change));
+      appliedTargetPaths.push(change.path);
     }
   }
 
@@ -170,5 +229,5 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
     };
   }
 
-  return { applied };
+  return { applied, appliedTargetPaths };
 }

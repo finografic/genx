@@ -30,6 +30,11 @@ export interface FeatureApplyResult {
   noopMessage?: string;
   /** Error if application failed */
   error?: Error;
+  /**
+   * Absolute paths touched by apply (writes, deletes, rename-backup sources), in apply order.
+   * For follow-up steps that must not depend on human-facing `applied` labels.
+   */
+  appliedTargetPaths?: readonly string[];
 }
 
 /**

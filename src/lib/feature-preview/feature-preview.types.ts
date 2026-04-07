@@ -25,7 +25,22 @@ export interface FeaturePreviewChangeDelete {
   summary?: string;
 }
 
-export type FeaturePreviewChange = FeaturePreviewChangeWrite | FeaturePreviewChangeDelete;
+/**
+ * Rename `path` to `backupPath` (non-destructive migration, e.g. Prettier config → `--backup` sibling).
+ */
+export interface FeaturePreviewChangeRenameBackup {
+  kind: 'renameBackup';
+  path: string;
+  backupPath: string;
+  currentContent: string;
+  exists: boolean;
+  summary?: string;
+}
+
+export type FeaturePreviewChange =
+  | FeaturePreviewChangeWrite
+  | FeaturePreviewChangeDelete
+  | FeaturePreviewChangeRenameBackup;
 
 /**
  * Grouped preview for a feature before apply.
