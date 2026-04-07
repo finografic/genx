@@ -1,3 +1,4 @@
+import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
@@ -150,10 +151,10 @@ async function syncDepsForTarget(
 
   if (!write) {
     infoMessage(
-      `${pc.gray(pc.dim(SEPARATOR))}\n\n${pc.green('DRY RUN.')} ${pc.white('Planned dependency changes for:')}\n${pc.cyan(targetDir)}`,
+      `${pc.gray(pc.dim(SEPARATOR))}\n\n${pc.cyan(targetDir.replace(homedir(), ''))} ${pc.white(pc.dim('(DRY RUN)'))}`,
     );
     if (changes.length === 0) {
-      infoMessage('All dependencies already aligned with policy.');
+      infoMessage(pc.white('All dependencies already aligned with policy.'));
     } else {
       const maxLabelLen = Math.max(...changes.map((c) => `[${c.operation}]`.length));
       const labelColumnWidth = maxLabelLen;
@@ -166,7 +167,7 @@ async function syncDepsForTarget(
   }
 
   if (changes.length === 0) {
-    infoMessage('All dependencies already aligned with policy. No changes made.');
+    infoMessage(pc.white('All dependencies already aligned with policy. No changes made.'));
     return;
   }
 
