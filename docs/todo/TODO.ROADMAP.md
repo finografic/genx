@@ -7,6 +7,8 @@ Ordered roughly by dependency: earlier items are prerequisites for later ones.
 
 ## 1. Composable detect primitives
 
+- [ ] status: pending
+
 **Goal:** Replace per-feature hand-written `detect()` implementations with a small set of typed
 predicate helpers combined via `allOf` / `anyOf`.
 
@@ -36,6 +38,8 @@ Each primitive (`hasDependency`, `hasScript`, `hasFile`, `hasConfigBlock`) retur
 
 ## 2. jsdiff — per-file diff display
 
+- [ ] status: pending
+
 **Goal:** Before writing any file, show a per-file unified diff and ask the user to confirm
 (yes / no / yes-to-all). Applies to `migrate`, `deps`, and future write operations.
 
@@ -63,6 +67,8 @@ a separate (internal) use of the same library for a completely different purpose
 ---
 
 ## 3. Diff-as-detection
+
+- [ ] status: pending
 
 **Goal:** Replace hand-written `detect()` signal checks with a generate-and-diff approach:
 run the feature's `apply()` logic against a copy of the current state, diff the result against
@@ -113,6 +119,8 @@ before implementation. Plan carefully; touches every feature.
 
 ## 4. `genx create` — apply resolvePolicy() immediately after scaffold
 
+- [ ] status: pending
+
 **Goal:** After scaffolding a new package, run `resolvePolicy(packageType)` and write the
 resolved dependency versions directly into the new `package.json` instead of relying on the
 hardcoded versions in `_templates/package.json`.
@@ -129,6 +137,8 @@ not stale versions baked into the template.
 ---
 
 ## 5. Type-specific policy divergence in deps-policy
+
+- [ ] status: pending
 
 **Goal:** Allow `library.ts` and `config.ts` in `@finografic/deps-policy` to intentionally
 diverge from `base` where it makes sense (e.g., `config` packages probably do not need
@@ -148,6 +158,8 @@ ecosystem matures, some package types legitimately need a different dep surface.
 
 ## 6. Bulk orchestrator — `deps-manager`
 
+- [x] status: **DONE**
+
 **Goal:** A script (or separate package) that discovers all `@finografic` packages by
 filesystem and runs `genx deps --write` (or `genx migrate --only=dependencies --write`)
 against each, reporting a summary.
@@ -164,6 +176,8 @@ or two packages; tedious at ecosystem scale.
 ---
 
 ## 7. Structured markdown section management
+
+- [ ] status: pending
 
 **Goal:** A generic utility for reading, diffing, reordering, adding, updating, and deleting
 named sections in structured markdown files (AGENTS.md, CLAUDE.md, and similar).
@@ -205,6 +219,8 @@ need to be defined carefully (headings, code blocks, nested lists).
 ---
 
 ## 8. `ai-agents` feature — AGENTS.md + skills scaffold
+
+- [ ] status: pending
 
 **Goal:** New genx feature that manages the **agent interface layer** of a project:
 `AGENTS.md` (the AI assistant guide and index) and `.github/skills/` (agent workflow procedures).
