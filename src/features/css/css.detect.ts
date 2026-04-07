@@ -1,17 +1,12 @@
-import { resolve } from 'node:path';
-import { fileExists } from 'utils';
 import type { FeatureContext } from '../feature.types';
 
-import { LEGACY_STYLELINTRC_FILENAME, STYLELINT_CONFIG_FILENAME } from './css.constants';
+import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
+import { previewCss } from './css.preview.js';
 
 /**
- * Detect if CSS linting is already configured.
- * True when `stylelint.config.ts` or legacy `.stylelintrc.json` is present.
+ * Detect when CSS linting matches the canonical preview (deps, stylelint, VS Code, oxfmt).
  */
-export function detectCss(context: FeatureContext): boolean {
-  const root = context.targetDir;
-  return (
-    fileExists(resolve(root, STYLELINT_CONFIG_FILENAME)) ||
-    fileExists(resolve(root, LEGACY_STYLELINTRC_FILENAME))
-  );
+export async function detectCss(context: FeatureContext): Promise<boolean> {
+  const preview = await previewCss(context);
+  return !hasPreviewChanges(preview);
 }

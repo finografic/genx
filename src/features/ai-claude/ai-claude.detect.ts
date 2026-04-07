@@ -1,13 +1,12 @@
-import { resolve } from 'node:path';
-import { fileExists } from 'utils';
 import type { FeatureContext } from '../feature.types';
 
-import { AI_CLAUDE_FILES } from './ai-claude.constants';
+import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
+import { previewAiClaude } from './ai-claude.preview.js';
 
 /**
- * Detect if AI Claude feature is fully present in the target directory.
- * Checks for CLAUDE.md, .claude/memory.md, and .claude/settings.json.
+ * Detect when Claude Code support matches the canonical preview.
  */
 export async function detectAiClaude(context: FeatureContext): Promise<boolean> {
-  return AI_CLAUDE_FILES.every((file) => fileExists(resolve(context.targetDir, file)));
+  const preview = await previewAiClaude(context);
+  return !hasPreviewChanges(preview);
 }

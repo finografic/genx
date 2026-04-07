@@ -21,6 +21,25 @@ export function createDefaultTemplateVars(): TemplateVars {
 }
 
 /**
+ * Insert missing ESLint ignore patterns into flat-config source (preview / apply).
+ * Returns unchanged `content` when nothing is added.
+ */
+export function proposeEslintIgnorePatterns(content: string, patterns: readonly string[]): string {
+  const missing = patterns.filter((p) => !content.includes(`'${p}'`));
+  if (missing.length === 0) return content;
+
+  let next = content;
+  for (const pattern of missing) {
+    if (/globalIgnores\s*\(\s*\[/.test(next)) {
+      next = next.replace(/(globalIgnores\s*\(\s*\[[\s\S]*?)(\s*\]\s*\)\s*,)/, `$1    '${pattern}',\n$2`);
+    } else {
+      next = next.replace(/(ignores:\s*\[[^\]]*)\]/, `$1, '${pattern}']`);
+    }
+  }
+  return next;
+}
+
+/**
  * Add ESLint ignore patterns to `globalIgnores([...])` when present, otherwise the
  * first legacy `ignores: [...]` block. Skips patterns already present.
  */
@@ -31,22 +50,11 @@ export async function addEslintIgnorePatterns(
   const eslintConfigPath = resolve(targetDir, 'eslint.config.ts');
   if (!fileExists(eslintConfigPath)) return [];
 
-  let content = await readFile(eslintConfigPath, 'utf8');
-
-  const missing = patterns.filter((p) => !content.includes(`'${p}'`));
+  const before = await readFile(eslintConfigPath, 'utf8');
+  const missing = patterns.filter((p) => !before.includes(`'${p}'`));
   if (missing.length === 0) return [];
 
-  for (const pattern of missing) {
-    if (/globalIgnores\s*\(\s*\[/.test(content)) {
-      content = content.replace(
-        /(globalIgnores\s*\(\s*\[[\s\S]*?)(\s*\]\s*\)\s*,)/,
-        `$1    '${pattern}',\n$2`,
-      );
-    } else {
-      content = content.replace(/(ignores:\s*\[[^\]]*)\]/, `$1, '${pattern}']`);
-    }
-  }
-
-  await writeFile(eslintConfigPath, content, 'utf8');
+  const after = proposeEslintIgnorePatterns(before, patterns);
+  await writeFile(eslintConfigPath, after, 'utf8');
   return [...missing];
 }

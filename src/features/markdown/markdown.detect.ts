@@ -1,12 +1,13 @@
-import { isDependencyDeclared } from 'utils';
 import type { FeatureContext } from '../feature.types';
 
-import { MARKDOWNLINT_PACKAGE } from './markdown.constants';
+import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
+import { previewMarkdown } from './markdown.preview.js';
 
 /**
- * Detect if markdown linting is already configured.
- * Checks for eslint-plugin-markdownlint in dependencies.
+ * Detect if markdown linting is already fully configured for owned files (deps, ESLint block,
+ * VS Code, lint-staged, CSS assets).
  */
 export async function detectMarkdown(context: FeatureContext): Promise<boolean> {
-  return isDependencyDeclared(context.targetDir, MARKDOWNLINT_PACKAGE);
+  const preview = await previewMarkdown(context);
+  return !hasPreviewChanges(preview);
 }

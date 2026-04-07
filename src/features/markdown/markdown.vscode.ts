@@ -16,6 +16,7 @@ import {
   fileExists,
   insertRootPropertyBefore,
   parseJsoncObject,
+  readExtensionsJson,
   setRootPropertyJsonc,
 } from 'utils';
 
@@ -31,32 +32,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /** CSS files to copy from _templates/.vscode to target .vscode */
 const MARKDOWN_CSS_FILES = ['markdown-custom-dark.css', 'markdown-github-light.css'] as const;
 
-/**
- * Add markdownlint extension recommendations to .vscode/extensions.json.
- * Returns the list of extensions that were actually added.
- */
-export async function applyMarkdownExtensions(targetDir: string): Promise<string[]> {
-  return addExtensionRecommendations(targetDir, [...MARKDOWNLINT_VSCODE_EXTENSIONS]);
-}
+const EXTENSIONS_JSON_PATH = ['.vscode', 'extensions.json'] as const;
 
 /**
- * Add markdown settings to VSCode settings.json.
- * Only adds markdownlint.config and markdown.styles (no [markdown] / oxc.oxc-vscode).
+ * Proposed `.vscode/settings.json` text for the markdown feature (no disk writes).
  */
-export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
+export async function computeProposedMarkdownSettingsText(targetDir: string): Promise<{
+  path: string;
+  current: string;
+  proposed: string;
+}> {
   const filePath = resolve(targetDir, '.vscode', 'settings.json');
-  await ensureVSCodeDir(targetDir);
-
-  let text: string;
-  if (!fileExists(filePath)) {
-    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
-    await writeFile(filePath, text, 'utf8');
-  } else {
-    text = await readFile(filePath, 'utf8');
+  let current = '';
+  if (fileExists(filePath)) {
+    current = await readFile(filePath, 'utf8');
   }
 
-  let t = text;
-  let modified = false;
+  let t = current || `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
   const root = () => parseJsoncObject(t) as Record<string, unknown>;
 
   if (!root()[MARKDOWNLINT_CONFIG_KEY]) {
@@ -70,25 +62,76 @@ export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<bo
     } else {
       t = setRootPropertyJsonc(t, MARKDOWNLINT_CONFIG_KEY, MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY]);
     }
-    modified = true;
   }
 
   if (!parseJsoncObject(t)[MARKDOWN_STYLES_KEY]) {
     t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]]);
-    modified = true;
   }
 
   const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
   if (tail.changed) {
     t = tail.text;
-    modified = true;
   }
 
-  if (modified) {
-    await writeFile(filePath, t, 'utf8');
+  return { path: filePath, current, proposed: t };
+}
+
+/**
+ * Proposed `.vscode/extensions.json` text for markdownlint recommendations (no disk writes).
+ */
+export async function computeProposedMarkdownExtensionsText(targetDir: string): Promise<{
+  path: string;
+  current: string;
+  proposed: string;
+}> {
+  const filePath = resolve(targetDir, ...EXTENSIONS_JSON_PATH);
+  let current = '';
+  if (fileExists(filePath)) {
+    current = await readFile(filePath, 'utf8');
   }
 
-  return modified;
+  const parsed = await readExtensionsJson(targetDir);
+  const recommendations = [...(parsed.recommendations ?? [])];
+  for (const ext of MARKDOWNLINT_VSCODE_EXTENSIONS) {
+    if (!recommendations.includes(ext)) {
+      recommendations.push(ext);
+    }
+  }
+  const proposed = `${JSON.stringify({ ...parsed, recommendations }, null, 2)}\n`;
+  return { path: filePath, current, proposed };
+}
+
+/**
+ * Resolved template path for a markdown CSS asset, or null if not found.
+ */
+export function resolveMarkdownCssTemplatePath(filename: (typeof MARKDOWN_CSS_FILES)[number]): string | null {
+  const templatesPath = resolve(__dirname, '../../../../_templates/.vscode', filename);
+  const distTemplatesPath = resolve(__dirname, '../../../_templates/.vscode', filename);
+  if (fileExists(templatesPath)) return templatesPath;
+  if (fileExists(distTemplatesPath)) return distTemplatesPath;
+  return null;
+}
+
+/**
+ * Add markdownlint extension recommendations to .vscode/extensions.json.
+ * Returns the list of extensions that were actually added.
+ */
+export async function applyMarkdownExtensions(targetDir: string): Promise<string[]> {
+  return addExtensionRecommendations(targetDir, [...MARKDOWNLINT_VSCODE_EXTENSIONS]);
+}
+
+/**
+ * Add markdown settings to VSCode settings.json.
+ * Only adds markdownlint.config and markdown.styles (no [markdown] / oxc.oxc-vscode).
+ */
+export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
+  await ensureVSCodeDir(targetDir);
+  const { path: filePath, current, proposed } = await computeProposedMarkdownSettingsText(targetDir);
+  if (proposed === current) {
+    return false;
+  }
+  await writeFile(filePath, proposed, 'utf8');
+  return true;
 }
 
 /**

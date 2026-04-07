@@ -1,18 +1,12 @@
-import { resolve } from 'node:path';
-import { fileExists } from 'utils';
 import type { FeatureContext } from '../feature.types';
 
-import { AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
+import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
+import { previewAiInstructions } from './ai-instructions.preview.js';
 
 /**
- * Detect if AI Instructions feature is already present in the target directory.
- * Checks for copilot-instructions.md, instructions dir, and .cursor/rules.
+ * Detect when AI instructions are fully aligned with the canonical preview.
  */
 export async function detectAiInstructions(context: FeatureContext): Promise<boolean> {
-  const [copilotFile, instructionsDir, cursorDir] = AI_INSTRUCTIONS_FILES;
-  return (
-    fileExists(resolve(context.targetDir, copilotFile)) &&
-    fileExists(resolve(context.targetDir, instructionsDir)) &&
-    fileExists(resolve(context.targetDir, cursorDir))
-  );
+  const preview = await previewAiInstructions(context);
+  return !hasPreviewChanges(preview);
 }
