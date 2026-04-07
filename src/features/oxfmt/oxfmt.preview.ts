@@ -1,30 +1,59 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import {
+  BASE_SETTINGS_JSON,
+  fileExists,
+  hasAnyDependency,
+  parseJsoncObject,
+  readExtensionsJson,
+} from 'utils';
 import type {
   FeaturePreviewChange,
   FeaturePreviewResult,
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
+import type { OxfmtLanguageCategory } from './oxfmt.constants.js';
 
 import {
+  ensureMarkdownlintConfigAndStylesAtEnd,
+  ensureOxfmtSharedSettingsBeforePrettier,
+  removeRootKeysWithPrefix,
+  replaceDprintLanguageFormatters,
+  setLanguageFormatterBlock,
+  setRootPropertyJsonc,
+} from 'utils/vscode-jsonc.utils.js';
+import {
+  ESLINT_CONFIG_FILES,
   PACKAGE_JSON,
-  PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION,
-  PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER,
-  PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
+  VSCODE_DIR,
+  VSCODE_EXTENSIONS_JSON,
+  VSCODE_SETTINGS_JSON,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
-  FORMATTING_SCRIPTS,
-  FORMATTING_SECTION_TITLE,
-  OXFMT_LINT_STAGED_CODE_PATTERN,
-  OXFMT_LINT_STAGED_COMMAND,
-  OXFMT_LINT_STAGED_DATA_PATTERN,
-  OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES,
-  OXFMT_LINT_STAGED_MD_PATTERN,
-  OXFMT_UPDATE_SCRIPT,
+  createDeletePreviewChange,
+  createWritePreviewChange,
+} from '../../lib/feature-preview/feature-preview.utils.js';
+import {
+  DPRINT_CONFIG_FILES,
+  OXFMT_CATEGORY_DEPENDENCIES,
+  OXFMT_CI_STEP,
+  OXFMT_COVERED_STYLISTIC_RULES,
+  OXFMT_FORMATTER_ID,
+  OXFMT_LANGUAGE_CATEGORIES,
+  OXFMT_VSCODE_EXTENSIONS,
+  PRETTIER_CONFIG_FILES,
 } from './oxfmt.constants.js';
+import { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
+import { stripSimpleImportSortFromEslintConfigContent } from './oxfmt.simple-import-sort.js';
 import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
+import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxfmt.workflows.js';
+
+export { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
+
+const DPRINT_VSCODE_EXT_ID = 'dprint.dprint';
+
+const CI_WORKFLOW_REL = '.github/workflows/ci.yml';
 
 function isEnoent(error: unknown): boolean {
   return (
@@ -39,338 +68,124 @@ function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
 }
 
-function findNextScriptsSectionDividerIndex(keys: string[], sectionKeyIndex: number): number {
-  const prefix = PACKAGE_JSON_SCRIPTS_SECTION_PREFIX;
-  const current = keys[sectionKeyIndex];
-  for (let i = sectionKeyIndex + 1; i < keys.length; i++) {
-    const k = keys[i];
-    if (k.startsWith(prefix) && k !== current) {
-      return i;
+function stripOxfmtCoveredStylisticRulesFromEslintContent(content: string): string {
+  let updated = content;
+  for (const rule of OXFMT_COVERED_STYLISTIC_RULES) {
+    const escaped = rule.replace(/\//g, '\\/');
+    const regex = new RegExp(`^\\s*'${escaped}':.+\\n`, 'gm');
+    updated = updated.replace(regex, '');
+  }
+  updated = updated.replace(/^\s*\/\/ Stylistic\n/gm, '');
+  updated = updated.replace(/\n{3,}/g, '\n\n');
+  return updated;
+}
+
+function canonicalEslintConfigContent(content: string): string {
+  const stripped = stripOxfmtCoveredStylisticRulesFromEslintContent(content);
+  return stripSimpleImportSortFromEslintConfigContent(stripped);
+}
+
+function proposeCiYmlContent(current: string): string {
+  if (
+    current.includes('oxfmt --check') ||
+    current.includes('pnpm format:check') ||
+    current.includes('format:check')
+  ) {
+    return current;
+  }
+  return `${current.trimEnd()}${OXFMT_CI_STEP}`;
+}
+
+async function getOxfmtLanguagesForPreview(targetDir: string): Promise<string[]> {
+  const enabledCategories: OxfmtLanguageCategory[] = [];
+
+  for (const [category, dependencies] of Object.entries(OXFMT_CATEGORY_DEPENDENCIES)) {
+    const categoryKey = category as OxfmtLanguageCategory;
+
+    if (dependencies === null) {
+      enabledCategories.push(categoryKey);
+      continue;
+    }
+
+    if (await hasAnyDependency(targetDir, dependencies)) {
+      enabledCategories.push(categoryKey);
     }
   }
-  return keys.length;
-}
 
-function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
-  next: Record<string, string>;
-  changed: boolean;
-} {
-  const key = OXFMT_UPDATE_SCRIPT.key;
-  const value = OXFMT_UPDATE_SCRIPT.value;
-  const keys = Object.keys(scripts);
-
-  const packagesIdx = keys.indexOf(PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION);
-  if (packagesIdx === -1) {
-    if (scripts[key] === value) {
-      return { next: scripts, changed: false };
-    }
-    return { next: { ...scripts, [key]: value }, changed: true };
-  }
-
-  const nextSectionIdx = findNextScriptsSectionDividerIndex(keys, packagesIdx);
-  const sectionKeys = keys.slice(packagesIdx + 1, nextSectionIdx);
-
-  let insertAfter: string;
-  if (sectionKeys.includes('update:eslint-config')) {
-    insertAfter = 'update:eslint-config';
-  } else {
-    const updateKeys = sectionKeys.filter((k) => k.startsWith('update:'));
-    insertAfter =
-      updateKeys.length > 0 ? updateKeys[updateKeys.length - 1]! : PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
-  }
-
-  const without = keys.filter((k) => k !== key);
-  const insertAt = without.indexOf(insertAfter) + 1;
-  const newKeys = [...without.slice(0, insertAt), key, ...without.slice(insertAt)];
-
-  const next: Record<string, string> = {};
-  for (const k of newKeys) {
-    next[k] = k === key ? value : scripts[k];
-  }
-
-  const changed = scripts[key] !== value || JSON.stringify(keys) !== JSON.stringify(newKeys);
-
-  return { next, changed };
-}
-
-function coerceLintStagedStringValuesToArrays(lintStaged: Record<string, string[] | string>): void {
-  for (const k of Object.keys(lintStaged)) {
-    const v = lintStaged[k];
-    if (typeof v === 'string') {
-      lintStaged[k] = [v];
-    }
-  }
-}
-
-function mergeDataGlobAliasesIntoCanonical(lintStaged: Record<string, string[] | string>): void {
-  const canonical = OXFMT_LINT_STAGED_DATA_PATTERN;
-  let oxfmtCmd = OXFMT_LINT_STAGED_COMMAND;
-
-  for (const key of OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES) {
-    const cmds = lintStaged[key];
-    if (!Array.isArray(cmds)) continue;
-    const found = cmds.find((c) => c.includes('oxfmt'));
-    if (found) oxfmtCmd = found;
-  }
-
-  const canCmds = lintStaged[canonical];
-  if (Array.isArray(canCmds)) {
-    const found = canCmds.find((c) => c.includes('oxfmt'));
-    if (found) oxfmtCmd = found;
-  }
-
-  for (const key of OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES) {
-    delete lintStaged[key];
-  }
-
-  const finalCmds = [oxfmtCmd].filter((c) => !c.includes('eslint'));
-  lintStaged[canonical] = finalCmds.length > 0 ? finalCmds : [OXFMT_LINT_STAGED_COMMAND];
-}
-
-function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | string>): void {
-  const pattern = OXFMT_LINT_STAGED_CODE_PATTERN;
-  const cmds = lintStaged[pattern];
-  if (!Array.isArray(cmds) || cmds.length === 0) return;
-
-  const eslintFix = cmds.find((c) => c === 'eslint --fix');
-  const eslintOther = cmds.find((c) => c.includes('eslint') && !eslintFix);
-  const eslint = eslintFix ?? eslintOther;
-  lintStaged[pattern] = eslint ? [OXFMT_LINT_STAGED_COMMAND, eslint] : [OXFMT_LINT_STAGED_COMMAND];
-}
-
-function normalizeMdGlobOxfmtFirst(lintStaged: Record<string, string[] | string>): void {
-  const pattern = OXFMT_LINT_STAGED_MD_PATTERN;
-  const cmds = lintStaged[pattern];
-  if (!Array.isArray(cmds) || cmds.length === 0) {
-    lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
-    return;
-  }
-
-  const filtered = cmds.filter((c) => !c.includes('dprint'));
-  const eslintFix = filtered.find((c) => c === 'eslint --fix');
-  const eslintOther = filtered.find((c) => c.includes('eslint') && !eslintFix);
-  const eslint = eslintFix ?? eslintOther ?? 'eslint --fix';
-
-  lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, eslint];
-}
-
-const LINT_STAGED_KEY_ORDER = [
-  OXFMT_LINT_STAGED_CODE_PATTERN,
-  OXFMT_LINT_STAGED_MD_PATTERN,
-  OXFMT_LINT_STAGED_DATA_PATTERN,
-] as const;
-
-function reorderLintStagedKeys(
-  lintStaged: Record<string, string[] | string>,
-): Record<string, string[] | string> {
-  const next: Record<string, string[] | string> = {};
-  for (const k of LINT_STAGED_KEY_ORDER) {
-    if (k in lintStaged) next[k] = lintStaged[k];
-  }
-  for (const k of Object.keys(lintStaged)) {
-    if (!(k in next)) next[k] = lintStaged[k];
-  }
-  return next;
-}
-
-function hasFormattingScripts(scripts: Record<string, string>): boolean {
-  return 'format' in scripts || 'format:check' in scripts;
-}
-
-function hasFormattingSectionTitle(scripts: Record<string, string>): boolean {
-  return Object.keys(scripts).some((key) => key === FORMATTING_SECTION_TITLE);
-}
-
-function findFormattingInsertionPoint(scripts: Record<string, string>): number {
-  if (hasFormattingScripts(scripts)) {
-    return -1;
-  }
-
-  const scriptKeys = Object.keys(scripts);
-  const formattingTitleIdx = scriptKeys.indexOf(FORMATTING_SECTION_TITLE);
-
-  if (formattingTitleIdx !== -1) {
-    return formattingTitleIdx + 1;
-  }
-
-  const lintingIndex = scriptKeys.findIndex((key) => key.includes('LINTING'));
-  if (lintingIndex !== -1) {
-    let insertAfter = lintingIndex;
-    for (let i = lintingIndex + 1; i < scriptKeys.length; i++) {
-      const key = scriptKeys[i];
-      if (key.startsWith(PACKAGE_JSON_SCRIPTS_SECTION_PREFIX)) {
-        break;
+  const languages: string[] = [];
+  for (const category of enabledCategories) {
+    for (const lang of OXFMT_LANGUAGE_CATEGORIES[category]) {
+      if (!languages.includes(lang)) {
+        languages.push(lang);
       }
-      insertAfter = i;
     }
-    return insertAfter + 1;
   }
 
-  return scriptKeys.length;
+  return languages;
 }
 
-function ensureFormattingScriptsUnderFormattingHeader(scripts: Record<string, string>): {
-  next: Record<string, string>;
-  changed: boolean;
-} {
-  const keys = Object.keys(scripts);
-  const titleIdx = keys.indexOf(FORMATTING_SECTION_TITLE);
-  if (titleIdx === -1) {
-    return { next: scripts, changed: false };
+async function computeCanonicalExtensionsFileContent(targetDir: string): Promise<string> {
+  const content = await readExtensionsJson(targetDir);
+  let recommendations = [...(content.recommendations ?? [])].filter((id) => id !== DPRINT_VSCODE_EXT_ID);
+  for (const ext of OXFMT_VSCODE_EXTENSIONS) {
+    if (!recommendations.includes(ext)) {
+      recommendations.push(ext);
+    }
   }
-
-  const formatKeys = (['format:check', 'format:fix'] as const).filter((k) => k in scripts);
-  if (formatKeys.length === 0) {
-    return { next: scripts, changed: false };
-  }
-
-  const firstFmtIdx = Math.min(...formatKeys.map((k) => keys.indexOf(k)));
-  if (firstFmtIdx > titleIdx) {
-    return { next: scripts, changed: false };
-  }
-
-  const baseKeys = keys.filter((k) => k !== 'format:check' && k !== 'format:fix');
-  const titlePos = baseKeys.indexOf(FORMATTING_SECTION_TITLE);
-  if (titlePos === -1) {
-    return { next: scripts, changed: false };
-  }
-
-  const newKeys = [...baseKeys.slice(0, titlePos + 1), ...formatKeys, ...baseKeys.slice(titlePos + 1)];
-  const next: Record<string, string> = {};
-  for (const k of newKeys) {
-    next[k] = scripts[k];
-  }
-
-  return { next, changed: true };
+  const merged = [...new Set([...(content.unwantedRecommendations ?? []), 'esbenp.prettier-vscode'])].sort();
+  const next = { ...content, recommendations, unwantedRecommendations: merged };
+  return `${JSON.stringify(next, null, 2)}\n`;
 }
 
-function addFormattingScriptsPure(packageJson: PackageJson): PackageJson {
-  const scripts = { ...(packageJson.scripts ?? {}) };
+async function computeCanonicalSettingsFileContent(targetDir: string): Promise<string> {
+  const languages = await getOxfmtLanguagesForPreview(targetDir);
+  const filePath = resolve(targetDir, VSCODE_DIR, VSCODE_SETTINGS_JSON);
 
-  if (hasFormattingScripts(scripts)) {
-    return packageJson;
-  }
-
-  const scriptKeys = Object.keys(scripts);
-  const insertionPoint = findFormattingInsertionPoint(scripts);
-
-  if (insertionPoint === -1) {
-    return packageJson;
-  }
-
-  const newScripts: Record<string, string> = {};
-
-  for (let i = 0; i < insertionPoint; i++) {
-    const key = scriptKeys[i];
-    newScripts[key] = scripts[key];
-  }
-
-  if (!hasFormattingSectionTitle(scripts)) {
-    newScripts[FORMATTING_SECTION_TITLE] = PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER;
-  }
-
-  for (const [scriptKey, scriptValue] of Object.entries(FORMATTING_SCRIPTS)) {
-    newScripts[scriptKey] = scriptValue;
-  }
-
-  for (let i = insertionPoint; i < scriptKeys.length; i++) {
-    const key = scriptKeys[i];
-    newScripts[key] = scripts[key];
-  }
-
-  return { ...packageJson, scripts: newScripts };
-}
-
-function ensureFormattingScriptsPlacementPure(packageJson: PackageJson): PackageJson {
-  const { next, changed } = ensureFormattingScriptsUnderFormattingHeader(packageJson.scripts ?? {});
-  if (!changed) return packageJson;
-  return { ...packageJson, scripts: next };
-}
-
-function addUpdateScriptPure(packageJson: PackageJson): PackageJson {
-  const scripts = packageJson.scripts ?? {};
-  const { next, changed } = ensureUpdateOxfmtScriptPlacement(scripts);
-  if (!changed) return packageJson;
-  return { ...packageJson, scripts: next };
-}
-
-function addFormatToReleaseCheckPure(packageJson: PackageJson): PackageJson {
-  const scripts = { ...(packageJson.scripts ?? {}) };
-  const releaseCheck = scripts['release:check'];
-  if (!releaseCheck || releaseCheck.includes('format:check')) return packageJson;
-
-  scripts['release:check'] = `pnpm format:check && ${releaseCheck}`;
-  return { ...packageJson, scripts };
-}
-
-function addOxfmtToLintStagedPure(packageJson: PackageJson): PackageJson {
-  const lintStaged = {
-    ...((packageJson['lint-staged'] ?? {}) as Record<string, string[] | string>),
-  };
-  const before = JSON.stringify(lintStaged);
-
-  coerceLintStagedStringValuesToArrays(lintStaged);
-  mergeDataGlobAliasesIntoCanonical(lintStaged);
-
-  const codePattern = OXFMT_LINT_STAGED_CODE_PATTERN;
-  const codeCommands = lintStaged[codePattern];
-  if (!Array.isArray(codeCommands) || codeCommands.length === 0) {
-    lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
-  } else if (!codeCommands.some((c) => c.includes('oxfmt'))) {
-    lintStaged[codePattern] = [
-      OXFMT_LINT_STAGED_COMMAND,
-      ...codeCommands.filter((c) => !c.includes('dprint')),
-    ];
-  }
-  normalizeCodeGlobOxfmtFirst(lintStaged);
-
-  const dataPattern = OXFMT_LINT_STAGED_DATA_PATTERN;
-  const dataCmds = lintStaged[dataPattern];
-  if (!Array.isArray(dataCmds) || dataCmds.length === 0) {
-    lintStaged[dataPattern] = [OXFMT_LINT_STAGED_COMMAND];
-  } else if (!dataCmds.some((c) => c.includes('oxfmt'))) {
-    lintStaged[dataPattern] = [OXFMT_LINT_STAGED_COMMAND, ...dataCmds.filter((c) => !c.includes('eslint'))];
-    const stripped = (lintStaged[dataPattern] as string[]).filter((c) => !c.includes('eslint'));
-    lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
+  let text: string;
+  if (!fileExists(filePath)) {
+    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
   } else {
-    const stripped = dataCmds.filter((c) => !c.includes('eslint'));
-    lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
+    text = await readFile(filePath, 'utf8');
   }
 
-  normalizeMdGlobOxfmtFirst(lintStaged);
+  let t = text;
+  let r = removeRootKeysWithPrefix(t, 'dprint.');
+  t = r.text;
+  r = replaceDprintLanguageFormatters(t, OXFMT_FORMATTER_ID);
+  t = r.text;
+  let tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  if (tail.changed) t = tail.text;
 
-  const reordered = reorderLintStagedKeys(lintStaged);
+  const root0 = parseJsoncObject(t) as Record<string, unknown>;
+  if (root0['prettier.enable'] !== false) {
+    t = setRootPropertyJsonc(t, 'prettier.enable', false);
+  }
 
-  if (before === JSON.stringify(reordered)) return packageJson;
+  for (const lang of languages) {
+    const block = setLanguageFormatterBlock(t, lang, OXFMT_FORMATTER_ID);
+    if (block.changed) t = block.text;
+  }
 
-  return { ...packageJson, 'lint-staged': reordered as Record<string, string[]> };
-}
+  tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  if (tail.changed) t = tail.text;
 
-/**
- * Applies the same in-memory package.json transforms as `applyOxfmt` for `package.json`
- * (formatting scripts → placement → `update:oxfmt-config` → `release:check` → `lint-staged`).
- */
-export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJson {
-  let packageJson: PackageJson = JSON.parse(JSON.stringify(source)) as PackageJson;
+  const shared = ensureOxfmtSharedSettingsBeforePrettier(t, OXFMT_FORMATTER_ID);
+  t = shared.text;
+  tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  if (tail.changed) t = tail.text;
 
-  packageJson = addFormattingScriptsPure(packageJson);
-  packageJson = ensureFormattingScriptsPlacementPure(packageJson);
-  packageJson = addUpdateScriptPure(packageJson);
-  packageJson = addFormatToReleaseCheckPure(packageJson);
-  packageJson = addOxfmtToLintStagedPure(packageJson);
-
-  return packageJson;
+  return t;
 }
 
 const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
 
 /**
- * Preview canonical oxfmt outputs for `package.json` and `oxfmt.config.ts` (aligned with apply order
- * for those files). Used for migrate detection and future apply preview.
+ * Preview files and package metadata owned by `applyOxfmt` so detection matches apply breadth.
  */
 export async function previewOxfmt(context: FeatureContext): Promise<FeaturePreviewResult> {
-  const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
-  const configPath = resolve(context.targetDir, OXFMT_CONFIG_FILENAME);
+  const { targetDir } = context;
+  const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
+  const configPath = resolve(targetDir, OXFMT_CONFIG_FILENAME);
 
   const currentPkgRaw = await readFile(packageJsonPath, 'utf8');
   const currentPkg = JSON.parse(currentPkgRaw) as PackageJson;
@@ -386,7 +201,7 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
         packageJsonPath,
         currentPkgRaw,
         proposedPkgRaw,
-        'package.json (oxfmt scripts, lint-staged, release:check)',
+        'package.json (oxfmt, Prettier/dprint cleanup, scripts, lint-staged)',
       ),
     );
   } else {
@@ -407,9 +222,116 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
     applied.push(OXFMT_CONFIG_FILENAME);
   }
 
+  for (const file of PRETTIER_CONFIG_FILES) {
+    const abs = resolve(targetDir, file);
+    if (!fileExists(abs)) continue;
+    const body = await readFile(abs, 'utf8');
+    changes.push(
+      createDeletePreviewChange(
+        abs,
+        body,
+        true,
+        `Prettier config (removed from ${file} — apply renames to backup)`,
+      ),
+    );
+  }
+
+  for (const file of DPRINT_CONFIG_FILES) {
+    const abs = resolve(targetDir, file);
+    if (!fileExists(abs)) continue;
+    const body = await readFile(abs, 'utf8');
+    changes.push(createDeletePreviewChange(abs, body, true, `remove legacy ${file}`));
+  }
+
+  const ciAbs = resolve(targetDir, CI_WORKFLOW_REL);
+
+  for (const rel of OXFMT_GITHUB_WORKFLOW_PATHS) {
+    const abs = resolve(targetDir, rel);
+    if (!fileExists(abs)) continue;
+    if (abs === ciAbs) {
+      continue;
+    }
+    const raw = await readFile(abs, 'utf8');
+    const { content: scrubbed, changed } = scrubDprintFromWorkflowContent(raw);
+    if (changed) {
+      changes.push(createWritePreviewChange(abs, raw, scrubbed, `${rel} (dprint → pnpm format:check)`));
+    } else {
+      applied.push(`${rel} (no dprint drift)`);
+    }
+  }
+
+  if (fileExists(ciAbs)) {
+    const raw = await readFile(ciAbs, 'utf8');
+    const { content: afterDprint } = scrubDprintFromWorkflowContent(raw);
+    const proposed = proposeCiYmlContent(afterDprint);
+    if (proposed !== raw) {
+      changes.push(
+        createWritePreviewChange(
+          ciAbs,
+          raw,
+          proposed,
+          '.github/workflows/ci.yml (dprint scrub + format check)',
+        ),
+      );
+    } else {
+      applied.push('ci.yml (no workflow drift)');
+    }
+  }
+
+  const extPath = resolve(targetDir, VSCODE_DIR, VSCODE_EXTENSIONS_JSON);
+  let currentExt = '';
+  if (fileExists(extPath)) {
+    currentExt = await readFile(extPath, 'utf8');
+  }
+  const proposedExt = await computeCanonicalExtensionsFileContent(targetDir);
+  if (proposedExt !== currentExt) {
+    changes.push(
+      createWritePreviewChange(
+        extPath,
+        currentExt,
+        proposedExt,
+        '.vscode/extensions.json (oxc + Prettier unwanted)',
+      ),
+    );
+  } else {
+    applied.push('.vscode/extensions.json');
+  }
+
+  const settingsPath = resolve(targetDir, VSCODE_DIR, VSCODE_SETTINGS_JSON);
+  let currentSettings = '';
+  if (fileExists(settingsPath)) {
+    currentSettings = await readFile(settingsPath, 'utf8');
+  }
+  const proposedSettings = await computeCanonicalSettingsFileContent(targetDir);
+  if (proposedSettings !== currentSettings) {
+    changes.push(
+      createWritePreviewChange(
+        settingsPath,
+        currentSettings,
+        proposedSettings,
+        '.vscode/settings.json (oxfmt formatter + editor defaults)',
+      ),
+    );
+  } else {
+    applied.push('.vscode/settings.json');
+  }
+
+  for (const name of ESLINT_CONFIG_FILES) {
+    const abs = resolve(targetDir, name);
+    if (!fileExists(abs)) continue;
+    const raw = await readFile(abs, 'utf8');
+    const next = canonicalEslintConfigContent(raw);
+    if (next !== raw) {
+      const out = next.endsWith('\n') ? next : `${next}\n`;
+      changes.push(createWritePreviewChange(abs, raw, out, `${name} (oxfmt-covered ESLint cleanup)`));
+    } else {
+      applied.push(`${name} (no oxfmt ESLint drift)`);
+    }
+  }
+
   const noopMessage =
     changes.length === 0
-      ? 'oxfmt already matches canonical configuration (package.json + oxfmt.config.ts).'
+      ? 'oxfmt already matches canonical configuration across owned files (package.json, config, workflows, VS Code, ESLint).'
       : undefined;
 
   return { changes, applied, noopMessage };

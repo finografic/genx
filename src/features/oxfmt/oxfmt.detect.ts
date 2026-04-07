@@ -5,8 +5,8 @@ import { previewOxfmt } from './oxfmt.preview.js';
 
 /**
  * Detect if oxfmt is already fully configured in the target directory.
- * Uses previewed canonical outputs (package.json + `oxfmt.config.ts`) — returns true only when
- * preview reports no relevant file changes.
+ * Uses `previewOxfmt` (package.json, config, workflows, VS Code, ESLint, Prettier/dprint cleanup
+ * surfaces) — returns true only when preview reports no relevant file changes.
  */
 export async function detectOxfmt(context: FeatureContext): Promise<boolean> {
   const preview = await previewOxfmt(context);
