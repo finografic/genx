@@ -9,6 +9,7 @@ import {
 } from 'utils';
 import type {
   FeaturePreviewChange,
+  FeaturePreviewChangeWrite,
   FeaturePreviewResult,
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
@@ -66,6 +67,31 @@ function isEnoent(error: unknown): boolean {
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
+}
+
+function stableDependencyJsonSlice(deps: unknown): string {
+  if (!deps || typeof deps !== 'object') {
+    return '{}';
+  }
+  const record = deps as Record<string, string>;
+  const keys = Object.keys(record).sort();
+  const sorted: Record<string, string> = {};
+  for (const k of keys) {
+    sorted[k] = record[k]!;
+  }
+  return JSON.stringify(sorted);
+}
+
+/**
+ * True when `dependencies` / `devDependencies` differ — apply may need `pnpm install` after writing package.json.
+ */
+export function packageJsonManifestDependencyFieldsChanged(currentRaw: string, proposedRaw: string): boolean {
+  const cur = JSON.parse(currentRaw) as PackageJson;
+  const next = JSON.parse(proposedRaw) as PackageJson;
+  return (
+    stableDependencyJsonSlice(cur.dependencies) !== stableDependencyJsonSlice(next.dependencies) ||
+    stableDependencyJsonSlice(cur.devDependencies) !== stableDependencyJsonSlice(next.devDependencies)
+  );
 }
 
 function stripOxfmtCoveredStylisticRulesFromEslintContent(content: string): string {
@@ -334,5 +360,17 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
       ? 'oxfmt already matches canonical configuration across owned files (package.json, config, workflows, VS Code, ESLint).'
       : undefined;
 
-  return { changes, applied, noopMessage };
+  const pkgWrite = changes.find(
+    (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path === packageJsonPath,
+  );
+  const needsInstall =
+    pkgWrite !== undefined &&
+    packageJsonManifestDependencyFieldsChanged(pkgWrite.currentContent, pkgWrite.proposedContent);
+
+  return {
+    changes,
+    applied,
+    noopMessage,
+    ...(needsInstall ? { needsInstall: true as const } : {}),
+  };
 }

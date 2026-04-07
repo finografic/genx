@@ -129,3 +129,42 @@ describe('oxfmt.preview — converge + detection alignment', () => {
     expect(hasPreviewChanges(finalPreview)).toBe(false);
   });
 });
+
+describe('oxfmt.preview — needsInstall', () => {
+  it('omits needsInstall when package.json diff does not change dependency fields', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-needsinst-'));
+    const base: PackageJson = {
+      name: '@finografic/needsinst-a',
+      version: '0.0.0',
+      devDependencies: { oxfmt: '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+    };
+    const canonical = computeCanonicalOxfmtPackageJson(base);
+    const scripts = { ...(canonical.scripts ?? {}) };
+    delete scripts[OXFMT_UPDATE_SCRIPT.key];
+    const drifted: PackageJson = { ...canonical, scripts };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(drifted), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    const preview = await previewOxfmt({ targetDir: dir });
+    expect(
+      getChangedPreviewChanges(preview.changes).some(
+        (c) => c.kind === 'write' && c.path.endsWith('package.json'),
+      ),
+    ).toBe(true);
+    expect(preview.needsInstall).toBeFalsy();
+  });
+
+  it('sets needsInstall when dependency lists change', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-needsinst-b-'));
+    const pkg: PackageJson = {
+      name: '@finografic/needsinst-b',
+      version: '0.0.0',
+      scripts: { test: 'echo ok' },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    const preview = await previewOxfmt({ targetDir: dir });
+    expect(preview.needsInstall).toBe(true);
+  });
+});
