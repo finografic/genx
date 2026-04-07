@@ -172,7 +172,9 @@ async function syncDepsForTarget(
 
   const updatedPackageJson = applyDependencyChanges(packageJson, changes);
   await writePackageJson(packageJsonPath, updatedPackageJson);
-  successUpdatedMessage(`Updated ${changes.length} ${changes.length === 1 ? 'dependency' : 'dependencies'}`);
+  successUpdatedMessage(
+    `Updating ${changes.length} ${changes.length === 1 ? 'dependency' : 'dependencies'}...`,
+  );
 
   try {
     await execa('pnpm', ['install'], { cwd: targetDir });
