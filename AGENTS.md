@@ -10,6 +10,7 @@ Skills encode the exact conventions and wiring steps for this repo — skipping 
 | Add or update CLI help / add a command | [scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)       |
 | Add a new genx feature module          | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)         |
 | Add a new `src/core/` module           | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md) |
+| Prune Learned sections in AGENTS.md    | [maintain-agents](/.github/skills/maintain-agents/SKILL.md)           |
 
 ---
 
