@@ -103,7 +103,10 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
   }
 
   const assetsDest = resolve(targetDir, '.claude/assets');
-  if (fileExists(assetsDest)) {
+  const assetsGitkeepPath = resolve(targetDir, '.claude/assets/.gitkeep');
+  if (!fileExists(assetsDest)) {
+    changes.push(createWritePreviewChange(assetsGitkeepPath, '', '\n', '.claude/assets/'));
+  } else {
     applied.push('.claude/assets/');
   }
 
