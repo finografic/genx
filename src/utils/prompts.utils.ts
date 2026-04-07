@@ -34,6 +34,11 @@ export function infoMessage(message: string): void {
   clack.log.info(pc.cyan(message));
 }
 
+/** Clack log line without forcing cyan on the message body (preserves embedded picocolors). */
+export function logMessage(message: string): void {
+  clack.log.message(message);
+}
+
 export function warnMessage(message: string): void {
   clack.log.warn(pc.yellow(message));
 }

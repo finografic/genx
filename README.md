@@ -97,6 +97,9 @@ genx deps ../my-package --write
 
 # Sync all managed targets
 genx deps --managed --write
+
+# Include policy downgrades (dry run)
+genx deps --allow-downgrade
 ```
 
 ### `genx features`
@@ -244,7 +247,7 @@ my-package/
 | --------------- | -------------------------------------------- | ---------------------------------------------------- |
 | `create`        | Scaffold a new @finografic package           | Interactive prompts                                  |
 | `migrate`       | Sync conventions to an existing package      | `--write`, `--only=<sections>`, `--managed`, `--yes` |
-| `deps`          | Sync dependencies to @finografic/deps-policy | `--write`, `--managed`, `--yes`                      |
+| `deps`          | Sync dependencies to @finografic/deps-policy | `--write`, `--managed`, `--yes`, `--allow-downgrade` |
 | `features`      | Add optional features to an existing package | `--managed`, `--yes`                                 |
 | `help`          | Show this help message                       | -                                                    |
 | `--help` / `-h` | Show help (works with commands too)          | -                                                    |

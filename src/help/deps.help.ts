@@ -31,6 +31,10 @@ export const depsHelp: HelpConfig = {
         label: 'Sync all managed targets',
         description: 'genx deps --managed --write',
       },
+      {
+        label: 'Include policy downgrades (dry run)',
+        description: 'genx deps --allow-downgrade',
+      },
     ],
   },
 

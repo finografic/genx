@@ -108,6 +108,8 @@ Before writing any link:
 - When using the shared ESLint stack, keep `@finografic/eslint-config` as a devDependency alongside ESLint
 - Prefer `:` segment separators in `package.json` `scripts` keys and in docs (e.g. `lint:fix`, `dev:feature`); align with `_templates/package.json` rather than dot-separated names
 - For feature/migrate apply output, use `successMessage` for net-new work, `successUpdatedMessage` for in-place edits (prefer “Updated …”), `successRemovedMessage` for removals — see `.github/instructions/project/feature-patterns.instructions.md` and `prompts.utils`
+- For migrate/feature flows that confirm file changes, prefer one user decision per changed file (not per hunk); avoid implicit auto-accept on small diffs unless that behavior is explicitly opt-in
+- Keep shared utilities for feature preview / diff-as-detection that are not canonical `src/core/` grouped in a dedicated app-level folder so they stay maintainable and can be extracted to a package later if needed
 
 ## Learned Workspace Facts
 
@@ -120,3 +122,5 @@ Before writing any link:
 - `~/.config/genx/config.json` is read with `parseJsoncObject` (JSON or JSONC) for the managed-repos list
 - `pnpm list:managed-repos` runs `scripts/list-managed-repos.ts` to print prettified `{ "managed": [{ name, path }, ...] }` for immediate child folders under cwd that have `package.json`, `.git`, and a `name` starting with `@finografic/`
 - `eslint.config` writers must support `globalIgnores([...])` as well as legacy `ignores: [...]`; this repo intentionally ignores `.cursor/hooks/**` and `.cursor/chats/**` while keeping `.cursor/rules/**` lintable
+- `genx deps` dependency planning uses semver: skip when the local spec already satisfies the policy range; omit policy downgrades unless `--allow-downgrade`; dry-run uses `[upgrade]` in cyan, `[add]` in green, and `[downgrade]` in yellowions after the label are white (grey “from” on upgrade/downgrade rows)
+- Oxfmt `quoteProps` accepts `as-needed`, `consistent`, or `preserve` — not ESLint’s `consistent-as-needed`; align ESLint `quote-props` with an oxfmt-supported mode to avoid formatter vs lint fights on save

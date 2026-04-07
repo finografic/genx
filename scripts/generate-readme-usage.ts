@@ -167,7 +167,7 @@ function replaceBetweenMarkers(
 const COMMAND_OPTIONS: Record<string, string> = {
   create: 'Interactive prompts',
   migrate: '`--write`, `--only=<sections>`, `--managed`, `--yes`',
-  deps: '`--write`, `--managed`, `--yes`',
+  deps: '`--write`, `--managed`, `--yes`, `--allow-downgrade`',
   features: '`--managed`, `--yes`',
   help: '-',
 };

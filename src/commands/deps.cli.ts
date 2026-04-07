@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
-import { errorMessage, infoMessage, intro, successMessage, successUpdatedMessage } from 'utils';
+import { errorMessage, infoMessage, intro, logMessage, successMessage, successUpdatedMessage } from 'utils';
 import {
   GENX_CONFIG_PATH,
   getPathArg,
@@ -13,6 +13,7 @@ import {
 } from 'utils';
 
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
+import type { DependencyChange } from 'lib/migrate/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
 import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
@@ -20,6 +21,29 @@ import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import type { ManagedTarget } from 'types/managed.types';
+
+function dependencyChangeLabelInner(operation: DependencyChange['operation']): string {
+  if (operation === 'add') return 'add';
+  if (operation === 'downgrade') return 'downgrade';
+  return 'upgrade';
+}
+
+function formatDryRunDependencyLine(change: DependencyChange, labelColumnWidth: number): string {
+  const inner = dependencyChangeLabelInner(change.operation);
+  const plainLabel = `[${inner}]`;
+  const pad = ' '.repeat(Math.max(0, labelColumnWidth - plainLabel.length));
+  const labelColor =
+    change.operation === 'downgrade' ? pc.yellow : change.operation === 'upgrade' ? pc.cyan : pc.green;
+  const labelPart = `${pad}${labelColor(plainLabel)}`;
+  const afterLabel = '  ';
+
+  if (change.operation === 'add') {
+    return `${labelPart}${afterLabel}${pc.white(`${change.name} ${change.to}`)}`;
+  }
+
+  const detail = `${pc.white(change.name)} ${pc.gray(change.from!)} ${pc.white('→')} ${pc.white(change.to)}`;
+  return `${labelPart}${afterLabel}${detail}`;
+}
 
 export async function syncDeps(argv: string[], context: { cwd: string }): Promise<void> {
   if (argv.includes('--help') || argv.includes('-h')) {
@@ -38,6 +62,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   const write = argv.includes('--write');
   const managed = hasManagedFlag(argv);
   const yesMode = isYesMode(argv);
+  const allowDowngrade = argv.includes('--allow-downgrade');
   const pathArg = getPathArg(argv);
 
   if (managed && pathArg) {
@@ -85,7 +110,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
         }
       }
 
-      await syncDepsForTarget(target.path, write);
+      await syncDepsForTarget(target.path, write, { allowDowngrade });
       appliedCount += 1;
     }
 
@@ -96,10 +121,14 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   }
 
   const targetDir = resolveTargetDir(context.cwd, pathArg);
-  await syncDepsForTarget(targetDir, write);
+  await syncDepsForTarget(targetDir, write, { allowDowngrade });
 }
 
-async function syncDepsForTarget(targetDir: string, write: boolean): Promise<void> {
+async function syncDepsForTarget(
+  targetDir: string,
+  write: boolean,
+  options: { allowDowngrade: boolean },
+): Promise<void> {
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
@@ -110,17 +139,22 @@ async function syncDepsForTarget(targetDir: string, write: boolean): Promise<voi
   const packageJsonPath = resolve(targetDir, 'package.json');
   const packageJson = await readPackageJson(packageJsonPath);
 
-  const changes = planDependencyChanges(packageJson, dependencyRules);
+  const changes = planDependencyChanges(packageJson, dependencyRules, {
+    allowDowngrade: options.allowDowngrade,
+  });
 
   if (!write) {
     infoMessage(`\nDRY RUN. Planned dependency changes for:\n${pc.cyan(targetDir)}\n`);
     if (changes.length === 0) {
       infoMessage('All dependencies already aligned with policy.');
     } else {
+      const maxLabelLen = Math.max(
+        ...changes.map((c) => `[${dependencyChangeLabelInner(c.operation)}]`.length),
+      );
+      // Width of the label column (right-align `[…]`); equals longest label so `|  [downgrade]` keeps exactly clack’s two spaces after the pipe.
+      const labelColumnWidth = maxLabelLen;
       for (const change of changes) {
-        const tag = change.operation === 'add' ? pc.green('add') : pc.yellow('update');
-        const from = change.from ? ` ${pc.dim(change.from)} →` : '';
-        infoMessage(`  [${tag}] ${change.name}${from} ${pc.cyan(change.to)}`);
+        logMessage(formatDryRunDependencyLine(change, labelColumnWidth));
       }
     }
     infoMessage(

@@ -1,15 +1,103 @@
+import semver from 'semver';
+
 import type { DependencyRule, DependencySection } from 'types/dependencies.types';
 import type { PackageJson } from 'types/package-json.types';
+
+const PROTOCOL_PREFIX = /^(workspace|file|link|npm|git|http|https):/i;
 
 export interface DependencyChange {
   name: string;
   from?: string;
   to: string;
-  operation: 'add' | 'update' | 'noop';
+  operation: 'add' | 'upgrade' | 'downgrade';
   section: DependencySection;
 }
 
-export function planDependencyChanges(packageJson: PackageJson, rules: DependencyRule[]): DependencyChange[] {
+export interface PlanDependencyChangesOptions {
+  /** When false (default), omit changes that would move to an older policy floor than the current spec. */
+  allowDowngrade?: boolean;
+}
+
+function isProtocolSpec(spec: string): boolean {
+  return PROTOCOL_PREFIX.test(spec.trim());
+}
+
+/** Minimum version represented by a semver range or version-ish string; null if not semver-shaped. */
+function minVersionOfSpec(spec: string): semver.SemVer | null {
+  const trimmed = spec.trim();
+  if (isProtocolSpec(trimmed)) {
+    return null;
+  }
+  const range = semver.validRange(trimmed);
+  if (range) {
+    return semver.minVersion(range);
+  }
+  const c = semver.coerce(trimmed);
+  return c;
+}
+
+/**
+ * A representative version from the local spec used to test policy satisfaction
+ * (min of range, or coerced version).
+ */
+function representativeVersion(spec: string): string | null {
+  const trimmed = spec.trim();
+  if (isProtocolSpec(trimmed)) {
+    return null;
+  }
+  const range = semver.validRange(trimmed);
+  if (range) {
+    return semver.minVersion(range)?.version ?? null;
+  }
+  const c = semver.coerce(trimmed);
+  return c?.version ?? null;
+}
+
+function isSemverAligned(current: string, policy: string): boolean {
+  if (current === policy) {
+    return true;
+  }
+  const rep = representativeVersion(current);
+  if (!rep) {
+    return false;
+  }
+  if (!semver.validRange(policy)) {
+    return false;
+  }
+  return semver.satisfies(rep, policy, { includePrerelease: true });
+}
+
+function isPolicyDowngrade(current: string, policy: string): boolean {
+  const curMin = minVersionOfSpec(current);
+  const polMin = minVersionOfSpec(policy);
+  if (!curMin || !polMin) {
+    return false;
+  }
+  return semver.lt(polMin, curMin);
+}
+
+function classifyVersionChange(
+  current: string,
+  policy: string,
+  options: PlanDependencyChangesOptions,
+): DependencyChange['operation'] | null {
+  if (isSemverAligned(current, policy)) {
+    return null;
+  }
+
+  if (isPolicyDowngrade(current, policy)) {
+    return options.allowDowngrade ? 'downgrade' : null;
+  }
+
+  return 'upgrade';
+}
+
+export function planDependencyChanges(
+  packageJson: PackageJson,
+  rules: DependencyRule[],
+  options: PlanDependencyChangesOptions = {},
+): DependencyChange[] {
+  const allowDowngrade = options.allowDowngrade === true;
   const changes: DependencyChange[] = [];
 
   for (const rule of rules) {
@@ -29,15 +117,23 @@ export function planDependencyChanges(packageJson: PackageJson, rules: Dependenc
       continue;
     }
 
-    if (current !== targetVersion) {
-      changes.push({
-        name: rule.name,
-        from: current,
-        to: targetVersion,
-        operation: 'update',
-        section: rule.section,
-      });
+    const currentStr = String(current);
+    if (currentStr === targetVersion) {
+      continue;
     }
+
+    const op = classifyVersionChange(currentStr, targetVersion, { allowDowngrade });
+    if (op === null) {
+      continue;
+    }
+
+    changes.push({
+      name: rule.name,
+      from: currentStr,
+      to: targetVersion,
+      operation: op,
+      section: rule.section,
+    });
   }
 
   return changes;
