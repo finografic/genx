@@ -5,38 +5,7 @@ Ordered roughly by dependency: earlier items are prerequisites for later ones.
 
 ---
 
-## 1. Composable detect primitives
-
-- [ ] status: pending
-
-**Goal:** Replace per-feature hand-written `detect()` implementations with a small set of typed
-predicate helpers combined via `allOf` / `anyOf`.
-
-**Why:** Current `detect()` functions are bespoke per-feature and hard to audit. Bugs like the
-oxfmt false-negative (detecting `oxfmt.config.ts` existence instead of declared deps + scripts)
-are easy to introduce and hard to spot. A declarative approach eliminates an entire class of
-detection error.
-
-**Shape (proposed):**
-
-```ts
-import { allOf, hasDependency, hasScript } from 'utils/detect.utils';
-
-export const detectOxfmt = allOf([
-  hasDependency('oxfmt'),
-  hasDependency('@finografic/oxfmt-config'),
-  anyOf([hasScript('format:check'), hasScript('format:fix')]),
-]);
-```
-
-Each primitive (`hasDependency`, `hasScript`, `hasFile`, `hasConfigBlock`) returns
-`(context: FeatureContext) => Promise<boolean>`. `allOf` / `anyOf` compose them.
-
-**Status:** Not started. Standalone value even without diff-as-detection.
-
----
-
-## 2. jsdiff — per-file diff display
+## 1. jsdiff — per-file diff display
 
 - [x] status: **DONE**
 
@@ -66,7 +35,7 @@ a separate (internal) use of the same library for a completely different purpose
 
 ---
 
-## 3. Diff-as-detection
+## 2. Diff-as-detection
 
 - [x] status: **DONE**
 
@@ -119,7 +88,7 @@ post-write install gating where needed).
 
 ---
 
-## 4. `genx create` — apply resolvePolicy() immediately after scaffold
+## 3. `genx create` — apply resolvePolicy() immediately after scaffold
 
 - [ ] status: pending
 
@@ -138,7 +107,7 @@ not stale versions baked into the template.
 
 ---
 
-## 5. Type-specific policy divergence in deps-policy
+## 4. Type-specific policy divergence in deps-policy
 
 - [ ] status: pending
 
@@ -158,7 +127,7 @@ ecosystem matures, some package types legitimately need a different dep surface.
 
 ---
 
-## 6. Bulk orchestrator — `deps-manager`
+## 5. Bulk orchestrator — `deps-manager`
 
 - [x] status: **DONE**
 
@@ -177,7 +146,7 @@ or two packages; tedious at ecosystem scale.
 
 ---
 
-## 7. Structured markdown section management
+## 6. Structured markdown section management
 
 - [x] status: **DONE**
 
@@ -220,7 +189,7 @@ need to be defined carefully (headings, code blocks, nested lists).
 
 ---
 
-## 8. `ai-agents` feature — AGENTS.md + skills scaffold
+## 7. `ai-agents` feature — AGENTS.md + skills scaffold
 
 - [x] status: **DONE**
 
@@ -272,3 +241,9 @@ and which skills apply to which package types.
 - **Auto-publish on version bump** — too much automation risk; manual release gates are intentional.
 - **Removing `--only` from `migrate`** — `deps` command coexists as a fast path; `--only` retains
   value for other granular migrate operations (e.g. `--only=eslint`).
+
+---
+
+## Follow-up
+
+- [ ] Migrate `_templates/` and the `git-hooks` feature from `simple-git-hooks` to `husky`
