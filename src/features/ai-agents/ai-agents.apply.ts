@@ -10,11 +10,13 @@ import {
   findSectionIndex,
   hasSection,
   parseSections,
+  reorderSections,
   serializeSections,
   setSection,
 } from 'lib/markdown-sections';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import {
+  AI_AGENTS_ALL_CANONICAL_HEADINGS,
   AI_AGENTS_ENFORCED_HEADINGS,
   AI_AGENTS_SEEDED_HEADINGS,
   AI_AGENTS_SKILLS_DIR,
@@ -84,6 +86,13 @@ export async function applyAiAgents(context: FeatureContext): Promise<FeatureApp
         parsed = setSection(parsed, heading, templateSection.body);
         changed = true;
       }
+    }
+
+    // Enforce canonical section order (seeded then enforced, other sections follow)
+    const reordered = reorderSections(parsed, [...AI_AGENTS_ALL_CANONICAL_HEADINGS]);
+    if (reordered.sections.some((s, i) => s.heading !== parsed.sections[i]?.heading)) {
+      parsed = reordered;
+      changed = true;
     }
 
     if (changed) {

@@ -89,6 +89,8 @@ Before writing any link:
 1. Verify the target file exists.
 2. For anchor links: read the file, find the exact heading text, derive the slug — do not guess.
 
+---
+
 ## Git Policy
 
 - IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
