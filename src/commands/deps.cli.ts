@@ -186,5 +186,5 @@ async function syncDepsForTarget(
     errorMessage('pnpm install failed — run it manually');
   }
 
-  successMessage('Done');
+  successMessage('Done\n');
 }

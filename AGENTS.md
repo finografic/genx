@@ -34,13 +34,13 @@ These rules are specific to `@finografic/genx` and not shared with other project
 
 ### Instructions to Skills Map
 
-Canonical patterns live under `.github/instructions/project/`. Paired **skills** (agent procedures) live under `.github/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows without relying on `.claude/skills/` only.
+Canonical patterns live under `.github/instructions/project/`. Paired skills live under `.github/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows.
 
-| Instructions                                                                               | Skill (procedure)                                                     |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| [Feature Patterns](/.github/instructions/project/feature-patterns.instructions.md)         | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)         |
-| [CLI Help Patterns](/.github/instructions/project/cli-help-patterns.instructions.md)       | [scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)       |
-| [Core Module Patterns](/.github/instructions/project/core-module-patterns.instructions.md) | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md) |
+| Instructions                                                        | Skill (procedure)                              |
+| ------------------------------------------------------------------- | ---------------------------------------------- |
+| `.github/instructions/project/feature-patterns.instructions.md`     | `.github/skills/scaffold-feature/SKILL.md`     |
+| `.github/instructions/project/cli-help-patterns.instructions.md`    | `.github/skills/scaffold-cli-help/SKILL.md`    |
+| `.github/instructions/project/core-module-patterns.instructions.md` | `.github/skills/scaffold-core-module/SKILL.md` |
 
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
@@ -50,54 +50,29 @@ Canonical patterns live under `.github/instructions/project/`. Paired **skills**
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
 Follow general TypeScript, ESLint, and naming conventions from prior context.
 
-- [General](/.github/instructions/00-general.instructions.md)
-- [File Naming](/.github/instructions/01-file-naming.instructions.md)
-- [TypeScript Patterns](/.github/instructions/02-typescript-patterns.instructions.md)
-- [Provider & Context Patterns](/.github/instructions/03-provider-context-patterns.instructions.md)
-- [ESLint & Code Style](/.github/instructions/04-eslint-code-style.instructions.md)
-- [Documentation](/.github/instructions/05-documentation.instructions.md)
-- [Modern TypeScript Patterns](/.github/instructions/06-modern-typescript-patterns.instructions.md)
-- [Variable Naming](/.github/instructions/07-variable-naming.instructions.md)
-- [README Standards](/.github/instructions/08-readme-standards.instructions.md)
-- [Picocolors CLI styling](/.github/instructions/09-picocolors-cli-styling.instructions.md)
-- [Git Policy](/.github/instructions/10-git-policy.instructions.md)
+- General: `.github/instructions/00-general.instructions.md`
+- File Naming: `.github/instructions/01-file-naming.instructions.md`
+- TypeScript: `.github/instructions/02-typescript-patterns.instructions.md`
+- ESLint & Style: `.github/instructions/04-eslint-code-style.instructions.md`
+- Documentation: `.github/instructions/05-documentation.instructions.md`
+- Modern TS Patterns: `.github/instructions/06-modern-typescript-patterns.instructions.md`
+- Variable Naming: `.github/instructions/07-variable-naming.instructions.md`
+- README Standards: `.github/instructions/08-readme-standards.instructions.md`
+- Picocolors CLI styling: `.github/instructions/09-picocolors-cli-styling.instructions.md`
+- Git Policy: `.github/instructions/10-git-policy.instructions.md`
+- Agent-facing Markdown: `.github/instructions/11-agent-facing-markdown.instructions.md`
 
 ## Rules — Markdown Tables
 
 - Padded pipes: one space on each side of every `|`, including the separator row.
 - Align column widths so all cells in the same column are equal width.
 
-## Rules — Markdown Links
-
-- Use markdown link syntax when referencing another document — not bare paths or backtick references.
-- Use absolute paths from the repo root (e.g. `[AGENTS.md](/AGENTS.md)`).
-- Prefer em-dash `—` over hyphen-minus `-` as a heading separator — it produces a cleaner `--` slug.
-
-### Anchor slugification
-
-When linking to a specific section, append `#<slug>` to the path:
-
-- Use a single `#` regardless of the target heading level (H1–H6).
-- Slugify: lowercase, strip characters that are not alphanumeric, spaces, or hyphens; convert spaces to hyphens.
-- **Em-dash `—`** is stripped; surrounding spaces become hyphens → `--`
-  - `## Skills — Check Before Implementing` → `#skills--check-before-implementing`
-- **Hyphen-minus `-`** is kept; surrounding spaces also become hyphens → `---`
-  - `## Rules - General` → `#rules---general`
-
-### Confirm before writing
-
-Before writing any link:
-
-1. Verify the target file exists.
-2. For anchor links: read the file, find the exact heading text, derive the slug — do not guess.
-
 ---
 
 ## Git Policy
 
-- IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
-- [Git — Commits](/.github/instructions/10-git-policy.instructions.md#commits)
-- [Git — Releases](/.github/instructions/10-git-policy.instructions.md#releases)
+- IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Non-negotiable.
+- `.github/instructions/10-git-policy.instructions.md` (see Commits and Releases sections)
 
 ---
 
