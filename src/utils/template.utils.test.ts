@@ -35,6 +35,15 @@ describe('template utils', () => {
       expect(result).toBe('Hello World! __MISSING__');
     });
 
+    it('should replace **BOLD** form tokens (linter-normalized from __TOKEN__)', () => {
+      const template = '# **PACKAGE_NAME**\n\n> **DESCRIPTION**\n\nMIT © [**AUTHOR_NAME**](url)';
+      const vars = { PACKAGE_NAME: '@finografic/foo', DESCRIPTION: 'A package', AUTHOR_NAME: 'Justin' };
+
+      const result = applyTemplate(template, vars);
+
+      expect(result).toBe('# @finografic/foo\n\n> A package\n\nMIT © [Justin](url)');
+    });
+
     it('should handle empty template', () => {
       const result = applyTemplate('', {});
 
