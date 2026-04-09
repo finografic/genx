@@ -76,6 +76,19 @@ export async function removeDependency(
 }
 
 /**
+ * Return a shallow copy of a string-keyed record with keys sorted A→Z.
+ * Use when adding entries to `devDependencies` / `dependencies` so the
+ * written package.json stays consistently ordered.
+ */
+export function sortedRecord(record: Record<string, string>): Record<string, string> {
+  const sorted: Record<string, string> = {};
+  for (const k of Object.keys(record).sort()) {
+    sorted[k] = record[k]!;
+  }
+  return sorted;
+}
+
+/**
  * Check if any of the given dependencies are declared in package.json.
  * Useful for detecting feature categories (e.g., "has react" for frontend).
  */

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileExists, isDependencyDeclared } from 'utils';
+import { fileExists, isDependencyDeclared, sortedRecord } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -30,22 +30,20 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 
 async function withCssDevDependencies(targetDir: string, packageJson: PackageJson): Promise<PackageJson> {
   let next = packageJson;
+  const additions: Record<string, string> = {};
   if (!(await isDependencyDeclared(targetDir, STYLELINT_PACKAGE))) {
-    next = {
-      ...next,
-      devDependencies: {
-        ...(next.devDependencies ?? {}),
-        [STYLELINT_PACKAGE]: STYLELINT_PACKAGE_VERSION,
-      },
-    };
+    additions[STYLELINT_PACKAGE] = STYLELINT_PACKAGE_VERSION;
   }
   if (!(await isDependencyDeclared(targetDir, STYLELINT_STYLISTIC_PACKAGE))) {
+    additions[STYLELINT_STYLISTIC_PACKAGE] = STYLELINT_STYLISTIC_PACKAGE_VERSION;
+  }
+  if (Object.keys(additions).length > 0) {
     next = {
       ...next,
-      devDependencies: {
-        ...(next.devDependencies ?? {}),
-        [STYLELINT_STYLISTIC_PACKAGE]: STYLELINT_STYLISTIC_PACKAGE_VERSION,
-      },
+      devDependencies: sortedRecord({
+        ...((next.devDependencies as Record<string, string> | undefined) ?? {}),
+        ...additions,
+      }),
     };
   }
   return next;

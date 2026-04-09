@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fileExists, findPackageRoot, isDependencyDeclared } from 'utils';
+import { fileExists, findPackageRoot, isDependencyDeclared, sortedRecord } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -33,15 +33,20 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 }
 
 async function withGitHooksDependencies(targetDir: string, packageJson: PackageJson): Promise<PackageJson> {
-  let next = packageJson;
+  const additions: Record<string, string> = {};
   for (const [packageName, version] of Object.entries(GIT_HOOKS_PACKAGES)) {
-    if (await isDependencyDeclared(targetDir, packageName)) {
-      continue;
+    if (!(await isDependencyDeclared(targetDir, packageName))) {
+      additions[packageName] = version;
     }
-    const devDependencies = { ...(next.devDependencies ?? {}), [packageName]: version };
-    next = { ...next, devDependencies };
   }
-  return next;
+  if (Object.keys(additions).length === 0) {
+    return packageJson;
+  }
+  const devDependencies = sortedRecord({
+    ...((packageJson.devDependencies as Record<string, string> | undefined) ?? {}),
+    ...additions,
+  });
+  return { ...packageJson, devDependencies };
 }
 
 function stripLegacySimpleGitHooks(packageJson: PackageJson): PackageJson {

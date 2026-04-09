@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileExists, isDependencyDeclared } from 'utils';
+import { fileExists, isDependencyDeclared, sortedRecord } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -95,10 +95,10 @@ function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
   if (devDeps?.[MD_LINT_PACKAGE]) {
     return packageJson;
   }
-  const devDependencies = {
-    ...(packageJson.devDependencies ?? {}),
+  const devDependencies = sortedRecord({
+    ...((packageJson.devDependencies as Record<string, string> | undefined) ?? {}),
     [MD_LINT_PACKAGE]: MD_LINT_PACKAGE_VERSION,
-  };
+  });
   return { ...packageJson, devDependencies };
 }
 
@@ -148,6 +148,11 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
   const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
   const rawPkg = await readFile(packageJsonPath, 'utf8');
   let pkg = JSON.parse(rawPkg) as PackageJson;
+
+  // Skip self-install: md-lint is the markdown linter itself — don't add it as its own devDep.
+  if ((pkg as Record<string, unknown>)['name'] === MD_LINT_PACKAGE) {
+    return { changes: [], applied: [], noopMessage: `Skipped — target is ${MD_LINT_PACKAGE} itself.` };
+  }
 
   const hadDep = await isDependencyDeclared(targetDir, MD_LINT_PACKAGE);
   if (!hadDep) {

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fileExists, isDependencyDeclared } from 'utils';
+import { fileExists, isDependencyDeclared, sortedRecord } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -97,10 +97,10 @@ function withVitestDependency(packageJson: PackageJson): PackageJson {
   if (devDeps?.[VITEST_PACKAGE]) {
     return packageJson;
   }
-  const devDependencies = {
-    ...(packageJson.devDependencies ?? {}),
+  const devDependencies = sortedRecord({
+    ...((packageJson.devDependencies as Record<string, string> | undefined) ?? {}),
     [VITEST_PACKAGE]: VITEST_PACKAGE_VERSION,
-  };
+  });
   return { ...packageJson, devDependencies };
 }
 
