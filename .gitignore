@@ -16,6 +16,9 @@ build/
 .claude/
 !.claude/settings.json
 
+# Docs
+docs/drafts/
+
 # IDE
 .cursor/
 !.cursor/rules/

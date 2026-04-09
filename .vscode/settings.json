@@ -56,7 +56,7 @@
   },
 
   "markdownlint.config": {
-    "default": true,
+    "default": false,
     "MD013": { "line_length": 120, "tables": false, "code_blocks": false }, // Allow line length
     "MD024": false, // Allow duplicate headings
     "MD025": false, // Allow multiple top-level headings
