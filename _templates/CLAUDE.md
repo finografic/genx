@@ -2,7 +2,7 @@
 
 # Claude-specific Instructions
 
-## Rules - Claude
+## Rules — Claude
 
 - IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages.
 

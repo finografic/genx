@@ -7,7 +7,7 @@
 Check `AGENTS.md` → [**Skills — Check Before Implementing**](./AGENTS.md#skills--check-before-implementing) before starting any task that matches a known pattern
 (adding commands, features, core modules). Invoke the paired skill — do not implement from scratch.
 
-## Rules - Claude
+## Rules — Claude
 
 - IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
 
