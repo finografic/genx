@@ -17,6 +17,7 @@ import {
   LINT_STAGED_MD_LINT_CMD,
   LINT_STAGED_MD_PATTERN,
   LINT_STAGED_OXFMT_CMD,
+  MARKDOWN_LEGACY_CSS_FILES,
   MD_LINT_FIX_SCRIPT,
   MD_LINT_PACKAGE,
   MD_LINT_PACKAGE_VERSION,
@@ -193,7 +194,7 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
     applied.push('.vscode/extensions.json');
   }
 
-  for (const cssFile of ['markdown-github-light.css', 'markdown-custom-dark.css'] as const) {
+  for (const cssFile of MARKDOWN_LEGACY_CSS_FILES) {
     const cssPath = resolve(targetDir, '.vscode', cssFile);
     if (fileExists(cssPath)) {
       const cssBody = await readFile(cssPath, 'utf8');
