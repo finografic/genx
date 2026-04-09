@@ -9,7 +9,7 @@ import { detectMarkdown } from './markdown.detect';
  */
 export const markdownFeature: Feature = {
   id: 'markdown',
-  label: 'Markdown linting (eslint-plugin-markdownlint)',
+  label: 'Markdown linting (@finografic/md-lint)',
   hint: 'recommended',
   vscode: {
     extensions: MARKDOWNLINT_VSCODE_EXTENSIONS,

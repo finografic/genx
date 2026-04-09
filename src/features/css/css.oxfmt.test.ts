@@ -54,9 +54,10 @@ describe('css.oxfmt — ensureCssImportInOxfmtConfig', () => {
     expect(again).toBe(withCss);
   });
 
-  it('is a no-op for current _templates/oxfmt.config.ts (includes css by default)', () => {
+  it('adds css import to current _templates/oxfmt.config.ts (not included by default)', () => {
     const out = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
-    expect(out).toBe(baseTemplateOxfmtConfig);
+    expect(out).not.toBe(baseTemplateOxfmtConfig);
+    expect(out).toMatch(/\n {2}base,\n {2}css,/);
   });
 
   it('does nothing when @finografic/oxfmt-config is not imported', () => {
@@ -82,9 +83,11 @@ describe('css.oxfmt — insertCssOverrideInOxfmtConfig', () => {
     expect(again).toBe(patched);
   });
 
-  it('is a no-op for current _templates/oxfmt.config.ts', () => {
-    const out = insertCssOverrideInOxfmtConfig(baseTemplateOxfmtConfig);
-    expect(out).toBe(baseTemplateOxfmtConfig);
+  it('adds CSS/SCSS override to current _templates/oxfmt.config.ts (not included by default)', () => {
+    const withImport = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+    const out = insertCssOverrideInOxfmtConfig(withImport);
+    expect(out).toContain("files: ['*.css', '*.scss']");
+    expect(out).not.toBe(withImport);
   });
 });
 
@@ -98,11 +101,11 @@ describe('css.oxfmt — full patch (import + override)', () => {
     expect(next.split('{ files:').filter((s) => s.includes('*.css')).length).toBe(1);
   });
 
-  it('current template already matches expected shape', () => {
-    expect(baseTemplateOxfmtConfig).toMatch(
+  it('current template does not include CSS by default — css feature adds it', () => {
+    expect(baseTemplateOxfmtConfig).not.toMatch(
       /import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s,
     );
-    expect(baseTemplateOxfmtConfig).toContain(
+    expect(baseTemplateOxfmtConfig).not.toContain(
       `{ files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } }`,
     );
   });
@@ -145,7 +148,9 @@ describe('css.oxfmt — patchOxfmtConfigForCss', () => {
     const configPath = join(dir, OXFMT_CONFIG_FILENAME);
 
     try {
-      await writeFile(configPath, baseTemplateOxfmtConfig, 'utf8');
+      let withCss = ensureCssImportInOxfmtConfig(baseTemplateOxfmtConfig);
+      withCss = insertCssOverrideInOxfmtConfig(withCss);
+      await writeFile(configPath, withCss, 'utf8');
       await expect(patchOxfmtConfigForCss(dir)).resolves.toBe(false);
     } finally {
       await rm(dir, { recursive: true, force: true });

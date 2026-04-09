@@ -4,98 +4,28 @@ import { fileExists, isDependencyDeclared } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
-import { ESLINT_CONFIG_FILES, PACKAGE_JSON } from 'config/constants.config';
+import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
+import {
+  createDeletePreviewChange,
+  createWritePreviewChange,
+} from '../../lib/feature-preview/feature-preview.utils.js';
 import { OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES } from '../oxfmt/oxfmt.constants.js';
 import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
 import {
-  ESLINT_MARKDOWN_CONFIG_BLOCK,
-  ESLINT_MARKDOWN_IMPORTS,
   LINT_STAGED_DATA_ONLY_PATTERN,
+  LINT_STAGED_MD_LINT_CMD,
   LINT_STAGED_MD_PATTERN,
   LINT_STAGED_OXFMT_CMD,
-  MARKDOWNLINT_PACKAGE,
-  MARKDOWNLINT_PACKAGE_VERSION,
+  MD_LINT_FIX_SCRIPT,
+  MD_LINT_PACKAGE,
+  MD_LINT_PACKAGE_VERSION,
+  MD_LINT_SCRIPT,
 } from './markdown.constants';
 import {
   computeProposedMarkdownExtensionsText,
   computeProposedMarkdownSettingsText,
-  resolveMarkdownCssTemplatePath,
 } from './markdown.vscode';
-
-function findEslintConfig(targetDir: string): string | null {
-  for (const candidate of ESLINT_CONFIG_FILES) {
-    const filePath = resolve(targetDir, candidate);
-    if (fileExists(filePath)) {
-      return filePath;
-    }
-  }
-  return null;
-}
-
-/**
- * Returns proposed eslint config content when the markdown block should be added, else null.
- */
-export function proposeMarkdownEslintContent(content: string): string | null {
-  if (content.includes(MARKDOWNLINT_PACKAGE) || content.includes("files: ['**/*.md']")) {
-    return null;
-  }
-
-  let updatedContent = content;
-
-  if (!content.includes(MARKDOWNLINT_PACKAGE)) {
-    const importRegex = /^import .+ from ['"].+['"];?\s*$/gm;
-    let lastImportMatch: RegExpExecArray | null = null;
-    let match: RegExpExecArray | null;
-
-    while ((match = importRegex.exec(content)) !== null) {
-      lastImportMatch = match;
-    }
-
-    if (lastImportMatch) {
-      const insertPos = lastImportMatch.index + lastImportMatch[0].length;
-      updatedContent =
-        updatedContent.slice(0, insertPos) + '\n' + ESLINT_MARKDOWN_IMPORTS + updatedContent.slice(insertPos);
-    }
-  }
-
-  const modernEnd = /\n\]\);\s*$/;
-  const legacyEnd = /\n\];\s*\n+export default\s+config\b/m;
-
-  let insertPos: number | null = null;
-  const modernMatch = modernEnd.exec(updatedContent);
-  if (modernMatch) {
-    insertPos = modernMatch.index;
-  } else {
-    const legacyMatch = legacyEnd.exec(updatedContent);
-    if (legacyMatch) {
-      insertPos = legacyMatch.index;
-    } else {
-      const configArrayEndRegex = /\n\];?\s*\n*export default/;
-      const configEndMatch = configArrayEndRegex.exec(updatedContent);
-      if (configEndMatch) {
-        insertPos = configEndMatch.index;
-      }
-    }
-  }
-
-  if (insertPos === null) {
-    return null;
-  }
-
-  updatedContent =
-    updatedContent.slice(0, insertPos) +
-    '\n' +
-    ESLINT_MARKDOWN_CONFIG_BLOCK +
-    updatedContent.slice(insertPos);
-
-  if (updatedContent === content) {
-    return null;
-  }
-
-  return updatedContent;
-}
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -103,6 +33,7 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 
 /**
  * Applies lint-staged markdown splits / `*.md` commands — same rules as `markdown.apply`.
+ * Migrates `eslint --fix` → `md-lint --fix` on the `*.md` key when present.
  */
 export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): PackageJson {
   const lintStaged = { ...(packageJson['lint-staged'] as Record<string, string[]> | undefined) };
@@ -112,17 +43,28 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
 
   const mdCommands = lintStaged[LINT_STAGED_MD_PATTERN];
 
-  if (mdCommands?.some((c) => c.includes('oxfmt')) && mdCommands.includes('eslint --fix')) {
+  // Already fully configured with the new stack
+  if (mdCommands?.some((c) => c.includes('oxfmt')) && mdCommands.includes(LINT_STAGED_MD_LINT_CMD)) {
     return packageJson;
   }
 
-  if (mdCommands?.includes('eslint --fix') && !mdCommands.some((c) => c.includes('oxfmt'))) {
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+  // Migrate: has oxfmt + eslint --fix → replace eslint with md-lint --fix
+  if (mdCommands?.some((c) => c.includes('oxfmt')) && mdCommands.some((c) => c.includes('eslint'))) {
+    lintStaged[LINT_STAGED_MD_PATTERN] = mdCommands.map((c) =>
+      c.includes('eslint') ? LINT_STAGED_MD_LINT_CMD : c,
+    );
     return { ...packageJson, 'lint-staged': lintStaged };
   }
 
+  // Has eslint only → replace with oxfmt + md-lint
+  if (mdCommands?.some((c) => c.includes('eslint')) && !mdCommands.some((c) => c.includes('oxfmt'))) {
+    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, LINT_STAGED_MD_LINT_CMD];
+    return { ...packageJson, 'lint-staged': lintStaged };
+  }
+
+  // Has oxfmt only → add md-lint
   if (mdCommands?.some((c) => c.includes('oxfmt')) && !mdCommands.some((c) => c.includes('eslint'))) {
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, LINT_STAGED_MD_LINT_CMD];
     return { ...packageJson, 'lint-staged': lintStaged };
   }
 
@@ -134,13 +76,13 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
   if (combined && combined.includes(LINT_STAGED_OXFMT_CMD) && !combined.some((c) => c.includes('eslint'))) {
     lintStaged[LINT_STAGED_DATA_ONLY_PATTERN] = [LINT_STAGED_OXFMT_CMD];
     if (combinedKey) delete lintStaged[combinedKey];
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, LINT_STAGED_MD_LINT_CMD];
     return { ...packageJson, 'lint-staged': lintStaged };
   }
 
   const dataOnly = lintStaged[LINT_STAGED_DATA_ONLY_PATTERN];
   if (dataOnly && !lintStaged[LINT_STAGED_MD_PATTERN]) {
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, 'eslint --fix'];
+    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, LINT_STAGED_MD_LINT_CMD];
     return { ...packageJson, 'lint-staged': lintStaged };
   }
 
@@ -149,18 +91,53 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
 
 function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
   const devDeps = packageJson.devDependencies as Record<string, string> | undefined;
-  if (devDeps?.[MARKDOWNLINT_PACKAGE]) {
+  if (devDeps?.[MD_LINT_PACKAGE]) {
     return packageJson;
   }
   const devDependencies = {
     ...(packageJson.devDependencies ?? {}),
-    [MARKDOWNLINT_PACKAGE]: MARKDOWNLINT_PACKAGE_VERSION,
+    [MD_LINT_PACKAGE]: MD_LINT_PACKAGE_VERSION,
   };
   return { ...packageJson, devDependencies };
 }
 
+function withMarkdownScripts(packageJson: PackageJson): PackageJson {
+  const scripts = (packageJson.scripts as Record<string, string> | undefined) ?? {};
+  if (scripts[MD_LINT_SCRIPT] !== undefined && scripts[MD_LINT_FIX_SCRIPT] !== undefined) {
+    return packageJson;
+  }
+  const entries = Object.entries(scripts);
+  const lintFixIdx = entries.findIndex(([k]) => k === 'lint:fix');
+  const insertAt = lintFixIdx >= 0 ? lintFixIdx + 1 : entries.length;
+  const next = [...entries];
+  if (scripts[MD_LINT_SCRIPT] === undefined) {
+    next.splice(insertAt, 0, [MD_LINT_SCRIPT, 'md-lint']);
+  }
+  if (scripts[MD_LINT_FIX_SCRIPT] === undefined) {
+    const mdLintIdx = next.findIndex(([k]) => k === MD_LINT_SCRIPT);
+    next.splice(mdLintIdx >= 0 ? mdLintIdx + 1 : insertAt + 1, 0, [MD_LINT_FIX_SCRIPT, 'md-lint --fix']);
+  }
+  return { ...packageJson, scripts: Object.fromEntries(next) };
+}
+
 /**
- * Preview markdown feature ownership: package.json, ESLint, VS Code, lint-staged, CSS assets.
+ * Propose adding a `lint.md` step to `.github/workflows/ci.yml` (after Lint, before Type check).
+ * Returns null if the step is already present or the insertion point is not found.
+ */
+function proposeCiWithMarkdownLint(content: string): string | null {
+  if (content.includes('lint.md') || content.includes('md-lint')) {
+    return null;
+  }
+  const typeCheckStep = '\n      - name: Type check';
+  if (!content.includes(typeCheckStep)) {
+    return null;
+  }
+  const mdLintStep = '\n      - name: Lint markdown\n        run: pnpm lint.md';
+  return content.replace(typeCheckStep, `${mdLintStep}\n${typeCheckStep}`);
+}
+
+/**
+ * Preview markdown feature ownership: package.json, VS Code, lint-staged, CSS cleanup, CI.
  */
 export async function previewMarkdown(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
@@ -171,12 +148,13 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
   const rawPkg = await readFile(packageJsonPath, 'utf8');
   let pkg = JSON.parse(rawPkg) as PackageJson;
 
-  const hadDep = await isDependencyDeclared(targetDir, MARKDOWNLINT_PACKAGE);
+  const hadDep = await isDependencyDeclared(targetDir, MD_LINT_PACKAGE);
   if (!hadDep) {
     pkg = withMarkdownDevDependency(pkg);
   }
 
   pkg = applyMarkdownLintStagedTransforms(pkg);
+  pkg = withMarkdownScripts(pkg);
 
   const proposedPkgRaw = formatPackageJsonString(pkg);
   if (proposedPkgRaw !== rawPkg) {
@@ -185,23 +163,11 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
         packageJsonPath,
         rawPkg,
         proposedPkgRaw,
-        'package.json (markdownlint, lint-staged)',
+        'package.json (md-lint, scripts, lint-staged)',
       ),
     );
   } else {
     applied.push('package.json (markdown manifest)');
-  }
-
-  const eslintPath = findEslintConfig(targetDir);
-  if (eslintPath) {
-    const eslintRaw = await readFile(eslintPath, 'utf8');
-    const proposedEslint = proposeMarkdownEslintContent(eslintRaw);
-    if (proposedEslint !== null) {
-      const out = proposedEslint.endsWith('\n') ? proposedEslint : `${proposedEslint}\n`;
-      changes.push(createWritePreviewChange(eslintPath, eslintRaw, out, 'eslint config (markdown block)'));
-    } else {
-      applied.push('eslint (markdown block present)');
-    }
   }
 
   const settings = await computeProposedMarkdownSettingsText(targetDir);
@@ -227,18 +193,27 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
     applied.push('.vscode/extensions.json');
   }
 
-  for (const name of ['markdown-custom-dark.css', 'markdown-github-light.css'] as const) {
-    const destPath = resolve(targetDir, '.vscode', name);
-    if (fileExists(destPath)) {
-      applied.push(`.vscode/${name}`);
-      continue;
+  for (const cssFile of ['markdown-github-light.css', 'markdown-custom-dark.css'] as const) {
+    const cssPath = resolve(targetDir, '.vscode', cssFile);
+    if (fileExists(cssPath)) {
+      const cssBody = await readFile(cssPath, 'utf8');
+      changes.push(
+        createDeletePreviewChange(cssPath, cssBody, true, `.vscode/${cssFile} (moved to md-lint package)`),
+      );
     }
-    const src = resolveMarkdownCssTemplatePath(name);
-    if (!src) {
-      continue;
+  }
+
+  const ciPath = resolve(targetDir, '.github/workflows/ci.yml');
+  if (fileExists(ciPath)) {
+    const ciRaw = await readFile(ciPath, 'utf8');
+    const proposedCi = proposeCiWithMarkdownLint(ciRaw);
+    if (proposedCi !== null) {
+      changes.push(
+        createWritePreviewChange(ciPath, ciRaw, proposedCi, '.github/workflows/ci.yml (lint.md step)'),
+      );
+    } else {
+      applied.push('.github/workflows/ci.yml');
     }
-    const body = await readFile(src, 'utf8');
-    changes.push(createWritePreviewChange(destPath, '', body, `.vscode/${name} (markdown preview CSS)`));
   }
 
   const noopMessage =

@@ -16,7 +16,6 @@ export const ESLINT_CONFIG_FILES = [
 export const VSCODE_DIR = '.vscode';
 export const VSCODE_SETTINGS_JSON = 'settings.json';
 export const VSCODE_EXTENSIONS_JSON = 'extensions.json';
-export const VSCODE_MARKDOWN_CSS = 'markdown-custom-dark.css';
 
 export const COMMITLINT_CONFIG = 'commitlint.config.mjs';
 
@@ -24,7 +23,7 @@ export const COMMITLINT_CONFIG = 'commitlint.config.mjs';
 // Package names
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const PKG_ESLINT_MARKDOWNLINT = 'eslint-plugin-markdownlint';
+export const PKG_MD_LINT = '@finografic/md-lint';
 export const PKG_STYLELINT = 'stylelint';
 export const PKG_STYLELINT_STYLISTIC = '@stylistic/stylelint-plugin';
 export const PKG_COMMITLINT_CLI = '@commitlint/cli';

@@ -29,8 +29,8 @@ export const dependencyRules: DependencyRule[] = [
   },
   { name: '@eslint/js', version: dev['@eslint/js'], section: 'devDependencies' },
   {
-    name: 'eslint-plugin-markdownlint',
-    version: dev['eslint-plugin-markdownlint'],
+    name: '@finografic/md-lint',
+    version: dev['@finografic/md-lint'],
     section: 'devDependencies',
     optional: true,
   },

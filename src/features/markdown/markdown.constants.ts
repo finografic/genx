@@ -2,16 +2,21 @@
  * Markdown feature configuration.
  */
 
-import { PKG_ESLINT_MARKDOWNLINT } from 'config/constants.config';
+import { PKG_MD_LINT } from 'config/constants.config';
 
-export const MARKDOWNLINT_PACKAGE = PKG_ESLINT_MARKDOWNLINT;
-export const MARKDOWNLINT_PACKAGE_VERSION = 'latest';
+export const MD_LINT_PACKAGE = PKG_MD_LINT;
+export const MD_LINT_PACKAGE_VERSION = 'latest';
 
 /** Legacy lint-staged glob that merged data files + `md` (split into data-only + `*.md` by the markdown feature). */
 export const LINT_STAGED_DATA_WITH_MD_PATTERN = '*.{json,jsonc,yml,yaml,toml,md}';
 export const LINT_STAGED_DATA_ONLY_PATTERN = '*.{json,jsonc,yml,yaml,toml}';
 export const LINT_STAGED_MD_PATTERN = '*.md';
 export const LINT_STAGED_OXFMT_CMD = 'oxfmt --no-error-on-unmatched-pattern';
+export const LINT_STAGED_MD_LINT_CMD = 'md-lint --fix';
+
+/** Script keys added to package.json by the markdown feature. */
+export const MD_LINT_SCRIPT = 'lint.md';
+export const MD_LINT_FIX_SCRIPT = 'lint.md.fix';
 
 /** VSCode extension IDs for markdownlint */
 export const MARKDOWNLINT_VSCODE_EXTENSIONS = ['davidanson.vscode-markdownlint'] as const;
@@ -21,6 +26,9 @@ export const MARKDOWNLINT_CONFIG_KEY = 'markdownlint.config';
 
 /** VSCode settings key for markdown preview styles */
 export const MARKDOWN_STYLES_KEY = 'markdown.styles';
+
+/** Legacy markdown.styles path — used to detect and migrate old configurations. */
+export const MARKDOWN_STYLES_LEGACY_PATH = '.vscode/markdown-github-light.css';
 
 /**
  * VSCode settings for markdown (markdownlint + preview styles only).
@@ -37,52 +45,5 @@ export const MARKDOWN_VSCODE_SETTINGS = {
     MD041: false, // Don't require first line to be a top-level heading
     MD060: { style: 'aligned' }, // Allow heading indentation
   },
-  [MARKDOWN_STYLES_KEY]: ['.vscode/markdown-github-light.css'],
+  [MARKDOWN_STYLES_KEY]: ['node_modules/@finografic/md-lint/styles/markdown-github-light.css'],
 } as const;
-
-/**
- * ESLint markdown config block to add to eslint.config.ts.
- * This is the string representation that will be inserted.
- */
-export const ESLINT_MARKDOWN_IMPORTS = `import markdownlintPlugin from 'eslint-plugin-markdownlint';
-import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';`;
-
-export const ESLINT_MARKDOWN_CONFIG_BLOCK = `
-  {
-    files: ['**/*.md'],
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      '.cursor/hooks/**',
-      '.cursor/chats/**',
-      '.github/instructions/**',
-      '.claude/**/*.md',
-      '**/CLAUDE.md',
-    ],
-    languageOptions: {
-      parser: markdownlintParser,
-    },
-    plugins: {
-      markdownlint: markdownlintPlugin as Linter.Processor,
-      '@stylistic': stylistic,
-    },
-    rules: {
-      ...markdownlintPlugin.configs.recommended.rules,
-      'markdownlint/md004': 'off', // Unordered list style
-      'markdownlint/md012': 'off', // Multiple consecutive blank lines
-      'markdownlint/md013': 'off', // Line length
-      'markdownlint/md024': 'off', // Duplicate headings
-      'markdownlint/md025': 'off', // Single h1
-      'markdownlint/md026': 'off', // Trailing punctuation in heading
-      'markdownlint/md029': 'off', // List style
-      'markdownlint/md036': 'off', // No emphasis as heading
-      'markdownlint/md040': 'off', // Fenced code language
-      'markdownlint/md041': 'off', // First line heading
-      'markdownlint/md043': 'off', // Required heading structure
-
-      // Formatting consistency
-      '@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 1 }],
-      '@stylistic/no-trailing-spaces': 'error',
-      '@stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
-    },
-  },`;

@@ -2,12 +2,11 @@
  * Markdown VSCode configuration utilities.
  *
  * Handles VSCode settings (markdownlint config, preview styles)
- * and markdown CSS file copying.
+ * and extension recommendations.
  */
 
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import {
   addExtensionRecommendations,
   BASE_SETTINGS_JSON,
@@ -22,20 +21,17 @@ import {
 
 import {
   MARKDOWN_STYLES_KEY,
+  MARKDOWN_STYLES_LEGACY_PATH,
   MARKDOWN_VSCODE_SETTINGS,
   MARKDOWNLINT_CONFIG_KEY,
   MARKDOWNLINT_VSCODE_EXTENSIONS,
 } from './markdown.constants';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/** CSS files to copy from _templates/.vscode to target .vscode */
-const MARKDOWN_CSS_FILES = ['markdown-custom-dark.css', 'markdown-github-light.css'] as const;
-
 const EXTENSIONS_JSON_PATH = ['.vscode', 'extensions.json'] as const;
 
 /**
  * Proposed `.vscode/settings.json` text for the markdown feature (no disk writes).
+ * Migrates the legacy `.vscode/markdown-github-light.css` path to the md-lint package path.
  */
 export async function computeProposedMarkdownSettingsText(targetDir: string): Promise<{
   path: string;
@@ -64,8 +60,14 @@ export async function computeProposedMarkdownSettingsText(targetDir: string): Pr
     }
   }
 
-  if (!parseJsoncObject(t)[MARKDOWN_STYLES_KEY]) {
+  const currentStyles = parseJsoncObject(t)[MARKDOWN_STYLES_KEY] as string[] | undefined;
+  const newPath = MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY][0];
+
+  if (!currentStyles) {
     t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]]);
+  } else if (currentStyles.includes(MARKDOWN_STYLES_LEGACY_PATH)) {
+    const migrated = currentStyles.map((s) => (s === MARKDOWN_STYLES_LEGACY_PATH ? newPath : s));
+    t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, migrated);
   }
 
   const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
@@ -102,17 +104,6 @@ export async function computeProposedMarkdownExtensionsText(targetDir: string): 
 }
 
 /**
- * Resolved template path for a markdown CSS asset, or null if not found.
- */
-export function resolveMarkdownCssTemplatePath(filename: (typeof MARKDOWN_CSS_FILES)[number]): string | null {
-  const templatesPath = resolve(__dirname, '../../../../_templates/.vscode', filename);
-  const distTemplatesPath = resolve(__dirname, '../../../_templates/.vscode', filename);
-  if (fileExists(templatesPath)) return templatesPath;
-  if (fileExists(distTemplatesPath)) return distTemplatesPath;
-  return null;
-}
-
-/**
  * Add markdownlint extension recommendations to .vscode/extensions.json.
  * Returns the list of extensions that were actually added.
  */
@@ -132,45 +123,4 @@ export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<bo
   }
   await writeFile(filePath, proposed, 'utf8');
   return true;
-}
-
-/**
- * Copy one CSS file from _templates/.vscode to target .vscode folder.
- */
-async function copyMarkdownCssFile(
-  targetDir: string,
-  filename: (typeof MARKDOWN_CSS_FILES)[number],
-): Promise<boolean> {
-  const destPath = resolve(targetDir, '.vscode', filename);
-  if (fileExists(destPath)) {
-    return false;
-  }
-
-  const templatesPath = resolve(__dirname, '../../../../_templates/.vscode', filename);
-  const distTemplatesPath = resolve(__dirname, '../../../_templates/.vscode', filename);
-
-  const srcPath = fileExists(templatesPath)
-    ? templatesPath
-    : fileExists(distTemplatesPath)
-      ? distTemplatesPath
-      : null;
-  if (!srcPath) {
-    return false;
-  }
-
-  await mkdir(dirname(destPath), { recursive: true });
-  await copyFile(srcPath, destPath);
-  return true;
-}
-
-/**
- * Copy markdown CSS files (markdown-custom-dark.css, markdown-github-light.css) to target .vscode folder.
- */
-export async function copyMarkdownCss(targetDir: string): Promise<boolean> {
-  let anyCopied = false;
-  for (const filename of MARKDOWN_CSS_FILES) {
-    const copied = await copyMarkdownCssFile(targetDir, filename);
-    if (copied) anyCopied = true;
-  }
-  return anyCopied;
 }
