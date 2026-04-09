@@ -151,11 +151,12 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
 
     await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
 
-    // Conditionally strip author URL link from README when URL is blank
+    // Conditionally strip author URL link from README when URL is blank.
+    // applyTemplate has already replaced __AUTHOR_URL__ with '', leaving [Name]() — strip the empty link.
     const readmePath = resolve(targetDir, 'README.md');
     if (!config.author.url) {
       const readmeContent = await readFile(readmePath, 'utf8');
-      const updated = readmeContent.replace(/\[(\*\*[^*]+\*\*)\]\(__AUTHOR_URL__\)/, '$1');
+      const updated = readmeContent.replace(/\[([^\]]+)\]\(\)/g, '$1');
       await writeFile(readmePath, updated, 'utf8');
     }
 
