@@ -58,8 +58,8 @@ importers:
         specifier: ^9.18.4
         version: 9.18.4(478e255242643e49b87141a89fb37564)
       '@finografic/oxfmt-config':
-        specifier: ^1.3.0
-        version: 1.3.0(oxfmt@0.44.0)
+        specifier: ^1.4.1
+        version: 1.4.1(oxfmt@0.44.0)
       '@finografic/project-scripts':
         specifier: ^1.3.3
         version: 1.3.3(@types/node@24.0.0)(tsx@4.21.0)
@@ -593,8 +593,8 @@ packages:
       prettier-plugin-astro:
         optional: true
 
-  '@finografic/oxfmt-config@1.3.0':
-    resolution: {integrity: sha512-+cOXfeMzza/9DVDHDDGYSsUF+34E9CdgteuS8PwqvsFpZhwNgIj897j65qUH2gluUnUWPZQycuj5EE0Bs3V3Xg==, tarball: https://npm.pkg.github.com/download/@finografic/oxfmt-config/1.3.0/6d33686f6158af96a902657189c4fec06f9c7001}
+  '@finografic/oxfmt-config@1.4.1':
+    resolution: {integrity: sha512-WfPDPqGafGPzcU9pNJrQpLY4bf5AzlyYbSzL5//+SIs8QwGrhnoXNJw+BUdk4PY5TFcCDOXmuOoPIu6UIJVQWg==, tarball: https://npm.pkg.github.com/download/@finografic/oxfmt-config/1.4.1/b02eefbb248c0d017cfb69424978e6324f7f36f0}
     peerDependencies:
       oxfmt: '>=0.41.0'
 
@@ -5117,7 +5117,7 @@ snapshots:
       - typescript
       - vitest
 
-  '@finografic/oxfmt-config@1.3.0(oxfmt@0.44.0)':
+  '@finografic/oxfmt-config@1.4.1(oxfmt@0.44.0)':
     dependencies:
       oxfmt: 0.44.0
 
