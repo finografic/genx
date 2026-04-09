@@ -30,8 +30,8 @@ export const MARKDOWN_STYLES_KEY = 'markdown.styles';
 /** Legacy markdown.styles path — used to detect and migrate old configurations. */
 export const MARKDOWN_STYLES_LEGACY_PATH = '.vscode/markdown-github-light.css';
 
-/** CSS files previously copied into .vscode/ — now shipped in the md-lint package. */
-export const MARKDOWN_LEGACY_CSS_FILES = ['markdown-github-light.css', 'markdown-custom-dark.css'] as const;
+/** CSS asset filenames shipped in the md-lint package (and previously copied into .vscode/). */
+export const MD_LINT_CSS_FILES = ['markdown-github-light.css', 'markdown-custom-dark.css'] as const;
 
 /**
  * VSCode settings for markdown (markdownlint + preview styles only).
