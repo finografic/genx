@@ -13,6 +13,10 @@
 - Keep imports sorted; let Prettier handle JSX formatting.
 - Document significant changes; add date tags in docs.
 
+## Project-Specific Rules
+
+Project-specific rules live in `.github/instructions/project/*.instructions.md`
+
 ## Rule Files
 
 - General: `.github/instructions/00-general.instructions.md`
@@ -27,10 +31,6 @@
 - Git Policy: `.github/instructions/10-git-policy.instructions.md`
 - Agent-facing Markdown: `.github/instructions/11-agent-facing-markdown.instructions.md`
 - Design Spec Documentation: `.github/instructions/12-design-specs.instructions.md`
-
-## Project-Specific Rules
-
-Project-specific rules live in `.github/instructions/project/*.instructions.md`.
 
 Maintenance
 

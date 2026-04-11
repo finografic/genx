@@ -8,7 +8,6 @@ Do not reference `@workspace/*` — all imports and deps must use published pack
 ## Rules — General
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
-Follow general TypeScript, ESLint, and naming conventions from prior context.
 
 - General: `.github/instructions/00-general.instructions.md`
 - File Naming: `.github/instructions/01-file-naming.instructions.md`
@@ -21,7 +20,7 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - Picocolors CLI styling: `.github/instructions/09-picocolors-cli-styling.instructions.md`
 - Git Policy: `.github/instructions/10-git-policy.instructions.md`
 - Agent-facing Markdown: `.github/instructions/11-agent-facing-markdown.instructions.md`
-- Design Spec Documentation: `.github/instructions/12-design-specs.instructions.md`
+- Feature Design Specs: `.github/instructions/12-feature-design-specs.instructions.md`
 
 ---
 
