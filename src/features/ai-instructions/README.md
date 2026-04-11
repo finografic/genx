@@ -4,24 +4,25 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 
 ## What it does
 
-- Creates `.github/copilot-instructions.md` — summary index for GitHub Copilot
-- Creates `.github/instructions/` — canonical rule files shared across all AI tools
-- Creates `.github/instructions/project/` — empty folder for project-specific rules
+- Syncs `.github/copilot-instructions.md` from `_templates` (full file when content differs).
+- Syncs each file under `.github/instructions/` from `_templates`, **except** the `project/` subtree — that folder is never overwritten by genx (per-repo rules stay put).
+- Syncs the **Rules — General** block in root `AGENTS.md` from `_templates/AGENTS.md` (or writes `AGENTS.md` when missing).
+- Optionally updates `eslint.config.ts` ignore patterns for `.cursor/` paths.
 
 ## Files
 
-| File                           | Purpose                                     |
-| ------------------------------ | ------------------------------------------- |
-| `ai-instructions.constants.ts` | File and directory paths for the feature    |
-| `ai-instructions.detect.ts`    | Check if Copilot + instructions are present |
-| `ai-instructions.apply.ts`     | Copy shared instructions into the project   |
-| `ai-instructions.feature.ts`   | Feature definition                          |
+| File                              | Purpose                                     |
+| --------------------------------- | ------------------------------------------- |
+| `ai-instructions.constants.ts`    | File and directory paths for the feature    |
+| `ai-instructions.agents.utils.ts` | Extract/replace `AGENTS.md` Rules — General |
+| `ai-instructions.detect.ts`       | Preview has no pending writes → aligned     |
+| `ai-instructions.apply.ts`        | Apply preview changes (per-file confirm)    |
+| `ai-instructions.preview.ts`      | Build diffs vs `_templates`                 |
+| `ai-instructions.feature.ts`      | Feature definition                          |
 
-## Rule Files
+## Rule files
 
-The `.github/instructions/` directory ships with eight global rule files (`00`–`08`) covering TypeScript patterns, file naming, ESLint style, documentation, and more. These are shared across all projects.
-
-The `.github/instructions/project/` subfolder is reserved for project-specific rules that should not be shared across projects. Add `*.instructions.md` files there and link them from `CLAUDE.md`, `AGENTS.md`, or other tool-specific entry points as needed.
+Canonical numbered `*.instructions.md` files live under `.github/instructions/`. The `project/` subfolder is for **project-only** instructions; genx does not sync template content into it.
 
 ## Dependency
 

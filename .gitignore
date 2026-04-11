@@ -47,10 +47,9 @@ coverage/
 *.tsbuildinfo
 
 # macOS
-.DS_Store
-Thumbs.db
+**/.DS_Store
+**Thumbs.db
 Icon?
-
 # Windows
 Thumbs.db
 ehthumbs.db

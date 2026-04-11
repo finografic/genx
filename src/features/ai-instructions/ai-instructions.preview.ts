@@ -10,7 +10,16 @@ import { applyTemplate } from 'utils/template.utils';
 import type { TemplateVars } from 'types/template.types';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { proposeEslintIgnorePatterns } from '../feature.utils';
-import { AI_INSTRUCTIONS_ESLINT_IGNORES, AI_INSTRUCTIONS_FILES } from './ai-instructions.constants';
+import {
+  extractRulesGeneralSection,
+  proposeAgentsWithRulesGeneralBlock,
+} from './ai-instructions.agents.utils.js';
+import {
+  AI_INSTRUCTIONS_AGENTS_MD,
+  AI_INSTRUCTIONS_ESLINT_IGNORES,
+  AI_INSTRUCTIONS_FILES,
+  AI_INSTRUCTIONS_SKIP_SUBDIR,
+} from './ai-instructions.constants';
 
 const TEMPLATE_EXTENSIONS = ['.json', '.ts', '.md', '.yml', '.yaml', '.mjs', '.js'] as const;
 const TEMPLATE_FILES = ['LICENSE'] as const;
@@ -23,33 +32,35 @@ async function readTemplatedFileBody(srcPath: string, baseName: string, vars: Te
   return shouldTemplate ? applyTemplate(raw, vars) : raw;
 }
 
-async function collectDirWrites(
-  templateSrcRoot: string,
-  destRoot: string,
-  vars: TemplateVars,
-): Promise<Array<{ dest: string; body: string }>> {
-  const out: Array<{ dest: string; body: string }> = [];
+/** Template files under `.github/instructions/`, excluding `project/` (never overwritten from genx). */
+async function collectInstructionTemplateFiles(
+  instructionsTemplateRoot: string,
+): Promise<Array<{ rel: string; abs: string }>> {
+  const out: Array<{ rel: string; abs: string }> = [];
 
-  async function walk(currentSrc: string, currentDest: string): Promise<void> {
-    const entries = await readdir(currentSrc, { withFileTypes: true });
+  async function walk(dir: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
-      const srcPath = join(currentSrc, entry.name);
-      const destPath = join(currentDest, entry.name);
+      if (entry.name === '.DS_Store') continue;
+      if (entry.name === AI_INSTRUCTIONS_SKIP_SUBDIR && entry.isDirectory()) {
+        continue;
+      }
+      const abs = join(dir, entry.name);
+      const rel = relative(instructionsTemplateRoot, abs);
       if (entry.isDirectory()) {
-        await walk(srcPath, destPath);
-      } else if (entry.isFile()) {
-        const body = await readTemplatedFileBody(srcPath, entry.name, vars);
-        out.push({ dest: destPath, body });
+        await walk(abs);
+      } else {
+        out.push({ rel, abs });
       }
     }
   }
 
-  await walk(templateSrcRoot, destRoot);
-  return out;
+  await walk(instructionsTemplateRoot);
+  return out.sort((a, b) => a.rel.localeCompare(b.rel));
 }
 
 /**
- * Preview AI instructions: Copilot file, `.github/instructions/`, ESLint ignores.
+ * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint ignores.
  */
 export async function previewAiInstructions(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
@@ -69,30 +80,75 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
     AUTHOR_EMAIL: '',
   };
 
-  const [copilotFile, instructionsDir] = AI_INSTRUCTIONS_FILES;
+  const [copilotFile, instructionsDirRel] = AI_INSTRUCTIONS_FILES;
+  const copilotTemplatePath = resolve(templateDir, copilotFile);
+  const instructionsTemplateRoot = resolve(templateDir, instructionsDirRel);
 
   const copilotDest = resolve(targetDir, copilotFile);
-  if (!fileExists(copilotDest)) {
-    const body = await readTemplatedFileBody(
-      resolve(templateDir, copilotFile),
-      'copilot-instructions.md',
-      vars,
+  const copilotProposed = await readTemplatedFileBody(copilotTemplatePath, 'copilot-instructions.md', vars);
+  let copilotCurrent = '';
+  if (fileExists(copilotDest)) {
+    copilotCurrent = await readFile(copilotDest, 'utf8');
+  }
+  if (copilotProposed !== copilotCurrent) {
+    changes.push(
+      createWritePreviewChange(
+        copilotDest,
+        copilotCurrent,
+        copilotProposed,
+        `${copilotFile} (Copilot rules index)`,
+      ),
     );
-    changes.push(createWritePreviewChange(copilotDest, '', body, copilotFile));
   } else {
     applied.push(copilotFile);
   }
 
-  const instructionsDest = resolve(targetDir, instructionsDir);
-  if (!fileExists(instructionsDest)) {
-    const srcRoot = resolve(templateDir, instructionsDir);
-    const files = await collectDirWrites(srcRoot, instructionsDest, vars);
-    for (const { dest, body } of files) {
-      const rel = relative(targetDir, dest);
-      changes.push(createWritePreviewChange(dest, '', body, rel));
+  const instructionFiles = await collectInstructionTemplateFiles(instructionsTemplateRoot);
+  const instructionsDestRoot = resolve(targetDir, instructionsDirRel);
+
+  for (const { rel, abs: srcAbs } of instructionFiles) {
+    const destPath = join(instructionsDestRoot, rel);
+    const baseName = rel.split(/[/\\]/).pop() ?? rel;
+    const proposed = await readTemplatedFileBody(srcAbs, baseName, vars);
+    let current = '';
+    if (fileExists(destPath)) {
+      current = await readFile(destPath, 'utf8');
     }
-  } else {
-    applied.push(instructionsDir);
+    if (proposed !== current) {
+      changes.push(createWritePreviewChange(destPath, current, proposed, join(instructionsDirRel, rel)));
+    } else {
+      applied.push(join(instructionsDirRel, rel));
+    }
+  }
+
+  const agentsTemplatePath = resolve(templateDir, AI_INSTRUCTIONS_AGENTS_MD);
+  const agentsDest = resolve(targetDir, AI_INSTRUCTIONS_AGENTS_MD);
+  if (fileExists(agentsTemplatePath)) {
+    if (!fileExists(agentsDest)) {
+      const body = await readTemplatedFileBody(agentsTemplatePath, AI_INSTRUCTIONS_AGENTS_MD, vars);
+      changes.push(
+        createWritePreviewChange(agentsDest, '', body, `${AI_INSTRUCTIONS_AGENTS_MD} (from template)`),
+      );
+    } else {
+      const templateAgentsRaw = await readFile(agentsTemplatePath, 'utf8');
+      const rulesGeneralBlock = extractRulesGeneralSection(templateAgentsRaw);
+      if (rulesGeneralBlock !== null) {
+        const currentAgents = await readFile(agentsDest, 'utf8');
+        const proposedAgents = proposeAgentsWithRulesGeneralBlock(currentAgents, rulesGeneralBlock);
+        if (proposedAgents !== null) {
+          changes.push(
+            createWritePreviewChange(
+              agentsDest,
+              currentAgents,
+              proposedAgents,
+              `${AI_INSTRUCTIONS_AGENTS_MD} (Rules — General)`,
+            ),
+          );
+        } else {
+          applied.push(`${AI_INSTRUCTIONS_AGENTS_MD} (Rules — General)`);
+        }
+      }
+    }
   }
 
   const eslintPath = resolve(targetDir, 'eslint.config.ts');
@@ -109,7 +165,7 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
 
   const noopMessage =
     changes.length === 0
-      ? 'AI instructions already match canonical configuration for owned files.'
+      ? 'AI instructions already match canonical templates (Copilot, instruction files, AGENTS Rules — General, ESLint).'
       : undefined;
 
   return { changes, applied, noopMessage };

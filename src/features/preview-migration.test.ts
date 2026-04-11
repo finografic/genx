@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
 
 import { hasPreviewChanges } from '../lib/feature-preview/feature-preview.utils.js';
@@ -23,6 +24,23 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
   existsSync(join(repoRoot, '_templates/.github/instructions'));
+
+/** Copy `_templates` Copilot + instruction files (excluding `project/`) + `AGENTS.md` for aligned-detect tests. */
+async function seedCanonicalAiInstructions(root: string): Promise<void> {
+  await mkdir(join(root, '.github'), { recursive: true });
+  const copilotSrc = join(repoRoot, '_templates/.github/copilot-instructions.md');
+  await writeFile(join(root, '.github/copilot-instructions.md'), await readFile(copilotSrc, 'utf8'));
+  const instRoot = join(repoRoot, '_templates/.github/instructions');
+  const relFiles = await fg('**/*', { cwd: instRoot, onlyFiles: true });
+  for (const rel of relFiles) {
+    if (rel.startsWith('project/') || rel === 'project') continue;
+    const src = join(instRoot, rel);
+    const dest = join(root, '.github/instructions', rel);
+    await mkdir(dirname(dest), { recursive: true });
+    await writeFile(dest, await readFile(src, 'utf8'));
+  }
+  await writeFile(join(root, 'AGENTS.md'), await readFile(join(repoRoot, '_templates/AGENTS.md'), 'utf8'));
+}
 
 describe('preview migration — drift vs canonical', () => {
   it('markdown: minimal package shows preview drift and detect false', async () => {
@@ -105,20 +123,38 @@ describe('preview migration — drift vs canonical', () => {
   );
 
   it.skipIf(!aiInstructionsTemplatesPresent)(
-    'ai-instructions: detect true when copilot, instructions, and cursor paths exist',
+    'ai-instructions: detect true when canonical template files match',
     async () => {
       const root = await mkdtemp(join(tmpdir(), 'genx-aii-'));
       await writeFile(
         join(root, 'package.json'),
         `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
       );
-      await mkdir(join(root, '.github'), { recursive: true });
-      await writeFile(join(root, '.github/copilot-instructions.md'), '# c\n');
-      await mkdir(join(root, '.github/instructions'), { recursive: true });
+      await seedCanonicalAiInstructions(root);
 
       const preview = await previewAiInstructions({ targetDir: root });
       expect(hasPreviewChanges(preview)).toBe(false);
       expect(await detectAiInstructions({ targetDir: root })).toBe(true);
+
+      await rm(root, { recursive: true, force: true });
+    },
+  );
+
+  it.skipIf(!aiInstructionsTemplatesPresent)(
+    'ai-instructions: missing instruction files vs template show drift',
+    async () => {
+      const root = await mkdtemp(join(tmpdir(), 'genx-aii-miss-'));
+      await writeFile(
+        join(root, 'package.json'),
+        `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
+      );
+      await seedCanonicalAiInstructions(root);
+      await rm(join(root, '.github/instructions/11-agent-facing-markdown.instructions.md'));
+      await rm(join(root, '.github/instructions/12-feature-design-specs.instructions.md'));
+
+      const preview = await previewAiInstructions({ targetDir: root });
+      expect(hasPreviewChanges(preview)).toBe(true);
+      expect(preview.changes.some((c) => c.kind === 'write' && c.path.includes('11-agent'))).toBe(true);
 
       await rm(root, { recursive: true, force: true });
     },
