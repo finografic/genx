@@ -72,13 +72,20 @@ async function copyDirInternal(
       await mkdir(destPath, { recursive: true });
       await copyDirInternal(srcPath, destPath, vars, options, rootSrc);
     } else if (entry.isFile()) {
+      const isDotTemplate = entry.name.endsWith('.template');
+      const destFileName = isDotTemplate ? entry.name.slice(0, -'.template'.length) : entry.name;
+      const resolvedDestPath = join(currentDest, destFileName);
+
+      const baseForExtCheck = isDotTemplate ? destFileName : entry.name;
       const shouldTemplate =
-        templateExtensions.some((ext) => entry.name.endsWith(ext)) || templateFiles.includes(entry.name);
+        templateExtensions.some((ext) => baseForExtCheck.endsWith(ext)) ||
+        templateFiles.includes(entry.name) ||
+        templateFiles.includes(destFileName);
 
       if (shouldTemplate) {
-        await copyTemplate(srcPath, destPath, vars);
+        await copyTemplate(srcPath, resolvedDestPath, vars);
       } else {
-        await copyFileDirect(srcPath, destPath);
+        await copyFileDirect(srcPath, resolvedDestPath);
       }
     }
   }

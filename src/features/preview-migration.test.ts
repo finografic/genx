@@ -39,7 +39,10 @@ async function seedCanonicalAiInstructions(root: string): Promise<void> {
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, await readFile(src, 'utf8'));
   }
-  await writeFile(join(root, 'AGENTS.md'), await readFile(join(repoRoot, '_templates/AGENTS.md'), 'utf8'));
+  await writeFile(
+    join(root, 'AGENTS.md'),
+    await readFile(join(repoRoot, '_templates/AGENTS.md.template'), 'utf8'),
+  );
 }
 
 describe('preview migration — drift vs canonical', () => {

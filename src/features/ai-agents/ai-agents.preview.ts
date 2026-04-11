@@ -15,6 +15,7 @@ import {
   setSection,
 } from 'lib/markdown-sections';
 import { getTemplatesDir } from 'utils/package-root.utils';
+import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
   AI_AGENTS_ALL_CANONICAL_HEADINGS,
@@ -60,12 +61,12 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
   const fromDir = fileURLToPath(new URL('.', import.meta.url));
   const templateDir = getTemplatesDir(fromDir);
 
-  const templateAgentsPath = resolve(templateDir, 'AGENTS.md');
+  const templateAgentsPath = resolveTemplateSourcePath(templateDir, 'AGENTS.md');
   let templateContent: string;
   try {
     templateContent = await readFile(templateAgentsPath, 'utf8');
   } catch {
-    throw new Error('Missing _templates/AGENTS.md');
+    throw new Error('Missing _templates/AGENTS.md.template');
   }
 
   const templateParsed = parseSections(templateContent);

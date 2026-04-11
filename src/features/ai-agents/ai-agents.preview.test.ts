@@ -32,7 +32,7 @@ describe('ai-agents preview-driven detect', () => {
     );
 
     const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
-    const templateAgents = join(repoRoot, '_templates/AGENTS.md');
+    const templateAgents = join(repoRoot, '_templates/AGENTS.md.template');
     await writeFile(join(root, 'AGENTS.md'), await readFile(templateAgents, 'utf8'));
 
     const skillsTpl = join(repoRoot, '_templates/.github/skills');

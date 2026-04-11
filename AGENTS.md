@@ -26,14 +26,14 @@ This file defines genx behavior, NOT template content.
 IMPORTANT: Before writing code for any of the patterns below, invoke the paired skill.
 Skills encode the exact conventions and wiring steps for this repo — skipping them causes pattern drift.
 
-| Task                                   | Skill to invoke                                                               |
-| -------------------------------------- | ----------------------------------------------------------------------------- |
-| Add or update CLI help / add a command | [scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)               |
-| Add a new genx feature module          | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)                 |
-| Convert a feature to preview diffs     | [scaffold-feature-preview](/.github/skills/scaffold-feature-preview/SKILL.md) |
-| Add a new `src/core/` module           | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md)         |
-| Template-only merge & section order    | [template-canonical-merge](/.github/skills/template-canonical-merge/SKILL.md) |
-| Prune Learned sections in AGENTS.md    | [maintain-agents](/.github/skills/maintain-agents/SKILL.md)                   |
+| Task                                   | Skill to invoke                                                              |
+| -------------------------------------- | ---------------------------------------------------------------------------- |
+| Add or update CLI help / add a command | [scaffold-cli-help](.github/skills/scaffold-cli-help/SKILL.md)               |
+| Add a new genx feature module          | [scaffold-feature](.github/skills/scaffold-feature/SKILL.md)                 |
+| Convert a feature to preview diffs     | [scaffold-feature-preview](.github/skills/scaffold-feature-preview/SKILL.md) |
+| Add a new `src/core/` module           | [scaffold-core-module](.github/skills/scaffold-core-module/SKILL.md)         |
+| Template-only merge & section order    | [template-canonical-merge](.github/skills/template-canonical-merge/SKILL.md) |
+| Prune Learned sections in AGENTS.md    | [maintain-agents](.github/skills/maintain-agents/SKILL.md)                   |
 
 ---
 
@@ -110,6 +110,7 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 - For feature/migrate apply output, use `successMessage` for net-new work, `successUpdatedMessage` for in-place edits (prefer “Updated …”), `successRemovedMessage` for removals — see `.github/instructions/project/feature-patterns.instructions.md` and `prompts.utils`
 - For migrate/feature flows that confirm file changes, prefer one user decision per changed file (not per hunk); avoid implicit auto-accept on small diffs unless that behavior is explicitly opt-in
 - Keep shared utilities for feature preview / diff-as-detection that are not canonical `src/core/` grouped in a dedicated app-level folder so they stay maintainable and can be extracted to a package later if needed
+- For Clack `text` prompts with a placeholder or default hint, use `textPrompt` from `core/flow` instead of `clack.text` so Tab and Right-arrow fill the hint on an empty line (upstream `@clack/core` maps Tab to backspace for tracked prompts and treats placeholder as visual-only); see `docs/spec/CLI_CORE.md`
 
 ## Learned Workspace Facts
 
@@ -121,6 +122,6 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 - Commitlint is configured via root `commitlint.config.mjs` (template under `_templates/`); the git-hooks feature strips a legacy top-level `commitlint` key from `package.json` when present and ensures the config file exists — `detectGitHooks` / `isGitHooksFullyConfigured` treat lint-staged and commitlint independently so a correct `lint-staged` block alone does not skip migrating inlined commitlint to the file
 - `~/.config/genx/config.json` is read with `parseJsoncObject` (JSON or JSONC) for the managed-repos list
 - `pnpm list:managed-repos` runs `scripts/list-managed-repos.ts` to print prettified `{ "managed": [{ name, path }, ...] }` for immediate child folders under cwd that have `package.json`, `.git`, and a `name` starting with `@finografic/`
-- `eslint.config` writers must support `globalIgnores([...])` as well as legacy `ignores: [...]`; this repo intentionally ignores `.cursor/hooks/**` and `.cursor/chats/**` while keeping `.cursor/rules/**` lintable
+- `eslint.config` writers must support `globalIgnores([...])` as well as legacy `ignores: [...]`; this repo intentionally ignores `.cursor/hooks/**` and `.cursor/chats/**`; markdown lint ignores `.cursor/**` and `_templates/**/*.md` (no tracked rules under `_templates/.cursor/`)
 - `genx deps` dependency planning uses semver: skip when the local spec already satisfies the policy range; omit policy downgrades unless `--allow-downgrade`; dry-run uses `[upgrade]` in cyan, `[add]` in green, and `[downgrade]` in yellowions after the label are white (grey “from” on upgrade/downgrade rows)
 - Oxfmt `quoteProps` accepts `as-needed`, `consistent`, or `preserve` — not ESLint’s `consistent-as-needed`; align ESLint `quote-props` with an oxfmt-supported mode to avoid formatter vs lint fights on save

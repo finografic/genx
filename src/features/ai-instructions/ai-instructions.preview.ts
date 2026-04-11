@@ -6,6 +6,7 @@ import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-pre
 import type { FeatureContext } from '../feature.types';
 
 import { getTemplatesDir } from 'utils/package-root.utils';
+import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
 import type { TemplateVars } from 'types/template.types';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
@@ -118,7 +119,7 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
     }
   }
 
-  const agentsTemplatePath = resolve(templateDir, AI_INSTRUCTIONS_AGENTS_MD);
+  const agentsTemplatePath = resolveTemplateSourcePath(templateDir, AI_INSTRUCTIONS_AGENTS_MD);
   const agentsDest = resolve(targetDir, AI_INSTRUCTIONS_AGENTS_MD);
   if (fileExists(agentsTemplatePath)) {
     if (!fileExists(agentsDest)) {

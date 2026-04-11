@@ -1,5 +1,7 @@
 @AGENTS.md
 
+## IMPORTANT: [Canonical Template Source (STRICT)](./AGENTS.md#important-canonical-template-source-strict)
+
 # Claude-specific Instructions
 
 ## Skills

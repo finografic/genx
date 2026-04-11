@@ -6,6 +6,7 @@ import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-pre
 import type { FeatureContext } from '../feature.types';
 
 import { getTemplatesDir } from 'utils/package-root.utils';
+import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { AI_INSTRUCTIONS_ESLINT_IGNORES } from '../ai-instructions/ai-instructions.constants';
@@ -70,7 +71,7 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
   const handoffVars = { ...baseVars, ...pkgVars };
 
   async function templateBody(rel: string, vars: typeof baseVars): Promise<string> {
-    const raw = await readFile(resolve(templateDir, rel), 'utf8');
+    const raw = await readFile(resolveTemplateSourcePath(templateDir, rel), 'utf8');
     return applyTemplate(raw, vars);
   }
 

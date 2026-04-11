@@ -88,13 +88,7 @@ export default defineConfig([
 
   {
     files: ['**/*.md'],
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      '.cursor/**',
-      '_templates/**/*.md',
-      '!_templates/.cursor/rules/**/*.md',
-    ],
+    ignores: ['node_modules/**', 'dist/**', '.cursor/**', '_templates/**/*.md'],
     languageOptions: {
       parser: markdownlintParser,
     },

@@ -9,7 +9,7 @@ tools: [file-read, file-edit, terminal]
 
 ## Non-negotiable invariant
 
-**No part of anything outside `_templates/` is used as the specification for what gets templated** into consumer packages (create, migrate, `ai-instructions`, etc.). The **genx repo root** — including root `AGENTS.md`, root `.github/instructions/`, or hand-edited examples — is **not** the canonical layout for generated or merged output. Always read the **file under `_templates/`** (e.g. `_templates/AGENTS.md`).
+**No part of anything outside `_templates/` is used as the specification for what gets templated** into consumer packages (create, migrate, `ai-instructions`, etc.). The **genx repo root** — including root `AGENTS.md`, root `.github/instructions/`, or hand-edited examples — is **not** the canonical layout for generated or merged output. Always read the **file under `_templates/`** (e.g. `_templates/AGENTS.md.template` — outputs **`AGENTS.md`** in packages).
 
 If code loads a “template” path, it must resolve under **`getTemplatesDir()` / `_templates/`**, not the repository root (except where the running package _is_ the target being written, and even then shared blocks come from `_templates`).
 
@@ -54,7 +54,7 @@ Reference implementation: `reorderMergedAgentSections` in `ai-instructions.agent
 
 ### 4. Preamble
 
-Use the **template** preamble (title line) so new packages match `_templates/AGENTS.md` exactly.
+Use the **template** preamble (title line) so new packages match `_templates/AGENTS.md.template` / merged output exactly.
 
 ### 5. Idempotence check
 
@@ -64,15 +64,15 @@ If `proposed === normalizedTarget`, return no-op (`null` / no write).
 
 - Adding or changing **template merge** behavior for any file under `_templates/`.
 - Debugging **wrong section order** after a merge.
-- Reviewing PRs that compare **root** `AGENTS.md` to **generated** output — remind: spec is **`_templates/AGENTS.md`**.
+- Reviewing PRs that compare **root** `AGENTS.md` to **generated** output — remind: spec is **`_templates/AGENTS.md.template`** (not root).
 
 ## Related code
 
-| Area            | Location                                                                                 |
-| --------------- | ---------------------------------------------------------------------------------------- |
-| Merge + reorder | `src/features/ai-instructions/ai-instructions.agents.utils.ts`                           |
-| Preview wiring  | `src/features/ai-instructions/ai-instructions.preview.ts` (reads `_templates/AGENTS.md`) |
-| Deep dive doc   | `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`                                              |
+| Area            | Location                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| Merge + reorder | `src/features/ai-instructions/ai-instructions.agents.utils.ts`                                    |
+| Preview wiring  | `src/features/ai-instructions/ai-instructions.preview.ts` (reads `_templates/AGENTS.md.template`) |
+| Deep dive doc   | `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`                                                       |
 
 ## Related skill
 

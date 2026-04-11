@@ -1,9 +1,9 @@
 /**
- * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md`** is the only canonical layout for the spine
+ * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the only canonical layout for the spine
  * (**Rules — Project-Specific** → **Rules — General** → **Rules — Markdown Tables** → **Git Policy**).
  * Target-only `##` sections (e.g. Skills, Learned) and the **Rules — Project-Specific** body come from the package
  * being migrated; shared blocks are taken from the template file. Do not mirror ordering from a consumer repo’s
- * hand-edited `AGENTS.md` when changing this module — match **`_templates/AGENTS.md`**.
+ * hand-edited `AGENTS.md` when changing this module — match **`_templates/AGENTS.md.template`**.
  */
 
 /** Sections taken verbatim from the template (canonical shared lists). */
@@ -69,7 +69,7 @@ export function parseH2Sections(content: string): ParsedAgents {
 
 /**
  * Reverse merge: template file is the **base**; target contributes extras and Project-Specific.
- * After merge, sections are **reordered** to match **`_templates/AGENTS.md`**: **Rules — Project-Specific** first,
+ * After merge, sections are **reordered** to match **`_templates/AGENTS.md.template`**: **Rules — Project-Specific** first,
  * then **General** → **Markdown Tables** → **Git Policy**, then other extras in merge order, then **Learned** last.
  *
  * Returns `null` if the result equals `target` (already aligned).
@@ -124,7 +124,7 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 }
 
 /**
- * After collecting sections, enforce the same vertical order as **`_templates/AGENTS.md`**:
+ * After collecting sections, enforce the same vertical order as **`_templates/AGENTS.md.template`**:
  * 1. **Rules — Project-Specific** (first `##` after preamble; fixes PS appended at end when missing from target)
  * 2. **Rules — General**, **Rules — Markdown Tables**, **Git Policy** (bodies from template where applicable)
  * 3. Other non-spine sections — preserve relative order from `merged`

@@ -9,7 +9,7 @@ export const AI_AGENTS_FILES = ['AGENTS.md', '.github/skills/'] as const;
 export const AI_AGENTS_SKILLS_DIR = '.github/skills';
 
 /**
- * Canonical H2 section headings defined in `_templates/AGENTS.md`.
+ * Canonical H2 section headings defined in `_templates/AGENTS.md.template`.
  * Applied to every target project — split into two tiers:
  *
  * SEEDED   — written once if absent; never updated automatically (project customises them).
