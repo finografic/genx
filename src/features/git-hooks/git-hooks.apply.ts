@@ -9,15 +9,11 @@ import { previewGitHooks } from './git-hooks.preview.js';
 
 /**
  * Apply git-hooks feature using `previewGitHooks` + `applyPreviewChanges`, then `pnpm install`
- * when package.json dependency lists change.
+ * when package.json dependency lists change. Successful install already runs `prepare` (husky).
  */
 export async function applyGitHooks(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewGitHooks(context);
   const result = await applyPreviewChanges(preview);
-
-  if (result.applied.length > 0) {
-    warnMessage('Run "pnpm prepare" to activate git hooks');
-  }
 
   if (result.applied.length === 0) {
     return result;
@@ -28,6 +24,7 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
     preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
   if (!shouldRunInstall) {
+    warnMessage('Run "pnpm prepare" to activate git hooks');
     return result;
   }
 
@@ -37,6 +34,7 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
   try {
     await execa('pnpm', ['install'], { cwd: context.targetDir });
     installSpin.stop('Dependencies installed');
+    // `prepare` (husky) runs during install — no extra step for the common path.
     return {
       applied: [...result.applied, 'dependencies (pnpm install)'],
       appliedTargetPaths: result.appliedTargetPaths,
@@ -45,6 +43,7 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
     installSpin.stop('Failed to install dependencies');
     const error = err instanceof Error ? err : new Error(String(err));
     errorMessage(error.message);
+    warnMessage('After fixing install, run "pnpm prepare" to activate git hooks');
     return { applied: result.applied, appliedTargetPaths: result.appliedTargetPaths, error };
   }
 }

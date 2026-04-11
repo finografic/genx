@@ -82,28 +82,40 @@ function addHooksConfigs(packageJson: PackageJson): PackageJson {
   return next;
 }
 
+/** Map legacy `simple-git-hooks` CLI invocations to `husky` (canonical in this repo). */
+function migratePreparePart(part: string): string {
+  const t = part.trim();
+  if (t === 'simple-git-hooks') return 'husky';
+  if (t === 'npx simple-git-hooks') return 'husky';
+  if (t === 'pnpm exec simple-git-hooks') return 'husky';
+  return t;
+}
+
 function ensurePrepareScript(packageJson: PackageJson): PackageJson {
   const scripts = packageJson.scripts ?? {};
   const prepare = scripts.prepare ?? '';
 
-  const parts = prepare
+  const rawParts = prepare
     .split('&&')
     .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => (part === 'simple-git-hooks' ? 'husky' : part));
+    .filter(Boolean);
 
-  if (parts.includes('husky') && !parts.includes('simple-git-hooks')) {
-    return packageJson;
-  }
-
-  const nextScripts = { ...scripts };
+  let parts = rawParts.map(migratePreparePart);
 
   if (!parts.includes('husky')) {
     parts.push('husky');
   }
 
-  nextScripts.prepare = parts.join(' && ') || 'husky';
-  return { ...packageJson, scripts: nextScripts };
+  const nextPrepare = parts.join(' && ') || 'husky';
+
+  // Compare to current script; do not use an early return on *migrated* parts — that wrongly
+  // skipped writes when the only segment was `simple-git-hooks` (mapped to husky in memory
+  // while package.json still held `simple-git-hooks`).
+  if (nextPrepare === prepare.trim()) {
+    return packageJson;
+  }
+
+  return { ...packageJson, scripts: { ...scripts, prepare: nextPrepare } };
 }
 
 async function readOptionalUtf8(path: string): Promise<string> {

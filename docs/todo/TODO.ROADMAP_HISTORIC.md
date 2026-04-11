@@ -109,7 +109,7 @@ not stale versions baked into the template.
 
 ## 4. Type-specific policy divergence in deps-policy
 
-- [ ] status: pending
+- [x] status: **DONE**
 
 **Goal:** Allow `library.ts` and `config.ts` in `@finografic/deps-policy` to intentionally
 diverge from `base` where it makes sense (e.g., `config` packages probably do not need

@@ -64,6 +64,34 @@ describe('git-hooks preview-driven detect', () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it('replaces scripts.prepare simple-git-hooks with husky when migrating from simple-git-hooks', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-gh-sgh-'));
+    const pkg = {
+      'name': 'x',
+      'version': '1.0.0',
+      'scripts': { prepare: 'simple-git-hooks' },
+      'devDependencies': {
+        '@commitlint/cli': 'latest',
+        '@commitlint/config-conventional': 'latest',
+        'lint-staged': 'latest',
+        'simple-git-hooks': '^2.13.1',
+      },
+      'lint-staged': { '*.{ts,tsx}': ['eslint --fix'] },
+      'simple-git-hooks': { 'pre-commit': 'npx lint-staged --allow-empty' },
+      'commitlint': { extends: ['@commitlint/config-conventional'] },
+    };
+    await writeFile(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
+
+    const preview = await previewGitHooks({ targetDir: root });
+    const pkgChange = preview.changes.find((c) => c.path === join(root, 'package.json'));
+    expect(pkgChange?.kind).toBe('write');
+    if (pkgChange?.kind !== 'write') throw new Error('expected package.json write');
+    const proposed = JSON.parse(pkgChange.proposedContent) as { scripts?: { prepare?: string } };
+    expect(proposed.scripts?.prepare).toBe('husky');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
   it('treats legacy simple-git-hooks allowBuilds in pnpm-workspace.yaml as drift', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-gh-'));
     const pkg = {
