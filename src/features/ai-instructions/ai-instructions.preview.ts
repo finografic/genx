@@ -10,10 +10,7 @@ import { applyTemplate } from 'utils/template.utils';
 import type { TemplateVars } from 'types/template.types';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { proposeEslintIgnorePatterns } from '../feature.utils';
-import {
-  extractRulesGeneralSection,
-  proposeAgentsWithRulesGeneralBlock,
-} from './ai-instructions.agents.utils.js';
+import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
 import {
   AI_INSTRUCTIONS_AGENTS_MD,
   AI_INSTRUCTIONS_ESLINT_IGNORES,
@@ -131,22 +128,19 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
       );
     } else {
       const templateAgentsRaw = await readFile(agentsTemplatePath, 'utf8');
-      const rulesGeneralBlock = extractRulesGeneralSection(templateAgentsRaw);
-      if (rulesGeneralBlock !== null) {
-        const currentAgents = await readFile(agentsDest, 'utf8');
-        const proposedAgents = proposeAgentsWithRulesGeneralBlock(currentAgents, rulesGeneralBlock);
-        if (proposedAgents !== null) {
-          changes.push(
-            createWritePreviewChange(
-              agentsDest,
-              currentAgents,
-              proposedAgents,
-              `${AI_INSTRUCTIONS_AGENTS_MD} (Rules — General)`,
-            ),
-          );
-        } else {
-          applied.push(`${AI_INSTRUCTIONS_AGENTS_MD} (Rules — General)`);
-        }
+      const currentAgents = await readFile(agentsDest, 'utf8');
+      const proposedAgents = mergeAgentsFromTemplate(currentAgents, templateAgentsRaw);
+      if (proposedAgents !== null) {
+        changes.push(
+          createWritePreviewChange(
+            agentsDest,
+            currentAgents,
+            proposedAgents,
+            `${AI_INSTRUCTIONS_AGENTS_MD} (template base + target extras)`,
+          ),
+        );
+      } else {
+        applied.push(AI_INSTRUCTIONS_AGENTS_MD);
       }
     }
   }
@@ -165,7 +159,7 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
 
   const noopMessage =
     changes.length === 0
-      ? 'AI instructions already match canonical templates (Copilot, instruction files, AGENTS Rules — General, ESLint).'
+      ? 'AI instructions already match canonical templates (Copilot, instruction files, AGENTS.md, ESLint).'
       : undefined;
 
   return { changes, applied, noopMessage };

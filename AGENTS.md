@@ -1,5 +1,26 @@
 # AGENTS.md — AI Assistant Guide
 
+## IMPORTANT: Canonical Template Source (STRICT)
+
+THIS project @finografic/genx, that creates / migrates features to other projects.
+
+- TARGET PROJECT uses `_templates/` as ONLY source of truth for:
+  - scaffolding
+  - merging
+  - generation
+
+- Files outside `_templates/` MUST NEVER be used for:
+  - template content
+  - structure
+  - ordering
+
+- This includes:
+  - this file (root AGENTS.md)
+  - feature READMEs
+  - docs/\*\*
+
+This file defines genx behavior, NOT template content.
+
 ## Skills — Check Before Implementing
 
 IMPORTANT: Before writing code for any of the patterns below, invoke the paired skill.
@@ -11,15 +32,17 @@ Skills encode the exact conventions and wiring steps for this repo — skipping 
 | Add a new genx feature module          | [scaffold-feature](/.github/skills/scaffold-feature/SKILL.md)                 |
 | Convert a feature to preview diffs     | [scaffold-feature-preview](/.github/skills/scaffold-feature-preview/SKILL.md) |
 | Add a new `src/core/` module           | [scaffold-core-module](/.github/skills/scaffold-core-module/SKILL.md)         |
+| Template-only merge & section order    | [template-canonical-merge](/.github/skills/template-canonical-merge/SKILL.md) |
 | Prune Learned sections in AGENTS.md    | [maintain-agents](/.github/skills/maintain-agents/SKILL.md)                   |
 
 ---
 
 ## Rules — Project-Specific
 
-Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
-These rules are specific to `@finografic/genx` and not shared with other projects.
+- Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
+- These rules are specific to `@finografic/genx` and not shared with other projects.
 
+- **`docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`** — `_templates/` is the only spec for template merge and `AGENTS.md` spine order (not the genx root file); skill: [template-canonical-merge](/.github/skills/template-canonical-merge/SKILL.md).
 - **`docs/spec/CLI_CORE.md`** is the canonical **CLI `src/core/` module spec** for `@finografic` CLI packages.
   - Use it when designing portable `core/` modules, help patterns, and when generating or migrating **CLI-shaped** projects so generated trees include the same conventions (see `create` / `migrate`.
   - **library** and **config** package types do not use this `core/` layout — TBD whether they get an analogous doc).

@@ -6,7 +6,7 @@
 
 export const AI_INSTRUCTIONS_FILES = ['.github/copilot-instructions.md', '.github/instructions'] as const;
 
-/** Root AGENTS.md — Rules — General list synced from `_templates/AGENTS.md` */
+/** Target package `AGENTS.md` path; merge uses `_templates/AGENTS.md` as the canonical spine (not any repo’s hand-edited copy). */
 export const AI_INSTRUCTIONS_AGENTS_MD = 'AGENTS.md' as const;
 
 /** Under `.github/instructions/` — never overwrite from templates (per-repo content). */

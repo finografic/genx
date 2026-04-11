@@ -2,8 +2,8 @@
 
 ## Rules — Project-Specific
 
-Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
-Do not reference `@workspace/*` — all imports and deps must use published package names.
+- Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
+- Do not reference `@workspace/*` — all imports and deps must use published package names.
 
 ## Rules — General
 
