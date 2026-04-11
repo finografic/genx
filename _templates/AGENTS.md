@@ -3,12 +3,7 @@
 ## Rules — Project-Specific
 
 Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
-
-<!-- NOTE: CLI projects (genx:type:cli keyword in package.json) only -->
-
-- Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-
-- Do not reference `@workspace/*` — all imports and deps must use published package names.
+Do not reference `@workspace/*` — all imports and deps must use published package names.
 
 ## Rules — General
 
@@ -26,6 +21,7 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - Picocolors CLI styling: `.github/instructions/09-picocolors-cli-styling.instructions.md`
 - Git Policy: `.github/instructions/10-git-policy.instructions.md`
 - Agent-facing Markdown: `.github/instructions/11-agent-facing-markdown.instructions.md`
+- Design Spec Documentation: `.github/instructions/12-design-specs.instructions.md`
 
 ---
 

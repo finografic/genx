@@ -61,6 +61,7 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - Picocolors CLI styling: `.github/instructions/09-picocolors-cli-styling.instructions.md`
 - Git Policy: `.github/instructions/10-git-policy.instructions.md`
 - Agent-facing Markdown: `.github/instructions/11-agent-facing-markdown.instructions.md`
+- Design Spec Documentation: `.github/instructions/12-design-specs.instructions.md`
 
 ## Rules — Markdown Tables
 
