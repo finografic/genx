@@ -27,7 +27,7 @@ Use this **algorithm** whenever you merge a **target** document with a **templat
 - For each target section:
   - If the heading **does not exist** in the template → keep target body (extras: Skills, Learned, etc.).
   - If **`Rules — Project-Specific`** (or equivalent) → keep **target** body (repo-specific).
-  - If the heading is a **shared template block** (e.g. Rules — General, Markdown Tables, Git Policy) → substitute **template** body.
+  - If the heading is a **shared template block** (e.g. Rules — Global, Markdown Tables, Git Policy) → substitute **template** body.
   - Otherwise → prefer template body if present, else target.
 - After the walk, **append** any template sections whose keys were **never seen** in the target (e.g. missing Project-Specific).
 

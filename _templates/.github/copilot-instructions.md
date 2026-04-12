@@ -1,23 +1,10 @@
 # Copilot Instructions
 
-## Summary
-
-- This repository provides concise rules for Copilot.
-- Source of truth: `.github/instructions/`.
-- Copilot reads `.github/instructions/*.instructions.md` directly.
-
-## Core Guidelines
-
-- Use TypeScript with `strict` mode; prioritize type safety.
-- Prefer named parameters and guard clauses.
-- Keep imports sorted; let Prettier handle JSX formatting.
-- Document significant changes; add date tags in docs.
-
 ## Project-Specific Rules
 
 Project-specific rules live in `.github/instructions/project/*.instructions.md`
 
-## Rule Files
+## Global Rules
 
 - General: `.github/instructions/00-general.instructions.md`
 - File Naming: `.github/instructions/01-file-naming.instructions.md`
@@ -31,8 +18,3 @@ Project-specific rules live in `.github/instructions/project/*.instructions.md`
 - Git Policy: `.github/instructions/10-git-policy.instructions.md`
 - Agent-facing Markdown: `.github/instructions/11-agent-facing-markdown.instructions.md`
 - Feature Design Specs: `.github/instructions/12-feature-design-specs.instructions.md`
-
-Maintenance
-
-- Edit rules in `.github/instructions/` only.
-- Keep these Copilot files concise and task-focused.

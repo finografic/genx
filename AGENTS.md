@@ -68,7 +68,7 @@ Canonical patterns live under `.github/instructions/project/`. Paired skills liv
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
 
-## Rules — General
+## Rules — Global
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
 

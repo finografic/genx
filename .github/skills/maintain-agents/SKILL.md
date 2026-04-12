@@ -35,7 +35,7 @@ Apply these criteria to every bullet. Be decisive — when in doubt, remove.
 
 - States something **any competent TypeScript / Node developer would know** without being
   told (e.g. "prefer `const` over `let`", "use async/await", "always handle errors")
-- **Duplicates** content already covered by a linked instruction file in `## Rules — General`
+- **Duplicates** content already covered by a linked instruction file in `## Rules — Global`
   (read the instruction file briefly if unsure)
 - References a **file, function, flag, or feature that no longer exists** in the repo
 - Describes a **one-off workaround** for a bug that has since been fixed

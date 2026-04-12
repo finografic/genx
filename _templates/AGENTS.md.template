@@ -5,7 +5,7 @@
 - Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
 
-## Rules — General
+## Rules — Global
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
 
