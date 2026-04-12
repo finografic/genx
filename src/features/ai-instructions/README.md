@@ -6,19 +6,19 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 
 - Syncs `.github/copilot-instructions.md` from `_templates` (full file when content differs).
 - Syncs each file under `.github/instructions/` from `_templates`, **except** the `project/` subtree — that folder is never overwritten by genx (per-repo rules stay put).
-- Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — General** → **Rules — Markdown Tables** → **Git Policy**, plus shared bodies for General / Markdown / Git). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
+- Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**, plus shared bodies for General / Markdown / Git). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
 - Optionally updates `eslint.config.ts` ignore patterns for `.cursor/` paths.
 
 ## Files
 
-| File                              | Purpose                                     |
-| --------------------------------- | ------------------------------------------- |
-| `ai-instructions.constants.ts`    | File and directory paths for the feature    |
-| `ai-instructions.agents.utils.ts` | Extract/replace `AGENTS.md` Rules — General |
-| `ai-instructions.detect.ts`       | Preview has no pending writes → aligned     |
-| `ai-instructions.apply.ts`        | Apply preview changes (per-file confirm)    |
-| `ai-instructions.preview.ts`      | Build diffs vs `_templates`                 |
-| `ai-instructions.feature.ts`      | Feature definition                          |
+| File                              | Purpose                                    |
+| --------------------------------- | ------------------------------------------ |
+| `ai-instructions.constants.ts`    | File and directory paths for the feature   |
+| `ai-instructions.agents.utils.ts` | Extract/replace `AGENTS.md` Rules — Global |
+| `ai-instructions.detect.ts`       | Preview has no pending writes → aligned    |
+| `ai-instructions.apply.ts`        | Apply preview changes (per-file confirm)   |
+| `ai-instructions.preview.ts`      | Build diffs vs `_templates`                |
+| `ai-instructions.feature.ts`      | Feature definition                         |
 
 ## Rule files
 

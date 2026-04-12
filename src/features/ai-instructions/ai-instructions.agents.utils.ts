@@ -1,6 +1,6 @@
 /**
  * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the only canonical layout for the spine
- * (**Rules — Project-Specific** → **Rules — General** → **Rules — Markdown Tables** → **Git Policy**).
+ * (**Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**).
  * Target-only `##` sections (e.g. Skills, Learned) and the **Rules — Project-Specific** body come from the package
  * being migrated; shared blocks are taken from the template file. Do not mirror ordering from a consumer repo’s
  * hand-edited `AGENTS.md` when changing this module — match **`_templates/AGENTS.md.template`**.
@@ -32,7 +32,7 @@ export interface H2Section {
 }
 
 /**
- * Normalize an H2 heading line: `## Rules — General` → `rules - general`.
+ * Normalize an H2 heading line: `## Rules — Global` → `rules - general`.
  */
 export function normalizeHeadingKey(headingLine: string): string {
   const withoutHash = headingLine.replace(/^##\s+/, '').trim();
@@ -126,7 +126,7 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 /**
  * After collecting sections, enforce the same vertical order as **`_templates/AGENTS.md.template`**:
  * 1. **Rules — Project-Specific** (first `##` after preamble; fixes PS appended at end when missing from target)
- * 2. **Rules — General**, **Rules — Markdown Tables**, **Git Policy** (bodies from template where applicable)
+ * 2. **Rules — Global**, **Rules — Markdown Tables**, **Git Policy** (bodies from template where applicable)
  * 3. Other non-spine sections — preserve relative order from `merged`
  * 4. **Learned** sections last — preserve relative order
  */
@@ -185,7 +185,7 @@ function ensureTrailingNewline(s: string): string {
   return s.endsWith('\n') ? s : `${s}\n`;
 }
 
-/** Extract Rules — General section text (for tests / diagnostics). */
+/** Extract Rules — Global section text (for tests / diagnostics). */
 export function extractRulesGeneralSection(agentsContent: string): string | null {
   const { sections } = parseH2Sections(agentsContent);
   const hit = sections.find((s) => normalizeHeadingKey(s.headingLine) === 'rules - general');

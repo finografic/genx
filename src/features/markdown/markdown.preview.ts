@@ -13,16 +13,21 @@ import {
 import { OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES } from '../oxfmt/oxfmt.constants.js';
 import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
 import {
+  ESLINT_PLUGIN_MARKDOWNLINT,
+  ESLINT_PLUGIN_SIMPLE_IMPORT_SORT,
   LINT_STAGED_DATA_ONLY_PATTERN,
   LINT_STAGED_MD_LINT_CMD,
   LINT_STAGED_MD_PATTERN,
   LINT_STAGED_OXFMT_CMD,
+  MARKDOWNLINT_DECLARATIONS_FILE,
+  MARKDOWNLINT_DECLARATIONS_MARKER,
   MD_LINT_CSS_FILES,
   MD_LINT_FIX_SCRIPT,
   MD_LINT_PACKAGE,
   MD_LINT_PACKAGE_VERSION,
   MD_LINT_SCRIPT,
 } from './markdown.constants';
+import { proposeMarkdownlintEslintConfigChange } from './markdown.eslint.js';
 import {
   computeProposedMarkdownExtensionsText,
   computeProposedMarkdownSettingsText,
@@ -88,6 +93,22 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
   }
 
   return packageJson;
+}
+
+/** Remove legacy markdown-related ESLint packages that are superseded by `@finografic/md-lint`. */
+function withoutLegacyMarkdownDevDependencies(packageJson: PackageJson): PackageJson {
+  const devDeps = packageJson.devDependencies as Record<string, string> | undefined;
+  if (!devDeps) return packageJson;
+
+  const toRemove = [ESLINT_PLUGIN_MARKDOWNLINT, ESLINT_PLUGIN_SIMPLE_IMPORT_SORT];
+  const hasAny = toRemove.some((p) => Object.prototype.hasOwnProperty.call(devDeps, p));
+  if (!hasAny) return packageJson;
+
+  const next = { ...devDeps };
+  for (const p of toRemove) {
+    delete next[p];
+  }
+  return { ...packageJson, devDependencies: next };
 }
 
 function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
@@ -159,6 +180,7 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
     pkg = withMarkdownDevDependency(pkg);
   }
 
+  pkg = withoutLegacyMarkdownDevDependencies(pkg);
   pkg = applyMarkdownLintStagedTransforms(pkg);
   pkg = withMarkdownScripts(pkg);
 
@@ -205,6 +227,37 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
       const cssBody = await readFile(cssPath, 'utf8');
       changes.push(
         createDeletePreviewChange(cssPath, cssBody, true, `.vscode/${cssFile} (moved to md-lint package)`),
+      );
+    }
+  }
+
+  // Strip markdownlint block + imports from eslint.config.*
+  const eslintChange = await proposeMarkdownlintEslintConfigChange(targetDir);
+  if (eslintChange !== null) {
+    changes.push(
+      createWritePreviewChange(
+        eslintChange.path,
+        eslintChange.current,
+        eslintChange.proposed,
+        'eslint.config (remove markdownlint plugin block)',
+      ),
+    );
+  } else {
+    applied.push('eslint.config (markdownlint already removed)');
+  }
+
+  // Delete src/declarations.d.ts if it is solely for eslint-plugin-markdownlint typings
+  const declarationsPath = resolve(targetDir, MARKDOWNLINT_DECLARATIONS_FILE);
+  if (fileExists(declarationsPath)) {
+    const declBody = await readFile(declarationsPath, 'utf8');
+    if (declBody.includes(MARKDOWNLINT_DECLARATIONS_MARKER)) {
+      changes.push(
+        createDeletePreviewChange(
+          declarationsPath,
+          declBody,
+          true,
+          `${MARKDOWNLINT_DECLARATIONS_FILE} (markdownlint type declarations — no longer needed)`,
+        ),
       );
     }
   }

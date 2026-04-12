@@ -112,7 +112,7 @@ describe('serializeSections', () => {
     const agentsDoc = [
       '# AGENTS.md — AI Assistant Guide\n\n',
       '## Skills — Check Before Implementing\n\nTable content.\n\n---\n\n',
-      '## Rules — General\n\nRules content.\n\n---\n\n',
+      '## Rules — Global\n\nRules content.\n\n---\n\n',
       '## Git Policy\n\nGit rules.\n',
     ].join('');
 

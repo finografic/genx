@@ -18,7 +18,7 @@ export const AI_AGENTS_SKILLS_DIR = '.github/skills';
 export const AI_AGENTS_SEEDED_HEADINGS = ['Rules — Project-Specific'] as const;
 
 export const AI_AGENTS_ENFORCED_HEADINGS = [
-  'Rules — General',
+  'Rules — Global',
   'Rules — Markdown Tables',
   'Git Policy',
 ] as const;

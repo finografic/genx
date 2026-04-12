@@ -8,7 +8,7 @@ import {
 
 describe('normalizeHeadingKey', () => {
   it('treats em dash and hyphen headings as the same key', () => {
-    expect(normalizeHeadingKey('## Rules — General')).toBe(normalizeHeadingKey('## Rules - General'));
+    expect(normalizeHeadingKey('## Rules — Global')).toBe(normalizeHeadingKey('## Rules - General'));
   });
 });
 
@@ -19,7 +19,7 @@ describe('mergeAgentsFromTemplate (reverse apply: template base + target extras)
 
 TEMPLATE_PS
 
-## Rules — General
+## Rules — Global
 
 TEMPLATE_GENERAL
 
@@ -49,7 +49,7 @@ KEEP_SKILLS
 
 LONG_PS_FROM_REPO
 
-## Rules — General
+## Rules — Global
 
 OLD_GENERAL
 
@@ -79,7 +79,7 @@ OLD_GIT
     expect(next?.startsWith('# AGENTS')).toBe(true);
 
     const idxPs = next!.indexOf('## Rules — Project-Specific');
-    const idxGen = next!.indexOf('## Rules — General');
+    const idxGen = next!.indexOf('## Rules — Global');
     const idxGit = next!.indexOf('## Git Policy');
     const idxSkills = next!.indexOf('## Skills');
     expect(idxPs).toBeGreaterThan(-1);
@@ -96,7 +96,7 @@ OLD_GIT
 
 KEEP_SKILLS
 
-## Rules — General
+## Rules — Global
 
 OLD_GENERAL
 

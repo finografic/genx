@@ -15,8 +15,8 @@ importers:
         specifier: ^0.9.2
         version: 0.9.2
       '@finografic/deps-policy':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.5.0
+        version: 0.5.0
       '@finografic/genx':
         specifier: 'link:'
         version: 'link:'
@@ -58,8 +58,8 @@ importers:
         specifier: ^9.18.4
         version: 9.18.4(478e255242643e49b87141a89fb37564)
       '@finografic/md-lint':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.5.0
+        version: 0.5.0
       '@finografic/oxfmt-config':
         specifier: ^1.5.0
         version: 1.5.0(oxfmt@0.44.0)
@@ -555,8 +555,8 @@ packages:
   '@finografic/core@0.9.2':
     resolution: {integrity: sha512-pvery4Vsi8WNprrD1FDq7pEl4VnTfkuUURK+VF/x7XSWc0RCunQKQwxbpo8tn0/7LG12D1TOQUTm61hoi9TjQw==, tarball: https://npm.pkg.github.com/download/@finografic/core/0.9.2/1c2a1033b2d6a4adc5ae33abd5abdb392daf0707}
 
-  '@finografic/deps-policy@0.4.0':
-    resolution: {integrity: sha512-VFFAJMeEXMtCulgYOOxy1wWInRkfR9HkJsEpgxvK/m6KgCH4bhirLNm3XLKUYl11r+FbyuxXpUIcZO9uEAHn2g==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.4.0/493461f92349afa1cc42610b3c3474110956700a}
+  '@finografic/deps-policy@0.5.0':
+    resolution: {integrity: sha512-zUi+YaLEnaEXIMbwRqjPembqGVBNbgRS8HvKoLK7yBIk+OcR6Ap3lY8m2sSiDnQYEOpvXRQeggskmocwWofjBQ==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.5.0/3ba90f084edb79d1f7880643fb49f5a1debf8de9}
     engines: {node: '>=24.3.0'}
 
   '@finografic/eslint-config@9.18.4':
@@ -596,8 +596,8 @@ packages:
       prettier-plugin-astro:
         optional: true
 
-  '@finografic/md-lint@0.4.0':
-    resolution: {integrity: sha512-uNH4RAGpqOJq+NcHx8j4k1+HslAkpvpVtC3BfJ0QUmiCZx87C9RapqtIe0tLwPKdHpCN+AsZMJcG1Tf1mBHhsA==, tarball: https://npm.pkg.github.com/download/@finografic/md-lint/0.4.0/0216e2f252569b875c1e1bd3a6d45a445222414f}
+  '@finografic/md-lint@0.5.0':
+    resolution: {integrity: sha512-tzFaZxml5X/sEHAM/5b1Z++DuQdPpO3pNfRsYbS/mH6avvx3oft0YiAmuz1czMYz87YMl7ofhuDlnms+fICugA==, tarball: https://npm.pkg.github.com/download/@finografic/md-lint/0.5.0/f2b2dfe303e8aa5f76af0f487ba6d1d6dfbf0a3b}
     hasBin: true
 
   '@finografic/oxfmt-config@1.5.0':
@@ -5074,7 +5074,7 @@ snapshots:
     dependencies:
       lodash: 4.17.21
 
-  '@finografic/deps-policy@0.4.0': {}
+  '@finografic/deps-policy@0.5.0': {}
 
   '@finografic/eslint-config@9.18.4(478e255242643e49b87141a89fb37564)':
     dependencies:
@@ -5152,7 +5152,7 @@ snapshots:
       - typescript
       - vitest
 
-  '@finografic/md-lint@0.4.0':
+  '@finografic/md-lint@0.5.0':
     dependencies:
       globby: 16.2.0
       markdownlint: 0.40.0
