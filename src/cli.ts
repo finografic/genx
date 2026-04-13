@@ -9,6 +9,7 @@ import { createPackage } from './commands/create.cli.js';
 import { syncDeps } from './commands/deps.cli.js';
 import { addFeatures } from './commands/features.cli.js';
 import { migratePackage } from './commands/migrate.cli.js';
+import { runSelfUpdateCheck, runSelfUpdateForced } from './core/self-update/index.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };
@@ -32,31 +33,44 @@ async function main(): Promise<void> {
     console.log(version);
     return;
   }
+
   const command = argv[0];
   const args = argv.slice(1);
+
+  /* ────────────────────────────────────────────────────────── */
+  /* Self-update check (skipped for update-self itself)        */
+  /* ────────────────────────────────────────────────────────── */
+
+  if (command !== 'update-self') {
+    await runSelfUpdateCheck();
+  }
 
   /* ────────────────────────────────────────────────────────── */
   /* Command registry                                           */
   /* ────────────────────────────────────────────────────────── */
 
   const commands: Record<string, CommandHandler> = {
-    create: async (argv, context) => {
+    'create': async (argv, context) => {
       await createPackage(argv, context);
     },
 
-    migrate: async (argv, context) => {
+    'migrate': async (argv, context) => {
       await migratePackage(argv, context);
     },
 
-    deps: async (argv, context) => {
+    'deps': async (argv, context) => {
       await syncDeps(argv, context);
     },
 
-    features: async (argv, context) => {
+    'features': async (argv, context) => {
       await addFeatures(argv, { targetDir: context.cwd });
     },
 
-    help: () => {
+    'update-self': async () => {
+      await runSelfUpdateForced();
+    },
+
+    'help': () => {
       renderHelp(cliHelp);
     },
   };
