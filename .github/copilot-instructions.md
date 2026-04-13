@@ -1,6 +1,6 @@
 # Copilot Instructions
 
-## Project-Specific Rules
+## Rules — Project-Specific
 
 Project-specific rules live in `.github/instructions/project/*.instructions.md`.
 

@@ -36,7 +36,7 @@ When linking to a specific section, append `#<slug>` to the path:
 - **Em-dash `—`** is stripped; surrounding spaces become hyphens → `--`
   - `## Skills — Check Before Implementing` → `#skills--check-before-implementing`
 - **Hyphen-minus `-`** is kept; surrounding spaces also become hyphens → `---`
-  - `## Rules - General` → `#rules---general`
+  - `## Rules — Global` → `#rules--general`
 
 ### Confirm before writing
 

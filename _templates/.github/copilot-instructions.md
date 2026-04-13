@@ -1,10 +1,10 @@
 # Copilot Instructions
 
-## Project-Specific Rules
+## Rules — Project-Specific
 
 Project-specific rules live in `.github/instructions/project/*.instructions.md`
 
-## Global Rules
+## Rules — Global
 
 - General: `.github/instructions/00-general.instructions.md`
 - File Naming: `.github/instructions/01-file-naming.instructions.md`

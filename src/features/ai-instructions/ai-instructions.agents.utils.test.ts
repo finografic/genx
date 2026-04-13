@@ -8,7 +8,7 @@ import {
 
 describe('normalizeHeadingKey', () => {
   it('treats em dash and hyphen headings as the same key', () => {
-    expect(normalizeHeadingKey('## Rules — Global')).toBe(normalizeHeadingKey('## Rules - General'));
+    expect(normalizeHeadingKey('## Rules — Global')).toBe(normalizeHeadingKey('## Rules - Global'));
   });
 });
 
@@ -38,7 +38,7 @@ TEMPLATE_GIT
 ---
 `;
 
-  it('uses template bodies for General / Markdown Tables / Git Policy and target for Project-Specific and extras', () => {
+  it('uses template bodies for Global / Markdown Tables / Git Policy and target for Project-Specific and extras', () => {
     const target = `# Title
 
 ## Skills — Extra
@@ -133,7 +133,7 @@ OLD_GIT
     expect(aligned).toBeNull();
   });
 
-  it('extractRulesGeneralSection reads General block', () => {
+  it('extractRulesGeneralSection reads Global block', () => {
     expect(extractRulesGeneralSection(template)).toContain('TEMPLATE_GENERAL');
   });
 });

@@ -6,13 +6,13 @@
  * hand-edited `AGENTS.md` when changing this module — match **`_templates/AGENTS.md.template`**.
  */
 
-/** Sections taken verbatim from the template (canonical shared lists). */
-const TEMPLATE_SYNC_KEYS = new Set(['rules - general', 'rules - markdown tables', 'git policy']);
+/** Sections taken verbatim from the template (canonical shared lists). Keys via {@link normalizeHeadingKey}. */
+const TEMPLATE_SYNC_KEYS = new Set(['rules - global', 'rules - markdown tables', 'git policy']);
 
-/** Canonical order for shared “Rules / Git” spine (Project-Specific first). */
+/** Canonical order for shared “Rules / Git” spine (Project-Specific first). Keys via {@link normalizeHeadingKey}. */
 const SPINE_KEYS = [
   'rules - project-specific',
-  'rules - general',
+  'rules - global',
   'rules - markdown tables',
   'git policy',
 ] as const;
@@ -32,7 +32,7 @@ export interface H2Section {
 }
 
 /**
- * Normalize an H2 heading line: `## Rules — Global` → `rules - general`.
+ * Normalize an H2 heading line: `## Rules — Global` → `rules - global` (em dash and hyphen equivalent).
  */
 export function normalizeHeadingKey(headingLine: string): string {
   const withoutHash = headingLine.replace(/^##\s+/, '').trim();
@@ -70,7 +70,7 @@ export function parseH2Sections(content: string): ParsedAgents {
 /**
  * Reverse merge: template file is the **base**; target contributes extras and Project-Specific.
  * After merge, sections are **reordered** to match **`_templates/AGENTS.md.template`**: **Rules — Project-Specific** first,
- * then **General** → **Markdown Tables** → **Git Policy**, then other extras in merge order, then **Learned** last.
+ * then **Rules — Global** → **Markdown Tables** → **Git Policy**, then other extras in merge order, then **Learned** last.
  *
  * Returns `null` if the result equals `target` (already aligned).
  */
@@ -159,7 +159,7 @@ function reorderMergedAgentSections(merged: string[]): string[] {
   }
 
   const ps = spineParts.get('rules - project-specific');
-  const gen = spineParts.get('rules - general');
+  const gen = spineParts.get('rules - global');
   const md = spineParts.get('rules - markdown tables');
   const git = spineParts.get('git policy');
 
@@ -185,9 +185,9 @@ function ensureTrailingNewline(s: string): string {
   return s.endsWith('\n') ? s : `${s}\n`;
 }
 
-/** Extract Rules — Global section text (for tests / diagnostics). */
+/** Extract **Rules — Global** section text (for tests / diagnostics). */
 export function extractRulesGeneralSection(agentsContent: string): string | null {
   const { sections } = parseH2Sections(agentsContent);
-  const hit = sections.find((s) => normalizeHeadingKey(s.headingLine) === 'rules - general');
+  const hit = sections.find((s) => normalizeHeadingKey(s.headingLine) === 'rules - global');
   return hit ? hit.fullText.trimEnd() : null;
 }
