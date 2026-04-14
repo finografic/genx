@@ -111,6 +111,7 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 - For migrate/feature flows that confirm file changes, prefer one user decision per changed file (not per hunk); avoid implicit auto-accept on small diffs unless that behavior is explicitly opt-in
 - Keep shared utilities for feature preview / diff-as-detection that are not canonical `src/core/` grouped in a dedicated app-level folder so they stay maintainable and can be extracted to a package later if needed
 - For Clack `text` prompts with a placeholder or default hint, use `textPrompt` from `core/flow` instead of `clack.text` so Tab and Right-arrow fill the hint on an empty line (upstream `@clack/core` maps Tab to backspace for tracked prompts and treats placeholder as visual-only); see `docs/spec/CLI_CORE.md`
+- For Picocolors multiline dimmed output (e.g. `pc.gray`), apply the style per line and join with `\n` — a single `pc.gray(...)` on a string that contains newlines can reset after the first line so only the first row appears styled
 
 ## Learned Workspace Facts
 
@@ -125,3 +126,4 @@ Rules are canonical in `.github/instructions/` and shared across Claude Code, Cu
 - `eslint.config` writers must support `globalIgnores([...])` as well as legacy `ignores: [...]`; this repo intentionally ignores `.cursor/hooks/**` and `.cursor/chats/**`; markdown lint ignores `.cursor/**` and `_templates/**/*.md` (no tracked rules under `_templates/.cursor/`)
 - `genx deps` dependency planning uses semver: skip when the local spec already satisfies the policy range; omit policy downgrades unless `--allow-downgrade`; dry-run uses `[upgrade]` in cyan, `[add]` in green, and `[downgrade]` in yellowions after the label are white (grey “from” on upgrade/downgrade rows)
 - Oxfmt `quoteProps` accepts `as-needed`, `consistent`, or `preserve` — not ESLint’s `consistent-as-needed`; align ESLint `quote-props` with an oxfmt-supported mode to avoid formatter vs lint fights on save
+- AGENTS merge in `ai-instructions.agents.utils`: `normalizeHeadingKey` yields lowercase keys (e.g. `rules - global`); spine map lookups and section comparisons must use those normalized keys, not display titles like `Rules — Global`, or the spine map misses sections and merge output breaks

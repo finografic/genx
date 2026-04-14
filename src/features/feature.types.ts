@@ -31,7 +31,7 @@ export interface FeatureApplyResult {
   /** Error if application failed */
   error?: Error;
   /**
-   * Absolute paths touched by apply (writes, deletes, rename-backup sources), in apply order.
+   * Absolute paths touched by apply (writes and deletes), in apply order.
    * For follow-up steps that must not depend on human-facing `applied` labels.
    */
   appliedTargetPaths?: readonly string[];

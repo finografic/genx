@@ -2,7 +2,7 @@
  * oxfmt feature — migrate an existing package to @finografic/oxfmt-config + oxfmt CLI.
  *
  * PRETTIER_* are used when replacing Prettier: detect Prettier, uninstall the package,
- * and backup Prettier config files before applying oxfmt.
+ * and remove Prettier config files when applying oxfmt.
  */
 
 export const OXFMT_CONFIG_PACKAGE = '@finografic/oxfmt-config';
@@ -43,7 +43,7 @@ export const OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES = [
   '*.{json,jsonc,md,yml,yaml,toml}',
 ] as const;
 
-/** Prettier config filenames to detect and backup when replacing with oxfmt. */
+/** Prettier config filenames to detect and remove when replacing with oxfmt. */
 export const PRETTIER_CONFIG_FILES = [
   '.prettierrc',
   '.prettierrc.js',

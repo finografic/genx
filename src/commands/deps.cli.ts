@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
-import { errorMessage, infoMessage, intro, logMessage, successMessage, successUpdatedMessage } from 'utils';
+import { errorMessage, infoMessage, intro, logMessage, spinner, successMessage } from 'utils';
 import {
   GENX_CONFIG_PATH,
   getPathArg,
@@ -51,6 +51,12 @@ function renderDependencyChangeLine(change: DependencyChange, labelColumnWidth: 
     '  ' +
     pc.white(FORMATTERS[change.operation](change))
   );
+}
+
+function logWrittenDependencyVersions(changes: DependencyChange[]): void {
+  const sorted = [...changes].sort((a, b) => a.name.localeCompare(b.name));
+  const body = sorted.map((c) => pc.gray(`${pc.green('+')} ${pc.white(c.name)} ${pc.gray(c.to)}`)).join('\n');
+  logMessage(body);
 }
 
 export async function syncDeps(argv: string[], context: { cwd: string }): Promise<void> {
@@ -175,16 +181,19 @@ async function syncDepsForTarget(
 
   const updatedPackageJson = applyDependencyChanges(packageJson, changes);
   await writePackageJson(packageJsonPath, updatedPackageJson);
-  successUpdatedMessage(
-    `Updating ${changes.length} ${changes.length === 1 ? 'dependency' : 'dependencies'}...`,
-  );
+
+  const installSpin = spinner();
+  const updatingLabel =
+    changes.length === 1 ? 'Updating 1 dependency' : `Updating ${changes.length} dependencies`;
+  installSpin.start(pc.cyan(updatingLabel));
 
   try {
     await execa('pnpm', ['install'], { cwd: targetDir });
-    successMessage('Dependencies installed');
+    installSpin.stop(pc.green('Dependencies installed'));
+    logWrittenDependencyVersions(changes);
+    successMessage('Done\n');
   } catch {
+    installSpin.stop('Failed to install dependencies');
     errorMessage('pnpm install failed — run it manually');
   }
-
-  successMessage('Done\n');
 }

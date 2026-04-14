@@ -8,12 +8,10 @@ import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/f
 import {
   applyPreviewChanges,
   createDeletePreviewChange,
-  createRenameBackupPreviewChange,
   createWritePreviewChange,
   getChangedPreviewChanges,
   hasPreviewChanges,
   isPreviewChangeChanged,
-  resolveFirstAvailableRenameBackupPath,
 } from './feature-preview.utils.js';
 
 vi.mock('../../core/file-diff/file-diff.utils.js', () => ({
@@ -39,48 +37,6 @@ beforeEach(() => {
   isCancelMock().mockReturnValue(false);
 });
 
-describe('feature-preview — resolveFirstAvailableRenameBackupPath', () => {
-  it('returns the preferred path when it does not exist', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'genx-fp-ub-'));
-    const from = join(root, 'prettier.config.js');
-    const preferred = join(root, 'prettier.config--backup.js');
-    await writeFile(from, 'x', 'utf8');
-
-    await expect(resolveFirstAvailableRenameBackupPath(from, preferred)).resolves.toBe(preferred);
-
-    await rm(root, { recursive: true, force: true });
-  });
-
-  it('returns --backup-2 when the default --backup path is already occupied', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'genx-fp-ub-'));
-    const from = join(root, 'prettier.config.js');
-    const preferred = join(root, 'prettier.config--backup.js');
-    await writeFile(from, 'x', 'utf8');
-    await writeFile(preferred, 'old backup', 'utf8');
-
-    await expect(resolveFirstAvailableRenameBackupPath(from, preferred)).resolves.toBe(
-      join(root, 'prettier.config--backup-2.js'),
-    );
-
-    await rm(root, { recursive: true, force: true });
-  });
-
-  it('skips occupied --backup-2 and returns --backup-3 when needed', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'genx-fp-ub-'));
-    const from = join(root, '.prettierrc');
-    const preferred = join(root, '.prettierrc--backup');
-    await writeFile(from, '{}', 'utf8');
-    await writeFile(preferred, 'a', 'utf8');
-    await writeFile(join(root, '.prettierrc--backup-2'), 'b', 'utf8');
-
-    await expect(resolveFirstAvailableRenameBackupPath(from, preferred)).resolves.toBe(
-      join(root, '.prettierrc--backup-3'),
-    );
-
-    await rm(root, { recursive: true, force: true });
-  });
-});
-
 describe('feature-preview — isPreviewChangeChanged', () => {
   it('treats identical write snapshots as unchanged', () => {
     const change = createWritePreviewChange('a.ts', 'same', 'same');
@@ -99,16 +55,6 @@ describe('feature-preview — isPreviewChangeChanged', () => {
 
   it('detects delete when the path existed', () => {
     const change = createDeletePreviewChange('x.ts', 'body', true);
-    expect(isPreviewChangeChanged(change)).toBe(true);
-  });
-
-  it('treats renameBackup as unchanged when the source did not exist at preview time', () => {
-    const change = createRenameBackupPreviewChange('a/.prettierrc', 'a/.prettierrc--backup', '', false);
-    expect(isPreviewChangeChanged(change)).toBe(false);
-  });
-
-  it('detects renameBackup when the source existed at preview time', () => {
-    const change = createRenameBackupPreviewChange('a/.prettierrc', 'a/.prettierrc--backup', '{}', true);
     expect(isPreviewChangeChanged(change)).toBe(true);
   });
 });
@@ -299,36 +245,6 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(result.applied).toEqual(['remove prettier config']);
     expect(result.appliedTargetPaths).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
-
-    await rm(root, { recursive: true, force: true });
-  });
-
-  it('renames an approved Prettier-style config to a sibling --backup path (non-destructive)', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'genx-fp-rb-'));
-    const fromPath = join(root, 'prettier.config.js');
-    const backupPath = join(root, 'prettier.config--backup.js');
-    await writeFile(fromPath, 'module.exports = {}', 'utf8');
-    selectMock().mockResolvedValue('write');
-
-    const result = await applyPreviewChanges({
-      changes: [
-        createRenameBackupPreviewChange(
-          fromPath,
-          backupPath,
-          'module.exports = {}',
-          true,
-          'Prettier config (prettier.config.js → prettier.config--backup.js)',
-        ),
-      ],
-      applied: [],
-    });
-
-    expect(confirmFileWriteMock).not.toHaveBeenCalled();
-    expect(selectMock()).toHaveBeenCalledOnce();
-    expect(result.applied).toEqual(['Prettier config (prettier.config.js → prettier.config--backup.js)']);
-    expect(result.appliedTargetPaths).toEqual([fromPath]);
-    await expect(readFile(fromPath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
-    expect(await readFile(backupPath, 'utf8')).toBe('module.exports = {}');
 
     await rm(root, { recursive: true, force: true });
   });

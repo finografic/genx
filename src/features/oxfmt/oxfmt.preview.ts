@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { basename, extname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import {
   BASE_SETTINGS_JSON,
   fileExists,
@@ -33,9 +33,7 @@ import {
 import type { PackageJson } from 'types/package-json.types';
 import {
   createDeletePreviewChange,
-  createRenameBackupPreviewChange,
   createWritePreviewChange,
-  resolveFirstAvailableRenameBackupPath,
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
   DPRINT_CONFIG_FILES,
@@ -254,21 +252,7 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
     const abs = resolve(targetDir, file);
     if (!fileExists(abs)) continue;
     const body = await readFile(abs, 'utf8');
-    const ext = extname(file);
-    const base = basename(file, ext || undefined);
-    const primaryBackupName = base + '--backup' + (ext || '');
-    const preferredBackupAbs = resolve(targetDir, primaryBackupName);
-    const backupAbs = await resolveFirstAvailableRenameBackupPath(abs, preferredBackupAbs);
-    const backupLabel = basename(backupAbs);
-    changes.push(
-      createRenameBackupPreviewChange(
-        abs,
-        backupAbs,
-        body,
-        true,
-        `Prettier config (${file} → ${backupLabel})`,
-      ),
-    );
+    changes.push(createDeletePreviewChange(abs, body, true, `remove Prettier config (${file})`));
   }
 
   for (const file of DPRINT_CONFIG_FILES) {
