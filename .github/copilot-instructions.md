@@ -37,5 +37,3 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 **Git**
 
 - Git policy: `.github/instructions/git/git-policy.instructions.md`
-
----
