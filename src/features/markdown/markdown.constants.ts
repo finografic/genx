@@ -17,8 +17,8 @@ export const LINT_STAGED_OXFMT_CMD = 'oxfmt --no-error-on-unmatched-pattern';
 export const LINT_STAGED_MD_LINT_CMD = 'md-lint --fix';
 
 /** Script keys added to package.json by the markdown feature. */
-export const MD_LINT_SCRIPT = 'lint.md';
-export const MD_LINT_FIX_SCRIPT = 'lint.md.fix';
+export const MD_LINT_SCRIPT = 'lint:md';
+export const MD_LINT_FIX_SCRIPT = 'lint:md:fix';
 
 /** Legacy ESLint plugin replaced by `@finografic/md-lint`. */
 export const ESLINT_PLUGIN_MARKDOWNLINT = 'eslint-plugin-markdownlint';

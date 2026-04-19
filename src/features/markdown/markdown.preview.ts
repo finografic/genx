@@ -143,18 +143,18 @@ function withMarkdownScripts(packageJson: PackageJson): PackageJson {
 }
 
 /**
- * Propose adding a `lint.md` step to `.github/workflows/ci.yml` (after Lint, before Type check).
+ * Propose adding a `lint:md` step to `.github/workflows/ci.yml` (after Lint, before Type check).
  * Returns null if the step is already present or the insertion point is not found.
  */
 function proposeCiWithMarkdownLint(content: string): string | null {
-  if (content.includes('lint.md') || content.includes('md-lint')) {
+  if (content.includes('lint:md') || content.includes('md-lint')) {
     return null;
   }
   const typeCheckStep = '\n      - name: Type check';
   if (!content.includes(typeCheckStep)) {
     return null;
   }
-  const mdLintStep = '\n      - name: Lint markdown\n        run: pnpm lint.md';
+  const mdLintStep = '\n      - name: Lint markdown\n        run: pnpm lint:md';
   return content.replace(typeCheckStep, `${mdLintStep}\n${typeCheckStep}`);
 }
 
@@ -268,7 +268,7 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
     const proposedCi = proposeCiWithMarkdownLint(ciRaw);
     if (proposedCi !== null) {
       changes.push(
-        createWritePreviewChange(ciPath, ciRaw, proposedCi, '.github/workflows/ci.yml (lint.md step)'),
+        createWritePreviewChange(ciPath, ciRaw, proposedCi, '.github/workflows/ci.yml (lint:md step)'),
       );
     } else {
       applied.push('.github/workflows/ci.yml');
