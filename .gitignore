@@ -21,9 +21,12 @@ build/
 # IDE
 **/.cursor/**
 !**/.cursor/.gitkeep
+!.cursor/rules/
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
+
 
 # Docs
 docs/drafts/

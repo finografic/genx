@@ -15,18 +15,20 @@ build/
 .codex/
 .claude/
 !.claude/settings.json
-
-# Docs
-docs/drafts/
+.worktrees/
+**/worktrees/
 
 # IDE
 **/.cursor/**
 !**/.cursor/.gitkeep
-.worktrees/
-**/worktrees/
+!.cursor/rules/
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
+
+# Docs
+docs/drafts/
 
 # Logs
 *.log
