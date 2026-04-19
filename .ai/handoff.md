@@ -79,7 +79,7 @@ No features prompt, no help file logic.
 
 ## Decisions
 
-1. `.claude/handoff.md` introduced as bridge between Claude Code and Claude.ai (2026-02-20)
+1. `.ai/handoff.md` introduced as bridge between Claude Code and Claude.ai (2026-02-20)
 2. Split **ai-rules** → **ai-claude** (CLAUDE.md + `.claude/`) and **ai-instructions**
    (`.github/instructions`, Copilot, Cursor) (2026-02-14)
 3. **ai-claude** auto-installs **ai-instructions** if missing (2026-02-14)

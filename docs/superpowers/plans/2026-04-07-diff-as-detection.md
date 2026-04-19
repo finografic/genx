@@ -56,7 +56,7 @@ Purpose:
 
 - Modify: `docs/todo/TODO.ROADMAP.md`
 - Modify: `.claude/memory.md`
-- Modify: `.claude/handoff.md`
+- Modify: `.ai/handoff.md`
 
 Purpose:
 
@@ -592,7 +592,7 @@ git commit -m "docs: add preview feature skill"
 
 - Modify: `docs/todo/TODO.ROADMAP.md`
 - Modify: `.claude/memory.md`
-- Modify: `.claude/handoff.md`
+- Modify: `.ai/handoff.md`
 
 - [ ] **Step 1: Update roadmap and handoff docs**
 
@@ -628,6 +628,6 @@ Expected: only preview/detection/docs changes intended by this plan
 - [ ] **Step 5: Commit**
 
 ```bash
-git add docs/todo/TODO.ROADMAP.md .claude/memory.md .claude/handoff.md
+git add docs/todo/TODO.ROADMAP.md .claude/memory.md .ai/handoff.md
 git commit -m "docs: record diff-as-detection rollout"
 ```

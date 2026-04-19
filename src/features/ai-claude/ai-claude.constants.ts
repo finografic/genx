@@ -2,7 +2,7 @@
  * AI Claude feature configuration.
  *
  * Installs Claude Code support: CLAUDE.md, .claude/memory.md,
- * .claude/handoff.md, .claude/settings.json, and .claude/assets/
+ * .ai/handoff.md, .claude/settings.json, and .claude/assets/
  * (preview/apply add .claude/assets/.gitkeep when the directory is missing).
  */
 
@@ -10,7 +10,7 @@ export const AI_CLAUDE_FILES = [
   'CLAUDE.md',
   '.claude/memory.md',
   '.claude/settings.json',
-  '.claude/handoff.md',
+  '.ai/handoff.md',
 ] as const;
 
 /** Lines to ensure exist in .gitignore for Claude Code */
