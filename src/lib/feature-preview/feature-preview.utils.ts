@@ -125,7 +125,6 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
   const applied: string[] = [];
   const appliedTargetPaths: string[] = [];
 
-  /* eslint-disable no-await-in-loop */
   for (const change of changed) {
     if (change.kind === 'write') {
       const currentOnDisk = await readUtf8(change.path);
@@ -163,7 +162,6 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
       appliedTargetPaths.push(change.path);
     }
   }
-  /* eslint-enable no-await-in-loop */
 
   if (applied.length === 0) {
     return {

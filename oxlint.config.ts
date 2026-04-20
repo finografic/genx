@@ -44,6 +44,7 @@ export default defineConfig({
     'eslint/eqeqeq': ['error', 'always', { null: 'ignore' }],
     'eslint/curly': ['error', 'multi-line'],
     'eslint/no-unused-vars': 'off',
+    'eslint/no-await-in-loop': 'off',
     // 'eslint/no-redeclare': 'off',
 
     'curly': ['error', 'multi-line'],

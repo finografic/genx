@@ -210,13 +210,11 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
   }
 
   // 6. Apply selected features (after install so node_modules exist)
-  /* eslint-disable no-await-in-loop */
   for (const featureId of config.features) {
     const feature = getFeature(featureId);
     if (!feature) continue;
     await feature.apply({ targetDir });
   }
-  /* eslint-enable no-await-in-loop */
 
   // 7. Initialize git
   const gitSpin = spinner();

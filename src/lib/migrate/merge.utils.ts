@@ -81,8 +81,8 @@ function mergePackageJson(existingRaw: string, templateRaw: string): string {
       ...template,
       ...existing,
       scripts: {
-        ...((template.scripts as Record<string, string>) || {}),
-        ...((existing.scripts as Record<string, string>) || {}),
+        ...(template.scripts as Record<string, string>),
+        ...(existing.scripts as Record<string, string>),
       },
     },
     null,

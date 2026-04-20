@@ -109,7 +109,6 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     let appliedCount = 0;
     let skippedCount = 0;
 
-    /* eslint-disable no-await-in-loop */
     for (const [index, target] of managedTargets.entries()) {
       if (write && !yesMode) {
         const action = await promptManagedTargetAction({
@@ -132,7 +131,6 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
       await syncDepsForTarget(target.path, write, { allowDowngrade });
       appliedCount += 1;
     }
-    /* eslint-enable no-await-in-loop */
 
     successMessage(
       `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})\n`,

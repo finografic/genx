@@ -116,7 +116,6 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     let appliedCount = 0;
     let skippedCount = 0;
 
-    /* eslint-disable no-await-in-loop */
     for (const [index, target] of managedTargets.entries()) {
       if (write && !flow.yesMode) {
         const action = await promptManagedTargetAction({
@@ -146,7 +145,6 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       });
       appliedCount += 1;
     }
-    /* eslint-enable no-await-in-loop */
 
     successMessage(
       `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
@@ -376,7 +374,6 @@ async function migrateSingleTarget(params: {
   const appliedFeatures: FeatureId[] = [];
   const noopMessages: string[] = [];
 
-  /* eslint-disable no-await-in-loop */
   for (const featureId of selectedFeatureIds) {
     const feature = getFeature(featureId);
     if (!feature) {
@@ -405,7 +402,6 @@ async function migrateSingleTarget(params: {
       noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
     }
   }
-  /* eslint-enable no-await-in-loop */
 
   // Show feature results
   if (appliedFeatures.length > 0) {
