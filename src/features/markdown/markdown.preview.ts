@@ -117,7 +117,7 @@ function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
     return packageJson;
   }
   const devDependencies = sortedRecord({
-    ...((packageJson.devDependencies as Record<string, string> | undefined) ?? {}),
+    ...(packageJson.devDependencies as Record<string, string> | undefined),
     [MD_LINT_PACKAGE]: MD_LINT_PACKAGE_VERSION,
   });
   return { ...packageJson, devDependencies };

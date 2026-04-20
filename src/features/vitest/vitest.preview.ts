@@ -98,7 +98,7 @@ function withVitestDependency(packageJson: PackageJson): PackageJson {
     return packageJson;
   }
   const devDependencies = sortedRecord({
-    ...((packageJson.devDependencies as Record<string, string> | undefined) ?? {}),
+    ...(packageJson.devDependencies as Record<string, string> | undefined),
     [VITEST_PACKAGE]: VITEST_PACKAGE_VERSION,
   });
   return { ...packageJson, devDependencies };

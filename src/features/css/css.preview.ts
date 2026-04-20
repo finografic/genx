@@ -41,7 +41,7 @@ async function withCssDevDependencies(targetDir: string, packageJson: PackageJso
     next = {
       ...next,
       devDependencies: sortedRecord({
-        ...((next.devDependencies as Record<string, string> | undefined) ?? {}),
+        ...(next.devDependencies as Record<string, string> | undefined),
         ...additions,
       }),
     };

@@ -39,7 +39,7 @@ export async function isDprintPresent(targetDir: string): Promise<boolean> {
 /** Exported for oxfmt preview / detection (same behavior as apply-time cleanup). */
 export function stripDprintFromLintStaged(lintStaged: Record<string, string[] | string>): boolean {
   let modified = false;
-  for (const key of [...Object.keys(lintStaged)]) {
+  for (const key of Object.keys(lintStaged)) {
     const cmds = lintStaged[key];
     if (Array.isArray(cmds)) {
       const next = cmds.filter((c) => !c.includes('dprint'));
@@ -62,7 +62,7 @@ export function stripDprintFromLintStaged(lintStaged: Record<string, string[] | 
 /** Exported for oxfmt preview / detection (same behavior as apply-time cleanup). */
 export function stripDprintFromScripts(scripts: Record<string, string>): boolean {
   let modified = false;
-  for (const key of [...Object.keys(scripts)]) {
+  for (const key of Object.keys(scripts)) {
     const value = scripts[key];
     if (key === 'update:dprint-config' || (typeof value === 'string' && value.includes('dprint'))) {
       delete scripts[key];

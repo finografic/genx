@@ -94,7 +94,7 @@ export default defineConfig({
     'typescript/consistent-indexed-object-style': ['error', 'record'],
     // 'typescript/explicit-function-return-type': 'error',
 
-    //NEW:
+    // NEW:
     'typescript/explicit-function-return-type': [
       'warn',
       {
@@ -102,7 +102,8 @@ export default defineConfig({
         allowTypedFunctionExpressions: true,
       },
     ],
-    'unicorn/no-useless-fallback-in-spread': 'warn',
+    'unicorn/no-useless-fallback-in-spread': 'error', // ✅ 🛠️
+    'unicorn/no-useless-spread': 'error', // ✅ ⚠️ 🛠️
   },
   overrides: [
     {
