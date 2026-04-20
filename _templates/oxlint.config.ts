@@ -44,6 +44,7 @@ export default defineConfig({
     'eslint/eqeqeq': ['error', 'always', { null: 'ignore' }],
     'eslint/curly': ['error', 'multi-line'],
     'eslint/no-unused-vars': 'off',
+    'eslint/no-await-in-loop': 'off',
     // 'eslint/no-redeclare': 'off',
 
     'curly': ['error', 'multi-line'],
@@ -95,7 +96,7 @@ export default defineConfig({
   },
   overrides: [
     {
-      files: ['**/*.spec.ts,**/*.test.ts,__tests__/**/*.ts'],
+      files: ['**/*.spec.ts', '**/*.test.ts', '__tests__/**/*.ts'],
       rules: {
         'import/first': 'off',
         'import/no-amd': 'error',
