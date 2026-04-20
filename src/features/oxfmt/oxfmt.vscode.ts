@@ -16,13 +16,13 @@ import {
   readExtensionsJson,
   writeExtensionsJson,
 } from 'utils';
+import type { OxfmtLanguageCategory } from './oxfmt.constants';
 
 import {
   OXFMT_CATEGORY_DEPENDENCIES,
   OXFMT_FORMATTER_ID,
   OXFMT_LANGUAGE_CATEGORIES,
   OXFMT_VSCODE_EXTENSIONS,
-  type OxfmtLanguageCategory,
 } from './oxfmt.constants';
 
 async function detectEnabledCategories(targetDir: string): Promise<OxfmtLanguageCategory[]> {

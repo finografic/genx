@@ -152,7 +152,7 @@ async function getOxfmtLanguagesForPreview(targetDir: string): Promise<string[]>
 
 async function computeCanonicalExtensionsFileContent(targetDir: string): Promise<string> {
   const content = await readExtensionsJson(targetDir);
-  let recommendations = [...(content.recommendations ?? [])].filter((id) => id !== DPRINT_VSCODE_EXT_ID);
+  const recommendations = [...(content.recommendations ?? [])].filter((id) => id !== DPRINT_VSCODE_EXT_ID);
   for (const ext of OXFMT_VSCODE_EXTENSIONS) {
     if (!recommendations.includes(ext)) {
       recommendations.push(ext);

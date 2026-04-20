@@ -38,7 +38,7 @@ const SPECS_DIR = 'docs/specs';
 const DRAFTS_DIR = 'docs/drafts';
 
 /** File patterns to consider */
-const DOC_EXTENSIONS = ['.md'];
+const DOC_EXTENSIONS = new Set(['.md']);
 
 /** Markers that suggest a file is a design spec (checked in content) */
 const SPEC_MARKERS = [
@@ -103,7 +103,7 @@ async function findDocFiles(scanDirs: string[], cwd: string): Promise<DocFile[]>
 
     for (const entry of entries) {
       if (!entry.isFile()) continue;
-      if (!DOC_EXTENSIONS.includes(extname(entry.name))) continue;
+      if (!DOC_EXTENSIONS.has(extname(entry.name))) continue;
 
       const absPath = join(absDir, entry.name);
       const content = await readFile(absPath, 'utf8');

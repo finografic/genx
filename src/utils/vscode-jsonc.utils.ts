@@ -1,6 +1,5 @@
 import { applyEdits, getNodeValue, modify, parseTree } from 'jsonc-parser';
-import type { ModificationOptions } from 'jsonc-parser';
-import type { Node } from 'jsonc-parser';
+import type { ModificationOptions, Node } from 'jsonc-parser';
 
 import { parseJsoncObject } from './jsonc.utils';
 

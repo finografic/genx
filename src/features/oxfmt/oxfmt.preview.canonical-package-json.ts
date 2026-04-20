@@ -143,8 +143,8 @@ function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
   next: Record<string, string>;
   changed: boolean;
 } {
-  const key = OXFMT_UPDATE_SCRIPT.key;
-  const value = OXFMT_UPDATE_SCRIPT.value;
+  const { key } = OXFMT_UPDATE_SCRIPT;
+  const { value } = OXFMT_UPDATE_SCRIPT;
   const keys = Object.keys(scripts);
 
   const packagesIdx = keys.indexOf(PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION);
@@ -333,7 +333,7 @@ function ensureFormattingScriptsUnderFormattingHeader(scripts: Record<string, st
 }
 
 function addFormattingScriptsPure(packageJson: PackageJson): PackageJson {
-  const scripts = { ...(packageJson.scripts ?? {}) };
+  const scripts = { ...packageJson.scripts };
 
   if (hasFormattingScripts(scripts)) {
     return packageJson;
@@ -383,7 +383,7 @@ function addUpdateScriptPure(packageJson: PackageJson): PackageJson {
 }
 
 function addFormatToReleaseCheckPure(packageJson: PackageJson): PackageJson {
-  const scripts = { ...(packageJson.scripts ?? {}) };
+  const scripts = { ...packageJson.scripts };
   const releaseCheck = scripts['release:check'];
   if (!releaseCheck || releaseCheck.includes('format:check')) return packageJson;
 

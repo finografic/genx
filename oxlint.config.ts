@@ -92,7 +92,17 @@ export default defineConfig({
     'typescript/no-floating-promises': 'off',
     'typescript/await-thenable': 'error',
     'typescript/consistent-indexed-object-style': ['error', 'record'],
-    'typescript/explicit-function-return-type': 'error',
+    // 'typescript/explicit-function-return-type': 'error',
+
+    //NEW:
+    'typescript/explicit-function-return-type': [
+      'warn',
+      {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+      },
+    ],
+    'unicorn/no-useless-fallback-in-spread': 'warn',
   },
   overrides: [
     {

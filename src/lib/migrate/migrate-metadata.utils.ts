@@ -3,11 +3,11 @@ import { resolve } from 'node:path';
 import { migrateConfig } from 'config/migrate.config';
 import type { MigrateOnlySection } from 'types/migrate.types';
 
-type MigrateArgs = {
+interface MigrateArgs {
   targetDir: string;
   write: boolean;
   only: Set<MigrateOnlySection> | null;
-};
+}
 
 // ------------------------------------------------------------------------ //
 

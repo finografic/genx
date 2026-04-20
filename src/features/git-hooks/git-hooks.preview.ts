@@ -100,7 +100,7 @@ function ensurePrepareScript(packageJson: PackageJson): PackageJson {
     .map((part) => part.trim())
     .filter(Boolean);
 
-  let parts = rawParts.map(migratePreparePart);
+  const parts = rawParts.map(migratePreparePart);
 
   if (!parts.includes('husky')) {
     parts.push('husky');

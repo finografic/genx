@@ -1,5 +1,5 @@
 export interface EslintConfigOptions {
-  globals: ('node' | 'browser')[];
+  globals: Array<'node' | 'browser'>;
   markdown: boolean;
 }
 
@@ -64,11 +64,11 @@ function buildImports(markdown: boolean): string {
   return lines.join('\n');
 }
 
-function buildGlobalsSpreads(presets: ('node' | 'browser')[]): string {
+function buildGlobalsSpreads(presets: Array<'node' | 'browser'>): string {
   return presets.map((p) => `        ...globals.${p},`).join('\n');
 }
 
-function buildJsBlock(presets: ('node' | 'browser')[]): string {
+function buildJsBlock(presets: Array<'node' | 'browser'>): string {
   const spreads = buildGlobalsSpreads(presets);
 
   return [
@@ -85,7 +85,7 @@ function buildJsBlock(presets: ('node' | 'browser')[]): string {
   ].join('\n');
 }
 
-function buildTsBlock(presets: ('node' | 'browser')[]): string {
+function buildTsBlock(presets: Array<'node' | 'browser'>): string {
   const spreads = buildGlobalsSpreads(presets);
 
   return [

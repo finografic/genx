@@ -19,7 +19,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "paths": {
       "_templates/*": ["./_templates/*"],
       "commands/*": ["./src/commands/*"],
@@ -33,6 +33,6 @@
       "utils/*": ["./src/utils/*"]
     }
   },
-  "include": ["src/**/*", "_templates/src/declarations.d.ts"],
+  "include": ["src/**/*", "scripts/**/*", "_templates/src/declarations.d.ts"],
   "exclude": ["node_modules", "dist", "_templates", "!_templates/src/declarations.d.ts"]
 }

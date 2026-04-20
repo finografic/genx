@@ -5,7 +5,8 @@
   "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports": "explicit"
   },
 
   "eslint.enable": true,
@@ -13,9 +14,12 @@
   "eslint.validate": ["javascript", "typescript", "css", "markdown"],
 
   "prettier.enable": false,
+
   "oxc.typeAware": true,
+  "oxc.lint.run": "onSave",
 
   "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
 
   "[javascript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
@@ -54,6 +58,7 @@
     "editor.defaultFormatter": "oxc.oxc-vscode",
     "editor.formatOnSave": true
   },
+
   "markdownlint.config": {
     "default": true,
     "MD013": {

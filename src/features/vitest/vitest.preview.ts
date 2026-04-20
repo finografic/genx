@@ -56,7 +56,7 @@ function findTestingInsertionPoint(scripts: Record<string, string>): number {
 }
 
 function withTestingScripts(packageJson: PackageJson): PackageJson {
-  const scripts = { ...(packageJson.scripts ?? {}) };
+  const scripts = { ...packageJson.scripts };
 
   if (hasTestingScripts(scripts)) {
     return packageJson;

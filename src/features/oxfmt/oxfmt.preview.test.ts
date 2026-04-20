@@ -167,7 +167,7 @@ describe('oxfmt.preview — needsInstall', () => {
       devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
     };
     const canonical = computeCanonicalOxfmtPackageJson(base);
-    const scripts = { ...(canonical.scripts ?? {}) };
+    const scripts = { ...canonical.scripts };
     delete scripts[OXFMT_UPDATE_SCRIPT.key];
     const drifted: PackageJson = { ...canonical, scripts };
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(drifted), 'utf8');

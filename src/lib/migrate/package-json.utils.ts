@@ -45,7 +45,7 @@ export function patchPackageJson(
   const next: PackageJson = { ...packageJson };
 
   // scripts
-  const scripts = { ...(packageJson.scripts ?? {}) };
+  const scripts = { ...packageJson.scripts };
   for (const [key, value] of Object.entries(migrateConfig.packageJson.ensureScripts)) {
     if (scripts[key] !== value) {
       scripts[key] = value;
@@ -55,7 +55,7 @@ export function patchPackageJson(
   next.scripts = scripts;
 
   // lint-staged
-  const lintStaged = { ...(packageJson['lint-staged'] ?? {}) };
+  const lintStaged = { ...packageJson['lint-staged'] };
   for (const [pattern, commands] of Object.entries(migrateConfig.packageJson.ensureLintStaged)) {
     const current = lintStaged[pattern];
     if (!Array.isArray(current) || current.join('\n') !== commands.join('\n')) {
@@ -72,7 +72,7 @@ export function patchPackageJson(
     : [];
   let changedKeywords = false;
 
-  const includeFinograficKeyword = migrateConfig.packageJson.ensureKeywords.includeFinograficKeyword;
+  const { includeFinograficKeyword } = migrateConfig.packageJson.ensureKeywords;
   const finograficKeywordResult = ensureKeyword(keywords, includeFinograficKeyword);
   changedKeywords = changedKeywords || finograficKeywordResult.changed;
 

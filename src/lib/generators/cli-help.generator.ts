@@ -55,7 +55,7 @@ export function printHelp(): void {
  * Falls back to the provided `fallback` name if not found.
  */
 export function getBinName(packageJson: Record<string, unknown>, fallback: string): string {
-  const bin = packageJson['bin'];
+  const { bin } = packageJson;
   if (typeof bin === 'object' && bin !== null && !Array.isArray(bin)) {
     const keys = Object.keys(bin as Record<string, string>);
     if (keys.length > 0 && keys[0]) return keys[0];
@@ -67,7 +67,7 @@ export function getBinName(packageJson: Record<string, unknown>, fallback: strin
  * Returns true if the package has the `genx:type:cli` keyword.
  */
 export function isCliPackage(packageJson: Record<string, unknown>): boolean {
-  const keywords = packageJson['keywords'];
+  const { keywords } = packageJson;
   if (!Array.isArray(keywords)) return false;
   return keywords.some((k) => k === 'genx:type:cli');
 }

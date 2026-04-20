@@ -24,6 +24,6 @@ export interface PackageType {
   /** ESLint configuration driven by package type */
   eslint: {
     /** Which globals presets to include */
-    globals: ('node' | 'browser')[];
+    globals: Array<'node' | 'browser'>;
   };
 }

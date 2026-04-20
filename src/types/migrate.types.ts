@@ -14,7 +14,7 @@ export const MIGRATE_ONLY_SECTIONS = [
 
 export type MigrateOnlySection = (typeof MIGRATE_ONLY_SECTIONS)[number];
 
-export type MigrateConfig = {
+export interface MigrateConfig {
   /** Default scope expected for existing @finografic packages */
   defaultScope: string;
 
@@ -47,4 +47,4 @@ export type MigrateConfig = {
       includePackageName: boolean;
     };
   };
-};
+}
