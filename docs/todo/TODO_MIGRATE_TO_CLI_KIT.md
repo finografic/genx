@@ -16,7 +16,7 @@ Replace genx's inline `src/core/` copies with `@finografic/cli-kit` subpath impo
 - [x] Remove `core/*` path alias from `tsconfig.json`
 - [x] Delete `src/core/flow/`, `src/core/render-help/`, `src/core/file-diff/` (keep `src/core/self-update/`)
 - [x] `pnpm typecheck` — zero errors
-- [ ] Commit `refactor: migrate core primitives to @finografic/cli-kit`
+- [x] Commit `refactor: migrate core primitives to @finografic/cli-kit`
 
 ## Phase 2 — Adjust features to use cli-kit in generated/migrated output
 

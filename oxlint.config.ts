@@ -113,7 +113,6 @@ export default defineConfig({
     },
   ],
   ignorePatterns: [
-    'tsconfig.json',
     '**/node_modules/**',
     '**/dist/**',
     '**/.ai/**',

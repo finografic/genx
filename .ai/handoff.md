@@ -9,7 +9,7 @@
 ## Project
 
 `@finografic/genx` — Opinionated generator and codemod toolkit for the @finografic ecosystem.
-Current version **v5.4.0**.
+Current version **v5.8.0**.
 
 ## Architecture
 
@@ -21,9 +21,8 @@ Current version **v5.4.0**.
 **Features:** Self-contained modules under `src/features/` (`detect`, `apply`, `*.feature.ts`).
 Templates live in `_templates/`. `migrate` syncs template conventions into existing packages.
 
-**`src/core/`:** Portable infrastructure shared across all `@finografic` CLI repos — kept in sync
-by convention. Modules: `core/flow/` (clack adapter), `core/render-help/` (CLI help renderer),
-`core/file-diff/` (per-file unified diff display + write confirmation via jsdiff).
+**`src/core/`:** Only `core/self-update/` remains (genx-specific). `core/flow/`, `core/render-help/`,
+and `core/file-diff/` were deleted — all callers now import from `@finografic/cli-kit` subpaths.
 
 **`src/lib/markdown-sections/`:** H2-delimited section parser/mutator for structured markdown
 files (AGENTS.md, CLAUDE.md). API: `parseSections`, `serializeSections`, `setSection` (upsert),
@@ -42,11 +41,12 @@ No features prompt, no help file logic.
 ## Stack
 
 - TypeScript (strict, ESM), **tsdown** → `dist/`
+- **@finografic/cli-kit** — shared CLI primitives (`/flow`, `/render-help`, `/file-diff`, `/xdg`)
 - **@clack/prompts**, **@finografic/core**, **execa**, **zod** (validation)
 - **@finografic/deps-policy** — canonical dep version source (`src/config/dependencies.rules.ts`)
-- **diff** (jsdiff) — unified diff generation used by `core/file-diff`
-- **vitest** (tests), **eslint** + **oxfmt** (lint/format)
-- **picocolors** (output); path aliases: `utils/*`, `config/*`, `core/*`, `lib/*`, `features/*`, `types/*`
+- **diff** (jsdiff) — unified diff generation used by `cli-kit/file-diff`
+- **vitest** (tests), **oxlint** + **oxfmt** (lint/format)
+- **picocolors** (output); path aliases: `utils/*`, `config/*`, `lib/*`, `features/*`, `types/*` (no `core/*`)
 
 ## Schema / Types
 
@@ -130,6 +130,11 @@ No features prompt, no help file logic.
 24. **Markdown self-install guard** (2026-04-10): `previewMarkdown` short-circuits with a noop
     when the target package name is `@finografic/md-lint`, preventing the feature from adding
     itself as its own devDependency.
+25. **cli-kit Phase 1 complete** (2026-04-20): `src/core/flow/`, `src/core/render-help/`,
+    `src/core/file-diff/` deleted. All callers → `@finografic/cli-kit/{flow,render-help,file-diff}`.
+    `managed.utils.ts` XDG path → `getConfigPath('genx')` from `cli-kit/xdg`. `tsconfig.json`
+    `baseUrl` removed, `rootDir: ./src` added. oxlint test override glob fixed. Phase 2 (features
+    injecting cli-kit into generated/migrated projects) tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
 
 ## Open Questions
 
@@ -143,12 +148,9 @@ No features prompt, no help file logic.
 
 ## Status
 
-Core CLI and all current roadmap items up through #8 are implemented. Done: #6 (bulk `--managed`),
+All ROADMAP items complete. Features use preview-driven detect/apply across `oxfmt`, `markdown`,
+`git-hooks`, `vitest`, `ai-agents`, `ai-claude`, `ai-instructions`, and `css`.
 
-\# 2 (`core/file-diff` diff+confirm), \#7 (`lib/markdown-sections`), \#8 (`ai-agents`), and \#3
-
-(`diff-as-detection` via `src/lib/feature-preview/` + feature-local previews).
-
-Features now use preview-driven detect/apply across `oxfmt`, `markdown`, `git-hooks`, `vitest`,
-`ai-agents`, `ai-claude`, `ai-instructions`, and `css`. `migrate --write` still shows per-file
-diff confirmation, and feature migration work can reuse the new `scaffold-feature-preview` skill.
+**cli-kit migration:** Phase 1 done (2026-04-20) — genx's own `src/` uses cli-kit. Phase 2 pending:
+features that scaffold/migrate other CLI projects should inject `@finografic/cli-kit` as a dep
+instead of copying `src/core/` files. Tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
