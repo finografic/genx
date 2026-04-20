@@ -1,24 +1,32 @@
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
+import { createFlowContext } from '@finografic/cli-kit/flow';
+import { renderHelp } from '@finografic/cli-kit/render-help';
 import { policy } from '@finografic/deps-policy';
 import * as clack from '@clack/prompts';
-import { confirmFileWrite, createDiffConfirmState } from 'core/file-diff';
-import { createFlowContext } from 'core/flow';
-import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { migrateHelp } from 'help/migrate.help';
-import { errorMessage, infoMessage, intro, spinner, successMessage, successUpdatedMessage } from 'utils';
-import { GENX_CONFIG_PATH, hasManagedFlag, readManagedTargets } from 'utils';
+import {
+  GENX_CONFIG_PATH,
+  errorMessage,
+  hasManagedFlag,
+  infoMessage,
+  intro,
+  readManagedTargets,
+  spinner,
+  successMessage,
+  successUpdatedMessage,
+} from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { restructureDocs } from 'lib/migrate/docs-restructure.utils';
 import { applyMerges } from 'lib/migrate/merge.utils';
-import { parseMigrateArgs } from 'lib/migrate/migrate-metadata.utils';
-import { getScopeAndName, shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
+import { getScopeAndName, parseMigrateArgs, shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from 'lib/migrate/node.utils';
 import {
   patchPackageJson,
@@ -108,6 +116,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     let appliedCount = 0;
     let skippedCount = 0;
 
+    /* eslint-disable no-await-in-loop */
     for (const [index, target] of managedTargets.entries()) {
       if (write && !flow.yesMode) {
         const action = await promptManagedTargetAction({
@@ -137,6 +146,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       });
       appliedCount += 1;
     }
+    /* eslint-enable no-await-in-loop */
 
     successMessage(
       `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
@@ -366,6 +376,7 @@ async function migrateSingleTarget(params: {
   const appliedFeatures: FeatureId[] = [];
   const noopMessages: string[] = [];
 
+  /* eslint-disable no-await-in-loop */
   for (const featureId of selectedFeatureIds) {
     const feature = getFeature(featureId);
     if (!feature) {
@@ -394,6 +405,7 @@ async function migrateSingleTarget(params: {
       noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
     }
   }
+  /* eslint-enable no-await-in-loop */
 
   // Show feature results
   if (appliedFeatures.length > 0) {

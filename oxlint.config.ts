@@ -95,7 +95,7 @@ export default defineConfig({
   },
   overrides: [
     {
-      files: ['**/*.spec.ts,**/*.test.ts,__tests__/**/*.ts'],
+      files: ['**/*.spec.ts', '**/*.test.ts', '__tests__/**/*.ts'],
       rules: {
         'import/first': 'off',
         'import/no-amd': 'error',
@@ -113,6 +113,7 @@ export default defineConfig({
     },
   ],
   ignorePatterns: [
+    'tsconfig.json',
     '**/node_modules/**',
     '**/dist/**',
     '**/.ai/**',

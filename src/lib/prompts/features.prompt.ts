@@ -1,6 +1,6 @@
-import { promptMultiSelect } from 'core/flow';
+import { promptMultiSelect } from '@finografic/cli-kit/flow';
+import type { FlowContext } from '@finografic/cli-kit/flow';
 import { features } from 'features/feature-registry';
-import type { FlowContext } from 'core/flow';
 import type { FeatureId } from 'features/feature.types';
 
 /**

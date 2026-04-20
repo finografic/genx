@@ -2,9 +2,9 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createFlowContext } from '@finografic/cli-kit/flow';
+import { renderHelp } from '@finografic/cli-kit/render-help';
 import { policy } from '@finografic/deps-policy';
-import { createFlowContext } from 'core/flow';
-import { renderHelp } from 'core/render-help';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { createHelp } from 'help/create.help';
@@ -210,11 +210,13 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
   }
 
   // 6. Apply selected features (after install so node_modules exist)
+  /* eslint-disable no-await-in-loop */
   for (const featureId of config.features) {
     const feature = getFeature(featureId);
     if (!feature) continue;
     await feature.apply({ targetDir });
   }
+  /* eslint-enable no-await-in-loop */
 
   // 7. Initialize git
   const gitSpin = spinner();

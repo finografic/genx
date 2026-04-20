@@ -1,4 +1,4 @@
-import type { HelpNoteOptions } from 'core/render-help';
+import type { HelpNoteOptions } from '@finografic/cli-kit/render-help';
 
 export const defaultHelpOptions: HelpNoteOptions = {
   labels: {

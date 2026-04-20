@@ -1,8 +1,9 @@
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import type { DiffAction, DiffConfirmState } from '@finografic/cli-kit/file-diff';
+import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
 import pc from 'picocolors';
-import type { DiffAction, DiffConfirmState } from '../../core/file-diff/file-diff.types.js';
 import type { FeatureApplyResult } from '../../features/feature.types.js';
 import type {
   FeaturePreviewChange,
@@ -10,8 +11,6 @@ import type {
   FeaturePreviewChangeWrite,
   FeaturePreviewResult,
 } from './feature-preview.types.js';
-
-import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/file-diff.utils.js';
 
 /**
  * Empty-file deletes cannot use `confirmFileWrite('', '')` (core skips as identical). Using a fake
@@ -75,8 +74,6 @@ export function getChangedPreviewChanges(changes: readonly FeaturePreviewChange[
   return changes.filter(isPreviewChangeChanged);
 }
 
-export function hasPreviewChanges(changes: readonly FeaturePreviewChange[]): boolean;
-export function hasPreviewChanges(preview: FeaturePreviewResult): boolean;
 export function hasPreviewChanges(
   changesOrPreview: readonly FeaturePreviewChange[] | FeaturePreviewResult,
 ): boolean {
@@ -128,6 +125,7 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
   const applied: string[] = [];
   const appliedTargetPaths: string[] = [];
 
+  /* eslint-disable no-await-in-loop */
   for (const change of changed) {
     if (change.kind === 'write') {
       const currentOnDisk = await readUtf8(change.path);
@@ -165,6 +163,7 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
       appliedTargetPaths.push(change.path);
     }
   }
+  /* eslint-enable no-await-in-loop */
 
   if (applied.length === 0) {
     return {

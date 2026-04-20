@@ -1,9 +1,19 @@
-import { createFlowContext } from 'core/flow';
-import { renderHelp } from 'core/render-help';
+import { createFlowContext } from '@finografic/cli-kit/flow';
+import { renderHelp } from '@finografic/cli-kit/render-help';
 import { getFeature } from 'features/feature-registry';
 import { featuresHelp } from 'help/features.help';
-import { errorMessage, infoMessage, intro, outro, successMessage } from 'utils';
-import { GENX_CONFIG_PATH, getPathArg, hasManagedFlag, readManagedTargets, resolveTargetDir } from 'utils';
+import {
+  GENX_CONFIG_PATH,
+  errorMessage,
+  getPathArg,
+  hasManagedFlag,
+  infoMessage,
+  intro,
+  outro,
+  readManagedTargets,
+  resolveTargetDir,
+  successMessage,
+} from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { promptFeatures } from 'lib/prompts/features.prompt';
@@ -67,6 +77,7 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
     let appliedCount = 0;
     let skippedCount = 0;
 
+    /* eslint-disable no-await-in-loop */
     for (const [index, target] of managedTargets.entries()) {
       if (!flow.yesMode) {
         const action = await promptManagedTargetAction({
@@ -90,6 +101,7 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
       await applyFeaturesToTarget(target.path, selectedFeatureIds);
       appliedCount += 1;
     }
+    /* eslint-enable no-await-in-loop */
 
     outro(
       `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
@@ -128,6 +140,7 @@ async function applyFeaturesToTarget(targetDir: string, selectedFeatureIds: Feat
   const appliedFeatures: FeatureId[] = [];
   const noopMessages: string[] = [];
 
+  /* eslint-disable no-await-in-loop */
   for (const featureId of selectedFeatureIds) {
     const feature = getFeature(featureId);
     if (!feature) {
@@ -155,6 +168,7 @@ async function applyFeaturesToTarget(targetDir: string, selectedFeatureIds: Feat
       noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
     }
   }
+  /* eslint-enable no-await-in-loop */
 
   // 4. Done
   if (appliedFeatures.length > 0) {

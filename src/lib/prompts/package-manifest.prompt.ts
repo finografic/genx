@@ -1,8 +1,7 @@
-import { promptText } from 'core/flow';
-import type { FlowContext } from 'core/flow';
+import { promptText } from '@finografic/cli-kit/flow';
+import type { FlowContext } from '@finografic/cli-kit/flow';
 
-import { packageNameSchema, scopeSchema } from 'utils/validation.utils';
-import { descriptionSchema } from 'utils/validation.utils';
+import { descriptionSchema, packageNameSchema, scopeSchema } from 'utils/validation.utils';
 
 export interface PackageManifest {
   scope: string;

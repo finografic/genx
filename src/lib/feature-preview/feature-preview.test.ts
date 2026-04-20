@@ -1,10 +1,11 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MockedFunction } from 'vitest';
 
-import { confirmFileWrite, createDiffConfirmState } from '../../core/file-diff/file-diff.utils.js';
 import {
   applyPreviewChanges,
   createDeletePreviewChange,
@@ -14,7 +15,7 @@ import {
   isPreviewChangeChanged,
 } from './feature-preview.utils.js';
 
-vi.mock('../../core/file-diff/file-diff.utils.js', () => ({
+vi.mock('@finografic/cli-kit/file-diff', () => ({
   confirmFileWrite: vi.fn(),
   createDiffConfirmState: vi.fn(() => ({ yesAll: false })),
 }));
@@ -27,9 +28,9 @@ vi.mock('@clack/prompts', () => ({
 
 const confirmFileWriteMock = vi.mocked(confirmFileWrite);
 const createDiffConfirmStateMock = vi.mocked(createDiffConfirmState);
-const logMessage = () => vi.mocked(clack.log.message);
-const selectMock = () => vi.mocked(clack.select);
-const isCancelMock = () => vi.mocked(clack.isCancel);
+const logMessage = (): MockedFunction<typeof clack.log.message> => vi.mocked(clack.log.message);
+const selectMock = (): MockedFunction<typeof clack.select> => vi.mocked(clack.select);
+const isCancelMock = (): MockedFunction<typeof clack.isCancel> => vi.mocked(clack.isCancel);
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -1,16 +1,21 @@
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
-import { renderHelp } from 'core/render-help';
+import { renderHelp } from '@finografic/cli-kit/render-help';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
-import { errorMessage, infoMessage, intro, logMessage, spinner, successMessage } from 'utils';
 import {
   GENX_CONFIG_PATH,
+  errorMessage,
   getPathArg,
   hasManagedFlag,
+  infoMessage,
+  intro,
   isYesMode,
+  logMessage,
   readManagedTargets,
   resolveTargetDir,
+  spinner,
+  successMessage,
 } from 'utils';
 
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
@@ -31,10 +36,10 @@ const OPERATION_COLOR = {
   downgrade: pc.yellow,
 } satisfies Record<DependencyChange['operation'], (s: string) => string>;
 
-const formatVersionChange = (c: DependencyChange) => `${c.name} ${pc.gray(c.from!)} → ${c.to}`;
+const formatVersionChange = (c: DependencyChange): string => `${c.name} ${pc.gray(c.from!)} → ${c.to}`;
 
 const FORMATTERS = {
-  add: (c: DependencyChange) => `${c.name} ${c.to}`,
+  add: (c: DependencyChange): string => `${c.name} ${c.to}`,
   upgrade: formatVersionChange,
   downgrade: formatVersionChange,
 } satisfies Record<DependencyChange['operation'], (c: DependencyChange) => string>;
@@ -104,6 +109,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     let appliedCount = 0;
     let skippedCount = 0;
 
+    /* eslint-disable no-await-in-loop */
     for (const [index, target] of managedTargets.entries()) {
       if (write && !yesMode) {
         const action = await promptManagedTargetAction({
@@ -126,6 +132,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
       await syncDepsForTarget(target.path, write, { allowDowngrade });
       appliedCount += 1;
     }
+    /* eslint-enable no-await-in-loop */
 
     successMessage(
       `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})\n`,

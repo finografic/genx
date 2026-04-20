@@ -1,4 +1,4 @@
-import type { HelpConfig } from 'core/render-help';
+import type { HelpConfig } from '@finografic/cli-kit/render-help';
 
 import { defaultHelpOptions } from 'config/help.config';
 

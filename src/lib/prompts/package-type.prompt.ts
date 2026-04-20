@@ -1,5 +1,5 @@
-import { promptSelect } from 'core/flow';
-import type { FlowContext } from 'core/flow';
+import { promptSelect } from '@finografic/cli-kit/flow';
+import type { FlowContext } from '@finografic/cli-kit/flow';
 
 import { PACKAGE_TYPES } from 'config/package-types.config';
 import type { PackageType } from 'types/package-type.types';

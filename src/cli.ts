@@ -2,7 +2,7 @@
 
 import { createRequire } from 'node:module';
 import process from 'node:process';
-import { renderHelp } from 'core/render-help/render-help.utils.js';
+import { renderHelp } from '@finografic/cli-kit/render-help';
 
 import { cliHelp } from './cli.help.js';
 import { createPackage } from './commands/create.cli.js';

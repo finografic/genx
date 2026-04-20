@@ -19,7 +19,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "baseUrl": ".",
+    "rootDir": "./src",
     "paths": {
       "_templates/*": ["./_templates/*"],
       "commands/*": ["./src/commands/*"],
@@ -29,7 +29,6 @@
       "lib/*": ["./src/lib/*"],
       "types": ["./src/types"],
       "types/*": ["./src/types/*"],
-      "core/*": ["./src/core/*"],
       "utils": ["./src/utils"],
       "utils/*": ["./src/utils/*"]
     }

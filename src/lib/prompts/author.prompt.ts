@@ -1,13 +1,13 @@
-import { promptAutocompleteMultiSelect, promptText } from 'core/flow';
-import type { FlowContext } from 'core/flow';
+import { promptAutocompleteMultiSelect, promptText } from '@finografic/cli-kit/flow';
+import type { FlowContext } from '@finografic/cli-kit/flow';
 
 import { emailSchema } from 'utils/validation.utils';
 
-export type Author = {
+export interface Author {
   name: string;
   email: string;
   url: string;
-};
+}
 
 type AuthorField = 'name' | 'email' | 'url';
 
@@ -29,9 +29,9 @@ export async function promptAuthor(flow: FlowContext, defaults: Author, scope: s
   // Defensive but explicit: clack returns AuthorField[]
   const selected = new Set(fields);
 
-  let name = defaults.name;
-  let email = defaults.email;
-  let url = defaults.url;
+  let {name} = defaults;
+  let {email} = defaults;
+  let {url} = defaults;
 
   if (selected.has('name')) {
     name = await promptText(flow, {

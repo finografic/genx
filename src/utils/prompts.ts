@@ -1,5 +1,5 @@
+import type { FlowContext } from '@finografic/cli-kit/flow';
 import type { PackageConfig } from '@finografic/core';
-import type { FlowContext } from 'core/flow';
 import type { FeatureId } from 'features/feature.types';
 
 import { promptAuthor } from 'lib/prompts/author.prompt';
@@ -25,7 +25,7 @@ interface PackageConfigWithFeatures extends PackageConfig {
 export async function promptCreatePackage(flow: FlowContext): Promise<PackageConfigWithFeatures> {
   const packageType = await promptPackageType(flow);
   const manifest = await promptPackageManifest(flow, defaultValuesConfig);
-  const scope = manifest.scope;
+  const {scope} = manifest;
   const author = await promptAuthor(flow, defaultValuesConfig.author, scope);
   const features = await promptFeatures(flow, packageType.defaultFeatures);
 
