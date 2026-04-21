@@ -6,7 +6,7 @@ import {
   json,
   markdown,
   sorting,
-} from '@finografic/oxfmt-config';
+} from '@finografic/oxc-config/oxfmt';
 import { defineConfig } from 'oxfmt';
 import type { OxfmtConfig, OxfmtOverrideConfig } from 'oxfmt';
 
