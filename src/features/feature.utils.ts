@@ -20,6 +20,8 @@ export function createDefaultTemplateVars(): TemplateVars {
   };
 }
 
+// DEPRECATED: Legacy `eslint.config.*` ignore patching only; remove when ESLint file editing is deleted
+// (no firm date).
 /**
  * Insert missing ESLint ignore patterns into flat-config source (preview / apply). Returns unchanged
  * `content` when nothing is added.
@@ -39,6 +41,7 @@ export function proposeEslintIgnorePatterns(content: string, patterns: readonly 
   return next;
 }
 
+// DEPRECATED: Legacy `eslint.config.ts` writer; remove when ESLint support is fully dropped (no firm date).
 /**
  * Add ESLint ignore patterns to `globalIgnores([...])` when present, otherwise the first legacy `ignores:
  * [...]` block. Skips patterns already present.

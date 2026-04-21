@@ -6,6 +6,8 @@
 
 export const PACKAGE_JSON = 'package.json';
 
+// DEPRECATED: Legacy ESLint flat-config filenames — used only for migrate/strip/delete paths; remove when
+// ESLint support is fully dropped (no firm date).
 export const ESLINT_CONFIG_FILES = [
   'eslint.config.ts',
   'eslint.config.mjs',
@@ -24,6 +26,8 @@ export const COMMITLINT_CONFIG = 'commitlint.config.mjs';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PKG_MD_LINT = '@finografic/md-lint';
+// DEPRECATED: Stylelint package ids — used only so the css feature can remove them from targets; remove when
+// Stylelint migration is dropped (no firm date).
 export const PKG_STYLELINT = 'stylelint';
 export const PKG_STYLELINT_STYLISTIC = '@stylistic/stylelint-plugin';
 export const PKG_COMMITLINT_CLI = '@commitlint/cli';

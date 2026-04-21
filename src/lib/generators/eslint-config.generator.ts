@@ -1,3 +1,5 @@
+// DEPRECATED: Dead-code ESLint config string generator; remove when the file is deleted as part of ESLint
+// removal (no firm date).
 export interface EslintConfigOptions {
   globals: Array<'node' | 'browser'>;
   markdown: boolean;

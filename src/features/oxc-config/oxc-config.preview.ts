@@ -97,6 +97,7 @@ export function packageJsonManifestDependencyFieldsChanged(currentRaw: string, p
   );
 }
 
+// DEPRECATED: ESLint stylistic line stripping — legacy eslint.config.* cleanup only; remove with ESLint purge.
 function stripOxfmtCoveredStylisticRulesFromEslintContent(content: string): string {
   let updated = content;
   for (const rule of OXFMT_COVERED_STYLISTIC_RULES) {
@@ -109,6 +110,7 @@ function stripOxfmtCoveredStylisticRulesFromEslintContent(content: string): stri
   return updated;
 }
 
+// DEPRECATED: ESLint config normalization for legacy files only; remove with ESLint purge.
 function canonicalEslintConfigContent(content: string): string {
   const stripped = stripOxfmtCoveredStylisticRulesFromEslintContent(content);
   return stripSimpleImportSortFromEslintConfigContent(stripped);

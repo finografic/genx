@@ -34,6 +34,7 @@ export const PRETTIER_PACKAGE_PATTERNS = ['*prettier-plugin-*'] as const;
 /** Legacy formatter packages to remove when migrating to oxc-config. */
 export const DPRINT_PACKAGES = ['dprint', '@finografic/dprint-config'] as const;
 
+// DEPRECATED: Package id for removal from `package.json` / ESLint config only; delete with ESLint purge.
 /** Import-sort plugin — redundant once formatting/import order is handled by oxc-config. */
 export const SIMPLE_IMPORT_SORT_PACKAGE = 'eslint-plugin-simple-import-sort' as const;
 
@@ -109,6 +110,8 @@ export const OXFMT_CATEGORY_DEPENDENCIES: Record<OxfmtLanguageCategory, string[]
   DATA: null,
 };
 
+// DEPRECATED: `@stylistic/*` ESLint rule names — only used while oxc-config strips legacy `eslint.config.*`;
+// remove when ESLint cleanup is complete (no firm date).
 /**
  * Stylistic rules that oxfmt fully replaces — safe to strip from **legacy** `eslint.config.*`. Does not
  * include indent / ternary rules (kept in sync with oxfmt per @finografic conventions).

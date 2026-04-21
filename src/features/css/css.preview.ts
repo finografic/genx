@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileExists, isDependencyDeclared, sortedRecord } from 'utils';
+import { fileExists, sortedRecord } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -16,11 +16,8 @@ import {
   LEGACY_STYLELINTRC_FILENAME,
   OXFMT_CONFIG_FILENAME,
   STYLELINT_CONFIG_FILENAME,
-  STYLELINT_CONFIG_TS_CONTENT,
   STYLELINT_PACKAGE,
-  STYLELINT_PACKAGE_VERSION,
   STYLELINT_STYLISTIC_PACKAGE,
-  STYLELINT_STYLISTIC_PACKAGE_VERSION,
 } from './css.constants';
 import { ensureCssImportInOxfmtConfig, insertCssOverrideInOxfmtConfig } from './css.oxfmt';
 import { proposeCssCombinedSettingsText, proposeCssExtensionsJsonText } from './css.vscode';
@@ -29,29 +26,27 @@ function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
 }
 
-async function withCssDevDependencies(targetDir: string, packageJson: PackageJson): Promise<PackageJson> {
-  let next = packageJson;
-  const additions: Record<string, string> = {};
-  if (!(await isDependencyDeclared(targetDir, STYLELINT_PACKAGE))) {
-    additions[STYLELINT_PACKAGE] = STYLELINT_PACKAGE_VERSION;
+/** Remove legacy Stylelint packages from devDependencies (migration only). */
+function withoutLegacyStylelintDevDependencies(packageJson: PackageJson): PackageJson {
+  const raw = packageJson.devDependencies as Record<string, string> | undefined;
+  if (!raw) {
+    return packageJson;
   }
-  if (!(await isDependencyDeclared(targetDir, STYLELINT_STYLISTIC_PACKAGE))) {
-    additions[STYLELINT_STYLISTIC_PACKAGE] = STYLELINT_STYLISTIC_PACKAGE_VERSION;
+  if (!raw[STYLELINT_PACKAGE] && !raw[STYLELINT_STYLISTIC_PACKAGE]) {
+    return packageJson;
   }
-  if (Object.keys(additions).length > 0) {
-    next = {
-      ...next,
-      devDependencies: sortedRecord({
-        ...(next.devDependencies as Record<string, string> | undefined),
-        ...additions,
-      }),
-    };
+  const nextDev = { ...raw };
+  delete nextDev[STYLELINT_PACKAGE];
+  delete nextDev[STYLELINT_STYLISTIC_PACKAGE];
+  if (Object.keys(nextDev).length === 0) {
+    const { devDependencies: _d, ...rest } = packageJson;
+    return rest as PackageJson;
   }
-  return next;
+  return { ...packageJson, devDependencies: sortedRecord(nextDev) };
 }
 
 /**
- * Preview CSS feature: package.json deps, stylelint config, VS Code, oxfmt patch, extensions.
+ * Preview CSS feature: remove legacy Stylelint, align VS Code + oxfmt for CSS/SCSS.
  */
 export async function previewCss(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
@@ -61,25 +56,26 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
   const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
   const rawPkg = await readFile(packageJsonPath, 'utf8');
   let pkg = JSON.parse(rawPkg) as PackageJson;
-  pkg = await withCssDevDependencies(targetDir, pkg);
+  pkg = withoutLegacyStylelintDevDependencies(pkg);
   const proposedPkgRaw = formatPackageJsonString(pkg);
   if (proposedPkgRaw !== rawPkg) {
     changes.push(
-      createWritePreviewChange(packageJsonPath, rawPkg, proposedPkgRaw, 'package.json (stylelint deps)'),
+      createWritePreviewChange(
+        packageJsonPath,
+        rawPkg,
+        proposedPkgRaw,
+        'package.json (remove legacy stylelint deps)',
+      ),
     );
   } else {
-    applied.push('package.json (stylelint deps)');
+    applied.push('package.json (stylelint cleanup)');
   }
 
   const stylelintConfigPath = resolve(targetDir, STYLELINT_CONFIG_FILENAME);
-  if (!fileExists(stylelintConfigPath)) {
+  if (fileExists(stylelintConfigPath)) {
+    const body = await readFile(stylelintConfigPath, 'utf8');
     changes.push(
-      createWritePreviewChange(
-        stylelintConfigPath,
-        '',
-        STYLELINT_CONFIG_TS_CONTENT,
-        STYLELINT_CONFIG_FILENAME,
-      ),
+      createDeletePreviewChange(stylelintConfigPath, body, true, `${STYLELINT_CONFIG_FILENAME} (removed)`),
     );
   } else {
     applied.push(STYLELINT_CONFIG_FILENAME);
@@ -108,7 +104,7 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
         settingsPath,
         settingsCurrent,
         out,
-        '.vscode/settings.json (stylelint + oxfmt)',
+        '.vscode/settings.json (remove stylelint keys + oxfmt formatters)',
       ),
     );
   } else {
@@ -132,13 +128,13 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
   const extPath = resolve(targetDir, '.vscode', 'extensions.json');
   const extCurrentRaw = fileExists(extPath) ? await readFile(extPath, 'utf8') : undefined;
   const extPreview = proposeCssExtensionsJsonText(extCurrentRaw);
-  if (extPreview.added.length > 0) {
+  if (extPreview.changed) {
     changes.push(
       createWritePreviewChange(
         extPath,
         extCurrentRaw ?? '',
         extPreview.proposed,
-        '.vscode/extensions.json (stylelint)',
+        '.vscode/extensions.json (remove stylelint extension)',
       ),
     );
   } else {
@@ -146,7 +142,7 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
   }
 
   const noopMessage =
-    changes.length === 0 ? 'CSS linting already matches canonical configuration for owned files.' : undefined;
+    changes.length === 0 ? 'CSS tooling already matches canonical configuration for owned files.' : undefined;
 
   const pkgWrite = changes.find((c) => c.kind === 'write' && c.path === packageJsonPath);
   const needsInstall =

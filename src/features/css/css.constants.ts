@@ -1,44 +1,21 @@
 /**
- * CSS linting feature configuration.
+ * CSS feature — oxfmt presets for CSS/SCSS; strips legacy Stylelint / VS Code stylelint wiring (migration
+ * only).
  */
 
+// DEPRECATED: Package name strings kept only so `previewCss` can remove them from consumer `package.json`;
+// delete when Stylelint migration support is dropped (no firm date).
 import { PKG_STYLELINT, PKG_STYLELINT_STYLISTIC } from 'config/constants.config';
 
 export const STYLELINT_PACKAGE = PKG_STYLELINT;
-export const STYLELINT_PACKAGE_VERSION = 'latest';
-
 export const STYLELINT_STYLISTIC_PACKAGE = PKG_STYLELINT_STYLISTIC;
-export const STYLELINT_STYLISTIC_PACKAGE_VERSION = 'latest';
 
-/** VSCode extension ID for stylelint */
+// DEPRECATED: VS Code extension id used only to strip `stylelint.vscode-stylelint` from `extensions.json`.
 export const CSS_VSCODE_EXTENSIONS = ['stylelint.vscode-stylelint'] as const;
 
-/** Primary stylelint config (flat TS module) */
+// DEPRECATED: Filenames used only to delete legacy config files during migration.
 export const STYLELINT_CONFIG_FILENAME = 'stylelint.config.ts';
-
-/** Legacy JSON config removed on apply when present */
 export const LEGACY_STYLELINTRC_FILENAME = '.stylelintrc.json';
-
-/** Default stylelint.config.ts body */
-export const STYLELINT_CONFIG_TS_CONTENT = `import type { Config } from 'stylelint';
-
-export default {
-  plugins: ['@stylistic/stylelint-plugin'],
-  rules: {
-    '@stylistic/indentation': 2,
-    '@stylistic/no-extra-semicolons': true,
-    '@stylistic/max-empty-lines': 1,
-  },
-} satisfies Config;
-`;
-
-/** VSCode settings added by the CSS feature */
-export const CSS_VSCODE_SETTINGS = {
-  'stylelint.enable': true,
-  'stylelint.validate': ['css', 'scss'],
-  'css.validate': false,
-  'scss.validate': false,
-} as const;
 
 /** Language IDs for oxfmt (oxc) formatter settings */
 export const CSS_OXFMT_LANGUAGES = ['css', 'scss'] as const;

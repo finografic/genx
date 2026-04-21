@@ -9,7 +9,7 @@ import { detectCss } from './css.detect';
  */
 export const cssFeature: Feature = {
   id: 'css',
-  label: 'CSS linting (stylelint + @stylistic)',
+  label: 'CSS (oxfmt for CSS/SCSS; removes legacy Stylelint)',
   hint: 'recommended for frontend packages',
   vscode: {
     extensions: CSS_VSCODE_EXTENSIONS,

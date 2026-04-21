@@ -4,7 +4,7 @@ import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.uti
 import { previewCss } from './css.preview.js';
 
 /**
- * Detect when CSS linting matches the canonical preview (deps, stylelint, VS Code, oxfmt).
+ * Detect when CSS tooling matches the canonical preview (no legacy Stylelint, VS Code + oxfmt for CSS/SCSS).
  */
 export async function detectCss(context: FeatureContext): Promise<boolean> {
   const preview = await previewCss(context);

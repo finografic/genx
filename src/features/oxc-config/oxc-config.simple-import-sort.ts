@@ -1,3 +1,5 @@
+// DEPRECATED: ESLint flat-config stripping for simple-import-sort migration only; remove when ESLint paths
+// are gone from genx (no firm date).
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileExists } from 'utils';

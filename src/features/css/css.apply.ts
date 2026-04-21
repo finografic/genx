@@ -9,8 +9,8 @@ import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewCss } from './css.preview.js';
 
 /**
- * Apply CSS linting feature using `previewCss` + `applyPreviewChanges`, then `pnpm install` when package.json
- * dependency lists change.
+ * Apply CSS feature using `previewCss` + `applyPreviewChanges`, then `pnpm install` when `package.json` deps
+ * change (e.g. after removing Stylelint packages).
  */
 export async function applyCss(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewCss(context);

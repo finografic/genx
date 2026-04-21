@@ -23,6 +23,7 @@ export const LINT_STAGED_MD_LINT_CMD = 'md-lint --fix';
 export const MD_LINT_SCRIPT = 'lint:md';
 export const MD_LINT_FIX_SCRIPT = 'lint:md:fix';
 
+// DEPRECATED: ESLint plugin package ids — devDependency removal / eslint.config stripping only; remove with ESLint purge.
 /** Legacy ESLint plugin replaced by `@finografic/md-lint`. */
 export const ESLINT_PLUGIN_MARKDOWNLINT = 'eslint-plugin-markdownlint';
 

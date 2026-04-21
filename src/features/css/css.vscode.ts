@@ -1,16 +1,17 @@
 /**
- * CSS feature VSCode configuration utilities.
+ * CSS feature VSCode configuration utilities — oxfmt formatters + **removal** of legacy Stylelint
+ * keys/extensions.
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
-  addExtensionRecommendations,
   addLanguageFormatterSettings,
+  ensureMarkdownlintConfigAndStylesAtEnd,
   ensureVSCodeDir,
   fileExists,
-  ensureMarkdownlintConfigAndStylesAtEnd,
   parseJsoncObject,
+  removeRootPropertyJsonc,
   setRootPropertyJsonc,
 } from 'utils';
 
@@ -18,17 +19,37 @@ import { setLanguageFormatterBlock } from 'utils/vscode-jsonc.utils';
 
 import type { VSCodeExtensionsJson } from 'types/vscode.types';
 
-import { CSS_OXFMT_LANGUAGES, CSS_VSCODE_EXTENSIONS, CSS_VSCODE_SETTINGS } from './css.constants';
+import { CSS_OXFMT_LANGUAGES, CSS_VSCODE_EXTENSIONS } from './css.constants';
+
+// DEPRECATED: Legacy Stylelint VS Code keys — stripped from settings.json during migration only; remove when
+// Stylelint migration is dropped (no firm date).
+const LEGACY_STYLELINT_ROOT_KEYS = ['stylelint.enable', 'stylelint.validate'] as const;
+const LEGACY_VALIDATE_KEYS_WHEN_FALSE = ['css.validate', 'scss.validate'] as const;
 
 /**
- * Add stylelint extension recommendation to .vscode/extensions.json.
+ * Remove Stylelint-related root keys and `css.validate` / `scss.validate` when set to `false` (undo
+ * stylelint-era disables). Pure text transform for preview.
  */
-export async function applyCssExtensions(targetDir: string): Promise<string[]> {
-  return addExtensionRecommendations(targetDir, [...CSS_VSCODE_EXTENSIONS]);
+export function proposeStripLegacyStylelintFromVSCodeSettings(text: string): string {
+  let t = text;
+  for (const key of LEGACY_STYLELINT_ROOT_KEYS) {
+    if ((parseJsoncObject(t) as Record<string, unknown>)[key] !== undefined) {
+      t = removeRootPropertyJsonc(t, key);
+    }
+  }
+  let root = parseJsoncObject(t) as Record<string, unknown>;
+  for (const key of LEGACY_VALIDATE_KEYS_WHEN_FALSE) {
+    if (root[key] === false) {
+      t = removeRootPropertyJsonc(t, key);
+      root = parseJsoncObject(t) as Record<string, unknown>;
+    }
+  }
+  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
+  return tail.changed ? tail.text : t;
 }
 
 /**
- * Add stylelint settings to .vscode/settings.json.
+ * DEPRECATED: Legacy apply path — strips Stylelint keys like preview; prefer `previewCss` + apply preview.
  */
 export async function applyCssVSCodeSettings(targetDir: string): Promise<boolean> {
   const filePath = resolve(targetDir, '.vscode', 'settings.json');
@@ -42,40 +63,16 @@ export async function applyCssVSCodeSettings(targetDir: string): Promise<boolean
     text = await readFile(filePath, 'utf8');
   }
 
-  let t = text;
-  const before = t;
-
-  if ((parseJsoncObject(t) as Record<string, unknown>)['stylelint.enable'] !== true) {
-    t = setRootPropertyJsonc(t, 'stylelint.enable', true);
+  const next = proposeStripLegacyStylelintFromVSCodeSettings(text);
+  if (next === text) {
+    return false;
   }
-
-  if (!(parseJsoncObject(t) as Record<string, unknown>)['stylelint.validate']) {
-    t = setRootPropertyJsonc(t, 'stylelint.validate', [...CSS_VSCODE_SETTINGS['stylelint.validate']]);
-  }
-
-  if ((parseJsoncObject(t) as Record<string, unknown>)['css.validate'] !== false) {
-    t = setRootPropertyJsonc(t, 'css.validate', false);
-  }
-
-  if ((parseJsoncObject(t) as Record<string, unknown>)['scss.validate'] !== false) {
-    t = setRootPropertyJsonc(t, 'scss.validate', false);
-  }
-
-  let changed = t !== before;
-  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) {
-    t = tail.text;
-    changed = true;
-  }
-  if (changed) {
-    await writeFile(filePath, t, 'utf8');
-  }
-
-  return changed;
+  await writeFile(filePath, next.endsWith('\n') ? next : `${next}\n`, 'utf8');
+  return true;
 }
 
 /**
- * Configure oxfmt (oxc) as the default formatter for CSS/SCSS in .vscode/settings.json.
+ * Configure oxfmt (oxc) as the default formatter for CSS/SCSS in `.vscode/settings.json`.
  */
 export async function applyCssOxfmtSettings(targetDir: string): Promise<string[]> {
   const { addedLanguages } = await addLanguageFormatterSettings(
@@ -84,32 +81,6 @@ export async function applyCssOxfmtSettings(targetDir: string): Promise<string[]
     'oxc.oxc-vscode',
   );
   return addedLanguages;
-}
-
-/**
- * Stylelint-related VS Code settings — pure text transform (for preview).
- */
-export function proposeCssVSCodeSettingsText(text: string): string {
-  let t = text;
-
-  if ((parseJsoncObject(t) as Record<string, unknown>)['stylelint.enable'] !== true) {
-    t = setRootPropertyJsonc(t, 'stylelint.enable', true);
-  }
-
-  if (!(parseJsoncObject(t) as Record<string, unknown>)['stylelint.validate']) {
-    t = setRootPropertyJsonc(t, 'stylelint.validate', [...CSS_VSCODE_SETTINGS['stylelint.validate']]);
-  }
-
-  if ((parseJsoncObject(t) as Record<string, unknown>)['css.validate'] !== false) {
-    t = setRootPropertyJsonc(t, 'css.validate', false);
-  }
-
-  if ((parseJsoncObject(t) as Record<string, unknown>)['scss.validate'] !== false) {
-    t = setRootPropertyJsonc(t, 'scss.validate', false);
-  }
-
-  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  return tail.changed ? tail.text : t;
 }
 
 /**
@@ -140,13 +111,13 @@ export function proposeCssOxfmtFormatterText(text: string): { text: string; adde
   return { text: t, addedLanguages };
 }
 
-/** Apply stylelint settings then oxfmt formatter blocks (same order as `applyCss`). */
+/** Strip legacy Stylelint VS Code keys, then apply oxfmt formatter blocks (same order as `previewCss`). */
 export function proposeCssCombinedSettingsText(startText: string): {
   text: string;
   addedLanguages: string[];
 } {
-  const afterStylelint = proposeCssVSCodeSettingsText(startText);
-  return proposeCssOxfmtFormatterText(afterStylelint);
+  const stripped = proposeStripLegacyStylelintFromVSCodeSettings(startText);
+  return proposeCssOxfmtFormatterText(stripped);
 }
 
 const BASE_EXTENSIONS_TEXT = `${JSON.stringify(
@@ -156,28 +127,37 @@ const BASE_EXTENSIONS_TEXT = `${JSON.stringify(
 )}\n`;
 
 /**
- * Merge extension recommendations — pure (for preview).
+ * Remove `stylelint.vscode-stylelint` from recommendations when present (migration). Pure (for preview).
  */
 export function proposeCssExtensionsJsonText(currentRaw: string | undefined): {
   proposed: string;
-  added: string[];
+  changed: boolean;
 } {
   const parsed = (
     currentRaw ? parseJsoncObject(currentRaw) : { recommendations: [], unwantedRecommendations: [] }
   ) as VSCodeExtensionsJson;
-  const recommendations = [...(parsed.recommendations ?? [])];
-  const added: string[] = [];
-  for (const ext of CSS_VSCODE_EXTENSIONS) {
-    if (!recommendations.includes(ext)) {
-      recommendations.push(ext);
-      added.push(ext);
-    }
-  }
+  const strip = new Set<string>(CSS_VSCODE_EXTENSIONS);
+  const before = [...(parsed.recommendations ?? [])];
+  const recommendations = before.filter((id) => !strip.has(id));
   const proposedObj: VSCodeExtensionsJson = { ...parsed, recommendations };
   const proposed = `${JSON.stringify(proposedObj, null, 2)}\n`;
   const baseline = currentRaw ?? BASE_EXTENSIONS_TEXT;
-  if (proposed === baseline) {
-    return { proposed, added: [] };
+  const changed = proposed !== baseline;
+  return { proposed, changed };
+}
+
+/**
+ * DEPRECATED: Was used to add Stylelint extension; use `proposeCssExtensionsJsonText` + apply preview
+ * instead.
+ */
+export async function applyCssExtensions(targetDir: string): Promise<string[]> {
+  const extPath = resolve(targetDir, '.vscode', 'extensions.json');
+  const currentRaw = fileExists(extPath) ? await readFile(extPath, 'utf8') : undefined;
+  const { proposed, changed } = proposeCssExtensionsJsonText(currentRaw);
+  if (!changed) {
+    return [];
   }
-  return { proposed, added };
+  await ensureVSCodeDir(targetDir);
+  await writeFile(extPath, proposed, 'utf8');
+  return [...CSS_VSCODE_EXTENSIONS];
 }

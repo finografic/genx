@@ -8,6 +8,7 @@ export const renameRules: RenameRule[] = [
     canonical: '.nvmrc',
     alternatives: ['.nvm'],
   },
+  // DEPRECATED: ESLint filename normalization for migrate only; remove when ESLint is fully gone (no firm date).
   {
     canonical: 'eslint.config.ts',
     alternatives: [
