@@ -6,7 +6,7 @@ Pre-commit linting + conventional commits.
 
 - Installs `lint-staged`, `husky`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
-- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; the **oxfmt** feature prepends `oxfmt` when applied)
+- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `oxfmt` then `oxlint --fix`, matching the oxc template)
 - Scaffolds `.husky/pre-commit` and `.husky/commit-msg`
 - Ensures `commitlint.config.mjs` exists (copies from genx `_templates/` when missing)
 - Removes an inlined `commitlint` key from package.json if present (config lives in `commitlint.config.mjs`)
@@ -28,6 +28,6 @@ Run `pnpm prepare` to activate git hooks.
 
 ## How it works
 
-1. **lint-staged**: runs `eslint --fix` on staged `*.{ts,tsx,js,jsx,mjs,cjs}` (and `oxfmt` first when the oxfmt feature is applied)
+1. **lint-staged**: runs `oxfmt` then `oxlint --fix` on staged `*.{ts,tsx,js,jsx,mjs,cjs}` (same order as `_templates/package.json`)
 2. **Husky pre-commit**: runs `pnpm exec lint-staged --allow-empty`
 3. **commitlint**: reads rules from `commitlint.config.mjs` and is invoked by `.husky/commit-msg`

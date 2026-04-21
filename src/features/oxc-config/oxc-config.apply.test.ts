@@ -3,11 +3,12 @@ import { execa } from 'execa';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PACKAGE_JSON } from 'config/constants.config';
-import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
-import { applyOxfmt } from './oxfmt.apply.js';
-import { previewOxfmt } from './oxfmt.preview.js';
 
-vi.mock('./oxfmt.preview.js', () => ({
+import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
+import { applyOxfmt } from './oxc-config.apply.js';
+import { previewOxfmt } from './oxc-config.preview.js';
+
+vi.mock('./oxc-config.preview.js', () => ({
   previewOxfmt: vi.fn(),
 }));
 
@@ -28,7 +29,7 @@ const previewOxfmtMock = vi.mocked(previewOxfmt);
 const applyPreviewChangesMock = vi.mocked(applyPreviewChanges);
 const execaMock = vi.mocked(execa);
 
-describe('oxfmt.apply — preview-driven apply', () => {
+describe('oxc-config.apply — preview-driven apply', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

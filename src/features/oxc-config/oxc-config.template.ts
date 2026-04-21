@@ -4,6 +4,10 @@ import { fileExists } from 'utils';
 
 const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
 
+/**
+ * Canonical `oxfmt.config.ts` aligned with `_templates/oxfmt.config.ts` (formatter presets from
+ * `@finografic/oxc-config`).
+ */
 export const OXFMT_CONFIG_BODY = `import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
@@ -12,18 +16,15 @@ export const OXFMT_CONFIG_BODY = `import {
   json,
   markdown,
   sorting,
-  typescript,
-} from '@finografic/oxfmt-config';
+} from '@finografic/oxc-config/oxfmt';
 import { defineConfig } from 'oxfmt';
+import type { OxfmtConfig, OxfmtOverrideConfig } from 'oxfmt';
 
 export default defineConfig({
-  $schema: './node_modules/oxfmt/configuration_schema.json',
   ignorePatterns: [...ignorePatterns],
   ...base,
-  ...typescript,
   ...sorting,
   overrides: [
-    { files: ['*.ts', '*.tsx'], excludeFiles: [], options: { ...typescript } },
     { files: ['*.json', '*.jsonc'], excludeFiles: [], options: { ...json } },
     {
       files: ['*.md', '*.mdx'],
@@ -35,8 +36,8 @@ export default defineConfig({
       excludeFiles: [],
       options: { ...agentMarkdown },
     },
-  ],
-} satisfies ReturnType<typeof defineConfig>);
+  ] satisfies OxfmtOverrideConfig[],
+} satisfies OxfmtConfig);
 `;
 
 /** File contents written by {@link ensureOxfmtConfig} — used by preview/detection. */
@@ -49,8 +50,8 @@ export interface EnsureOxfmtConfigOptions {
 }
 
 /**
- * Ensure \`oxfmt.config.ts\` exists in the target directory (aligned with repo \`_templates/\`;
- * CSS/SCSS override is NOT included — the **css** feature adds it when applied).
+ * Ensure `oxfmt.config.ts` exists in the target directory (aligned with repo `_templates/`; CSS/SCSS override
+ * is NOT included — the **css** feature adds it when applied).
  */
 export async function ensureOxfmtConfig(
   targetDir: string,

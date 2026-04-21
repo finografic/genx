@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { stripSimpleImportSortFromEslintConfigContent } from './oxfmt.simple-import-sort';
+import { stripSimpleImportSortFromEslintConfigContent } from './oxc-config.simple-import-sort';
 
 const WITH_SIMPLE_IMPORT_SORT = `import js from '@eslint/js';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';

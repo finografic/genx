@@ -20,6 +20,10 @@ export const renameRules: RenameRule[] = [
     ],
   },
   {
+    canonical: 'oxlint.config.ts',
+    alternatives: [],
+  },
+  {
     canonical: 'commitlint.config.mjs',
     alternatives: [
       '.commitlintrc',

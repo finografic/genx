@@ -1,8 +1,7 @@
 import type { FeatureId } from 'features/feature.types';
 
 /**
- * Package type definition.
- * Each type configures how the scaffolded package is shaped.
+ * Package type definition. Each type configures how the scaffolded package is shaped.
  */
 export interface PackageType {
   /** Unique identifier for the package type */
@@ -21,9 +20,4 @@ export interface PackageType {
   scripts?: Record<string, string>;
   /** Features pre-selected by default for this type */
   defaultFeatures: FeatureId[];
-  /** ESLint configuration driven by package type */
-  eslint: {
-    /** Which globals presets to include */
-    globals: Array<'node' | 'browser'>;
-  };
 }

@@ -62,7 +62,7 @@ genx migrate ../my-package
 genx migrate ../my-package --write
 
 # Only update specific sections
-genx migrate --only=package-json,eslint --write
+genx migrate --only=package-json,workflows --write
 
 # Update dependencies and Node version
 genx migrate --only=dependencies,node --write
@@ -126,21 +126,21 @@ genx features --managed
 
 <!-- GENERATED:FEATURES:START -->
 
-### oxfmt
+### oxc-config
 
-Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos not created from the latest genx template).
+Migrate an existing package to `oxfmt` + `oxlint` + `@finografic/oxc-config` (for repos not created from the latest genx template).
 
-- Installs `oxfmt` and `@finografic/oxfmt-config`
-- Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
-- Adds `format:check` / `format:fix` and `update:oxfmt-config` in the **PACKAGES** scripts section
+- Installs `oxfmt`, `oxlint`, and `@finografic/oxc-config`
+- Creates `oxfmt.config.ts` and `oxlint.config.ts` (base presets; CSS overrides come from the **css** feature)
+- Adds `format:check` / `format:fix`, `lint` / `lint:fix`, and `update:oxc-config` in the **PACKAGES** scripts section
 - Replaces Prettier if present (uninstall + backup configs)
 - Removes **dprint** / `@finografic/dprint-config` if still present (deps, `dprint.json(c)` / `dprint.config.jsonc`, lint-staged, scripts, VS Code `dprint.*` settings)
 - Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` / `pnpm dprint check` steps use `pnpm format:check` instead
-- Normalizes `lint-staged`: `*.{ts,…,cjs}` → `oxfmt` then `eslint --fix`; `*.md` → `eslint --fix` only; `*.{json,jsonc,md,yml,yaml,toml}` → `oxfmt` only (legacy data globs are merged)
+- Normalizes `lint-staged`: `*.{ts,…,cjs}` → `oxfmt` then `oxlint --fix`; `*.md` → `oxlint --fix` only; `*.{json,jsonc,md,yml,yaml,toml}` → `oxfmt` only (legacy data globs are merged)
 - Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
 - Updates `.vscode/settings.json` with JSONC-aware patches (keeps `//` comments and unrelated keys): global oxc options sit just before `prettier.enable`; `[markdown]` is inserted before `markdownlint.config` when present
-- Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers
+- **Legacy:** if `eslint.config.ts` exists, strips redundant `@stylistic/*` rules that oxfmt fully covers (ESLint is not installed by this feature)
 
 ### vitest
 
@@ -153,20 +153,23 @@ Testing via Vitest.
 
 Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 
-- Creates `.github/copilot-instructions.md` — summary index for GitHub Copilot
-- Creates `.github/instructions/` — canonical rule files shared across all AI tools
-- Creates `.github/instructions/project/` — empty folder for project-specific rules
+- Syncs `.github/copilot-instructions.md` from `_templates` (full file when content differs).
+- Syncs each file under `.github/instructions/` from `_templates`, **except** the `project/` subtree — that folder is never overwritten by genx (per-repo rules stay put).
+- Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**, plus shared bodies for General / Markdown / Git). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
+- Optionally updates `eslint.config.ts` ignore patterns for `.cursor/` paths.
 
 ### markdown
 
-Markdown linting via `eslint-plugin-markdownlint`.
+Markdown linting via `@finografic/md-lint` (replaces legacy `eslint-plugin-markdownlint`).
 
-- Installs `eslint-plugin-markdownlint`
-- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
-- Adds markdown block to `eslint.config.ts`
+- Installs `@finografic/md-lint`
+- Normalizes `lint-staged` for `*.md`: `oxfmt` + `md-lint --fix` (migrates legacy `eslint --fix` on markdown when present)
+- Removes legacy `eslint-plugin-markdownlint` / `eslint-plugin-simple-import-sort` from devDependencies when present
+- Strips markdownlint-related blocks from **legacy** `eslint.config.*` when present
+- Adds `lint:md` / `lint:md:fix` scripts
 - Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
 - Adds VSCode extension recommendation
-- Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
+- Uses styles from the `md-lint` package for markdown preview (removes copied `.vscode/*.css` when redundant)
 
 ### css
 
@@ -185,7 +188,7 @@ Pre-commit linting + conventional commits.
 
 - Installs `lint-staged`, `husky`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
-- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; the **oxfmt** feature prepends `oxfmt` when applied)
+- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `oxfmt` then `oxlint --fix`, matching the oxc template)
 - Scaffolds `.husky/pre-commit` and `.husky/commit-msg`
 - Ensures `commitlint.config.mjs` exists (copies from genx `_templates/` when missing)
 - Removes an inlined `commitlint` key from package.json if present (config lives in `commitlint.config.mjs`)
@@ -203,16 +206,16 @@ Every scaffolded package includes:
 - `package.json` — configured with scope, name, and package type
 - `tsconfig.json` — strict TypeScript config
 - `tsdown.config.ts` — modern bundler setup
-- `eslint.config.ts` — ESLint v9 flat config
+- `oxfmt.config.ts` and `oxlint.config.ts` — formatter + linter via `@finografic/oxc-config` presets (`oxfmt`, `oxlint`)
 - `.gitignore`, `LICENSE`, `README.md`
 
-Optional features (selected during `create` or added via `features`):
+Optional features (selected during `create`, or added via `migrate` / `features`):
 
-- **oxfmt** — migrate older repos to oxfmt + `@finografic/oxfmt-config`
+- **oxc-config** — align an existing repo with the template oxfmt + oxlint stack (not offered on `create`; new packages already include the configs above)
 - **vitest** — unit testing
 - **git-hooks** — pre-commit linting + conventional commits
 - **ai-instructions** — shared AI rules (Copilot, Cursor, Claude)
-- **markdown** — markdown linting via ESLint
+- **markdown** — markdown linting via `@finografic/md-lint`
 - **css** — CSS linting via Stylelint + Stylistic plugin
 
 ---
@@ -227,11 +230,11 @@ my-package/
 ├── package.json
 ├── tsconfig.json
 ├── tsdown.config.ts
-├── eslint.config.ts
+├── oxfmt.config.ts
+├── oxlint.config.ts
 ├── .gitignore
 ├── LICENSE
 ├── README.md
-├── oxfmt.config.ts          (optional migration feature)
 └── .github/                 (optional)
     ├── copilot-instructions.md
     └── instructions/

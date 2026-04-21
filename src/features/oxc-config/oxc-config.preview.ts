@@ -13,7 +13,7 @@ import type {
   FeaturePreviewResult,
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
-import type { OxfmtLanguageCategory } from './oxfmt.constants.js';
+import type { OxfmtLanguageCategory } from './oxc-config.constants.js';
 
 import {
   ensureMarkdownlintConfigAndStylesAtEnd,
@@ -23,6 +23,7 @@ import {
   setLanguageFormatterBlock,
   setRootPropertyJsonc,
 } from 'utils/vscode-jsonc.utils.js';
+
 import {
   ESLINT_CONFIG_FILES,
   PACKAGE_JSON,
@@ -31,6 +32,7 @@ import {
   VSCODE_SETTINGS_JSON,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import {
   createDeletePreviewChange,
   createWritePreviewChange,
@@ -44,13 +46,13 @@ import {
   OXFMT_LANGUAGE_CATEGORIES,
   OXFMT_VSCODE_EXTENSIONS,
   PRETTIER_CONFIG_FILES,
-} from './oxfmt.constants.js';
-import { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
-import { stripSimpleImportSortFromEslintConfigContent } from './oxfmt.simple-import-sort.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
-import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxfmt.workflows.js';
+} from './oxc-config.constants.js';
+import { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
+import { stripSimpleImportSortFromEslintConfigContent } from './oxc-config.simple-import-sort.js';
+import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
+import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxc-config.workflows.js';
 
-export { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
+export { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 
 const DPRINT_VSCODE_EXT_ID = 'dprint.dprint';
 
@@ -83,7 +85,8 @@ function stableDependencyJsonSlice(deps: unknown): string {
 }
 
 /**
- * True when `dependencies` / `devDependencies` differ — apply may need `pnpm install` after writing package.json.
+ * True when `dependencies` / `devDependencies` differ — apply may need `pnpm install` after writing
+ * package.json.
  */
 export function packageJsonManifestDependencyFieldsChanged(currentRaw: string, proposedRaw: string): boolean {
   const cur = JSON.parse(currentRaw) as PackageJson;

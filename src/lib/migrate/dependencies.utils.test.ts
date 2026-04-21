@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { DependencyRule } from 'types/dependencies.types';
 import type { PackageJson } from 'types/package-json.types';
+
 import { planDependencyChanges } from './dependencies.utils.js';
 
 function rule(
@@ -27,9 +28,9 @@ describe('planDependencyChanges', () => {
     const pkg: PackageJson = {
       name: '@finografic/test',
       version: '0.0.0',
-      devDependencies: { eslint: '^9.20.0' },
+      devDependencies: { oxlint: '^1.61.0' },
     };
-    const changes = planDependencyChanges(pkg, [rule('eslint', '^9.0.0')]);
+    const changes = planDependencyChanges(pkg, [rule('oxlint', '^1.0.0')]);
     expect(changes).toEqual([]);
   });
 

@@ -9,7 +9,9 @@ function hasCssOverride(content: string): boolean {
 }
 
 function hasCssNamedImport(content: string): boolean {
-  const importMatch = content.match(/import\s*\{([^}]+)\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s);
+  const importMatch =
+    content.match(/import\s*\{([^}]+)\}\s*from\s*['"]@finografic\/oxc-config\/oxfmt['"]/s) ??
+    content.match(/import\s*\{([^}]+)\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s);
   return importMatch !== null && /\bcss\b/.test(importMatch[1]);
 }
 
@@ -19,11 +21,14 @@ function oxfmtConfigAlreadyHasCssPreset(content: string): boolean {
 }
 
 /**
- * Ensure `css` is imported from `@finografic/oxfmt-config` (insert after `base,`).
+ * Ensure `css` is imported from `@finografic/oxc-config/oxfmt` (insert after `base,`). Legacy: also
+ * recognizes `@finografic/oxfmt-config`.
  */
 export function ensureCssImportInOxfmtConfig(content: string): string {
   if (hasCssNamedImport(content)) return content;
-  if (!content.includes('@finografic/oxfmt-config')) return content;
+  if (!content.includes('@finografic/oxc-config') && !content.includes('@finografic/oxfmt-config')) {
+    return content;
+  }
 
   if (/\n {2}base,\n {2}css,/.test(content)) return content;
 

@@ -6,6 +6,7 @@ import {
   PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import {
   DPRINT_PACKAGES,
   FORMATTING_SCRIPTS,
@@ -18,11 +19,13 @@ import {
   OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES,
   OXFMT_LINT_STAGED_MD_PATTERN,
   OXFMT_UPDATE_SCRIPT,
+  OXLINT_CLI_PACKAGE,
+  OXLINT_LINT_STAGED_FIX,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
   SIMPLE_IMPORT_SORT_PACKAGE,
-} from './oxfmt.constants.js';
-import { stripDprintFromLintStaged, stripDprintFromScripts } from './oxfmt.dprint-cleanup.js';
+} from './oxc-config.constants.js';
+import { stripDprintFromLintStaged, stripDprintFromScripts } from './oxc-config.dprint-cleanup.js';
 
 function patternToRegex(pattern: string): RegExp {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
@@ -119,7 +122,18 @@ function ensureOxfmtPolicyDevDependencies(packageJson: PackageJson): PackageJson
     dev[OXFMT_CLI_PACKAGE] = policyDev['oxfmt'];
     changed = true;
   }
-  if (!dev[OXFMT_CONFIG_PACKAGE] && policyDev?.['@finografic/oxfmt-config']) {
+  if (!dev[OXLINT_CLI_PACKAGE] && policyDev?.['oxlint']) {
+    dev[OXLINT_CLI_PACKAGE] = policyDev['oxlint'];
+    changed = true;
+  }
+  if (dev['@finografic/oxfmt-config'] && policyDev?.['@finografic/oxc-config']) {
+    delete dev['@finografic/oxfmt-config'];
+    dev[OXFMT_CONFIG_PACKAGE] = policyDev['@finografic/oxc-config'];
+    changed = true;
+  } else if (!dev[OXFMT_CONFIG_PACKAGE] && policyDev?.['@finografic/oxc-config']) {
+    dev[OXFMT_CONFIG_PACKAGE] = policyDev['@finografic/oxc-config'];
+    changed = true;
+  } else if (!dev[OXFMT_CONFIG_PACKAGE] && policyDev?.['@finografic/oxfmt-config']) {
     dev[OXFMT_CONFIG_PACKAGE] = policyDev['@finografic/oxfmt-config'];
     changed = true;
   }
@@ -159,7 +173,11 @@ function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
   const sectionKeys = keys.slice(packagesIdx + 1, nextSectionIdx);
 
   let insertAfter: string;
-  if (sectionKeys.includes('update:eslint-config')) {
+  if (sectionKeys.includes('update:oxc-config')) {
+    insertAfter = 'update:oxc-config';
+  } else if (sectionKeys.includes('update:oxfmt-config')) {
+    insertAfter = 'update:oxfmt-config';
+  } else if (sectionKeys.includes('update:eslint-config')) {
     insertAfter = 'update:eslint-config';
   } else {
     const updateKeys = sectionKeys.filter((k) => k.startsWith('update:'));
@@ -167,8 +185,12 @@ function ensureUpdateOxfmtScriptPlacement(scripts: Record<string, string>): {
       updateKeys.length > 0 ? updateKeys[updateKeys.length - 1]! : PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
   }
 
-  const without = keys.filter((k) => k !== key);
-  const insertAt = without.indexOf(insertAfter) + 1;
+  const without = keys.filter((k) => k !== key && k !== 'update:oxfmt-config');
+  let anchor = insertAfter;
+  if (!without.includes(anchor)) {
+    anchor = PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
+  }
+  const insertAt = without.indexOf(anchor) + 1;
   const newKeys = [...without.slice(0, insertAt), key, ...without.slice(insertAt)];
 
   const next: Record<string, string> = {};
@@ -220,26 +242,31 @@ function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | strin
   const cmds = lintStaged[pattern];
   if (!Array.isArray(cmds) || cmds.length === 0) return;
 
+  const oxlintFix = cmds.find((c) => c.includes('oxlint') && c.includes('--fix'));
   const eslintFix = cmds.find((c) => c === 'eslint --fix');
   const eslintOther = cmds.find((c) => c.includes('eslint') && !eslintFix);
-  const eslint = eslintFix ?? eslintOther;
-  lintStaged[pattern] = eslint ? [OXFMT_LINT_STAGED_COMMAND, eslint] : [OXFMT_LINT_STAGED_COMMAND];
+  const linter = oxlintFix ?? eslintFix ?? eslintOther;
+  lintStaged[pattern] = linter
+    ? [OXFMT_LINT_STAGED_COMMAND, linter]
+    : [OXFMT_LINT_STAGED_COMMAND, OXLINT_LINT_STAGED_FIX];
 }
 
 function normalizeMdGlobOxfmtFirst(lintStaged: Record<string, string[] | string>): void {
   const pattern = OXFMT_LINT_STAGED_MD_PATTERN;
   const cmds = lintStaged[pattern];
   if (!Array.isArray(cmds) || cmds.length === 0) {
-    lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
+    lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, OXLINT_LINT_STAGED_FIX];
     return;
   }
 
   const filtered = cmds.filter((c) => !c.includes('dprint'));
+  const mdLint = filtered.find((c) => c.includes('md-lint'));
+  const oxlintFix = filtered.find((c) => c.includes('oxlint') && c.includes('--fix'));
   const eslintFix = filtered.find((c) => c === 'eslint --fix');
   const eslintOther = filtered.find((c) => c.includes('eslint') && !eslintFix);
-  const eslint = eslintFix ?? eslintOther ?? 'eslint --fix';
+  const second = mdLint ?? oxlintFix ?? eslintFix ?? eslintOther ?? OXLINT_LINT_STAGED_FIX;
 
-  lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, eslint];
+  lintStaged[pattern] = [OXFMT_LINT_STAGED_COMMAND, second];
 }
 
 const LINT_STAGED_KEY_ORDER = [
@@ -403,7 +430,7 @@ function addOxfmtToLintStagedPure(packageJson: PackageJson): PackageJson {
   const codePattern = OXFMT_LINT_STAGED_CODE_PATTERN;
   const codeCommands = lintStaged[codePattern];
   if (!Array.isArray(codeCommands) || codeCommands.length === 0) {
-    lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, 'eslint --fix'];
+    lintStaged[codePattern] = [OXFMT_LINT_STAGED_COMMAND, OXLINT_LINT_STAGED_FIX];
   } else if (!codeCommands.some((c) => c.includes('oxfmt'))) {
     lintStaged[codePattern] = [
       OXFMT_LINT_STAGED_COMMAND,
@@ -447,8 +474,8 @@ function applyOxfmtPackageJsonLayoutTransforms(packageJson: PackageJson): Packag
 }
 
 /**
- * Full canonical `package.json` after oxfmt apply: Prettier/dprint/simple-import-sort cleanup,
- * policy devDependencies, then scripts / lint-staged layout (matches `applyOxfmt` ordering).
+ * Full canonical `package.json` after oxfmt apply: Prettier/dprint/simple-import-sort cleanup, policy
+ * devDependencies, then scripts / lint-staged layout (matches `applyOxfmt` ordering).
  */
 export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJson {
   let pkg: PackageJson = JSON.parse(JSON.stringify(source)) as PackageJson;

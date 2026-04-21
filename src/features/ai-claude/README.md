@@ -6,10 +6,10 @@ Claude Code support: CLAUDE.md, session memory, handoff document, and settings.
 
 - Creates `CLAUDE.md` — project-specific instructions for Claude Code
 - Creates `.claude/memory.md` — session breadcrumb log (gitignored)
-- Creates `.ai/handoff.md` — project snapshot for bridging Claude Code ↔ Claude.ai (gitignored)
+- Creates `.ai/handoff.md` — project snapshot for bridging Claude Code ↔ Claude.ai (git-tracked; other `.ai/*` ignored)
 - Creates `.claude/settings.json` — Claude Code permissions (checked in)
 - Creates `.claude/assets/.gitkeep` — keeps the shared Claude assets area scaffolded even when empty
-- Adds `.claude/` to `.gitignore`, re-admitting `settings.json`
+- Ensures `.gitignore` ignores `.claude/` (re-admitting `settings.json`) and `.ai/` (re-admitting `handoff.md`)
 - Auto-installs `ai-instructions` if `.github/instructions/` is missing
 
 ## Files

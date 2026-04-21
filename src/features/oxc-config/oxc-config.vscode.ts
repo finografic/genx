@@ -1,5 +1,5 @@
 /**
- * oxfmt VSCode configuration — oxc.oxc-vscode as formatter by language.
+ * Oxfmt VSCode configuration — oxc.oxc-vscode as formatter by language.
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -16,14 +16,14 @@ import {
   readExtensionsJson,
   writeExtensionsJson,
 } from 'utils';
-import type { OxfmtLanguageCategory } from './oxfmt.constants';
+import type { OxfmtLanguageCategory } from './oxc-config.constants';
 
 import {
   OXFMT_CATEGORY_DEPENDENCIES,
   OXFMT_FORMATTER_ID,
   OXFMT_LANGUAGE_CATEGORIES,
   OXFMT_VSCODE_EXTENSIONS,
-} from './oxfmt.constants';
+} from './oxc-config.constants';
 
 async function detectEnabledCategories(targetDir: string): Promise<OxfmtLanguageCategory[]> {
   const enabledCategories: OxfmtLanguageCategory[] = [];

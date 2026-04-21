@@ -9,8 +9,7 @@
     "source.organizeImports": "explicit"
   },
 
-  "eslint.enable": true,
-  "eslint.useFlatConfig": true,
+  "eslint.enable": false,
   "eslint.validate": ["javascript", "typescript"],
 
   "prettier.enable": false,

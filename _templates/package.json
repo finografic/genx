@@ -61,7 +61,7 @@
     "·········· REGISTRIES": "················································",
     "view:registry:github": "pnpm view __PACKAGE_NAME__ --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
-    "update:oxfmt-config": "pnpm update @finografic/oxfmt-config --latest && pnpm update oxfmt --latest",
+    "update:oxc-config": "pnpm update @finografic/oxc-config --latest && pnpm update oxfmt --latest && pnpm update oxlint --latest",
     "update:deps:all": "pnpm update --latest",
     "·········· UTILS": "·····················································",
     "tsc:debug": "tsc --pretty --project tsconfig.json",
@@ -72,7 +72,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "@finografic/oxfmt-config": "^1.0.3",
+    "@finografic/oxc-config": "^2.0.0",
     "@types/node": "^24.0.0",
     "globals": "^17.3.0",
     "husky": "^9.1.7",
