@@ -40,9 +40,5 @@
     "editor.formatOnSave": true
   },
 
-  "markdownlint.config": {
-    "MD029": false // Allow list style
-  },
-
   "markdown.styles": ["node_modules/@finografic/md-lint/styles/markdown-github-light.css"]
 }
