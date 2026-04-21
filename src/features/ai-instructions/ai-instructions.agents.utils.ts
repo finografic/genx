@@ -7,6 +7,26 @@
  * **`_templates/AGENTS.md.template`**.
  */
 
+/**
+ * Legacy flat layout: `NN-topic.instructions.md` at `.github/instructions/` root → subfolder layout. Matches
+ * refactor / older genx trees; used only to rewrite **paths inside markdown** (e.g. AGENTS.md).
+ */
+const LEGACY_INSTRUCTION_BASE_TO_FOLDER: Record<string, string> = {
+  'typescript-patterns': 'code',
+  'eslint-code-style': 'code',
+  'modern-typescript-patterns': 'code',
+  'provider-context-patterns': 'code',
+  'picocolors-cli-styling': 'code',
+  'file-naming': 'naming',
+  'variable-naming': 'naming',
+  'documentation': 'documentation',
+  'readme-standards': 'documentation',
+  'agent-facing-markdown': 'documentation',
+  'feature-design-specs': 'documentation',
+  'todo-done-docs': 'documentation',
+  'git-policy': 'git',
+};
+
 /** Sections taken verbatim from the template (canonical shared lists). Keys via {@link normalizeHeadingKey}. */
 const TEMPLATE_SYNC_KEYS = new Set(['rules - global', 'rules - markdown tables', 'git policy']);
 
@@ -45,6 +65,28 @@ export function normalizeHeadingKey(headingLine: string): string {
     .replace(/[—–]/g, '-')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Rewrite legacy `.github/instructions/` paths (numbered flat + `project/NN-`) so AGENTS / docs match the
+ * current subfolder layout. Idempotent for already-migrated content.
+ */
+export function rewriteLegacyAgentDocPaths(content: string): string {
+  let out = content;
+  // Older headings used ASCII hyphen instead of em dash (normalizeHeadingKey already treats them alike).
+  out = out.replace(/^## Rules - /gm, '## Rules — ');
+  out = out.replace(/\.github\/instructions\/project\/\d{2}-/g, '.github/instructions/project/');
+
+  for (const [base, folder] of Object.entries(LEGACY_INSTRUCTION_BASE_TO_FOLDER)) {
+    const re = new RegExp(`\\.github/instructions/\\d{2}-${escapeRegExp(base)}\\.instructions\\.md`, 'g');
+    out = out.replace(re, `.github/instructions/${folder}/${base}.instructions.md`);
+  }
+
+  return out;
 }
 
 /**

@@ -6,7 +6,7 @@ Claude Code support: CLAUDE.md, session memory, handoff document, and settings.
 
 - Creates `CLAUDE.md` — project-specific instructions for Claude Code
 - Creates `.claude/memory.md` — session breadcrumb log (gitignored)
-- Creates `.ai/handoff.md` — project snapshot for bridging Claude Code ↔ Claude.ai (git-tracked; other `.ai/*` ignored)
+- Creates `.ai/handoff.md` — project snapshot for bridging Claude Code ↔ Claude.ai (git-tracked; other `.ai/*` ignored). If `.ai/handoff.md` is missing but legacy `.claude/handoff.md` exists, preview migrates its body into `.ai/handoff.md` under **Imported from `.claude/handoff.md`** and removes the legacy file.
 - Creates `.claude/settings.json` — Claude Code permissions (checked in)
 - Creates `.claude/assets/.gitkeep` — keeps the shared Claude assets area scaffolded even when empty
 - Ensures `.gitignore` ignores `.claude/` (re-admitting `settings.json`) and `.ai/` (re-admitting `handoff.md`)
@@ -14,12 +14,13 @@ Claude Code support: CLAUDE.md, session memory, handoff document, and settings.
 
 ## Files
 
-| File                     | Purpose                                    |
-| ------------------------ | ------------------------------------------ |
-| `ai-claude.constants.ts` | File list and gitignore entries            |
-| `ai-claude.detect.ts`    | Check if all Claude Code files are present |
-| `ai-claude.apply.ts`     | Install files, ensure gitignore, auto-dep  |
-| `ai-claude.feature.ts`   | Feature definition                         |
+| File                         | Purpose                                                 |
+| ---------------------------- | ------------------------------------------------------- |
+| `ai-claude.constants.ts`     | File list and gitignore entries                         |
+| `ai-claude.detect.ts`        | Check if all Claude Code files are present              |
+| `ai-claude.handoff.utils.ts` | Merge legacy `.claude/handoff.md` into `.ai/handoff.md` |
+| `ai-claude.apply.ts`         | Install files, ensure gitignore, auto-dep               |
+| `ai-claude.feature.ts`       | Feature definition                                      |
 
 ## Handoff Document
 

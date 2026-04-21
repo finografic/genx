@@ -9,11 +9,17 @@ import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
 
-import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
+import {
+  createDeletePreviewChange,
+  createWritePreviewChange,
+} from '../../lib/feature-preview/feature-preview.utils.js';
 import { AI_INSTRUCTIONS_ESLINT_IGNORES } from '../ai-instructions/ai-instructions.constants';
 import { previewAiInstructions } from '../ai-instructions/ai-instructions.preview.js';
 import { createDefaultTemplateVars, proposeEslintIgnorePatterns } from '../feature.utils';
 import { AI_CLAUDE_ESLINT_IGNORES, AI_CLAUDE_FILES, AI_CLAUDE_GITIGNORE_LINES } from './ai-claude.constants';
+import { appendMigratedClaudeHandoff } from './ai-claude.handoff.utils.js';
+
+const LEGACY_CLAUDE_HANDOFF = '.claude/handoff.md' as const;
 
 async function readPackageVars(targetDir: string): Promise<{ PACKAGE_NAME: string; DESCRIPTION: string }> {
   try {
@@ -97,9 +103,32 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
     applied.push(settingsFile);
   }
 
+  const legacyHandoffPath = resolve(targetDir, LEGACY_CLAUDE_HANDOFF);
   if (!fileExists(handoffDest)) {
-    const body = await templateBody(handoffFile, handoffVars);
-    changes.push(createWritePreviewChange(handoffDest, '', body, handoffFile));
+    if (fileExists(legacyHandoffPath)) {
+      const templated = await templateBody(handoffFile, handoffVars);
+      const legacyRaw = await readFile(legacyHandoffPath, 'utf8');
+      const mergedHandoff = appendMigratedClaudeHandoff(templated, legacyRaw);
+      changes.push(
+        createWritePreviewChange(
+          handoffDest,
+          '',
+          mergedHandoff,
+          `${handoffFile} (migrated from ${LEGACY_CLAUDE_HANDOFF})`,
+        ),
+      );
+      changes.push(
+        createDeletePreviewChange(
+          legacyHandoffPath,
+          legacyRaw,
+          true,
+          `${LEGACY_CLAUDE_HANDOFF} (merged into ${handoffFile})`,
+        ),
+      );
+    } else {
+      const body = await templateBody(handoffFile, handoffVars);
+      changes.push(createWritePreviewChange(handoffDest, '', body, handoffFile));
+    }
   } else {
     applied.push(handoffFile);
   }

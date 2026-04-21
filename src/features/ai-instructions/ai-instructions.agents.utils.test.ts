@@ -4,11 +4,33 @@ import {
   extractRulesGeneralSection,
   mergeAgentsFromTemplate,
   normalizeHeadingKey,
+  rewriteLegacyAgentDocPaths,
 } from './ai-instructions.agents.utils.js';
 
 describe('normalizeHeadingKey', () => {
   it('treats em dash and hyphen headings as the same key', () => {
     expect(normalizeHeadingKey('## Rules — Global')).toBe(normalizeHeadingKey('## Rules - Global'));
+  });
+});
+
+describe('rewriteLegacyAgentDocPaths', () => {
+  it('normalizes Rules heading hyphen to em dash', () => {
+    const input = '## Rules - Global\n\nbody\n';
+    expect(rewriteLegacyAgentDocPaths(input)).toBe('## Rules — Global\n\nbody\n');
+  });
+
+  it('rewrites numbered flat instruction paths into subfolders', () => {
+    const input =
+      'See `.github/instructions/03-typescript-patterns.instructions.md` and `.github/instructions/12-git-policy.instructions.md`.';
+    expect(rewriteLegacyAgentDocPaths(input)).toBe(
+      'See `.github/instructions/code/typescript-patterns.instructions.md` and `.github/instructions/git/git-policy.instructions.md`.',
+    );
+  });
+
+  it('strips numeric prefix under project/', () => {
+    expect(rewriteLegacyAgentDocPaths('.github/instructions/project/01-foo.instructions.md')).toBe(
+      '.github/instructions/project/foo.instructions.md',
+    );
   });
 });
 

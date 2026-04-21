@@ -13,7 +13,7 @@ import type { TemplateVars } from 'types/template.types';
 
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { proposeEslintIgnorePatterns } from '../feature.utils';
-import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
+import { mergeAgentsFromTemplate, rewriteLegacyAgentDocPaths } from './ai-instructions.agents.utils.js';
 import {
   AI_INSTRUCTIONS_AGENTS_MD,
   AI_INSTRUCTIONS_ESLINT_IGNORES,
@@ -133,14 +133,18 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
     } else {
       const templateAgentsRaw = await readFile(agentsTemplatePath, 'utf8');
       const currentAgents = await readFile(agentsDest, 'utf8');
-      const proposedAgents = mergeAgentsFromTemplate(currentAgents, templateAgentsRaw);
-      if (proposedAgents !== null) {
+      const pathNormalized = rewriteLegacyAgentDocPaths(currentAgents);
+      const merged = mergeAgentsFromTemplate(pathNormalized, templateAgentsRaw);
+      const proposedRaw = merged === null ? pathNormalized : rewriteLegacyAgentDocPaths(merged);
+      const proposedAgents = proposedRaw.endsWith('\n') ? proposedRaw : `${proposedRaw}\n`;
+      const normalizedCurrent = currentAgents.endsWith('\n') ? currentAgents : `${currentAgents}\n`;
+      if (proposedAgents !== normalizedCurrent) {
         changes.push(
           createWritePreviewChange(
             agentsDest,
             currentAgents,
             proposedAgents,
-            `${AI_INSTRUCTIONS_AGENTS_MD} (template base + target extras)`,
+            `${AI_INSTRUCTIONS_AGENTS_MD} (template base + target extras + legacy path rewrites)`,
           ),
         );
       } else {
