@@ -5,11 +5,12 @@ import { ensureDir, fileExists, infoMessage } from 'utils';
 
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { confirmReleasesRename } from 'lib/prompts/migrate.prompt';
+
 import type { MigrateOnlySection } from 'types/migrate.types';
 
 /**
- * Restructure docs/ folder by moving GitHub-related docs to docs/process/.
- * This runs BEFORE template sync to avoid overwriting existing restructured files.
+ * Restructure docs/ folder by moving GitHub-related docs to docs/process/. This runs BEFORE template sync to
+ * avoid overwriting existing restructured files.
  */
 export async function restructureDocs(
   targetDir: string,

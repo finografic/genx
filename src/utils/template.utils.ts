@@ -3,13 +3,13 @@ import type { TemplateVars } from 'types/template.types';
 /**
  * Replace tokens in template content with actual values.
  *
- * Tokens follow the pattern: __UPPER_SNAKE_CASE__
- * The `**UPPER_SNAKE_CASE**` form is also matched — markdown linters running on template
- * files normalize underscore-emphasis to asterisk-emphasis (MD049), so both forms must work.
+ * Tokens follow the pattern: **UPPER_SNAKE_CASE** The `**UPPER_SNAKE_CASE**` form is also matched — markdown
+ * linters running on template files normalize underscore-emphasis to asterisk-emphasis (MD049), so both forms
+ * must work.
  *
  * @example
- * applyTemplate("Hello __NAME__!", { NAME: "World" }) // => "Hello World!"
- * applyTemplate("# **PACKAGE_NAME**", { PACKAGE_NAME: "foo" }) // => "# foo"
+ *   applyTemplate('Hello __NAME__!', { NAME: 'World' }); // => "Hello World!"
+ *   applyTemplate('# **PACKAGE_NAME**', { PACKAGE_NAME: 'foo' }); // => "# foo"
  */
 export function applyTemplate(content: string, vars: TemplateVars): string {
   return content.replace(/(?:__|\*\*)([A-Z][A-Z_]*)(?:__|\*\*)/g, (match, key) => {

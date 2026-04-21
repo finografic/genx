@@ -59,6 +59,9 @@ export default defineConfig({
 
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     'import/no-duplicates': 'error',
+
+    /** Project-specific block tags in JSDoc (not standard jsdoc.org names). */
+    'jsdoc/check-tag-names': ['error', { definedTags: ['finografic'] }],
     'typescript/consistent-type-imports': [
       'error',
       { prefer: 'type-imports', fixStyle: 'separate-type-imports' },

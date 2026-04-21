@@ -1,8 +1,7 @@
 /**
  * Markdown VSCode configuration utilities.
  *
- * Handles VSCode settings (markdownlint config, preview styles)
- * and extension recommendations.
+ * Handles VSCode settings (markdownlint config, preview styles) and extension recommendations.
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -31,8 +30,8 @@ import {
 const EXTENSIONS_JSON_PATH = ['.vscode', 'extensions.json'] as const;
 
 /**
- * Proposed `.vscode/settings.json` text for the markdown feature (no disk writes).
- * Migrates the legacy `.vscode/markdown-github-light.css` path to the md-lint package path.
+ * Proposed `.vscode/settings.json` text for the markdown feature (no disk writes). Migrates the legacy
+ * `.vscode/markdown-github-light.css` path to the md-lint package path.
  */
 export async function computeProposedMarkdownSettingsText(targetDir: string): Promise<{
   path: string;
@@ -46,7 +45,7 @@ export async function computeProposedMarkdownSettingsText(targetDir: string): Pr
   }
 
   let t = current || `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
-  const root = () => parseJsoncObject(t) as Record<string, unknown>;
+  const root = (): Record<string, unknown> => parseJsoncObject(t);
 
   // Remove 'markdown' from eslint.validate if present (markdown is linted by md-lint, not ESLint)
   const eslintValidate = root()['eslint.validate'] as string[] | undefined;
@@ -115,16 +114,16 @@ export async function computeProposedMarkdownExtensionsText(targetDir: string): 
 }
 
 /**
- * Add markdownlint extension recommendations to .vscode/extensions.json.
- * Returns the list of extensions that were actually added.
+ * Add markdownlint extension recommendations to .vscode/extensions.json. Returns the list of extensions that
+ * were actually added.
  */
 export async function applyMarkdownExtensions(targetDir: string): Promise<string[]> {
   return addExtensionRecommendations(targetDir, [...MARKDOWNLINT_VSCODE_EXTENSIONS]);
 }
 
 /**
- * Add markdown settings to VSCode settings.json.
- * Only adds markdownlint.config and markdown.styles (no [markdown] / oxc.oxc-vscode).
+ * Add markdown settings to VSCode settings.json. Only adds markdownlint.config and markdown.styles (no
+ * [markdown] / oxc.oxc-vscode).
  */
 export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   await ensureVSCodeDir(targetDir);

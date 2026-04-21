@@ -8,7 +8,9 @@ import type { FeatureContext } from '../feature.types';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
+
 import type { TemplateVars } from 'types/template.types';
+
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { proposeEslintIgnorePatterns } from '../feature.utils';
 import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
@@ -58,7 +60,8 @@ async function collectInstructionTemplateFiles(
 }
 
 /**
- * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint ignores.
+ * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint
+ * ignores.
  */
 export async function previewAiInstructions(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;

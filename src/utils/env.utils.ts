@@ -1,8 +1,8 @@
 import process from 'node:process';
 
 /**
- * Check if we're running in development mode.
- * Development mode is when:
+ * Check if we're running in development mode. Development mode is when:
+ *
  * - NODE_ENV is 'development'
  * - Running via tsx (execPath contains 'tsx')
  * - Running from source TypeScript files

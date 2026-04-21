@@ -2,6 +2,7 @@ import { rename } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { fileExists } from 'utils/fs.utils';
+
 import type { RenameRule } from 'config/rename.rules';
 
 export interface RenameChange {
@@ -27,8 +28,8 @@ export function planRenames(existingFiles: Set<string>, rules: RenameRule[]): Re
 }
 
 /**
- * Get set of existing files in target directory.
- * Checks for all canonical files and their alternatives from rename rules.
+ * Get set of existing files in target directory. Checks for all canonical files and their alternatives from
+ * rename rules.
  */
 export async function getExistingFiles(targetDir: string, renameRules: RenameRule[]): Promise<Set<string>> {
   const files = new Set<string>();

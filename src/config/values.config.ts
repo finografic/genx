@@ -13,8 +13,7 @@ export interface DefaultValuesConfig {
   };
 
   /**
-   * Author prompt format (single prompt).
-   * Example: `Name | email@example.com | https://example.com`
+   * Author prompt format (single prompt). Example: `Name | email@example.com | https://example.com`
    */
   authorPromptDelimiter: string;
 }
@@ -34,8 +33,7 @@ export const defaultValuesConfig: DefaultValuesConfig = {
   },
 
   /**
-   * Author prompt format (single prompt).
-   * Example: `Name | email@example.com | https://example.com`
+   * Author prompt format (single prompt). Example: `Name | email@example.com | https://example.com`
    */
   authorPromptDelimiter: '|',
 };

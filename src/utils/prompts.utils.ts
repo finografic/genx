@@ -44,8 +44,7 @@ export function warnMessage(message: string): void {
 }
 
 /**
- * Canonical cancellation handler.
- * Always call this instead of duplicating clack.cancel().
+ * Canonical cancellation handler. Always call this instead of duplicating clack.cancel().
  */
 export function cancel(): null {
   clack.cancel('Operation cancelled');
@@ -55,6 +54,6 @@ export function cancel(): null {
 /**
  * Show a spinner for async operations.
  */
-export function spinner() {
+export function spinner(): ReturnType<typeof clack.spinner> {
   return clack.spinner();
 }

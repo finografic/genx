@@ -37,8 +37,8 @@ function minVersionOfSpec(spec: string): semver.SemVer | null {
 }
 
 /**
- * A representative version from the local spec used to test policy satisfaction
- * (min of range, or coerced version).
+ * A representative version from the local spec used to test policy satisfaction (min of range, or coerced
+ * version).
  */
 function representativeVersion(spec: string): string | null {
   const trimmed = spec.trim();
@@ -142,9 +142,8 @@ export function planDependencyChanges(
 const DEPENDENCY_SECTIONS: DependencySection[] = ['dependencies', 'devDependencies'];
 
 /**
- * Apply dependency changes to package.json.
- * When adding/updating in one section, removes the dep from the other section
- * (so a dep can be moved from dependencies to devDependencies or vice versa).
+ * Apply dependency changes to package.json. When adding/updating in one section, removes the dep from the
+ * other section (so a dep can be moved from dependencies to devDependencies or vice versa).
  */
 export function applyDependencyChanges(packageJson: PackageJson, changes: DependencyChange[]): PackageJson {
   const next = { ...packageJson };

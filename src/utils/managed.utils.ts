@@ -4,6 +4,7 @@ import { getConfigPath } from '@finografic/cli-kit/xdg';
 import { z } from 'zod';
 
 import type { ManagedConfig, ManagedTarget } from 'types/managed.types';
+
 import { parseJsoncObject } from './jsonc.utils';
 
 export const GENX_CONFIG_DIR = getConfigPath('genx');

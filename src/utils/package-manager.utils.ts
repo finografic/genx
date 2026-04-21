@@ -26,8 +26,7 @@ export async function isDependencyDeclared(targetDir: string, packageName: strin
 }
 
 /**
- * Install a package as a dev dependency using pnpm.
- * Generic utility for feature installation.
+ * Install a package as a dev dependency using pnpm. Generic utility for feature installation.
  */
 export async function installDevDependency(
   targetDir: string,
@@ -60,8 +59,8 @@ export async function installDevDependency(
 }
 
 /**
- * Remove a package from dependencies and devDependencies using pnpm.
- * Only call when the package is known to be declared (e.g. after isDependencyDeclared).
+ * Remove a package from dependencies and devDependencies using pnpm. Only call when the package is known to
+ * be declared (e.g. after isDependencyDeclared).
  */
 export async function removeDependency(
   targetDir: string,
@@ -76,9 +75,8 @@ export async function removeDependency(
 }
 
 /**
- * Return a shallow copy of a string-keyed record with keys sorted A→Z.
- * Use when adding entries to `devDependencies` / `dependencies` so the
- * written package.json stays consistently ordered.
+ * Return a shallow copy of a string-keyed record with keys sorted A→Z. Use when adding entries to
+ * `devDependencies` / `dependencies` so the written package.json stays consistently ordered.
  */
 export function sortedRecord(record: Record<string, string>): Record<string, string> {
   const sorted: Record<string, string> = {};
@@ -89,8 +87,8 @@ export function sortedRecord(record: Record<string, string>): Record<string, str
 }
 
 /**
- * Check if any of the given dependencies are declared in package.json.
- * Useful for detecting feature categories (e.g., "has react" for frontend).
+ * Check if any of the given dependencies are declared in package.json. Useful for detecting feature
+ * categories (e.g., "has react" for frontend).
  */
 export async function hasAnyDependency(targetDir: string, packageNames: string[]): Promise<boolean> {
   for (const name of packageNames) {

@@ -3,11 +3,10 @@
 /**
  * Triage planning and design documents.
  *
- * Scans known agent output locations for spec-like markdown files,
- * then prompts to move each to docs/specs/, docs/drafts/, or discard.
+ * Scans known agent output locations for spec-like markdown files, then prompts to move each to docs/specs/,
+ * docs/drafts/, or discard.
  *
- * Usage: pnpm triage:docs
- *        pnpm triage:docs --scan-dir=custom/path
+ * Usage: pnpm triage:docs pnpm triage:docs --scan-dir=custom/path
  */
 
 import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises';

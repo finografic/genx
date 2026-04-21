@@ -4,12 +4,13 @@ import { errorMessage, spinner, warnMessage } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { PACKAGE_JSON } from 'config/constants.config';
+
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewGitHooks } from './git-hooks.preview.js';
 
 /**
- * Apply git-hooks feature using `previewGitHooks` + `applyPreviewChanges`, then `pnpm install`
- * when package.json dependency lists change. Successful install already runs `prepare` (husky).
+ * Apply git-hooks feature using `previewGitHooks` + `applyPreviewChanges`, then `pnpm install` when
+ * package.json dependency lists change. Successful install already runs `prepare` (husky).
  */
 export async function applyGitHooks(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewGitHooks(context);

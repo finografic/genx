@@ -4,7 +4,7 @@ import { applyVitest } from './vitest.apply';
 import { detectVitest } from './vitest.detect';
 
 /**
- * vitest feature definition.
+ * Vitest feature definition.
  */
 export const vitestFeature: Feature = {
   id: 'vitest',

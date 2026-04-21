@@ -9,7 +9,10 @@ import { PKG_MD_LINT } from 'config/constants.config';
 export const MD_LINT_PACKAGE = PKG_MD_LINT;
 export const MD_LINT_PACKAGE_VERSION = policy.base.devDependencies?.[PKG_MD_LINT] ?? 'latest';
 
-/** Legacy lint-staged glob that merged data files + `md` (split into data-only + `*.md` by the markdown feature). */
+/**
+ * Legacy lint-staged glob that merged data files + `md` (split into data-only + `*.md` by the markdown
+ * feature).
+ */
 export const LINT_STAGED_DATA_WITH_MD_PATTERN = '*.{json,jsonc,yml,yaml,toml,md}';
 export const LINT_STAGED_DATA_ONLY_PATTERN = '*.{json,jsonc,yml,yaml,toml}';
 export const LINT_STAGED_MD_PATTERN = '*.md';
@@ -48,8 +51,8 @@ export const MARKDOWN_STYLES_LEGACY_PATH = '.vscode/markdown-github-light.css';
 export const MD_LINT_CSS_FILES = ['markdown-github-light.css', 'markdown-custom-dark.css'] as const;
 
 /**
- * VSCode settings for markdown (markdownlint + preview styles only).
- * Does NOT set [markdown] or oxc.oxc-vscode.
+ * VSCode settings for markdown (markdownlint + preview styles only). Does NOT set [markdown] or
+ * oxc.oxc-vscode.
  */
 export const MARKDOWN_VSCODE_SETTINGS = {
   [MARKDOWNLINT_CONFIG_KEY]: {

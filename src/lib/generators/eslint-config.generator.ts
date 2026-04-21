@@ -4,8 +4,7 @@ export interface EslintConfigOptions {
 }
 
 /**
- * Generate the full `eslint.config.ts` content based on package type settings
- * and selected features.
+ * Generate the full `eslint.config.ts` content based on package type settings and selected features.
  */
 export function generateEslintConfig(options: EslintConfigOptions): string {
   const { globals: globalsPresets, markdown } = options;

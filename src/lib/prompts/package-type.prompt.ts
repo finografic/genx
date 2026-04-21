@@ -5,8 +5,7 @@ import { PACKAGE_TYPES } from 'config/package-types.config';
 import type { PackageType } from 'types/package-type.types';
 
 /**
- * Prompt user to select a package type.
- * Returns the selected PackageType object.
+ * Prompt user to select a package type. Returns the selected PackageType object.
  */
 export async function promptPackageType(flow: FlowContext): Promise<PackageType> {
   return promptSelect(flow, {

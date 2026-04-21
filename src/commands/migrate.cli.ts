@@ -43,6 +43,7 @@ import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from '
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
+
 import { dependencyRules } from 'config/dependencies.rules';
 import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';

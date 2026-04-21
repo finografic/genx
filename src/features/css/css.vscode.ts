@@ -15,7 +15,9 @@ import {
 } from 'utils';
 
 import { setLanguageFormatterBlock } from 'utils/vscode-jsonc.utils';
+
 import type { VSCodeExtensionsJson } from 'types/vscode.types';
+
 import { CSS_OXFMT_LANGUAGES, CSS_VSCODE_EXTENSIONS, CSS_VSCODE_SETTINGS } from './css.constants';
 
 /**

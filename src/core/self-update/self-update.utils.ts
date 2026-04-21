@@ -76,9 +76,8 @@ async function applyUpdate(genxRoot: string, latestVersion: string): Promise<voi
 }
 
 /**
- * Runs on every genx startup. Silently skips if the cache is still fresh.
- * When the check interval has elapsed, hits the registry and prompts if an
- * update is available.
+ * Runs on every genx startup. Silently skips if the cache is still fresh. When the check interval has
+ * elapsed, hits the registry and prompts if an update is available.
  */
 export async function runSelfUpdateCheck(): Promise<void> {
   const cache = await readCache();
@@ -117,8 +116,8 @@ export async function runSelfUpdateCheck(): Promise<void> {
 }
 
 /**
- * Explicit `genx update-self` command. Bypasses the cache and always checks
- * the registry, showing current vs latest.
+ * Explicit `genx update-self` command. Bypasses the cache and always checks the registry, showing current vs
+ * latest.
  */
 export async function runSelfUpdateForced(): Promise<void> {
   const spin = clack.spinner();

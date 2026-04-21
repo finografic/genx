@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 /**
- * Find the nearest directory at/above `startDir` that contains a `package.json`.
- * Falls back to `startDir` if none is found (shouldn't happen in normal usage).
+ * Find the nearest directory at/above `startDir` that contains a `package.json`. Falls back to `startDir` if
+ * none is found (shouldn't happen in normal usage).
  */
 export function findPackageRoot(startDir: string): string {
   let dir = startDir;

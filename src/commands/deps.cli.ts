@@ -25,6 +25,7 @@ import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
+
 import { dependencyRules } from 'config/dependencies.rules';
 import type { ManagedTarget } from 'types/managed.types';
 

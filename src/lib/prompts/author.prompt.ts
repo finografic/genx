@@ -29,9 +29,9 @@ export async function promptAuthor(flow: FlowContext, defaults: Author, scope: s
   // Defensive but explicit: clack returns AuthorField[]
   const selected = new Set(fields);
 
-  let {name} = defaults;
-  let {email} = defaults;
-  let {url} = defaults;
+  let { name } = defaults;
+  let { email } = defaults;
+  let { url } = defaults;
 
   if (selected.has('name')) {
     name = await promptText(flow, {

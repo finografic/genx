@@ -8,6 +8,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import type { VSCodeExtensionsJson, VSCodeSettingsJson } from 'types/vscode.types';
+
 import { fileExists } from './fs.utils';
 import { parseJsoncObject } from './jsonc.utils';
 import {
@@ -66,8 +67,8 @@ export async function writeExtensionsJson(targetDir: string, content: VSCodeExte
 }
 
 /**
- * Add extension recommendations to .vscode/extensions.json.
- * Returns the list of extensions that were actually added (not already present).
+ * Add extension recommendations to .vscode/extensions.json. Returns the list of extensions that were actually
+ * added (not already present).
  */
 export async function addExtensionRecommendations(
   targetDir: string,
@@ -118,6 +119,7 @@ export async function writeSettingsJson(targetDir: string, content: VSCodeSettin
 
 /**
  * Add language-specific formatter settings to .vscode/settings.json.
+ *
  * @param targetDir - Target directory
  * @param languages - Array of language IDs (e.g., "typescript", "javascript")
  * @param formatterId - VSCode formatter ID (e.g., "oxc.oxc-vscode")
