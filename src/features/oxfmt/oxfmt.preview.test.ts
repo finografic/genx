@@ -2,9 +2,11 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { FeaturePreviewChangeWrite } from '../../lib/feature-preview/feature-preview.types.js';
 
 import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import {
   getChangedPreviewChanges,
   hasPreviewChanges,
@@ -53,12 +55,12 @@ describe('oxfmt.preview — package.json drift', () => {
 
     const preview = await previewOxfmt({ targetDir: dir });
     const changed = getChangedPreviewChanges(preview.changes);
-    const pkgChange = changed.find((c) => c.kind === 'write' && c.path.endsWith('package.json'));
-    expect(pkgChange?.kind).toBe('write');
-    if (pkgChange?.kind === 'write') {
-      expect(pkgChange.proposedContent).toContain(OXFMT_UPDATE_SCRIPT.key);
-      expect(pkgChange.currentContent).not.toContain(OXFMT_UPDATE_SCRIPT.key);
-    }
+    const pkgChange = changed.find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('package.json'),
+    );
+    expect(pkgChange).toBeDefined();
+    expect(pkgChange!.proposedContent).toContain(OXFMT_UPDATE_SCRIPT.key);
+    expect(pkgChange!.currentContent).not.toContain(OXFMT_UPDATE_SCRIPT.key);
   });
 
   it('reports no package.json preview change when canonical layout already matches', async () => {
@@ -99,12 +101,12 @@ describe('oxfmt.preview — non-package.json drift', () => {
 
     const preview = await previewOxfmt({ targetDir: dir });
     const changed = getChangedPreviewChanges(preview.changes);
-    const wfChange = changed.find((c) => c.kind === 'write' && c.path.endsWith('ci.yml'));
-    expect(wfChange?.kind).toBe('write');
-    if (wfChange?.kind === 'write') {
-      expect(wfChange.proposedContent).toContain('pnpm format:check');
-      expect(wfChange.currentContent).toContain('dprint');
-    }
+    const wfChange = changed.find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('ci.yml'),
+    );
+    expect(wfChange).toBeDefined();
+    expect(wfChange!.proposedContent).toContain('pnpm format:check');
+    expect(wfChange!.currentContent).toContain('dprint');
   });
 });
 
@@ -128,11 +130,10 @@ describe('oxfmt.preview — Prettier config removal', () => {
     const prettierChange = getChangedPreviewChanges(preview.changes).find(
       (c) => c.kind === 'delete' && c.path.endsWith('.prettierrc'),
     );
-    expect(prettierChange?.kind).toBe('delete');
-    if (prettierChange?.kind === 'delete') {
-      expect(prettierChange.path).toBe(resolve(dir, '.prettierrc'));
-      expect(prettierChange.summary).toBe('remove Prettier config (.prettierrc)');
-    }
+    expect(prettierChange).toBeDefined();
+    expect(prettierChange!.kind).toBe('delete');
+    expect(prettierChange!.path).toBe(resolve(dir, '.prettierrc'));
+    expect(prettierChange!.summary).toBe('remove Prettier config (.prettierrc)');
   });
 });
 
