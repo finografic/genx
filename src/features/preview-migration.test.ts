@@ -25,7 +25,10 @@ const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
   existsSync(join(repoRoot, '_templates/.github/instructions'));
 
-/** Copy `_templates` Copilot + instruction files (excluding `project/`) + `AGENTS.md` for aligned-detect tests. */
+/**
+ * Copy `_templates` Copilot + instruction files (excluding `project/`) + `AGENTS.md` for aligned-detect
+ * tests.
+ */
 async function seedCanonicalAiInstructions(root: string): Promise<void> {
   await mkdir(join(root, '.github'), { recursive: true });
   const copilotSrc = join(repoRoot, '_templates/.github/copilot-instructions.md');
@@ -152,12 +155,16 @@ describe('preview migration — drift vs canonical', () => {
         `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
       );
       await seedCanonicalAiInstructions(root);
-      await rm(join(root, '.github/instructions/11-agent-facing-markdown.instructions.md'));
-      await rm(join(root, '.github/instructions/12-feature-design-specs.instructions.md'));
+      await rm(join(root, '.github/instructions/documentation/agent-facing-markdown.instructions.md'));
+      await rm(join(root, '.github/instructions/documentation/feature-design-specs.instructions.md'));
 
       const preview = await previewAiInstructions({ targetDir: root });
       expect(hasPreviewChanges(preview)).toBe(true);
-      expect(preview.changes.some((c) => c.kind === 'write' && c.path.includes('11-agent'))).toBe(true);
+      expect(
+        preview.changes.some(
+          (c) => c.kind === 'write' && c.path.includes('agent-facing-markdown.instructions.md'),
+        ),
+      ).toBe(true);
 
       await rm(root, { recursive: true, force: true });
     },

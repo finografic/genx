@@ -52,6 +52,19 @@ export function insertCssOverrideInOxfmtConfig(content: string): string {
     );
   }
 
+  const needleOxfmtOverride = `      options: { ...agentMarkdown },
+    },
+  ] satisfies OxfmtOverrideConfig[],`;
+  if (content.includes(needleOxfmtOverride)) {
+    return content.replace(
+      needleOxfmtOverride,
+      `      options: { ...agentMarkdown },
+    },
+    { files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } },
+  ] satisfies OxfmtOverrideConfig[],`,
+    );
+  }
+
   return content.replace(
     /(\n {2}\],)(\n} satisfies ReturnType<typeof defineConfig>)/,
     `\n    { files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } },$1$2`,
