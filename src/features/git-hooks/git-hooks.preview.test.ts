@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
+import { LINT_STAGED_CONFIG } from './git-hooks.constants.js';
 import { detectGitHooks, isGitHooksFullyConfigured } from './git-hooks.detect.js';
 import { previewGitHooks } from './git-hooks.preview.js';
 
@@ -44,7 +45,7 @@ describe('git-hooks preview-driven detect', () => {
         'husky': 'latest',
         'lint-staged': 'latest',
       },
-      'lint-staged': { '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'] },
+      'lint-staged': LINT_STAGED_CONFIG,
     };
     await writeFile(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
 
@@ -104,7 +105,7 @@ describe('git-hooks preview-driven detect', () => {
         'husky': 'latest',
         'lint-staged': 'latest',
       },
-      'lint-staged': { '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'] },
+      'lint-staged': LINT_STAGED_CONFIG,
     };
     await writeFile(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
 

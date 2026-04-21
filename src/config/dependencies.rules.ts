@@ -5,11 +5,11 @@ import type { DependencyRule } from 'types/dependencies.types';
 const dev = policy.base.devDependencies ?? {};
 
 /**
- * Dependency version rules for template migrations.
- * Versions are sourced from @finografic/deps-policy — edit versions there, not here.
+ * Dependency version rules for template migrations. Versions are sourced from @finografic/deps-policy — edit
+ * versions there, not here.
  *
- * Entries without a version install @latest.
- * Entries with optional: true are only aligned if already present — never force-added.
+ * Entries without a version install @latest. Entries with optional: true are only aligned if already present
+ * — never force-added.
  */
 export const dependencyRules: DependencyRule[] = [
   // core tooling
@@ -20,44 +20,19 @@ export const dependencyRules: DependencyRule[] = [
   { name: 'husky', version: dev['husky'], section: 'devDependencies' },
   { name: 'lint-staged', version: dev['lint-staged'], section: 'devDependencies' },
 
-  // eslint stack
-  { name: 'eslint', version: dev['eslint'], section: 'devDependencies' },
-  {
-    name: '@finografic/eslint-config',
-    version: dev['@finografic/eslint-config'],
-    section: 'devDependencies',
-  },
-  { name: '@eslint/js', version: dev['@eslint/js'], section: 'devDependencies' },
   {
     name: '@finografic/md-lint',
     version: dev['@finografic/md-lint'],
     section: 'devDependencies',
     optional: true,
   },
-  {
-    name: '@stylistic/eslint-plugin',
-    version: dev['@stylistic/eslint-plugin'],
-    section: 'devDependencies',
-    optional: true,
-  },
-  {
-    name: '@typescript-eslint/parser',
-    version: dev['@typescript-eslint/parser'],
-    section: 'devDependencies',
-  },
-  {
-    name: '@typescript-eslint/eslint-plugin',
-    version: dev['@typescript-eslint/eslint-plugin'],
-    section: 'devDependencies',
-  },
-  { name: 'typescript-eslint', version: dev['typescript-eslint'], section: 'devDependencies' },
-  { name: 'globals', version: dev['globals'], section: 'devDependencies' },
 
-  // formatting (optional — only aligned if already present; not forced on dprint or other formatter projects)
+  // oxc toolchain (optional — aligned when present)
   { name: 'oxfmt', version: dev['oxfmt'], section: 'devDependencies', optional: true },
+  { name: 'oxlint', version: dev['oxlint'], section: 'devDependencies', optional: true },
   {
-    name: '@finografic/oxfmt-config',
-    version: dev['@finografic/oxfmt-config'],
+    name: '@finografic/oxc-config',
+    version: dev['@finografic/oxc-config'],
     section: 'devDependencies',
     optional: true,
   },

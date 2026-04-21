@@ -5,16 +5,17 @@ import { describe, expect, it } from 'vitest';
 
 import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import { getChangedPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
-import { detectOxfmt } from './oxfmt.detect.js';
-import { computeCanonicalOxfmtPackageJson, previewOxfmt } from './oxfmt.preview.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
+import { detectOxfmt } from './oxc-config.detect.js';
+import { computeCanonicalOxfmtPackageJson, previewOxfmt } from './oxc-config.preview.js';
+import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
 }
 
-/** Apply write preview proposals until stable (same idea as oxfmt.preview tests). */
+/** Apply write preview proposals until stable (same idea as oxc-config.preview tests). */
 async function convergePreviewWrites(targetDir: string, maxIterations = 8): Promise<void> {
   for (let i = 0; i < maxIterations; i++) {
     const preview = await previewOxfmt({ targetDir });
@@ -36,7 +37,7 @@ describe('detectOxfmt', () => {
     const base: PackageJson = {
       name: '@finografic/detect-pkg',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -59,7 +60,7 @@ describe('detectOxfmt', () => {
     const base: PackageJson = {
       name: '@finografic/clean-pkg',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),

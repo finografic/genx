@@ -6,15 +6,14 @@ import { aiInstructionsFeature } from './ai-instructions/ai-instructions.feature
 import { cssFeature } from './css/css.feature';
 import { gitHooksFeature } from './git-hooks/git-hooks.feature';
 import { markdownFeature } from './markdown/markdown.feature';
-import { oxfmtFeature } from './oxfmt/oxfmt.feature';
+import { oxcConfigFeature } from './oxc-config/oxc-config.feature';
 import { vitestFeature } from './vitest/vitest.feature';
 
 /**
- * Registry of all available features.
- * Add new features here as they are implemented.
+ * Registry of all available features. Add new features here as they are implemented.
  */
 export const features: Feature[] = [
-  oxfmtFeature,
+  oxcConfigFeature,
   vitestFeature,
   cssFeature,
   aiAgentsFeature,

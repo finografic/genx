@@ -2,7 +2,6 @@ export const MIGRATE_ONLY_SECTIONS = [
   'package-json',
   'hooks',
   'nvmrc',
-  'eslint',
   'oxfmt',
   'workflows',
   'docs',
@@ -19,8 +18,8 @@ export interface MigrateConfig {
   defaultScope: string;
 
   /**
-   * Files/dirs to sync from `_templates/` into the target repository.
-   * These are treated as "locked" convention surfaces.
+   * Files/dirs to sync from `_templates/` into the target repository. These are treated as "locked"
+   * convention surfaces.
    *
    * NOTE: copy is template-aware (token replacement) for common text formats.
    */
@@ -34,8 +33,7 @@ export interface MigrateConfig {
   }>;
 
   /**
-   * package.json patch behavior.
-   * References sharedConfig to ensure consistency with create command.
+   * Package.json patch behavior. References sharedConfig to ensure consistency with create command.
    */
   packageJson: {
     ensureScripts: Record<string, string>;

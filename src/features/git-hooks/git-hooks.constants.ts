@@ -11,6 +11,8 @@ import {
   PKG_LINT_STAGED,
 } from 'config/constants.config';
 
+import { OXFMT_LINT_STAGED_COMMAND, OXLINT_LINT_STAGED_FIX } from '../oxc-config/oxc-config.constants';
+
 export const GIT_HOOKS_PACKAGES = {
   [PKG_COMMITLINT_CLI]: 'latest',
   [PKG_COMMITLINT_CONFIG]: 'latest',
@@ -19,11 +21,10 @@ export const GIT_HOOKS_PACKAGES = {
 } as const;
 
 /**
- * lint-staged configuration for package.json.
- * Matches the code glob used when oxfmt prepends its command in lint-staged.
+ * Lint-staged configuration for package.json (aligned with `_templates/package.json` + oxc-config).
  */
 export const LINT_STAGED_CONFIG: Record<string, string[]> = {
-  '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'],
+  '*.{ts,tsx,js,jsx,mjs,cjs}': [OXFMT_LINT_STAGED_COMMAND, OXLINT_LINT_STAGED_FIX],
 };
 
 /**

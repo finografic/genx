@@ -7,7 +7,7 @@ import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
 
 import { hasPreviewChanges } from '../lib/feature-preview/feature-preview.utils.js';
-import { AI_CLAUDE_FILES } from './ai-claude/ai-claude.constants.js';
+import { AI_CLAUDE_FILES, AI_CLAUDE_GITIGNORE_LINES } from './ai-claude/ai-claude.constants.js';
 import { previewAiClaude } from './ai-claude/ai-claude.preview.js';
 import { detectAiInstructions } from './ai-instructions/ai-instructions.detect.js';
 import { previewAiInstructions } from './ai-instructions/ai-instructions.preview.js';
@@ -20,6 +20,9 @@ import { detectVitest } from './vitest/vitest.detect.js';
 import { previewVitest } from './vitest/vitest.preview.js';
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+
+/** Matches `AI_CLAUDE_GITIGNORE_LINES` so ai-claude preview has no .gitignore drift. */
+const AI_CLAUDE_GITIGNORE_FIXTURE = `${AI_CLAUDE_GITIGNORE_LINES.join('\n')}\n`;
 
 const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
@@ -183,7 +186,7 @@ describe('preview migration — drift vs canonical', () => {
       await mkdir(dirname(p), { recursive: true });
       await writeFile(p, 'ok\n');
     }
-    await writeFile(join(root, '.gitignore'), `.claude/\n!.claude/settings.json\n`);
+    await writeFile(join(root, '.gitignore'), AI_CLAUDE_GITIGNORE_FIXTURE);
     await writeFile(join(root, 'eslint.config.ts'), `export default { ignores: ['**/.claude/**'] };\n`);
 
     const preview = await previewAiClaude({ targetDir: root });
@@ -209,7 +212,7 @@ describe('preview migration — drift vs canonical', () => {
       await writeFile(p, 'ok\n');
     }
     await mkdir(join(root, '.claude/assets'), { recursive: true });
-    await writeFile(join(root, '.gitignore'), `.claude/\n!.claude/settings.json\n`);
+    await writeFile(join(root, '.gitignore'), AI_CLAUDE_GITIGNORE_FIXTURE);
     await writeFile(join(root, 'eslint.config.ts'), `export default { ignores: ['**/.claude/**'] };\n`);
 
     const preview = await previewAiClaude({ targetDir: root });

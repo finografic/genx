@@ -12,7 +12,6 @@ export const PACKAGE_TYPES: PackageType[] = [
     entryPoints: ['src/index.ts'],
     keywords: ['library'],
     defaultFeatures: ['vitest'],
-    eslint: { globals: ['node'] },
   },
   {
     id: 'cli',
@@ -27,7 +26,6 @@ export const PACKAGE_TYPES: PackageType[] = [
       'dev:cli': 'NODE_ENV=development tsx src/cli.ts --',
     },
     defaultFeatures: ['vitest'],
-    eslint: { globals: ['node'] },
   },
   {
     id: 'config',
@@ -37,6 +35,5 @@ export const PACKAGE_TYPES: PackageType[] = [
     entryPoints: ['src/index.ts'],
     keywords: ['config', 'shared-config'],
     defaultFeatures: [],
-    eslint: { globals: ['node'] },
   },
 ];

@@ -14,8 +14,9 @@ build/
 # Agents
 .codex/
 .claude/
-!.claude/handoff.md
 !.claude/settings.json
+.ai/
+!.ai/handoff.md
 .worktrees/
 **/worktrees/
 

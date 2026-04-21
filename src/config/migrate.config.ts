@@ -1,4 +1,5 @@
 import type { MigrateConfig } from 'types/migrate.types';
+
 import { sharedConfig } from './shared.config';
 
 export const migrateConfig: MigrateConfig = {
@@ -18,12 +19,8 @@ export const migrateConfig: MigrateConfig = {
     },
     { section: 'hooks', templatePath: 'commitlint.config.mjs', targetPath: 'commitlint.config.mjs' },
     { section: 'nvmrc', templatePath: '.nvmrc', targetPath: '.nvmrc' },
-    { section: 'eslint', templatePath: 'eslint.config.ts', targetPath: 'eslint.config.ts' },
-    {
-      section: 'eslint',
-      templatePath: 'src/declarations.d.ts',
-      targetPath: 'src/declarations.d.ts',
-    },
+    { section: 'workflows', templatePath: 'oxlint.config.ts', targetPath: 'oxlint.config.ts' },
+    { section: 'workflows', templatePath: 'oxfmt.config.ts', targetPath: 'oxfmt.config.ts' },
     {
       section: 'workflows',
       templatePath: '.github/workflows/ci.yml',

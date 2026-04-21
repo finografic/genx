@@ -4,13 +4,14 @@ import { errorMessage, spinner } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { PACKAGE_JSON } from 'config/constants.config';
+
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
-import { previewOxfmt } from './oxfmt.preview.js';
+import { previewOxfmt } from './oxc-config.preview.js';
 
 /**
- * Apply oxfmt to an existing package (Prettier → oxfmt migration path).
- * Uses `previewOxfmt` as the single source of truth for file changes, then runs `pnpm install`
- * when the manifest dependency lists change and package.json was applied.
+ * Apply oxfmt to an existing package (Prettier → oxfmt migration path). Uses `previewOxfmt` as the single
+ * source of truth for file changes, then runs `pnpm install` when the manifest dependency lists change and
+ * package.json was applied.
  */
 export async function applyOxfmt(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewOxfmt(context);

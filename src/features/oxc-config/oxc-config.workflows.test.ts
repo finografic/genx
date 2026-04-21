@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { scrubDprintFromWorkflowContent } from './oxfmt.workflows';
+import { scrubDprintFromWorkflowContent } from './oxc-config.workflows';
 
-describe('oxfmt.workflows — scrubDprintFromWorkflowContent', () => {
+describe('oxc-config.workflows — scrubDprintFromWorkflowContent', () => {
   it('replaces pnpm dprint check with pnpm format:check', () => {
     const input = `
       - name: Format check

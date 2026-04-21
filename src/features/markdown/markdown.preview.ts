@@ -6,12 +6,13 @@ import type { FeatureContext } from '../feature.types';
 
 import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import {
   createDeletePreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
-import { OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES } from '../oxfmt/oxfmt.constants.js';
-import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
+import { OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES } from '../oxc-config/oxc-config.constants.js';
+import { packageJsonManifestDependencyFieldsChanged } from '../oxc-config/oxc-config.preview.js';
 import {
   ESLINT_PLUGIN_MARKDOWNLINT,
   ESLINT_PLUGIN_SIMPLE_IMPORT_SORT,
@@ -38,8 +39,8 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 }
 
 /**
- * Applies lint-staged markdown splits / `*.md` commands — same rules as `markdown.apply`.
- * Migrates `eslint --fix` → `md-lint --fix` on the `*.md` key when present.
+ * Applies lint-staged markdown splits / `*.md` commands — same rules as `markdown.apply`. Migrates `eslint
+ * --fix` → `md-lint --fix` on the `*.md` key when present.
  */
 export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): PackageJson {
   const lintStaged = { ...(packageJson['lint-staged'] as Record<string, string[]> | undefined) };
@@ -143,8 +144,8 @@ function withMarkdownScripts(packageJson: PackageJson): PackageJson {
 }
 
 /**
- * Propose adding a `lint:md` step to `.github/workflows/ci.yml` (after Lint, before Type check).
- * Returns null if the step is already present or the insertion point is not found.
+ * Propose adding a `lint:md` step to `.github/workflows/ci.yml` (after Lint, before Type check). Returns null
+ * if the step is already present or the insertion point is not found.
  */
 function proposeCiWithMarkdownLint(content: string): string | null {
   if (content.includes('lint:md') || content.includes('md-lint')) {

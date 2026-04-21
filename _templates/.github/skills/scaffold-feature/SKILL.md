@@ -148,7 +148,7 @@ In `src/features/feature.types.ts`, add the new ID to the `FeatureId` union:
 
 ```ts
 export type FeatureId =
-  | 'oxfmt'
+  | 'oxcConfig'
   // ... existing entries ...
   | '__FEATURE_ID__';
 ```
@@ -189,7 +189,7 @@ Now fill in the skeleton:
      - **`successMessage`** — new work (created file, new script, installed package) — green.
      - **`successUpdatedMessage`** — modified existing files in place — cyan; prefer **“Updated …”** copy.
      - **`successRemovedMessage`** — removed deps, deleted legacy config, or removal-style cleanup — yellow; prefer **“Removed …”** (or **“Backed up …”** when replacing) copy.
-       See `.github/instructions/project/feature-patterns.instructions.md` (**Shared Utilities**) for the full table. Reference implementations: `src/features/oxfmt/oxfmt.apply.ts`, `src/features/markdown/markdown.apply.ts`.
+       See `.github/instructions/project/feature-patterns.instructions.md` (**Shared Utilities**) for the full table. Reference implementations: `src/features/oxc-config/oxc-config.apply.ts`, `src/features/markdown/markdown.apply.ts`.
 
 4. **VSCode** (optional) — only create `__FOLDER_NAME__.vscode.ts` if the feature needs VSCode extensions or settings. Wrap `addExtensionRecommendations` / `addLanguageFormatterSettings` here — never call them directly from apply.
 

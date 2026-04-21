@@ -5,6 +5,7 @@ import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils
 
 import { isCliPackage } from 'lib/generators/cli-help.generator';
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
+
 import { migrateConfig } from 'config/migrate.config';
 import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
@@ -35,19 +36,19 @@ export async function syncFromTemplate(
     const sourcePath = resolve(templateDir, item.templatePath);
     const destinationPath = resolve(targetDir, item.targetPath);
 
-    // Special handling for eslint.config.ts: backup existing alternatives first
-    if (item.targetPath === 'eslint.config.ts') {
-      const eslintRule = renameRules.find((rule) => rule.canonical === 'eslint.config.ts');
-      if (eslintRule) {
-        const filesToCheck = [...eslintRule.alternatives, eslintRule.canonical];
+    // Special handling for oxlint.config.ts: backup existing file before template sync
+    if (item.targetPath === 'oxlint.config.ts') {
+      const oxlintRule = renameRules.find((rule) => rule.canonical === 'oxlint.config.ts');
+      if (oxlintRule) {
+        const filesToCheck = [...oxlintRule.alternatives, oxlintRule.canonical];
 
         for (const file of filesToCheck) {
           const filePath = resolve(targetDir, file);
           if (fileExists(filePath)) {
-            const ext = file.includes('.') ? file.split('.').pop() : 'mjs';
-            const backupPath = resolve(targetDir, `eslint.config--backup.${ext}`);
+            const ext = file.includes('.') ? file.split('.').pop() : 'ts';
+            const backupPath = resolve(targetDir, `oxlint.config--backup.${ext}`);
             await rename(filePath, backupPath);
-            infoMessage(`Backed up ${file} to eslint.config--backup.${ext}`);
+            infoMessage(`Backed up ${file} to oxlint.config--backup.${ext}`);
           }
         }
       }

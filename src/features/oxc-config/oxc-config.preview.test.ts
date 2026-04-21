@@ -11,9 +11,9 @@ import {
   getChangedPreviewChanges,
   hasPreviewChanges,
 } from '../../lib/feature-preview/feature-preview.utils.js';
-import { OXFMT_UPDATE_SCRIPT } from './oxfmt.constants.js';
-import { computeCanonicalOxfmtPackageJson, previewOxfmt } from './oxfmt.preview.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
+import { OXFMT_UPDATE_SCRIPT } from './oxc-config.constants.js';
+import { computeCanonicalOxfmtPackageJson, previewOxfmt } from './oxc-config.preview.js';
+import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -35,15 +35,15 @@ async function convergePreviewWrites(targetDir: string, maxIterations = 8): Prom
   }
 }
 
-describe('oxfmt.preview — package.json drift', () => {
-  it('reports package.json changes when `update:oxfmt-config` is missing (legacy detect would still see format scripts)', async () => {
+describe('oxc-config.preview — package.json drift', () => {
+  it('reports package.json changes when `update:oxc-config` is missing (legacy detect would still see format scripts)', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-drift-'));
     const pkg: PackageJson = {
       name: '@finografic/drift-pkg',
       version: '0.0.0',
       devDependencies: {
         'oxfmt': '0.0.0',
-        '@finografic/oxfmt-config': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
       },
       scripts: {
         'format:check': 'oxfmt --check',
@@ -68,7 +68,7 @@ describe('oxfmt.preview — package.json drift', () => {
     const base: PackageJson = {
       name: '@finografic/ok-pkg',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     const canonical = computeCanonicalOxfmtPackageJson(base);
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(canonical), 'utf8');
@@ -81,13 +81,13 @@ describe('oxfmt.preview — package.json drift', () => {
   });
 });
 
-describe('oxfmt.preview — non-package.json drift', () => {
+describe('oxc-config.preview — non-package.json drift', () => {
   it('reports workflow changes when GitHub workflow still runs dprint', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-wf-'));
     const base: PackageJson = {
       name: '@finografic/wf-pkg',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -110,13 +110,13 @@ describe('oxfmt.preview — non-package.json drift', () => {
   });
 });
 
-describe('oxfmt.preview — Prettier config removal', () => {
+describe('oxc-config.preview — Prettier config removal', () => {
   it('proposes delete for Prettier config files', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-prettier-'));
     const base: PackageJson = {
       name: '@finografic/prettier-remove',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -137,13 +137,13 @@ describe('oxfmt.preview — Prettier config removal', () => {
   });
 });
 
-describe('oxfmt.preview — converge + detection alignment', () => {
+describe('oxc-config.preview — converge + detection alignment', () => {
   it('after converging writes, preview reports no remaining drift', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-converge-'));
     const base: PackageJson = {
       name: '@finografic/conv-pkg',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     await writeFile(
       resolve(dir, PACKAGE_JSON),
@@ -159,13 +159,13 @@ describe('oxfmt.preview — converge + detection alignment', () => {
   });
 });
 
-describe('oxfmt.preview — needsInstall', () => {
+describe('oxc-config.preview — needsInstall', () => {
   it('omits needsInstall when package.json diff does not change dependency fields', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-needsinst-'));
     const base: PackageJson = {
       name: '@finografic/needsinst-a',
       version: '0.0.0',
-      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxfmt-config': '0.0.0' },
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
     };
     const canonical = computeCanonicalOxfmtPackageJson(base);
     const scripts = { ...canonical.scripts };

@@ -16,16 +16,16 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const baseTemplateOxfmtConfig = readFileSync(join(repoRoot, '_templates/oxfmt.config.ts'), 'utf8');
 
 /**
- * Smallest config that still satisfies {@link insertCssOverrideInOxfmtConfig}’s `agentMarkdown`
- * needle and {@link ensureCssImportInOxfmtConfig}’s `base` / `ignorePatterns` import shape —
- * no full copy of an older `_templates` file.
+ * Smallest config that still satisfies {@link insertCssOverrideInOxfmtConfig}’s `agentMarkdown` needle and
+ * {@link ensureCssImportInOxfmtConfig}’s `base` / `ignorePatterns` import shape — no full copy of an older
+ * `_templates` file.
  */
 const MINIMAL_OXFMT_WITHOUT_CSS = `import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
   base,
   ignorePatterns,
-} from '@finografic/oxfmt-config';
+} from '@finografic/oxc-config/oxfmt';
 import { defineConfig } from 'oxfmt';
 
 export default defineConfig({
@@ -60,7 +60,7 @@ describe('css.oxfmt — ensureCssImportInOxfmtConfig', () => {
     expect(out).toMatch(/\n {2}base,\n {2}css,/);
   });
 
-  it('does nothing when @finografic/oxfmt-config is not imported', () => {
+  it('does nothing when @finografic/oxc-config is not imported', () => {
     const noOxfmt = `export default { foo: 1 };`;
     expect(ensureCssImportInOxfmtConfig(noOxfmt)).toBe(noOxfmt);
   });
@@ -96,14 +96,14 @@ describe('css.oxfmt — full patch (import + override)', () => {
     let next = ensureCssImportInOxfmtConfig(MINIMAL_OXFMT_WITHOUT_CSS);
     next = insertCssOverrideInOxfmtConfig(next);
 
-    expect(next).toMatch(/import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s);
+    expect(next).toMatch(/import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxc-config\/oxfmt['"]/s);
     expect(next).toContain(`{ files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } }`);
     expect(next.split('{ files:').filter((s) => s.includes('*.css')).length).toBe(1);
   });
 
   it('current template does not include CSS by default — css feature adds it', () => {
     expect(baseTemplateOxfmtConfig).not.toMatch(
-      /import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s,
+      /import\s*\{[^}]*\bcss\b[^}]*\}\s*from\s*['"]@finografic\/oxc-config\/oxfmt['"]/s,
     );
     expect(baseTemplateOxfmtConfig).not.toContain(
       `{ files: ['*.css', '*.scss'], excludeFiles: [], options: { ...css } }`,

@@ -14,7 +14,7 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 
 // ── Feature READMEs ──────────────────────────────────────────────────
 
-const FEATURE_DIRS = ['oxfmt', 'vitest', 'ai-instructions', 'markdown', 'css', 'git-hooks'] as const;
+const FEATURE_DIRS = ['oxc-config', 'vitest', 'ai-instructions', 'markdown', 'css', 'git-hooks'] as const;
 
 interface FeatureInfo {
   name: string;

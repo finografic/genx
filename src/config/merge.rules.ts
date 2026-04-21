@@ -11,7 +11,7 @@ export const mergeConfig: MergeRule[] = [
     strategy: 'custom',
   },
   {
-    file: 'eslint.config.ts',
+    file: 'oxlint.config.ts',
     strategy: 'overwrite',
   },
 ];

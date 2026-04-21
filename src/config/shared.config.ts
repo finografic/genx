@@ -1,6 +1,6 @@
 /**
- * Shared configuration used by both create and migrate commands.
- * This ensures consistency between scaffolding new packages and updating existing ones.
+ * Shared configuration used by both create and migrate commands. This ensures consistency between scaffolding
+ * new packages and updating existing ones.
  */
 
 export interface SharedConfig {
@@ -8,13 +8,13 @@ export interface SharedConfig {
   defaultScope: string;
 
   /**
-   * Package.json scripts that should be present in all @finografic packages.
-   * These match what's in _templates/package.json.
+   * Package.json scripts that should be present in all @finografic packages. These match what's in
+   * _templates/package.json.
    */
   packageJsonScripts: Record<string, string>;
 
   /**
-   * lint-staged configuration that should be present in all @finografic packages.
+   * Lint-staged configuration that should be present in all @finografic packages.
    */
   lintStaged: Record<string, string[]>;
 
@@ -34,15 +34,15 @@ export const sharedConfig: SharedConfig = {
   defaultScope: '@finografic',
 
   /**
-   * Package.json scripts that should be present in all @finografic packages.
-   * These match what's in _templates/package.json.
+   * Package.json scripts that should be present in all @finografic packages. These match what's in
+   * _templates/package.json.
    */
   packageJsonScripts: {
     'test': 'vitest',
     'test:run': 'vitest run',
     'test:coverage': 'vitest run --coverage',
-    'lint': 'eslint .',
-    'lint:fix': 'eslint . --fix',
+    'lint': 'oxlint -c oxlint.config.ts',
+    'lint:fix': 'oxlint -c oxlint.config.ts --fix',
     'typecheck': 'tsc --project tsconfig.json --noEmit',
     'tsc:debug': 'tsc --pretty --project tsconfig.json',
     'release:check': 'pnpm lint:fix && pnpm typecheck && pnpm test:run',
@@ -56,10 +56,13 @@ export const sharedConfig: SharedConfig = {
   },
 
   /**
-   * lint-staged configuration that should be present in all @finografic packages.
+   * Lint-staged configuration that should be present in all @finografic packages.
    */
   lintStaged: {
-    '*.{ts,tsx,js,mjs,cjs}': ['eslint --fix'],
+    '*.{ts,tsx,js,jsx,mjs,cjs}': [
+      'oxfmt --no-error-on-unmatched-pattern',
+      'oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern',
+    ],
   },
 
   /**

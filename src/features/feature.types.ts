@@ -2,7 +2,7 @@
  * Feature ID type - must match the feature folder name.
  */
 export type FeatureId =
-  | 'oxfmt'
+  | 'oxcConfig'
   | 'vitest'
   | 'githubWorkflow'
   | 'aiAgents'
@@ -31,8 +31,8 @@ export interface FeatureApplyResult {
   /** Error if application failed */
   error?: Error;
   /**
-   * Absolute paths touched by apply (writes and deletes), in apply order.
-   * For follow-up steps that must not depend on human-facing `applied` labels.
+   * Absolute paths touched by apply (writes and deletes), in apply order. For follow-up steps that must not
+   * depend on human-facing `applied` labels.
    */
   appliedTargetPaths?: readonly string[];
 }
@@ -46,8 +46,7 @@ export interface FeatureVSCodeConfig {
 }
 
 /**
- * Feature definition.
- * Each feature must implement this interface.
+ * Feature definition. Each feature must implement this interface.
  */
 export interface Feature {
   /** Unique feature identifier (matches folder name) */
@@ -62,14 +61,13 @@ export interface Feature {
   vscode?: FeatureVSCodeConfig;
 
   /**
-   * Optional detection function to check if feature is already present.
-   * Returns true if feature is detected, false otherwise.
+   * Optional detection function to check if feature is already present. Returns true if feature is detected,
+   * false otherwise.
    */
   detect?: (context: FeatureContext) => boolean | Promise<boolean>;
 
   /**
-   * Apply the feature to the target directory.
-   * This is where the feature's side effects happen.
+   * Apply the feature to the target directory. This is where the feature's side effects happen.
    */
   apply: (context: FeatureContext) => Promise<FeatureApplyResult>;
 }

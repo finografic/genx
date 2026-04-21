@@ -23,10 +23,10 @@ import {
 } from 'utils';
 
 import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
-import { generateEslintConfig } from 'lib/generators/eslint-config.generator';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
+
 import { createConfig } from 'config/create.config';
 
 // NOTE: This command never prompts directly.
@@ -181,13 +181,6 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
         await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
       }
     }
-
-    // Generate eslint.config.ts based on package type + selected features
-    const eslintContent = generateEslintConfig({
-      globals: config.packageType.eslint.globals,
-      markdown: selectedFeatures.has('markdown'),
-    });
-    await writeFile(resolve(targetDir, 'eslint.config.ts'), eslintContent, 'utf8');
 
     spin.stop('Project structure created');
   } catch (err) {
