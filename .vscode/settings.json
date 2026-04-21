@@ -66,6 +66,7 @@
       "code_blocks": false
     },
     "MD024": false,
+    "MD029": "warning",
     "MD025": false,
     "MD036": false,
     "MD040": false,
