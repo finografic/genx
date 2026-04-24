@@ -1,6 +1,7 @@
-# TODO.ROADMAP.md
+# ROADMAP.md
 
 Future enhancements identified during the deps-policy → genx → target pipeline walkthrough (2026-04-06).
+Updated 2026-04-24.
 Ordered roughly by dependency: earlier items are prerequisites for later ones.
 
 ---
@@ -48,12 +49,6 @@ ecosystem matures, some package types legitimately need a different dep surface.
 
 - [x] status: **DONE**
 
-**Goal:** Finish the Husky migration outside this local repo so new scaffolds and feature-driven
-installs match the current local setup.
-
-**Why:** The local repo, generated templates, and the `git-hooks` feature all need to agree on one
-canonical hook system.
-
 **Status:** Done. Root + `_templates/` now use Husky with `.husky/pre-commit` and
 `.husky/commit-msg`, the `git-hooks` feature preview/detect/apply flow is Husky-based, legacy
 `simple-git-hooks` config is cleaned up, and docs/tests were updated to match.
@@ -68,60 +63,51 @@ canonical hook system.
 and `docs/scratch/` directory structure, gitignore entry, triage script, and the
 `12-design-specs.instructions.md` instruction file in any `@finografic` package.
 
-**Why:** Agents across the ecosystem produce planning artifacts in ad-hoc locations (Cursor's
-`superpowers/`, Claude Code's `.claude/drafts/`, GPT session outputs, etc.). Without a canonical
-structure, these accumulate in inconsistent places and either get committed haphazardly or lost.
-The triage system currently lives only in genx — it should be portable to any project.
+**Why:** Agents across the ecosystem produce planning artifacts in ad-hoc locations without a
+canonical structure. The triage system currently lives only in genx — it should be portable.
 
 **What the feature would apply:**
 
-- Create `docs/specs/` directory
-- Create `docs/scratch/` directory
+- Create `docs/specs/` and `docs/scratch/` directories
 - Add `docs/scratch/` to `.gitignore`
-- Copy `scripts/triage-docs.ts` to target project
+- Copy `scripts/triage-docs.ts` to target project (pending #6 portability decision)
 - Add `triage:docs` script to `package.json`
 - Copy `12-design-specs.instructions.md` to `.github/instructions/`
 - Add triage-docs SKILL to `.github/skills/triage-docs/`
-- Wire entries into `AGENTS.md` if the `ai-agents` feature is present
+- Wire entries into `AGENTS.md` if the `ai-agents` feature is present (optional, graceful skip)
 
 **Detection:** Preview-driven — compute canonical state of all owned files, diff against disk.
 
-**Dependencies:** Requires `ai-agents` feature for AGENTS.md wiring (optional — feature should
-work standalone without it, just skip the AGENTS.md step).
-
-**Status:** Not started. The underlying pieces exist (script, skill, instruction file) but are
-not yet packaged as a genx feature module.
+**Status:** Not started. Blocked on #6 (triage-docs portability).
 
 ---
 
-## 5. `scaffold-feature` templates — modernize for diff-as-detection
+## 5. `generate-new-genx-feature` skill — modernize for diff-as-detection
 
 - [ ] status: pending
 
-**Goal:** Update the `_templates/feature/` skeleton and the `scaffold-feature` SKILL to produce
-features that use the preview-driven detect/apply pattern (`*.preview.ts` module) instead of the
-old signal-based detection.
+**Goal:** Update the `feature-template/` skeleton and `generate-new-genx-feature` SKILL so that
+newly scaffolded features use the preview-driven detect/apply pattern (`*.preview.ts` module)
+instead of the old signal-based detection.
 
 **Why:** All existing features have been migrated to diff-as-detection via `src/lib/feature-preview/`.
-New features scaffolded from `_templates/feature/` still follow the old pattern — they produce a
-simple `detect()` that checks for a signal and an `apply()` that writes from scratch. This creates
-an immediate pattern mismatch that has to be manually corrected after scaffolding.
+New features scaffolded from the template still follow the old pattern — an immediate pattern
+mismatch that must be manually corrected after scaffolding.
 
 **What changes:**
 
-- Add `__FOLDER_NAME__.preview.ts` to `_templates/feature/`
+- Add `__FOLDER_NAME__.preview.ts` to `.github/skills/generate-new-genx-feature/feature-template/`
 - Update `__FOLDER_NAME__.detect.ts` template to call preview and check for emptiness
 - Update `__FOLDER_NAME__.apply.ts` template to call preview and use `applyPreviewChanges()`
 - Update `__FOLDER_NAME__.feature.ts` template with preview import
-- Update `scripts/new-feature.ts` to scaffold the preview file
-- Update `.github/skills/scaffold-feature/SKILL.md` to document the preview pattern
+- Update `new-feature.ts` (scaffold script) to emit the preview file
+- Update `.github/skills/generate-new-genx-feature/SKILL.md` to document the preview pattern
 - Update `.github/instructions/project/feature-patterns.instructions.md` with preview conventions
 
 **Prerequisite:** Need a stable reference feature to use as the template source. Candidates:
 `oxfmt` (complex, many file mutations), `git-hooks` (medium complexity), or `vitest` (simpler).
 
-**Status:** Not started. Blocked on choosing the reference feature and extracting the common
-preview skeleton from it.
+**Status:** Not started. Blocked on choosing the reference feature.
 
 ---
 
@@ -133,8 +119,8 @@ preview skeleton from it.
 can use without depending on genx's internal utilities.
 
 **Why:** The current script imports from `utils` and `utils/picocolors` — genx-internal barrel
-exports. For the `design-docs` feature (#4) to copy this script into other projects, it either
-needs to be self-contained or extracted into `@finografic/core`.
+exports. For the `design-docs` feature (#4) to copy this script into other projects, it needs
+to be self-contained.
 
 **Options:**
 
