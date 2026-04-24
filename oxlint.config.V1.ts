@@ -127,7 +127,7 @@ export default defineConfig({
   ignorePatterns: [
     '**/node_modules/**',
     '**/dist/**',
-    '**/.ai/**',
+    '**/.agents/**',
     '**/.cursor/hooks/**',
     '**/.cursor/chats/**',
     '**/.claude/**',

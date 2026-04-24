@@ -12,6 +12,8 @@ build/
 .env.*.local
 
 # Agents
+.agents/
+!.agents/handoff.md
 .codex/
 .claude/
 !.claude/handoff.md
