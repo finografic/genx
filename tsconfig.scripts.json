@@ -7,5 +7,5 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext"
   },
-  "include": ["scripts/**/*"]
+  "include": ["scripts/**/*", ".github/skills/**/*.ts"]
 }

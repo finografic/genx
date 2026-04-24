@@ -13,9 +13,9 @@ import { resolve } from 'node:path';
 import process from 'node:process';
 import * as clack from '@clack/prompts';
 
-import { ensureDir, fileExists } from '../src/utils/fs.utils';
-import { pc } from '../src/utils/picocolors';
-import { applyTemplate } from '../src/utils/template.utils';
+import { ensureDir, fileExists } from '../../../src/utils/fs.utils';
+import { pc } from '../../../src/utils/picocolors';
+import { applyTemplate } from '../../../src/utils/template.utils';
 
 /* ────────────────────────────────────────────────────────── */
 /* Helpers                                                     */
@@ -147,7 +147,7 @@ async function main(): Promise<void> {
 
   await ensureDir(featureDir);
 
-  const templateDir = resolve('_templates/feature');
+  const templateDir = resolve('.github/skills/generate-new-genx-feature/feature-template');
   const templateFiles = await readdir(templateDir);
 
   for (const templateFile of templateFiles) {

@@ -5,11 +5,11 @@ import { OXFMT_VSCODE_EXTENSIONS } from './oxfmt.constants';
 import { detectOxfmt } from './oxfmt.detect';
 
 /**
- * oxfmt feature — Prettier → oxfmt migration for packages not created from the latest template.
+ * Oxfmt feature — Prettier → oxfmt migration for packages not created from the latest template.
  */
 export const oxfmtFeature: Feature = {
   id: 'oxfmt',
-  label: 'oxfmt formatting (extends @finografic/oxfmt-config)',
+  label: 'oxc-config (oxfmt formatter + oxlint linter)',
   hint: 'optional',
   vscode: {
     extensions: OXFMT_VSCODE_EXTENSIONS,

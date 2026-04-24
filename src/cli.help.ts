@@ -35,7 +35,7 @@ export const cliHelp: HelpConfig = {
       },
       {
         label: 'Migrate only specific sections',
-        description: 'genx migrate --only=package-json,eslint --write',
+        description: 'genx migrate --only=package-json,oxfmt --write',
       },
       {
         label: 'Sync deps (dry run)',

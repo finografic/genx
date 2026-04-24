@@ -3,6 +3,7 @@ import { execa } from 'execa';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PACKAGE_JSON } from 'config/constants.config';
+
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { applyOxfmt } from './oxfmt.apply.js';
 import { previewOxfmt } from './oxfmt.preview.js';
@@ -117,12 +118,12 @@ describe('oxfmt.apply — preview-driven apply', () => {
     };
     previewOxfmtMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({
-      applied: ['eslint.config.ts (oxfmt-covered ESLint cleanup)'],
+      applied: ['remove eslint.config.ts (replaced by oxlint)'],
       appliedTargetPaths: [resolve(targetDir, 'eslint.config.ts')],
     });
 
     const result = await applyOxfmt({ targetDir });
     expect(execaMock).not.toHaveBeenCalled();
-    expect(result.applied).toEqual(['eslint.config.ts (oxfmt-covered ESLint cleanup)']);
+    expect(result.applied).toEqual(['remove eslint.config.ts (replaced by oxlint)']);
   });
 });

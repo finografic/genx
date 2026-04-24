@@ -23,6 +23,7 @@ import {
   setLanguageFormatterBlock,
   setRootPropertyJsonc,
 } from 'utils/vscode-jsonc.utils.js';
+
 import {
   ESLINT_CONFIG_FILES,
   PACKAGE_JSON,
@@ -31,6 +32,7 @@ import {
   VSCODE_SETTINGS_JSON,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import {
   createDeletePreviewChange,
   createWritePreviewChange,
@@ -39,14 +41,12 @@ import {
   DPRINT_CONFIG_FILES,
   OXFMT_CATEGORY_DEPENDENCIES,
   OXFMT_CI_STEP,
-  OXFMT_COVERED_STYLISTIC_RULES,
   OXFMT_FORMATTER_ID,
   OXFMT_LANGUAGE_CATEGORIES,
   OXFMT_VSCODE_EXTENSIONS,
   PRETTIER_CONFIG_FILES,
 } from './oxfmt.constants.js';
 import { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
-import { stripSimpleImportSortFromEslintConfigContent } from './oxfmt.simple-import-sort.js';
 import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
 import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxfmt.workflows.js';
 
@@ -83,7 +83,8 @@ function stableDependencyJsonSlice(deps: unknown): string {
 }
 
 /**
- * True when `dependencies` / `devDependencies` differ — apply may need `pnpm install` after writing package.json.
+ * True when `dependencies` / `devDependencies` differ — apply may need `pnpm install` after writing
+ * package.json.
  */
 export function packageJsonManifestDependencyFieldsChanged(currentRaw: string, proposedRaw: string): boolean {
   const cur = JSON.parse(currentRaw) as PackageJson;
@@ -92,23 +93,6 @@ export function packageJsonManifestDependencyFieldsChanged(currentRaw: string, p
     stableDependencyJsonSlice(cur.dependencies) !== stableDependencyJsonSlice(next.dependencies) ||
     stableDependencyJsonSlice(cur.devDependencies) !== stableDependencyJsonSlice(next.devDependencies)
   );
-}
-
-function stripOxfmtCoveredStylisticRulesFromEslintContent(content: string): string {
-  let updated = content;
-  for (const rule of OXFMT_COVERED_STYLISTIC_RULES) {
-    const escaped = rule.replace(/\//g, '\\/');
-    const regex = new RegExp(`^\\s*'${escaped}':.+\\n`, 'gm');
-    updated = updated.replace(regex, '');
-  }
-  updated = updated.replace(/^\s*\/\/ Stylistic\n/gm, '');
-  updated = updated.replace(/\n{3,}/g, '\n\n');
-  return updated;
-}
-
-function canonicalEslintConfigContent(content: string): string {
-  const stripped = stripOxfmtCoveredStylisticRulesFromEslintContent(content);
-  return stripSimpleImportSortFromEslintConfigContent(stripped);
 }
 
 function proposeCiYmlContent(current: string): string {
@@ -335,22 +319,17 @@ export async function previewOxfmt(context: FeatureContext): Promise<FeaturePrev
     applied.push('.vscode/settings.json');
   }
 
+  // DEPRECATED: eslint.config.* files removed — oxlint replaces ESLint.
   for (const name of ESLINT_CONFIG_FILES) {
     const abs = resolve(targetDir, name);
     if (!fileExists(abs)) continue;
     const raw = await readFile(abs, 'utf8');
-    const next = canonicalEslintConfigContent(raw);
-    if (next !== raw) {
-      const out = next.endsWith('\n') ? next : `${next}\n`;
-      changes.push(createWritePreviewChange(abs, raw, out, `${name} (oxfmt-covered ESLint cleanup)`));
-    } else {
-      applied.push(`${name} (no oxfmt ESLint drift)`);
-    }
+    changes.push(createDeletePreviewChange(abs, raw, true, `remove ${name} (replaced by oxlint)`));
   }
 
   const noopMessage =
     changes.length === 0
-      ? 'oxfmt already matches canonical configuration across owned files (package.json, config, workflows, VS Code, ESLint).'
+      ? 'oxc-config already matches canonical configuration across owned files (package.json, config, workflows, VS Code).'
       : undefined;
 
   const pkgWrite = changes.find(

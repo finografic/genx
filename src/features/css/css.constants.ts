@@ -1,25 +1,25 @@
 /**
- * CSS linting feature configuration.
+ * CSS feature configuration.
  */
 
 import { PKG_STYLELINT, PKG_STYLELINT_STYLISTIC } from 'config/constants.config';
 
+// DEPRECATED: stylelint replaced by oxfmt for CSS. Kept for removal detection.
 export const STYLELINT_PACKAGE = PKG_STYLELINT;
-export const STYLELINT_PACKAGE_VERSION = 'latest';
-
+// DEPRECATED: @stylistic/stylelint-plugin replaced by oxfmt. Kept for removal detection.
 export const STYLELINT_STYLISTIC_PACKAGE = PKG_STYLELINT_STYLISTIC;
-export const STYLELINT_STYLISTIC_PACKAGE_VERSION = 'latest';
 
-/** VSCode extension ID for stylelint */
-export const CSS_VSCODE_EXTENSIONS = ['stylelint.vscode-stylelint'] as const;
+/** VSCode extension ID for stylelint — kept to remove from recommendations */
+// DEPRECATED: stylelint.vscode-stylelint removed in favour of oxc.oxc-vscode.
+export const CSS_VSCODE_STYLELINT_EXT = 'stylelint.vscode-stylelint' as const;
 
-/** Primary stylelint config (flat TS module) */
+// DEPRECATED: No longer created — kept to detect and delete legacy configs.
 export const STYLELINT_CONFIG_FILENAME = 'stylelint.config.ts';
 
 /** Legacy JSON config removed on apply when present */
 export const LEGACY_STYLELINTRC_FILENAME = '.stylelintrc.json';
 
-/** Default stylelint.config.ts body */
+// DEPRECATED: stylelint.config.ts body — only kept to identify the file pattern for deletion.
 export const STYLELINT_CONFIG_TS_CONTENT = `import type { Config } from 'stylelint';
 
 export default {
@@ -32,13 +32,8 @@ export default {
 } satisfies Config;
 `;
 
-/** VSCode settings added by the CSS feature */
-export const CSS_VSCODE_SETTINGS = {
-  'stylelint.enable': true,
-  'stylelint.validate': ['css', 'scss'],
-  'css.validate': false,
-  'scss.validate': false,
-} as const;
+// DEPRECATED: stylelint VSCode settings — kept for removal detection.
+export const CSS_VSCODE_STYLELINT_SETTINGS_KEYS = ['stylelint.enable', 'stylelint.validate'] as const;
 
 /** Language IDs for oxfmt (oxc) formatter settings */
 export const CSS_OXFMT_LANGUAGES = ['css', 'scss'] as const;

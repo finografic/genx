@@ -4,13 +4,21 @@ import { fileExists } from 'utils';
 
 import { OXFMT_CONFIG_FILENAME } from './css.constants';
 
+/** Regex matching the named import block from either the old or new oxc-config package. */
+const OXC_IMPORT_BLOCK_RE =
+  /import\s*\{([^}]+)\}\s*from\s*['"](?:@finografic\/oxfmt-config|@finografic\/oxc-config\/oxfmt)['"]/s;
+
 function hasCssOverride(content: string): boolean {
   return content.includes("files: ['*.css', '*.scss']") || content.includes('files: ["*.css", "*.scss"]');
 }
 
 function hasCssNamedImport(content: string): boolean {
-  const importMatch = content.match(/import\s*\{([^}]+)\}\s*from\s*['"]@finografic\/oxfmt-config['"]/s);
+  const importMatch = content.match(OXC_IMPORT_BLOCK_RE);
   return importMatch !== null && /\bcss\b/.test(importMatch[1]);
+}
+
+function hasOxcConfigImport(content: string): boolean {
+  return OXC_IMPORT_BLOCK_RE.test(content);
 }
 
 /** True when the standard genx CSS preset is already present (import + override). */
@@ -19,11 +27,12 @@ function oxfmtConfigAlreadyHasCssPreset(content: string): boolean {
 }
 
 /**
- * Ensure `css` is imported from `@finografic/oxfmt-config` (insert after `base,`).
+ * Ensure `css` is imported from the oxc-config package (insert after `base,`). Handles both
+ * `@finografic/oxfmt-config` and `@finografic/oxc-config/oxfmt`.
  */
 export function ensureCssImportInOxfmtConfig(content: string): string {
   if (hasCssNamedImport(content)) return content;
-  if (!content.includes('@finografic/oxfmt-config')) return content;
+  if (!hasOxcConfigImport(content)) return content;
 
   if (/\n {2}base,\n {2}css,/.test(content)) return content;
 

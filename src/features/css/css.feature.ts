@@ -1,19 +1,15 @@
 import type { Feature } from '../feature.types';
 
 import { applyCss } from './css.apply';
-import { CSS_VSCODE_EXTENSIONS } from './css.constants';
 import { detectCss } from './css.detect';
 
 /**
- * CSS linting feature definition.
+ * CSS formatting feature — ensures oxfmt handles CSS/SCSS and removes legacy stylelint.
  */
 export const cssFeature: Feature = {
   id: 'css',
-  label: 'CSS linting (stylelint + @stylistic)',
+  label: 'CSS formatting (oxfmt) — removes legacy stylelint if present',
   hint: 'recommended for frontend packages',
-  vscode: {
-    extensions: CSS_VSCODE_EXTENSIONS,
-  },
   detect: detectCss,
   apply: applyCss,
 };

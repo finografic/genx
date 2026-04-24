@@ -24,7 +24,9 @@ export const COMMITLINT_CONFIG = 'commitlint.config.mjs';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PKG_MD_LINT = '@finografic/md-lint';
+// DEPRECATED: stylelint replaced by oxfmt for CSS formatting. Kept for removal detection.
 export const PKG_STYLELINT = 'stylelint';
+// DEPRECATED: @stylistic/stylelint-plugin replaced by oxfmt. Kept for removal detection.
 export const PKG_STYLELINT_STYLISTIC = '@stylistic/stylelint-plugin';
 export const PKG_COMMITLINT_CLI = '@commitlint/cli';
 export const PKG_COMMITLINT_CONFIG = '@commitlint/config-conventional';

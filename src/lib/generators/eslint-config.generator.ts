@@ -1,11 +1,12 @@
+// DEPRECATED: ESLint config generation removed — oxlint replaces ESLint. This generator is unused;
+// remove once the create command no longer references it.
 export interface EslintConfigOptions {
   globals: Array<'node' | 'browser'>;
   markdown: boolean;
 }
 
 /**
- * Generate the full `eslint.config.ts` content based on package type settings
- * and selected features.
+ * Generate the full `eslint.config.ts` content based on package type settings and selected features.
  */
 export function generateEslintConfig(options: EslintConfigOptions): string {
   const { globals: globalsPresets, markdown } = options;
