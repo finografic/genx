@@ -150,9 +150,6 @@ function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): v
     replaceAiRefsInFile(path.join(targetDir, rel), result);
   }
 
-  // Scan agent-written files inside .agents/ — agents may have written .ai/ paths
-  replaceAiRefsInFile(path.join(targetDir, '.agents/handoff.md'), result);
-
   // Also scan .github/instructions/project/ markdown files
   const projectInst = path.join(targetDir, '.github/instructions/project');
   if (fs.existsSync(projectInst)) {
@@ -685,6 +682,10 @@ export async function migrateAgentDocs(
 
   // Always ensure .gitignore has canonical .agents/ entries (even if .ai/ was absent)
   ensureAgentsGitignore(targetDir, result);
+
+  // Always scan .agents/handoff.md — agent-written content may still reference .ai/
+  // Runs unconditionally because .ai/ may have been renamed in a prior run
+  replaceAiRefsInFile(path.join(targetDir, '.agents/handoff.md'), result);
 
   // ── Step 2: instructions layout + agent file patches ─────────────────────
   // Skip if the structure is already canonical (Step 1 may have been the only thing needed).
