@@ -23,6 +23,7 @@ import {
 import type { FeatureId } from 'features/feature.types';
 
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
+import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from 'lib/migrate/agent-docs-migration';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { restructureDocs } from 'lib/migrate/docs-restructure.utils';
 import { applyMerges } from 'lib/migrate/merge.utils';
@@ -43,6 +44,7 @@ import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from '
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
+
 import { dependencyRules } from 'config/dependencies.rules';
 import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';
@@ -154,6 +156,28 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
 
   let selectedFeatureIds: FeatureId[] = [];
   if (!only) {
+    const mode = await clack.select({
+      message: 'What would you like to do?',
+      options: [
+        { value: 'features', label: 'Select optional features' },
+        {
+          value: 'agent-docs',
+          label: 'Migrate AI agent docs',
+          hint: 'restructure .github/instructions/, AGENTS.md, CLAUDE.md',
+        },
+      ],
+    });
+
+    if (clack.isCancel(mode)) {
+      process.exit(0);
+      return;
+    }
+
+    if (mode === 'agent-docs') {
+      await runAgentDocsMigration(targetDir, write);
+      return;
+    }
+
     const prompted = await promptFeatures(flow);
     if (!prompted) {
       process.exit(0);
@@ -169,6 +193,40 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     debug,
     selectedFeatureIds,
   });
+}
+
+async function runAgentDocsMigration(targetDir: string, write: boolean): Promise<void> {
+  if (!write) {
+    const plan = await migrateAgentDocs(targetDir, { dryRun: true });
+    infoMessage(`${pc.green('DRY RUN.')} ${pc.white('Planned changes for:')}\n${pc.cyan(targetDir)}`);
+    for (const line of plan.applied) {
+      clack.log.info(`- ${line}`);
+    }
+    for (const line of plan.skipped) {
+      clack.log.info(`${pc.dim(`- skip: ${line}`)}`);
+    }
+    infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n\n`);
+    return;
+  }
+
+  if (isAgentDocsAlreadyMigrated(targetDir)) {
+    infoMessage('AI agent docs already in canonical structure. No changes needed.');
+    return;
+  }
+
+  const spin = spinner();
+  spin.start('Migrating AI agent docs...');
+  const result = await migrateAgentDocs(targetDir, { dryRun: false });
+  spin.stop('Done');
+
+  if (result.errors.length > 0) {
+    for (const err of result.errors) errorMessage(err);
+  }
+  if (result.applied.length > 0) {
+    successUpdatedMessage(`Updated ${result.applied.length} item(s)`);
+  } else {
+    infoMessage('Nothing to change.');
+  }
 }
 
 async function migrateSingleTarget(params: {
