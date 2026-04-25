@@ -43,9 +43,12 @@ export const ESLINT_PACKAGES_TO_REMOVE = [
   '@eslint/js',
   '@finografic/eslint-config',
   '@stylistic/eslint-plugin',
+  '@stylistic/stylelint-plugin',
   '@typescript-eslint/parser',
   '@typescript-eslint/eslint-plugin',
   'typescript-eslint',
+  'globals',
+  'eslint-plugin-simple-import-sort',
 ] as const;
 
 /** Legacy formatter config files to delete when migrating away. */

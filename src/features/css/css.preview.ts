@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileExists, sortedRecord } from 'utils';
+import { sortedRecord } from '@finografic/cli-kit/package-manager';
+import { fileExists } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 

@@ -12,8 +12,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@finografic/cli-kit':
-        specifier: ^0.2.2
-        version: 0.2.2
+        specifier: ^1.1.1
+        version: 1.1.1
       '@finografic/core':
         specifier: ^0.9.2
         version: 0.9.2
@@ -380,11 +380,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@finografic/cli-kit@0.2.2':
-    resolution: {integrity: sha512-uEuGJlKD+3P6x5G8yrBJ5rdi9UO2pwSvym1ar7fYuTucWpBaIuzus/QcmzYWGNLW+bftWo/xmT+YikLW2TM8XA==, tarball: https://npm.pkg.github.com/download/@finografic/cli-kit/0.2.2/c6ccfc6a3db6a4b504965b1215eeb1ebc83166b2}
-
-  '@finografic/cli-kit@1.0.1':
-    resolution: {integrity: sha512-aP7fYRWhqp83z/VzR1sPAUzF6hFQACSdFTzlpA1tcNwQDgGLKwuM/BE4L4MNtca7fv72XycKC1CQp7oK+s8WpQ==, tarball: https://npm.pkg.github.com/download/@finografic/cli-kit/1.0.1/230991f3422ece6bddb0ea76309a1fe2fbbe35a2}
+  '@finografic/cli-kit@1.1.1':
+    resolution: {integrity: sha512-4SDTGTp4txzUA9k4XnhurdElUmzYjnWlXWn8ASUHY/itVLyxaYK6HA4oxl5yQ7aXzf4wKlP9h3WlrDtE6zaI3A==, tarball: https://npm.pkg.github.com/download/@finografic/cli-kit/1.1.1/83d92a6b78dbbb43a95b5b8579f81cc6e9c087ce}
 
   '@finografic/core@0.9.2':
     resolution: {integrity: sha512-pvery4Vsi8WNprrD1FDq7pEl4VnTfkuUURK+VF/x7XSWc0RCunQKQwxbpo8tn0/7LG12D1TOQUTm61hoi9TjQw==, tarball: https://npm.pkg.github.com/download/@finografic/core/0.9.2/1c2a1033b2d6a4adc5ae33abd5abdb392daf0707}
@@ -2582,15 +2579,7 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@finografic/cli-kit@0.2.2':
-    dependencies:
-      '@clack/core': 1.2.0
-      '@clack/prompts': 1.2.0
-      diff: 8.0.4
-      jsonc-parser: 3.3.1
-      picocolors: 1.1.1
-
-  '@finografic/cli-kit@1.0.1':
+  '@finografic/cli-kit@1.1.1':
     dependencies:
       '@clack/core': 1.2.0
       '@clack/prompts': 1.2.0
@@ -2605,7 +2594,7 @@ snapshots:
 
   '@finografic/deps-policy@0.15.2':
     dependencies:
-      '@finografic/cli-kit': 1.0.1
+      '@finografic/cli-kit': 1.1.1
       strip-ansi: 7.2.0
 
   '@finografic/md-lint@0.8.0':

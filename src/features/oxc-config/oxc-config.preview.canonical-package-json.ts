@@ -1,3 +1,4 @@
+import { sortedRecord } from '@finografic/cli-kit/package-manager';
 import { formatting, linting } from '@finografic/deps-policy';
 
 import {
@@ -145,7 +146,7 @@ function ensureOxcToolchainDevDependencies(packageJson: PackageJson): PackageJso
   }
 
   if (!changed) return packageJson;
-  return { ...packageJson, devDependencies: dev };
+  return { ...packageJson, devDependencies: sortedRecord(dev) };
 }
 
 function findNextScriptsSectionDividerIndex(keys: string[], sectionKeyIndex: number): number {
