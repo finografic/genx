@@ -21,6 +21,7 @@ import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
+
 import type { ManagedTarget } from 'types/managed.types';
 
 /**
@@ -60,7 +61,6 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
       const message = error instanceof Error ? error.message : 'Unable to read managed config';
       errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
       process.exit(1);
-      return;
     }
 
     if (managedTargets.length === 0) {
@@ -71,7 +71,6 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
     const selectedFeatureIds = await promptFeatures(flow);
     if (!selectedFeatureIds) {
       process.exit(0);
-      return;
     }
 
     let appliedCount = 0;
@@ -88,7 +87,6 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
 
         if (action === null) {
           process.exit(0);
-          return;
         }
 
         if (action === 'skip') {
@@ -112,14 +110,12 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
     process.exit(1);
-    return;
   }
 
   // 2. Prompt for features
   const selectedFeatureIds = await promptFeatures(flow);
   if (!selectedFeatureIds) {
     process.exit(0);
-    return;
   }
 
   // 3. Apply selected features
@@ -132,7 +128,6 @@ async function applyFeaturesToTarget(targetDir: string, selectedFeatureIds: Feat
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
     process.exit(1);
-    return;
   }
 
   const appliedFeatures: FeatureId[] = [];
@@ -156,7 +151,6 @@ async function applyFeaturesToTarget(targetDir: string, selectedFeatureIds: Feat
     const result = await feature.apply({ targetDir });
     if (result.error) {
       process.exit(1);
-      return;
     }
 
     if (result.applied.length > 0) {

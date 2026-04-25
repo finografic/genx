@@ -1,11 +1,10 @@
 #!/usr/bin/env tsx
 /**
- * Scan immediate subdirectories of the current working directory for git repos whose
- * package.json `name` starts with `@finografic/`. Prints `{ "managed": [...] }` as prettified JSON.
+ * Scan immediate subdirectories of the current working directory for git repos whose package.json `name`
+ * starts with `@finografic/`. Prints `{ "managed": [...] }` as prettified JSON.
  *
- * Usage (from the directory that contains sibling repos, e.g. `~/repos-finografic`):
- *   pnpm list:managed-repos
- *   npx tsx --tsconfig tsconfig.scripts.json scripts/list-managed-repos.ts
+ * Usage (from the directory that contains sibling repos, e.g. `~/repos-finografic`): pnpm list:managed-repos
+ * npx tsx --tsconfig tsconfig.scripts.json scripts/list-managed-repos.ts
  */
 
 import { existsSync } from 'node:fs';

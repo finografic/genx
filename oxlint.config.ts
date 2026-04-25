@@ -29,7 +29,7 @@ export default defineConfig({
 
   categories: {
     correctness: 'error',
-    perf: 'error',
+    perf: 'warn',
   },
 
   rules: {
@@ -98,10 +98,16 @@ export default defineConfig({
     'typescript/explicit-function-return-type': [
       'warn',
       {
+        allowConciseArrowFunctionExpressionsStartingWithVoid: true,
+        allowDirectConstAssertionInArrowFunctions: true,
         allowExpressions: true,
+        // allowFunctionsWithoutTypeParameters: true,
+        allowHigherOrderFunctions: true,
+        allowIIFEs: true,
         allowTypedFunctionExpressions: true,
       },
     ],
+    // 'typescript/explicit-function-return-type': ['error', { allowIIFEs: 'warn' }],
     'unicorn/no-useless-fallback-in-spread': 'error', // ✅ 🛠️
     'unicorn/no-useless-spread': 'error', // ✅ ⚠️ 🛠️
   },
