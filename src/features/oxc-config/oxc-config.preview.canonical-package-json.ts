@@ -1,4 +1,4 @@
-import { policy } from '@finografic/deps-policy';
+import { formatting, linting } from '@finografic/deps-policy';
 
 import {
   PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION,
@@ -128,20 +128,19 @@ function removeEslintPackages(packageJson: PackageJson): PackageJson {
 }
 
 function ensureOxcToolchainDevDependencies(packageJson: PackageJson): PackageJson {
-  const policyDev = policy.base.devDependencies as Record<string, string> | undefined;
   const dev = { ...(packageJson.devDependencies as Record<string, string> | undefined) };
   let changed = false;
 
-  if (!dev[OXFMT_CLI_PACKAGE] && policyDev?.['oxfmt']) {
-    dev[OXFMT_CLI_PACKAGE] = policyDev['oxfmt'];
+  if (!dev[OXFMT_CLI_PACKAGE] && formatting['oxfmt']) {
+    dev[OXFMT_CLI_PACKAGE] = formatting['oxfmt'];
     changed = true;
   }
-  if (!dev[OXC_CONFIG_PACKAGE] && policyDev?.['@finografic/oxc-config']) {
-    dev[OXC_CONFIG_PACKAGE] = policyDev['@finografic/oxc-config'];
+  if (!dev[OXC_CONFIG_PACKAGE] && linting['@finografic/oxc-config']) {
+    dev[OXC_CONFIG_PACKAGE] = linting['@finografic/oxc-config'];
     changed = true;
   }
-  if (!dev[OXLINT_PACKAGE] && policyDev?.['oxlint']) {
-    dev[OXLINT_PACKAGE] = policyDev['oxlint'];
+  if (!dev[OXLINT_PACKAGE] && linting['oxlint']) {
+    dev[OXLINT_PACKAGE] = linting['oxlint'];
     changed = true;
   }
 
