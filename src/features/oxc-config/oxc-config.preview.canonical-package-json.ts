@@ -13,8 +13,11 @@ import {
   ESLINT_PACKAGES_TO_REMOVE,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
+  LINTING_SCRIPTS,
+  LINTING_SECTION_TITLE,
   LEGACY_OXFMT_CONFIG_PACKAGE,
   LEGACY_OXFMT_UPDATE_SCRIPT_KEY,
+  LEGACY_UPDATE_SCRIPTS_TO_REMOVE,
   OXC_CONFIG_PACKAGE,
   OXFMT_CLI_PACKAGE,
   OXFMT_LINT_STAGED_CODE_PATTERN,
@@ -25,6 +28,7 @@ import {
   OXFMT_UPDATE_SCRIPT,
   OXLINT_LINT_STAGED_COMMAND,
   OXLINT_PACKAGE,
+  OXLINT_TSGOLINT_PACKAGE,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
   SIMPLE_IMPORT_SORT_PACKAGE,
@@ -142,6 +146,10 @@ function ensureOxcToolchainDevDependencies(packageJson: PackageJson): PackageJso
   }
   if (!dev[OXLINT_PACKAGE] && linting['oxlint']) {
     dev[OXLINT_PACKAGE] = linting['oxlint'];
+    changed = true;
+  }
+  if (!dev[OXLINT_TSGOLINT_PACKAGE] && linting['oxlint-tsgolint']) {
+    dev[OXLINT_TSGOLINT_PACKAGE] = linting['oxlint-tsgolint'];
     changed = true;
   }
 
@@ -326,6 +334,43 @@ function reorderLintStagedKeys(
   return next;
 }
 
+function ensureLintingScriptsPure(packageJson: PackageJson): PackageJson {
+  const scripts = { ...packageJson.scripts };
+  const keys = Object.keys(scripts);
+  let changed = false;
+
+  for (const [key, value] of Object.entries(LINTING_SCRIPTS)) {
+    if (scripts[key] !== value) {
+      scripts[key] = value;
+      changed = true;
+    }
+  }
+
+  if (!changed) return packageJson;
+
+  // Ensure lint scripts appear under the LINTING section title, before FORMATTING
+  const lintingKeys = Object.keys(LINTING_SCRIPTS);
+  const withoutLinting = keys.filter((k) => !lintingKeys.includes(k));
+  const titleIdx = withoutLinting.indexOf(LINTING_SECTION_TITLE);
+  const fmtTitleIdx = withoutLinting.indexOf(FORMATTING_SECTION_TITLE);
+
+  const insertAfter =
+    titleIdx !== -1 ? titleIdx : fmtTitleIdx !== -1 ? fmtTitleIdx - 1 : withoutLinting.length - 1;
+
+  const newKeys = [
+    ...withoutLinting.slice(0, insertAfter + 1),
+    ...lintingKeys,
+    ...withoutLinting.slice(insertAfter + 1),
+  ];
+
+  const next: Record<string, string> = {};
+  for (const k of newKeys) {
+    next[k] = k in LINTING_SCRIPTS ? LINTING_SCRIPTS[k as keyof typeof LINTING_SCRIPTS] : scripts[k]!;
+  }
+
+  return { ...packageJson, scripts: next };
+}
+
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
   return 'format' in scripts || 'format:check' in scripts;
 }
@@ -491,9 +536,23 @@ function addOxfmtToLintStagedPure(packageJson: PackageJson): PackageJson {
   return { ...packageJson, 'lint-staged': reordered as Record<string, string[]> };
 }
 
+function removeLegacyUpdateScriptsPure(packageJson: PackageJson): PackageJson {
+  const scripts = packageJson.scripts as Record<string, string> | undefined;
+  if (!scripts) return packageJson;
+  const hasAny = LEGACY_UPDATE_SCRIPTS_TO_REMOVE.some((k) => k in scripts);
+  if (!hasAny) return packageJson;
+  const next = { ...scripts };
+  for (const k of LEGACY_UPDATE_SCRIPTS_TO_REMOVE) {
+    delete next[k];
+  }
+  return { ...packageJson, scripts: next };
+}
+
 function applyOxfmtPackageJsonLayoutTransforms(packageJson: PackageJson): PackageJson {
   let pkg: PackageJson = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
 
+  pkg = removeLegacyUpdateScriptsPure(pkg);
+  pkg = ensureLintingScriptsPure(pkg);
   pkg = addFormattingScriptsPure(pkg);
   pkg = ensureFormattingScriptsPlacementPure(pkg);
   pkg = addUpdateScriptPure(pkg);

@@ -13,6 +13,9 @@ export const OXFMT_CLI_PACKAGE = 'oxfmt';
 /** Oxlint CLI */
 export const OXLINT_PACKAGE = 'oxlint';
 
+/** Oxlint TypeScript type-checking rules */
+export const OXLINT_TSGOLINT_PACKAGE = 'oxlint-tsgolint';
+
 /** VSCode extension for oxfmt via Oxc */
 export const OXFMT_VSCODE_EXTENSIONS = ['oxc.oxc-vscode'] as const;
 
@@ -74,6 +77,13 @@ export const PRETTIER_CONFIG_FILES = [
   'prettier.config.ts',
 ] as const;
 
+export const LINTING_SECTION_TITLE = '·········· LINTING';
+export const LINTING_SCRIPTS = {
+  'lint': 'oxlint -c oxlint.config.ts',
+  'lint:fix': 'oxlint -c oxlint.config.ts --fix',
+  'lint:ci': 'oxlint -c oxlint.config.ts --quiet',
+};
+
 export const FORMATTING_SECTION_TITLE = '·········· FORMATTING';
 export const FORMATTING_SCRIPTS = {
   'format:check': 'oxfmt --check',
@@ -86,8 +96,9 @@ export const OXFMT_UPDATE_SCRIPT = {
     'pnpm update @finografic/oxc-config --latest && pnpm update oxfmt --latest && pnpm update oxlint --latest',
 };
 
-// DEPRECATED: Old update script key — removed when canonicalizing scripts.
+// DEPRECATED: Old update script keys — removed when canonicalizing scripts.
 export const LEGACY_OXFMT_UPDATE_SCRIPT_KEY = 'update:oxfmt-config' as const;
+export const LEGACY_UPDATE_SCRIPTS_TO_REMOVE = ['update:oxfmt-config', 'update:eslint-config'] as const;
 
 export const OXFMT_LINT_STAGED_COMMAND = 'oxfmt --no-error-on-unmatched-pattern';
 export const OXLINT_LINT_STAGED_COMMAND = 'oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern';
@@ -98,6 +109,7 @@ export const OXFMT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,yml,yaml,toml}';
 
 /** CI workflow format check step (appended to ci.yml) */
 export const OXFMT_CI_STEP = `
+
       - name: Format check
         run: pnpm format:check
 `;
