@@ -52,7 +52,7 @@ export interface AgentDocsMigrationResult {
 
 /** True when the `.ai/` folder still exists (needs Step 1 migration). */
 export function needsAiFolderMigration(targetDir: string): boolean {
-  return fs.existsSync(path.join(targetDir, '.ai'));
+  return fs.existsSync(path.join(targetDir, LEGACY_AI_FOLDER));
 }
 
 /** True when the target already uses the canonical agent-docs layout (both steps done). */
@@ -68,7 +68,10 @@ export function isAgentDocsAlreadyMigrated(targetDir: string): boolean {
 
 // ── step 1: .ai → .agents folder migration ───────────────────────────────────
 
-/** Files and glob patterns to scan for `.ai/` path references. */
+// DEPRECATED: .ai/ was the original agent folder name; .agents/ is canonical.
+const LEGACY_AI_FOLDER = '.ai';
+
+/** Files to scan for `.ai/` path references when renaming the folder. */
 const AI_REF_FILES = [
   '.gitignore',
   'CLAUDE.md',
@@ -89,7 +92,7 @@ function replaceAiRefsInFile(filePath: string, result: AgentDocsMigrationResult)
 }
 
 function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): void {
-  const aiDir = path.join(targetDir, '.ai');
+  const aiDir = path.join(targetDir, LEGACY_AI_FOLDER);
   const agentsDir = path.join(targetDir, '.agents');
 
   if (!fs.existsSync(aiDir)) {
@@ -694,7 +697,7 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
   const result: AgentDocsMigrationResult = { applied: [], skipped: [], errors: [] };
 
   // Step 1 plan
-  if (fs.existsSync(path.join(targetDir, '.ai'))) {
+  if (fs.existsSync(path.join(targetDir, LEGACY_AI_FOLDER))) {
     result.applied.push('.ai/ → .agents/ (rename folder)');
     const filesToCheck = [...AI_REF_FILES, '.github/instructions/project/*.md'];
     result.applied.push(`update .ai/ references in: ${filesToCheck.join(', ')}`);
