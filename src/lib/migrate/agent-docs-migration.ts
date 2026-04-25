@@ -79,8 +79,8 @@ const AGENTS_GITIGNORE_ENTRIES = ['.agents/', '!.agents/handoff.md'] as const;
 function replaceAiRefsInFile(filePath: string, result: AgentDocsMigrationResult): void {
   if (!fs.existsSync(filePath)) return;
   const content = fs.readFileSync(filePath, 'utf8');
-  // Replace .ai/ path segment. Matches: start of line, or preceded by ` " ' ( space , newline
-  const updated = content.replace(/(?<=[`"'(\s,\n])\.ai\//g, '.agents/').replace(/^\.ai\//gm, '.agents/');
+  // Simple global replace: in these agent files .ai/ exclusively refers to the legacy folder.
+  const updated = content.replace(/\.ai\//g, '.agents/');
   if (updated !== content) {
     fs.writeFileSync(filePath, updated, 'utf8');
     result.applied.push(`${path.relative(process.cwd(), filePath)}: .ai/ → .agents/`);
