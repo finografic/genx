@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { fileExists, parseJsoncObject, readExtensionsJson } from 'utils';
 import type {
   FeaturePreviewChange,
@@ -8,6 +9,7 @@ import type {
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
+import { findPackageRoot } from 'utils/package-root.utils';
 import { VSCODE_MARKDOWN_TAIL_KEYS } from 'utils/vscode-jsonc.utils.js';
 
 import {
@@ -81,14 +83,14 @@ export function packageJsonManifestDependencyFieldsChanged(currentRaw: string, p
 }
 
 function proposeCiYmlContent(current: string): string {
-  if (
-    current.includes('oxfmt --check') ||
-    current.includes('pnpm format:check') ||
-    current.includes('format:check')
-  ) {
-    return current;
+  let s = current;
+  // Replace bare `pnpm lint` with `pnpm lint:ci` (not followed by : or a word char)
+  s = s.replace(/run: pnpm lint(?![:\w])/g, 'run: pnpm lint:ci');
+  // Append format:check step if not already present
+  if (!s.includes('format:check')) {
+    s = `${s.trimEnd()}${OXFMT_CI_STEP}`;
   }
-  return `${current.trimEnd()}${OXFMT_CI_STEP}`;
+  return s;
 }
 
 async function computeCanonicalExtensionsFileContent(targetDir: string): Promise<string> {
@@ -146,6 +148,7 @@ async function computeCanonicalSettingsFileContent(targetDir: string): Promise<s
 }
 
 const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
+const OXLINT_CONFIG_FILENAME = 'oxlint.config.ts';
 
 /**
  * Preview files and package metadata owned by `applyOxfmt` so detection matches apply breadth.
@@ -188,6 +191,20 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     changes.push(createWritePreviewChange(configPath, currentConfig, canonicalConfig, OXFMT_CONFIG_FILENAME));
   } else {
     applied.push(OXFMT_CONFIG_FILENAME);
+  }
+
+  // oxlint.config.ts — copy from _templates/ if missing
+  const oxlintConfigPath = resolve(targetDir, OXLINT_CONFIG_FILENAME);
+  if (!fileExists(oxlintConfigPath)) {
+    const fromDir = fileURLToPath(new URL('.', import.meta.url));
+    const pkgRoot = findPackageRoot(fromDir);
+    const templatePath = resolve(pkgRoot, '_templates', OXLINT_CONFIG_FILENAME);
+    if (fileExists(templatePath)) {
+      const templateContent = await readFile(templatePath, 'utf8');
+      changes.push(createWritePreviewChange(oxlintConfigPath, '', templateContent, OXLINT_CONFIG_FILENAME));
+    }
+  } else {
+    applied.push(OXLINT_CONFIG_FILENAME);
   }
 
   for (const file of PRETTIER_CONFIG_FILES) {
