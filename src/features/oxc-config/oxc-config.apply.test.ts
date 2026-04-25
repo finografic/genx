@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PACKAGE_JSON } from 'config/constants.config';
 
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
-import { applyOxfmt } from './oxfmt.apply.js';
-import { previewOxfmt } from './oxfmt.preview.js';
+import { applyOxcConfig } from './oxc-config.apply.js';
+import { previewOxcConfig } from './oxc-config.preview.js';
 
-vi.mock('./oxfmt.preview.js', () => ({
-  previewOxfmt: vi.fn(),
+vi.mock('./oxc-config.preview.js', () => ({
+  previewOxcConfig: vi.fn(),
 }));
 
 vi.mock('../../lib/feature-preview/index.js', () => ({
@@ -25,7 +25,7 @@ vi.mock('utils', () => ({
   spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
 }));
 
-const previewOxfmtMock = vi.mocked(previewOxfmt);
+const previewOxcConfigMock = vi.mocked(previewOxcConfig);
 const applyPreviewChangesMock = vi.mocked(applyPreviewChanges);
 const execaMock = vi.mocked(execa);
 
@@ -40,32 +40,32 @@ describe('oxfmt.apply — preview-driven apply', () => {
       applied: [],
       noopMessage: 'ok',
     };
-    previewOxfmtMock.mockResolvedValue(preview);
+    previewOxcConfigMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({ applied: [], noopMessage: 'ok' });
 
-    await applyOxfmt({ targetDir: '/tmp/x' });
+    await applyOxcConfig({ targetDir: '/tmp/x' });
 
-    expect(previewOxfmtMock).toHaveBeenCalledTimes(1);
-    expect(previewOxfmtMock).toHaveBeenCalledWith({ targetDir: '/tmp/x' });
+    expect(previewOxcConfigMock).toHaveBeenCalledTimes(1);
+    expect(previewOxcConfigMock).toHaveBeenCalledWith({ targetDir: '/tmp/x' });
     expect(applyPreviewChangesMock).toHaveBeenCalledTimes(1);
     expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview);
   });
 
   it('returns noop when preview apply reports nothing written', async () => {
-    previewOxfmtMock.mockResolvedValue({
+    previewOxcConfigMock.mockResolvedValue({
       changes: [],
       applied: [],
       noopMessage: 'already ok',
     });
     applyPreviewChangesMock.mockResolvedValue({ applied: [], noopMessage: 'already ok' });
 
-    const result = await applyOxfmt({ targetDir: '/tmp/x' });
+    const result = await applyOxcConfig({ targetDir: '/tmp/x' });
     expect(result).toEqual({ applied: [], noopMessage: 'already ok' });
     expect(execaMock).not.toHaveBeenCalled();
   });
 
   it('returns noop when all preview writes were skipped', async () => {
-    previewOxfmtMock.mockResolvedValue({
+    previewOxcConfigMock.mockResolvedValue({
       changes: [
         {
           kind: 'write',
@@ -81,7 +81,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
       noopMessage: 'All changes were skipped.',
     });
 
-    const result = await applyOxfmt({ targetDir: '/tmp/x' });
+    const result = await applyOxcConfig({ targetDir: '/tmp/x' });
     expect(result.noopMessage).toBe('All changes were skipped.');
     expect(execaMock).not.toHaveBeenCalled();
   });
@@ -94,14 +94,14 @@ describe('oxfmt.apply — preview-driven apply', () => {
       applied: [],
       needsInstall: true as const,
     };
-    previewOxfmtMock.mockResolvedValue(preview);
+    previewOxcConfigMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({
       applied: ['label with no manifest substring'],
       appliedTargetPaths: [packageJsonPath],
     });
     execaMock.mockResolvedValue({} as never);
 
-    const result = await applyOxfmt({ targetDir });
+    const result = await applyOxcConfig({ targetDir });
 
     expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview);
     expect(execaMock).toHaveBeenCalledWith('pnpm', ['install'], { cwd: targetDir });
@@ -116,13 +116,13 @@ describe('oxfmt.apply — preview-driven apply', () => {
       applied: [],
       needsInstall: true as const,
     };
-    previewOxfmtMock.mockResolvedValue(preview);
+    previewOxcConfigMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({
       applied: ['remove eslint.config.ts (replaced by oxlint)'],
       appliedTargetPaths: [resolve(targetDir, 'eslint.config.ts')],
     });
 
-    const result = await applyOxfmt({ targetDir });
+    const result = await applyOxcConfig({ targetDir });
     expect(execaMock).not.toHaveBeenCalled();
     expect(result.applied).toEqual(['remove eslint.config.ts (replaced by oxlint)']);
   });

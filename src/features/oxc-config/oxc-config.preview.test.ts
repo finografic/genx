@@ -11,9 +11,9 @@ import {
   getChangedPreviewChanges,
   hasPreviewChanges,
 } from '../../lib/feature-preview/feature-preview.utils.js';
-import { OXFMT_UPDATE_SCRIPT } from './oxfmt.constants.js';
-import { computeCanonicalOxfmtPackageJson, previewOxfmt } from './oxfmt.preview.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
+import { OXFMT_UPDATE_SCRIPT } from './oxc-config.constants.js';
+import { computeCanonicalOxfmtPackageJson, previewOxcConfig } from './oxc-config.preview.js';
+import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -22,7 +22,7 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 /** Apply write preview proposals until stable — builds an aligned tree for detection tests. */
 async function convergePreviewWrites(targetDir: string, maxIterations = 8): Promise<void> {
   for (let i = 0; i < maxIterations; i++) {
-    const preview = await previewOxfmt({ targetDir });
+    const preview = await previewOxcConfig({ targetDir });
     const changed = getChangedPreviewChanges(preview.changes);
     if (changed.length === 0) return;
 
@@ -53,7 +53,7 @@ describe('oxfmt.preview — package.json drift', () => {
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
     await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
 
-    const preview = await previewOxfmt({ targetDir: dir });
+    const preview = await previewOxcConfig({ targetDir: dir });
     const changed = getChangedPreviewChanges(preview.changes);
     const pkgChange = changed.find(
       (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('package.json'),
@@ -74,7 +74,7 @@ describe('oxfmt.preview — package.json drift', () => {
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(canonical), 'utf8');
     await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
 
-    const preview = await previewOxfmt({ targetDir: dir });
+    const preview = await previewOxcConfig({ targetDir: dir });
     const changed = getChangedPreviewChanges(preview.changes);
     const pkgJsonChanges = changed.filter((c) => c.kind === 'write' && c.path.endsWith('package.json'));
     expect(pkgJsonChanges).toHaveLength(0);
@@ -99,7 +99,7 @@ describe('oxfmt.preview — non-package.json drift', () => {
     const wfPath = resolve(dir, '.github/workflows/ci.yml');
     await writeFile(wfPath, `jobs:\n  x:\n    steps:\n      - run: pnpm dprint check\n`, 'utf8');
 
-    const preview = await previewOxfmt({ targetDir: dir });
+    const preview = await previewOxcConfig({ targetDir: dir });
     const changed = getChangedPreviewChanges(preview.changes);
     const wfChange = changed.find(
       (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('ci.yml'),
@@ -126,7 +126,7 @@ describe('oxfmt.preview — Prettier config removal', () => {
     await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
     await writeFile(resolve(dir, '.prettierrc'), '{}\n', 'utf8');
 
-    const preview = await previewOxfmt({ targetDir: dir });
+    const preview = await previewOxcConfig({ targetDir: dir });
     const prettierChange = getChangedPreviewChanges(preview.changes).find(
       (c) => c.kind === 'delete' && c.path.endsWith('.prettierrc'),
     );
@@ -154,7 +154,7 @@ describe('oxfmt.preview — converge + detection alignment', () => {
 
     await convergePreviewWrites(dir);
 
-    const finalPreview = await previewOxfmt({ targetDir: dir });
+    const finalPreview = await previewOxcConfig({ targetDir: dir });
     expect(hasPreviewChanges(finalPreview)).toBe(false);
   });
 });
@@ -174,7 +174,7 @@ describe('oxfmt.preview — needsInstall', () => {
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(drifted), 'utf8');
     await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
 
-    const preview = await previewOxfmt({ targetDir: dir });
+    const preview = await previewOxcConfig({ targetDir: dir });
     expect(
       getChangedPreviewChanges(preview.changes).some(
         (c) => c.kind === 'write' && c.path.endsWith('package.json'),
@@ -193,7 +193,7 @@ describe('oxfmt.preview — needsInstall', () => {
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
     await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
 
-    const preview = await previewOxfmt({ targetDir: dir });
+    const preview = await previewOxcConfig({ targetDir: dir });
     expect(preview.needsInstall).toBe(true);
   });
 });

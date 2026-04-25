@@ -2,7 +2,7 @@ export const MIGRATE_ONLY_SECTIONS = [
   'package-json',
   'hooks',
   'nvmrc',
-  'oxfmt',
+  'oxc-config',
   'workflows',
   'docs',
   'dependencies',

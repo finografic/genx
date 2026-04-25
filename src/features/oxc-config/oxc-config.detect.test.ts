@@ -7,9 +7,9 @@ import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
 
 import { getChangedPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
-import { detectOxfmt } from './oxfmt.detect.js';
-import { computeCanonicalOxfmtPackageJson, previewOxfmt } from './oxfmt.preview.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
+import { detectOxcConfig } from './oxc-config.detect.js';
+import { computeCanonicalOxfmtPackageJson, previewOxcConfig } from './oxc-config.preview.js';
+import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -18,7 +18,7 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 /** Apply write preview proposals until stable (same idea as oxfmt.preview tests). */
 async function convergePreviewWrites(targetDir: string, maxIterations = 8): Promise<void> {
   for (let i = 0; i < maxIterations; i++) {
-    const preview = await previewOxfmt({ targetDir });
+    const preview = await previewOxcConfig({ targetDir });
     const changed = getChangedPreviewChanges(preview.changes);
     if (changed.length === 0) return;
 
@@ -31,7 +31,7 @@ async function convergePreviewWrites(targetDir: string, maxIterations = 8): Prom
   }
 }
 
-describe('detectOxfmt', () => {
+describe('detectOxcConfig', () => {
   it('returns false when preview finds non-package drift (e.g. workflow still uses dprint)', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-detect-false-'));
     const base: PackageJson = {
@@ -52,7 +52,7 @@ describe('detectOxfmt', () => {
       'utf8',
     );
 
-    await expect(detectOxfmt({ targetDir: dir })).resolves.toBe(false);
+    await expect(detectOxcConfig({ targetDir: dir })).resolves.toBe(false);
   });
 
   it('returns true after the tree converges to canonical oxfmt preview outputs', async () => {
@@ -71,6 +71,6 @@ describe('detectOxfmt', () => {
 
     await convergePreviewWrites(dir);
 
-    await expect(detectOxfmt({ targetDir: dir })).resolves.toBe(true);
+    await expect(detectOxcConfig({ targetDir: dir })).resolves.toBe(true);
   });
 });

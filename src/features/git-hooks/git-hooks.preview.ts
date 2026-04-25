@@ -9,13 +9,15 @@ import {
   reorderGitHookTailKeys,
   stripInlinedCommitlintFromPackageJson,
 } from 'lib/migrate/package-json.utils';
+
 import { COMMITLINT_CONFIG, PACKAGE_JSON, PKG_SIMPLE_GIT_HOOKS } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import {
   createDeletePreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
-import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
+import { packageJsonManifestDependencyFieldsChanged } from '../oxc-config/oxc-config.preview.js';
 import {
   GIT_HOOKS_PACKAGES,
   HUSKY_COMMIT_MSG_CONTENT,

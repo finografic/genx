@@ -6,14 +6,16 @@ import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-pre
 import type { FeatureContext } from '../feature.types';
 
 import { findPackageRoot } from 'utils/package-root.utils';
+
 import {
   PACKAGE_JSON,
   PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER,
   PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
 } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
+
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
-import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
+import { packageJsonManifestDependencyFieldsChanged } from '../oxc-config/oxc-config.preview.js';
 import {
   TEST_SCRIPTS,
   TESTING_SECTION_TITLE,

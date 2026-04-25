@@ -13,7 +13,7 @@ import type {
   FeaturePreviewResult,
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
-import type { OxfmtLanguageCategory } from './oxfmt.constants.js';
+import type { OxfmtLanguageCategory } from './oxc-config.constants.js';
 
 import {
   ensureMarkdownlintConfigAndStylesAtEnd,
@@ -45,12 +45,12 @@ import {
   OXFMT_LANGUAGE_CATEGORIES,
   OXFMT_VSCODE_EXTENSIONS,
   PRETTIER_CONFIG_FILES,
-} from './oxfmt.constants.js';
-import { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxfmt.template.js';
-import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxfmt.workflows.js';
+} from './oxc-config.constants.js';
+import { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
+import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
+import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxc-config.workflows.js';
 
-export { computeCanonicalOxfmtPackageJson } from './oxfmt.preview.canonical-package-json.js';
+export { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 
 const DPRINT_VSCODE_EXT_ID = 'dprint.dprint';
 
@@ -192,7 +192,7 @@ const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
 /**
  * Preview files and package metadata owned by `applyOxfmt` so detection matches apply breadth.
  */
-export async function previewOxfmt(context: FeatureContext): Promise<FeaturePreviewResult> {
+export async function previewOxcConfig(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
   const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
   const configPath = resolve(targetDir, OXFMT_CONFIG_FILENAME);

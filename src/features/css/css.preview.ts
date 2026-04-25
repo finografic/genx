@@ -11,7 +11,7 @@ import {
   createDeletePreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
-import { packageJsonManifestDependencyFieldsChanged } from '../oxfmt/oxfmt.preview.js';
+import { packageJsonManifestDependencyFieldsChanged } from '../oxc-config/oxc-config.preview.js';
 import {
   LEGACY_STYLELINTRC_FILENAME,
   OXFMT_CONFIG_FILENAME,

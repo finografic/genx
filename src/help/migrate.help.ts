@@ -21,7 +21,7 @@ export const migrateHelp: HelpConfig = {
       },
       {
         label: 'Only update specific sections',
-        description: 'genx migrate --only=package-json,oxfmt --write',
+        description: 'genx migrate --only=package-json,oxc-config --write',
       },
       {
         label: 'Update dependencies and Node version',

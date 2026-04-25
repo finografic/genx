@@ -27,8 +27,8 @@ import {
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
   SIMPLE_IMPORT_SORT_PACKAGE,
-} from './oxfmt.constants.js';
-import { stripDprintFromLintStaged, stripDprintFromScripts } from './oxfmt.dprint-cleanup.js';
+} from './oxc-config.constants.js';
+import { stripDprintFromLintStaged, stripDprintFromScripts } from './oxc-config.dprint-cleanup.js';
 
 function patternToRegex(pattern: string): RegExp {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');

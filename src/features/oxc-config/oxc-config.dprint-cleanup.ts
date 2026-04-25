@@ -13,7 +13,8 @@ import {
 
 import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
-import { DPRINT_CONFIG_FILES, DPRINT_PACKAGES, OXFMT_FORMATTER_ID } from './oxfmt.constants';
+
+import { DPRINT_CONFIG_FILES, DPRINT_PACKAGES, OXFMT_FORMATTER_ID } from './oxc-config.constants';
 
 const DPRINT_EXT_ID = 'dprint.dprint';
 

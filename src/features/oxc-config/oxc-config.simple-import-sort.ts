@@ -3,11 +3,12 @@ import { resolve } from 'node:path';
 import { fileExists } from 'utils';
 
 import { ESLINT_CONFIG_FILES } from 'config/constants.config';
-import { SIMPLE_IMPORT_SORT_PACKAGE } from './oxfmt.constants';
+
+import { SIMPLE_IMPORT_SORT_PACKAGE } from './oxc-config.constants';
 
 /**
- * Strip `eslint-plugin-simple-import-sort` usage from an ESLint flat-config file body.
- * Import sort is handled by oxfmt; keeping the plugin causes duplicate/conflicting concerns.
+ * Strip `eslint-plugin-simple-import-sort` usage from an ESLint flat-config file body. Import sort is handled
+ * by oxfmt; keeping the plugin causes duplicate/conflicting concerns.
  */
 export function stripSimpleImportSortFromEslintConfigContent(content: string): string {
   let s = content;
@@ -34,8 +35,8 @@ export function stripSimpleImportSortFromEslintConfigContent(content: string): s
 }
 
 /**
- * Apply {@link stripSimpleImportSortFromEslintConfigContent} to the first existing
- * `eslint.config.*` under `targetDir` that references simple-import-sort.
+ * Apply {@link stripSimpleImportSortFromEslintConfigContent} to the first existing `eslint.config.*` under
+ * `targetDir` that references simple-import-sort.
  */
 export async function stripSimpleImportSortFromEslintConfig(targetDir: string): Promise<boolean> {
   let changed = false;
