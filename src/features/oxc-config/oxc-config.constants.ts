@@ -22,7 +22,11 @@ export const OXFMT_VSCODE_EXTENSIONS = ['oxc.oxc-vscode'] as const;
 export const OXFMT_FORMATTER_ID = 'oxc.oxc-vscode';
 
 // DEPRECATED: legacy VSCode extensions removed when migrating to oxc-config.
-export const LEGACY_VSCODE_EXTENSIONS_TO_REMOVE = ['dprint.dprint', 'dbaeumer.vscode-eslint'] as const;
+export const LEGACY_VSCODE_EXTENSIONS_TO_REMOVE = [
+  'dprint.dprint',
+  'dbaeumer.vscode-eslint',
+  'stylelint.vscode-stylelint',
+] as const;
 
 /**
  * Exact Prettier-related package names to uninstall when replacing with oxfmt.
@@ -43,7 +47,7 @@ export const SIMPLE_IMPORT_SORT_PACKAGE = 'eslint-plugin-simple-import-sort' as 
 // DEPRECATED: @finografic/oxfmt-config replaced by @finografic/oxc-config. Kept for removal.
 export const LEGACY_OXFMT_CONFIG_PACKAGE = '@finografic/oxfmt-config' as const;
 
-// DEPRECATED: ESLint stack replaced by oxlint. Kept for removal during oxc-config migration.
+// DEPRECATED: ESLint/stylelint stack replaced by oxlint/oxfmt. Kept for removal during migration.
 export const ESLINT_PACKAGES_TO_REMOVE = [
   'eslint',
   '@eslint/js',
@@ -55,6 +59,20 @@ export const ESLINT_PACKAGES_TO_REMOVE = [
   'typescript-eslint',
   'globals',
   'eslint-plugin-simple-import-sort',
+  // DEPRECATED: stylelint replaced by oxfmt for CSS formatting.
+  'stylelint',
+] as const;
+
+/** Stylelint config files to delete when migrating to oxfmt CSS formatting. */
+export const STYLELINT_CONFIG_FILES = [
+  'stylelint.config.ts',
+  'stylelint.config.js',
+  'stylelint.config.mjs',
+  '.stylelintrc',
+  '.stylelintrc.json',
+  '.stylelintrc.js',
+  '.stylelintrc.yml',
+  '.stylelintrc.yaml',
 ] as const;
 
 /** Legacy formatter config files to delete when migrating away. */

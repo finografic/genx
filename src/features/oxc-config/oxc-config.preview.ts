@@ -31,6 +31,7 @@ import {
   OXFMT_FORMATTER_ID,
   OXFMT_VSCODE_EXTENSIONS,
   PRETTIER_CONFIG_FILES,
+  STYLELINT_CONFIG_FILES,
 } from './oxc-config.constants.js';
 import { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
@@ -201,6 +202,13 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     if (!fileExists(abs)) continue;
     const body = await readFile(abs, 'utf8');
     changes.push(createDeletePreviewChange(abs, body, true, `remove legacy ${file}`));
+  }
+
+  for (const file of STYLELINT_CONFIG_FILES) {
+    const abs = resolve(targetDir, file);
+    if (!fileExists(abs)) continue;
+    const body = await readFile(abs, 'utf8');
+    changes.push(createDeletePreviewChange(abs, body, true, `remove ${file} (replaced by oxfmt)`));
   }
 
   const ciAbs = resolve(targetDir, CI_WORKFLOW_REL);
