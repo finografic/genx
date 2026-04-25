@@ -150,6 +150,9 @@ function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): v
     replaceAiRefsInFile(path.join(targetDir, rel), result);
   }
 
+  // Scan agent-written files inside .agents/ — agents may have written .ai/ paths
+  replaceAiRefsInFile(path.join(targetDir, '.agents/handoff.md'), result);
+
   // Also scan .github/instructions/project/ markdown files
   const projectInst = path.join(targetDir, '.github/instructions/project');
   if (fs.existsSync(projectInst)) {
