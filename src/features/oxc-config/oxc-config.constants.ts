@@ -21,6 +21,9 @@ export const OXFMT_VSCODE_EXTENSIONS = ['oxc.oxc-vscode'] as const;
 
 export const OXFMT_FORMATTER_ID = 'oxc.oxc-vscode';
 
+// DEPRECATED: legacy VSCode extensions removed when migrating to oxc-config.
+export const LEGACY_VSCODE_EXTENSIONS_TO_REMOVE = ['dprint.dprint', 'dbaeumer.vscode-eslint'] as const;
+
 /**
  * Exact Prettier-related package names to uninstall when replacing with oxfmt.
  */
@@ -114,33 +117,18 @@ export const OXFMT_CI_STEP = `
         run: pnpm format:check
 `;
 
-/**
- * Language categories for oxfmt VSCode settings (oxc formatter).
- */
-export const OXFMT_LANGUAGE_CATEGORIES = {
-  DEFAULT: ['javascript', 'json', 'jsonc'] as const,
-  TYPESCRIPT: ['typescript'] as const,
-  REACT: ['typescriptreact', 'javascriptreact', 'css', 'scss', 'html'] as const,
-  MARKDOWN: ['markdown'] as const,
-  DATA: ['yaml', 'toml'] as const,
-} as const;
-
-export type OxfmtLanguageCategory = keyof typeof OXFMT_LANGUAGE_CATEGORIES;
-
-export const OXFMT_CATEGORY_DEPENDENCIES: Record<OxfmtLanguageCategory, string[] | null> = {
-  DEFAULT: null,
-  TYPESCRIPT: ['typescript'],
-  REACT: ['react', 'react-dom', 'preact', 'solid-js', 'vue'],
-  MARKDOWN: null,
-  DATA: null,
-};
-
-// DEPRECATED: oxfmt replaces these ESLint stylistic rules entirely. Kept only as a reference;
-// the oxc-config feature now deletes eslint.config.* rather than cleaning individual rules.
-export const OXFMT_COVERED_STYLISTIC_RULES = [
-  '@stylistic/semi',
-  '@stylistic/quotes',
-  '@stylistic/comma-dangle',
-  '@stylistic/no-trailing-spaces',
-  '@stylistic/no-multiple-empty-lines',
-];
+/** Canonical ordered list of languages that get oxc.oxc-vscode as their default formatter. */
+export const CANONICAL_VSCODE_LANGUAGES = [
+  'javascript',
+  'typescript',
+  'javascriptreact',
+  'typescriptreact',
+  'json',
+  'jsonc',
+  'yaml',
+  'toml',
+  'css',
+  'scss',
+  'html',
+  'markdown',
+] as const;

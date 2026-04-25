@@ -1,9 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { fileExists } from 'utils';
-
-const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
-
 export const OXFMT_CONFIG_BODY = `import {
   AGENT_DOC_MARKDOWN_PATHS,
   agentMarkdown,
@@ -36,29 +30,7 @@ export default defineConfig({
 } satisfies OxfmtConfig);
 `;
 
-/** File contents written by {@link ensureOxfmtConfig} — used by preview/detection. */
+/** Canonical `oxfmt.config.ts` body — used by preview and detection. */
 export function getOxfmtConfigCanonicalFileContent(): string {
   return `${OXFMT_CONFIG_BODY}\n`;
-}
-
-export interface EnsureOxfmtConfigOptions {
-  force?: boolean;
-}
-
-/**
- * Ensure `oxfmt.config.ts` exists in the target directory (aligned with repo `_templates/`; CSS/SCSS override
- * is NOT included — the **css** feature adds it when applied).
- */
-export async function ensureOxfmtConfig(
-  targetDir: string,
-  options: EnsureOxfmtConfigOptions = {},
-): Promise<{ wrote: boolean; path: string }> {
-  const path = join(targetDir, OXFMT_CONFIG_FILENAME);
-
-  if (!options.force && fileExists(path)) {
-    return { wrote: false, path };
-  }
-
-  await writeFile(path, getOxfmtConfigCanonicalFileContent(), 'utf8');
-  return { wrote: true, path };
 }

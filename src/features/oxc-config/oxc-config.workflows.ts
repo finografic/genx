@@ -1,7 +1,3 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { fileExists } from 'utils';
-
 /** Default workflows that may reference legacy `dprint` format checks. */
 export const OXFMT_GITHUB_WORKFLOW_PATHS = [
   '.github/workflows/ci.yml',
@@ -26,22 +22,4 @@ export function scrubDprintFromWorkflowContent(content: string): { content: stri
   s = s.replace(/^(\s*run:\s*)[^\n]*\bdprint\b[^\n]*$/gm, '$1pnpm format:check');
 
   return { content: s, changed: s !== content };
-}
-
-export async function scrubDprintFromGithubWorkflows(targetDir: string): Promise<{ applied: string[] }> {
-  const applied: string[] = [];
-
-  for (const rel of OXFMT_GITHUB_WORKFLOW_PATHS) {
-    const abs = resolve(targetDir, rel);
-    if (!fileExists(abs)) continue;
-
-    const raw = await readFile(abs, 'utf8');
-    const { content, changed } = scrubDprintFromWorkflowContent(raw);
-    if (changed) {
-      await writeFile(abs, content, 'utf8');
-      applied.push(`${rel} (replaced dprint → pnpm format:check)`);
-    }
-  }
-
-  return { applied };
 }

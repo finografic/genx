@@ -8,6 +8,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import type { VSCodeExtensionsJson, VSCodeSettingsJson } from 'types/vscode.types';
+
 import { fileExists } from './fs.utils';
 import { parseJsoncObject } from './jsonc.utils';
 import {
@@ -19,18 +20,22 @@ import {
 /** Base template for .vscode/extensions.json */
 const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
   recommendations: [],
-  unwantedRecommendations: [],
 };
 
 /** Base template for .vscode/settings.json */
 export const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'npm.packageManager': 'pnpm',
   'editor.formatOnSave': true,
-  'editor.codeActionsOnSave': { 'source.fixAll.eslint': 'explicit' },
-  'eslint.enable': true,
-  'eslint.useFlatConfig': true,
+  'editor.formatOnSaveMode': 'file',
+  'editor.defaultFormatter': 'oxc.oxc-vscode',
+  'editor.codeActionsOnSave': { 'source.fixAll.oxc': 'explicit', 'source.organizeImports': 'explicit' },
+  'eslint.enable': false,
   'eslint.validate': ['javascript', 'typescript'],
+  'prettier.enable': false,
+  'oxc.typeAware': true,
+  'oxc.lint.run': 'onSave',
   'typescript.tsdk': 'node_modules/typescript/lib',
+  'typescript.preferences.preferTypeOnlyAutoImports': true,
 };
 
 /**
@@ -61,13 +66,15 @@ export async function readExtensionsJson(targetDir: string): Promise<VSCodeExten
 export async function writeExtensionsJson(targetDir: string, content: VSCodeExtensionsJson): Promise<void> {
   await ensureVSCodeDir(targetDir);
   const filePath = resolve(targetDir, '.vscode', 'extensions.json');
-  const formatted = `${JSON.stringify(content, null, 2)}\n`;
+  // DEPRECATED: unwantedRecommendations — remove the field on every write.
+  const { unwantedRecommendations: _removed, ...rest } = content;
+  const formatted = `${JSON.stringify(rest, null, 2)}\n`;
   await writeFile(filePath, formatted, 'utf8');
 }
 
 /**
- * Add extension recommendations to .vscode/extensions.json.
- * Returns the list of extensions that were actually added (not already present).
+ * Add extension recommendations to .vscode/extensions.json. Returns the list of extensions that were actually
+ * added (not already present).
  */
 export async function addExtensionRecommendations(
   targetDir: string,
@@ -118,6 +125,7 @@ export async function writeSettingsJson(targetDir: string, content: VSCodeSettin
 
 /**
  * Add language-specific formatter settings to .vscode/settings.json.
+ *
  * @param targetDir - Target directory
  * @param languages - Array of language IDs (e.g., "typescript", "javascript")
  * @param formatterId - VSCode formatter ID (e.g., "oxc.oxc-vscode")

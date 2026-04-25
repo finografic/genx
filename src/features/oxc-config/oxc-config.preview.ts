@@ -1,28 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import {
-  BASE_SETTINGS_JSON,
-  fileExists,
-  hasAnyDependency,
-  parseJsoncObject,
-  readExtensionsJson,
-} from 'utils';
+import { fileExists, parseJsoncObject, readExtensionsJson } from 'utils';
 import type {
   FeaturePreviewChange,
   FeaturePreviewChangeWrite,
   FeaturePreviewResult,
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
-import type { OxfmtLanguageCategory } from './oxc-config.constants.js';
 
-import {
-  ensureMarkdownlintConfigAndStylesAtEnd,
-  ensureOxfmtSharedSettingsBeforePrettier,
-  removeRootKeysWithPrefix,
-  replaceDprintLanguageFormatters,
-  setLanguageFormatterBlock,
-  setRootPropertyJsonc,
-} from 'utils/vscode-jsonc.utils.js';
+import { VSCODE_MARKDOWN_TAIL_KEYS } from 'utils/vscode-jsonc.utils.js';
 
 import {
   ESLINT_CONFIG_FILES,
@@ -38,11 +24,11 @@ import {
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
+  CANONICAL_VSCODE_LANGUAGES,
   DPRINT_CONFIG_FILES,
-  OXFMT_CATEGORY_DEPENDENCIES,
+  LEGACY_VSCODE_EXTENSIONS_TO_REMOVE,
   OXFMT_CI_STEP,
   OXFMT_FORMATTER_ID,
-  OXFMT_LANGUAGE_CATEGORIES,
   OXFMT_VSCODE_EXTENSIONS,
   PRETTIER_CONFIG_FILES,
 } from './oxc-config.constants.js';
@@ -51,8 +37,6 @@ import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
 import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxc-config.workflows.js';
 
 export { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
-
-const DPRINT_VSCODE_EXT_ID = 'dprint.dprint';
 
 const CI_WORKFLOW_REL = '.github/workflows/ci.yml';
 
@@ -106,85 +90,58 @@ function proposeCiYmlContent(current: string): string {
   return `${current.trimEnd()}${OXFMT_CI_STEP}`;
 }
 
-async function getOxfmtLanguagesForPreview(targetDir: string): Promise<string[]> {
-  const enabledCategories: OxfmtLanguageCategory[] = [];
-
-  for (const [category, dependencies] of Object.entries(OXFMT_CATEGORY_DEPENDENCIES)) {
-    const categoryKey = category as OxfmtLanguageCategory;
-
-    if (dependencies === null) {
-      enabledCategories.push(categoryKey);
-      continue;
-    }
-
-    if (await hasAnyDependency(targetDir, dependencies)) {
-      enabledCategories.push(categoryKey);
-    }
-  }
-
-  const languages: string[] = [];
-  for (const category of enabledCategories) {
-    for (const lang of OXFMT_LANGUAGE_CATEGORIES[category]) {
-      if (!languages.includes(lang)) {
-        languages.push(lang);
-      }
-    }
-  }
-
-  return languages;
-}
-
 async function computeCanonicalExtensionsFileContent(targetDir: string): Promise<string> {
   const content = await readExtensionsJson(targetDir);
-  const recommendations = [...(content.recommendations ?? [])].filter((id) => id !== DPRINT_VSCODE_EXT_ID);
+  const recommendations = [...(content.recommendations ?? [])].filter(
+    (id) =>
+      !LEGACY_VSCODE_EXTENSIONS_TO_REMOVE.includes(id as (typeof LEGACY_VSCODE_EXTENSIONS_TO_REMOVE)[number]),
+  );
   for (const ext of OXFMT_VSCODE_EXTENSIONS) {
     if (!recommendations.includes(ext)) {
       recommendations.push(ext);
     }
   }
-  const merged = [...new Set([...(content.unwantedRecommendations ?? []), 'esbenp.prettier-vscode'])].sort();
-  const next = { ...content, recommendations, unwantedRecommendations: merged };
+  // DEPRECATED: unwantedRecommendations — remove the field if present.
+  const { unwantedRecommendations: _removed, ...rest } = content;
+  const next = { ...rest, recommendations };
   return `${JSON.stringify(next, null, 2)}\n`;
 }
 
 async function computeCanonicalSettingsFileContent(targetDir: string): Promise<string> {
-  const languages = await getOxfmtLanguagesForPreview(targetDir);
   const filePath = resolve(targetDir, VSCODE_DIR, VSCODE_SETTINGS_JSON);
 
-  let text: string;
-  if (!fileExists(filePath)) {
-    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
-  } else {
-    text = await readFile(filePath, 'utf8');
+  // Canonical top block
+  const settings: Record<string, unknown> = {
+    'npm.packageManager': 'pnpm',
+    'editor.formatOnSave': true,
+    'editor.formatOnSaveMode': 'file',
+    'editor.defaultFormatter': OXFMT_FORMATTER_ID,
+    'editor.codeActionsOnSave': { 'source.fixAll.oxc': 'explicit', 'source.organizeImports': 'explicit' },
+    'eslint.enable': false,
+    'eslint.validate': ['javascript', 'typescript'],
+    'prettier.enable': false,
+    'oxc.typeAware': true,
+    'oxc.lint.run': 'onSave',
+    'typescript.tsdk': 'node_modules/typescript/lib',
+    'typescript.preferences.preferTypeOnlyAutoImports': true,
+  };
+
+  // Canonical language blocks — all unconditional; markdown gets extra formatOnSave
+  for (const lang of CANONICAL_VSCODE_LANGUAGES) {
+    const block: Record<string, unknown> = { 'editor.defaultFormatter': OXFMT_FORMATTER_ID };
+    if (lang === 'markdown') block['editor.formatOnSave'] = true;
+    settings[`[${lang}]`] = block;
   }
 
-  let t = text;
-  let r = removeRootKeysWithPrefix(t, 'dprint.');
-  t = r.text;
-  r = replaceDprintLanguageFormatters(t, OXFMT_FORMATTER_ID);
-  t = r.text;
-  let tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) t = tail.text;
-
-  const root0 = parseJsoncObject(t) as Record<string, unknown>;
-  if (root0['prettier.enable'] !== false) {
-    t = setRootPropertyJsonc(t, 'prettier.enable', false);
+  // Preserve tail keys (markdownlint.config, markdown.styles) from the existing file
+  if (fileExists(filePath)) {
+    const existing = parseJsoncObject(await readFile(filePath, 'utf8')) as Record<string, unknown>;
+    for (const tailKey of VSCODE_MARKDOWN_TAIL_KEYS) {
+      if (tailKey in existing) settings[tailKey] = existing[tailKey];
+    }
   }
 
-  for (const lang of languages) {
-    const block = setLanguageFormatterBlock(t, lang, OXFMT_FORMATTER_ID);
-    if (block.changed) t = block.text;
-  }
-
-  tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) t = tail.text;
-
-  const shared = ensureOxfmtSharedSettingsBeforePrettier(t, OXFMT_FORMATTER_ID);
-  t = shared.text;
-  tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) t = tail.text;
-
-  return t;
+  return `${JSON.stringify(settings, null, 2)}\n`;
 }
 
 const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';

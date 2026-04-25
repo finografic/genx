@@ -177,8 +177,4 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
   };
 }
 
-const BASE_EXTENSIONS_JSON = `${JSON.stringify(
-  { recommendations: [], unwantedRecommendations: [] },
-  null,
-  2,
-)}\n`;
+const BASE_EXTENSIONS_JSON = `${JSON.stringify({ recommendations: [] }, null, 2)}\n`;

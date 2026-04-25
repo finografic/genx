@@ -69,28 +69,24 @@ export function proposeCssCombinedSettingsText(startText: string): {
   return proposeCssOxfmtFormatterText(startText);
 }
 
-const BASE_EXTENSIONS_TEXT = `${JSON.stringify(
-  { recommendations: [], unwantedRecommendations: [] } satisfies VSCodeExtensionsJson,
-  null,
-  2,
-)}\n`;
+const BASE_EXTENSIONS_TEXT = `${JSON.stringify({ recommendations: [] } satisfies VSCodeExtensionsJson, null, 2)}\n`;
 
 /**
- * Remove stylelint extension from recommendations + add to unwanted — pure (for preview).
+ * Remove stylelint extension from recommendations — pure (for preview).
  */
 export function proposeCssExtensionsJsonText(currentRaw: string | undefined): {
   proposed: string;
   added: string[];
 } {
   const parsed = (
-    currentRaw ? parseJsoncObject(currentRaw) : { recommendations: [], unwantedRecommendations: [] }
+    currentRaw ? parseJsoncObject(currentRaw) : { recommendations: [] }
   ) as VSCodeExtensionsJson;
 
-  // DEPRECATED: remove stylelint extension from recommendations; add to unwanted.
-  const recommendations = (parsed.recommendations ?? []).filter((id) => id !== CSS_VSCODE_STYLELINT_EXT);
-  const unwanted = [...new Set([...(parsed.unwantedRecommendations ?? []), CSS_VSCODE_STYLELINT_EXT])].sort();
+  // Remove stylelint from recommendations. DEPRECATED: unwantedRecommendations — remove if present.
+  const { unwantedRecommendations: _removed, ...rest } = parsed;
+  const recommendations = (rest.recommendations ?? []).filter((id) => id !== CSS_VSCODE_STYLELINT_EXT);
 
-  const proposedObj: VSCodeExtensionsJson = { ...parsed, recommendations, unwantedRecommendations: unwanted };
+  const proposedObj: VSCodeExtensionsJson = { ...rest, recommendations };
   const proposed = `${JSON.stringify(proposedObj, null, 2)}\n`;
   const baseline = currentRaw ?? BASE_EXTENSIONS_TEXT;
 
