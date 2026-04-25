@@ -50,14 +50,86 @@ export interface AgentDocsMigrationResult {
   errors: string[];
 }
 
-/** True when the target already uses the canonical agent-docs layout. */
+/** True when the `.ai/` folder still exists (needs Step 1 migration). */
+export function needsAiFolderMigration(targetDir: string): boolean {
+  return fs.existsSync(path.join(targetDir, '.ai'));
+}
+
+/** True when the target already uses the canonical agent-docs layout (both steps done). */
 export function isAgentDocsAlreadyMigrated(targetDir: string): boolean {
+  if (needsAiFolderMigration(targetDir)) return false;
   const instDst = path.join(targetDir, '.github/instructions');
   const hasLayout = layoutPresent(instDst);
   const hasHandoff = !fs.existsSync(path.join(targetDir, '.claude/handoff.md'));
   const claudeMd = path.join(targetDir, 'CLAUDE.md');
   const claudeOk = !fs.existsSync(claudeMd) || fs.readFileSync(claudeMd, 'utf8').trim() === '@AGENTS.md';
   return hasLayout && hasHandoff && claudeOk;
+}
+
+// ── step 1: .ai → .agents folder migration ───────────────────────────────────
+
+/** Files and glob patterns to scan for `.ai/` path references. */
+const AI_REF_FILES = [
+  '.gitignore',
+  'CLAUDE.md',
+  'AGENTS.md',
+  'README.md',
+  '.github/copilot-instructions.md',
+] as const;
+
+function replaceAiRefsInFile(filePath: string, result: AgentDocsMigrationResult): void {
+  if (!fs.existsSync(filePath)) return;
+  const content = fs.readFileSync(filePath, 'utf8');
+  // Replace .ai/ path segment (folder references) but not things like "email@ai.com"
+  const updated = content.replace(/(?<=[`"'(\s,\n])\.ai\//g, '.agents/').replace(/^\.ai\//gm, '.agents/');
+  if (updated !== content) {
+    fs.writeFileSync(filePath, updated, 'utf8');
+    result.applied.push(`${path.relative(process.cwd(), filePath)}: .ai/ → .agents/`);
+  }
+}
+
+function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): void {
+  const aiDir = path.join(targetDir, '.ai');
+  const agentsDir = path.join(targetDir, '.agents');
+
+  if (!fs.existsSync(aiDir)) {
+    result.skipped.push('.ai/ not found — nothing to rename');
+    return;
+  }
+
+  // Rename .ai/ → .agents/ (merge if .agents already exists)
+  if (fs.existsSync(agentsDir)) {
+    // Move contents from .ai/ into existing .agents/ without overwriting
+    for (const entry of fs.readdirSync(aiDir)) {
+      const src = path.join(aiDir, entry);
+      const dst = path.join(agentsDir, entry);
+      if (!fs.existsSync(dst)) {
+        fs.renameSync(src, dst);
+        result.applied.push(`.ai/${entry} → .agents/${entry}`);
+      } else {
+        result.skipped.push(`.ai/${entry} skipped (already exists in .agents/)`);
+      }
+    }
+    fs.rmdirSync(aiDir);
+  } else {
+    fs.renameSync(aiDir, agentsDir);
+    result.applied.push('.ai/ → .agents/');
+  }
+
+  // Update all known reference files
+  for (const rel of AI_REF_FILES) {
+    replaceAiRefsInFile(path.join(targetDir, rel), result);
+  }
+
+  // Also scan .github/instructions/project/ markdown files
+  const projectInst = path.join(targetDir, '.github/instructions/project');
+  if (fs.existsSync(projectInst)) {
+    for (const f of fs.readdirSync(projectInst)) {
+      if (f.endsWith('.md')) {
+        replaceAiRefsInFile(path.join(projectInst, f), result);
+      }
+    }
+  }
 }
 
 // ── layout helpers ────────────────────────────────────────────────────────────
@@ -570,12 +642,21 @@ export async function migrateAgentDocs(
 ): Promise<AgentDocsMigrationResult> {
   const { dryRun = false } = options;
 
-  // In dry-run mode, collect what WOULD change without touching the filesystem.
   if (dryRun) {
     return planAgentDocsMigration(targetDir);
   }
 
   const result: AgentDocsMigrationResult = { applied: [], skipped: [], errors: [] };
+
+  // ── Step 1: .ai → .agents ─────────────────────────────────────────────────
+  migrateAiFolder(targetDir, result);
+
+  // ── Step 2: instructions layout + agent file patches ─────────────────────
+  // Skip if the structure is already canonical (Step 1 may have been the only thing needed).
+  if (isAgentDocsAlreadyMigrated(targetDir)) {
+    result.skipped.push('agent docs structure already canonical — Step 2 skipped');
+    return result;
+  }
 
   const instDst = path.join(targetDir, '.github/instructions');
 
@@ -584,7 +665,6 @@ export async function migrateAgentDocs(
   const pkgRoot = findPackageRoot(fromDir);
   const fallbackInstDir = path.join(pkgRoot, '_templates/.github/instructions');
 
-  // Instructions layout migration
   if (!fs.existsSync(instDst)) {
     result.skipped.push('.github/instructions not found');
   } else {
@@ -612,6 +692,24 @@ export async function migrateAgentDocs(
 /** Dry-run: report what migrateAgentDocs would do without writing anything. */
 function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
   const result: AgentDocsMigrationResult = { applied: [], skipped: [], errors: [] };
+
+  // Step 1 plan
+  if (fs.existsSync(path.join(targetDir, '.ai'))) {
+    result.applied.push('.ai/ → .agents/ (rename folder)');
+    const filesToCheck = [...AI_REF_FILES, '.github/instructions/project/*.md'];
+    result.applied.push(`update .ai/ references in: ${filesToCheck.join(', ')}`);
+  } else {
+    result.skipped.push('.ai/ not found — Step 1 skipped');
+  }
+
+  // Step 2 plan — skip if already canonical after Step 1
+  const wouldBeCanonical =
+    !fs.existsSync(path.join(targetDir, '.ai')) && isAgentDocsAlreadyMigrated(targetDir);
+  if (wouldBeCanonical) {
+    result.skipped.push('agent docs structure already canonical — Step 2 skipped');
+    return result;
+  }
+
   const instDst = path.join(targetDir, '.github/instructions');
 
   if (!fs.existsSync(instDst)) {
@@ -646,18 +744,21 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
     if (
       sectionHasOldPaths(lines, (h) => /rules.*global/i.test(h)) ||
       !hasSection(lines, (h) => /rules.*global/i.test(h))
-    )
-      {result.applied.push('AGENTS.md: update Rules — Global section');}
-    if (!hasSection(lines, (h) => /claude code/i.test(h)))
-      {result.applied.push('AGENTS.md: add Claude Code session section');}
+    ) {
+      result.applied.push('AGENTS.md: update Rules — Global section');
+    }
+    if (!hasSection(lines, (h) => /claude code/i.test(h))) {
+      result.applied.push('AGENTS.md: add Claude Code session section');
+    }
   }
 
   const copilot = path.join(targetDir, '.github/copilot-instructions.md');
   if (fs.existsSync(copilot)) {
     const lines = fs.readFileSync(copilot, 'utf8').split('\n');
     const isRules = (h: string): boolean => /rules?.*global/i.test(h) || /rule\s+files/i.test(h);
-    if (hasSection(lines, isRules) && sectionHasOldPaths(lines, isRules))
-      {result.applied.push('copilot-instructions.md: update Rules — Global section');}
+    if (hasSection(lines, isRules) && sectionHasOldPaths(lines, isRules)) {
+      result.applied.push('copilot-instructions.md: update Rules — Global section');
+    }
   }
 
   return result;
