@@ -1,11 +1,11 @@
 import { sortedRecord } from '@finografic/cli-kit/package-manager';
-import { formatting, linting } from '@finografic/deps-policy';
 
 import {
   PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION,
   PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER,
   PACKAGE_JSON_SCRIPTS_SECTION_PREFIX,
 } from 'config/constants.config';
+import { formatting, linting } from 'config/policy.js';
 import type { PackageJson } from 'types/package-json.types';
 
 import {

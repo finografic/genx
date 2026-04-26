@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createFlowContext } from '@finografic/cli-kit/flow';
 import { renderHelp } from '@finografic/cli-kit/render-help';
-import { policy } from '@finografic/deps-policy';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import { createHelp } from 'help/create.help';
@@ -28,6 +27,7 @@ import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
 
 import { createConfig } from 'config/create.config';
+import { policy } from 'config/policy.js';
 
 // NOTE: This command never prompts directly.
 // All user input is collected via promptCreatePackage().

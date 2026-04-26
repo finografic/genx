@@ -1,4 +1,4 @@
-import { policy } from '@finografic/deps-policy';
+import { policy } from 'config/policy.js';
 
 export const VITEST_PACKAGE = 'vitest';
 export const VITEST_PACKAGE_VERSION = policy.base.devDependencies?.['vitest'] ?? 'latest';

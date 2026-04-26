@@ -1,5 +1,4 @@
-import { policy } from '@finografic/deps-policy';
-
+import { policy } from 'config/policy.js';
 import type { DependencyRule } from 'types/dependencies.types';
 
 const dev = policy.base.devDependencies ?? {};
