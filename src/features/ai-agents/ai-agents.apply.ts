@@ -8,5 +8,5 @@ import { previewAiAgents } from './ai-agents.preview.js';
  */
 export async function applyAiAgents(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewAiAgents(context);
-  return applyPreviewChanges(preview);
+  return applyPreviewChanges(preview, { yesAll: context.yesAll });
 }

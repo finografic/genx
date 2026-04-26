@@ -4,6 +4,7 @@ import { errorMessage, spinner } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { PACKAGE_JSON } from 'config/constants.config';
+
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewVitest } from './vitest.preview.js';
 
@@ -12,7 +13,7 @@ import { previewVitest } from './vitest.preview.js';
  */
 export async function applyVitest(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewVitest(context);
-  const result = await applyPreviewChanges(preview);
+  const result = await applyPreviewChanges(preview, { yesAll: context.yesAll });
 
   if (result.applied.length === 0) {
     return result;

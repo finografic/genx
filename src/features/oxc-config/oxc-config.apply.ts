@@ -15,7 +15,7 @@ import { previewOxcConfig } from './oxc-config.preview.js';
  */
 export async function applyOxcConfig(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewOxcConfig(context);
-  const result = await applyPreviewChanges(preview);
+  const result = await applyPreviewChanges(preview, { yesAll: context.yesAll });
 
   if (result.applied.length === 0) {
     return result;

@@ -126,6 +126,7 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
 export async function applyFeaturesToTarget(
   targetDir: string,
   selectedFeatureIds: FeatureId[],
+  options?: { yesAll?: boolean },
 ): Promise<void> {
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
@@ -151,7 +152,7 @@ export async function applyFeaturesToTarget(
       }
     }
 
-    const result = await feature.apply({ targetDir });
+    const result = await feature.apply({ targetDir, yesAll: options?.yesAll });
     if (result.error) {
       process.exit(1);
     }

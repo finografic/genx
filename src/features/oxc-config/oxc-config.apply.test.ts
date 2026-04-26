@@ -48,7 +48,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
     expect(previewOxcConfigMock).toHaveBeenCalledTimes(1);
     expect(previewOxcConfigMock).toHaveBeenCalledWith({ targetDir: '/tmp/x' });
     expect(applyPreviewChangesMock).toHaveBeenCalledTimes(1);
-    expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview);
+    expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview, { yesAll: undefined });
   });
 
   it('returns noop when preview apply reports nothing written', async () => {
@@ -103,7 +103,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
 
     const result = await applyOxcConfig({ targetDir });
 
-    expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview);
+    expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview, { yesAll: undefined });
     expect(execaMock).toHaveBeenCalledWith('pnpm', ['install'], { cwd: targetDir });
     expect(result.applied).toEqual(['label with no manifest substring', 'dependencies (pnpm install)']);
     expect(result.appliedTargetPaths).toEqual([packageJsonPath]);

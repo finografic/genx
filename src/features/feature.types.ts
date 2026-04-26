@@ -18,6 +18,8 @@ export type FeatureId =
 export interface FeatureContext {
   /** Target directory where the feature will be applied */
   targetDir: string;
+  /** When true, skip per-file confirmation prompts and apply all changes immediately. */
+  yesAll?: boolean;
 }
 
 /**

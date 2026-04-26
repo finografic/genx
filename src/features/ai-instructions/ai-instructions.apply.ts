@@ -8,5 +8,5 @@ import { previewAiInstructions } from './ai-instructions.preview.js';
  */
 export async function applyAiInstructions(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewAiInstructions(context);
-  return applyPreviewChanges(preview);
+  return applyPreviewChanges(preview, { yesAll: context.yesAll });
 }

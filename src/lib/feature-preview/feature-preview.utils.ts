@@ -13,9 +13,9 @@ import type {
 } from './feature-preview.types.js';
 
 /**
- * Empty-file deletes cannot use `confirmFileWrite('', '')` (core skips as identical). Using a fake
- * proposed string yields a misleading diff. Instead, show an explicit deletion preview and reuse the
- * same yes / skip / yes-to-all prompt shape as `confirmFileWrite`.
+ * Empty-file deletes cannot use `confirmFileWrite('', '')` (core skips as identical). Using a fake proposed
+ * string yields a misleading diff. Instead, show an explicit deletion preview and reuse the same yes / skip /
+ * yes-to-all prompt shape as `confirmFileWrite`.
  */
 async function confirmEmptyFileDelete(filePath: string, state?: DiffConfirmState): Promise<DiffAction> {
   clack.log.message(`${pc.bold(pc.white(filePath))}\n${pc.red('- (empty file — will be deleted)')}`);
@@ -109,10 +109,13 @@ async function readUtf8(path: string): Promise<string> {
 }
 
 /**
- * Applies changed preview entries using the shared file-diff confirmation flow.
- * Reads current content from disk at apply time so the diff matches the workspace.
+ * Applies changed preview entries using the shared file-diff confirmation flow. Reads current content from
+ * disk at apply time so the diff matches the workspace.
  */
-export async function applyPreviewChanges(preview: FeaturePreviewResult): Promise<FeatureApplyResult> {
+export async function applyPreviewChanges(
+  preview: FeaturePreviewResult,
+  options?: { yesAll?: boolean },
+): Promise<FeatureApplyResult> {
   const changed = getChangedPreviewChanges(preview.changes);
   if (changed.length === 0) {
     return {
@@ -122,6 +125,7 @@ export async function applyPreviewChanges(preview: FeaturePreviewResult): Promis
   }
 
   const state = createDiffConfirmState();
+  if (options?.yesAll) state.yesAll = true;
   const applied: string[] = [];
   const appliedTargetPaths: string[] = [];
 

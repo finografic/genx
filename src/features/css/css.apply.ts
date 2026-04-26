@@ -4,16 +4,17 @@ import { errorMessage, spinner } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { PACKAGE_JSON } from 'config/constants.config';
+
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewCss } from './css.preview.js';
 
 /**
- * Apply CSS linting feature using `previewCss` + `applyPreviewChanges`, then `pnpm install`
- * when package.json dependency lists change.
+ * Apply CSS linting feature using `previewCss` + `applyPreviewChanges`, then `pnpm install` when package.json
+ * dependency lists change.
  */
 export async function applyCss(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewCss(context);
-  const result = await applyPreviewChanges(preview);
+  const result = await applyPreviewChanges(preview, { yesAll: context.yesAll });
 
   if (result.applied.length === 0) {
     return result;

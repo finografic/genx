@@ -52,13 +52,15 @@ export async function auditPackage(argv: string[], options: { targetDir: string 
     return;
   }
 
-  const selectedFeatureIds = await promptAuditSuggest(flow, actionable);
+  const selectedFeatureIds = flow.yesMode
+    ? actionable.map((e) => e.feature.id)
+    : await promptAuditSuggest(flow, actionable);
 
-  if (!selectedFeatureIds) {
+  if (!selectedFeatureIds || selectedFeatureIds.length === 0) {
     outro('No features selected');
     return;
   }
 
-  await applyFeaturesToTarget(targetDir, selectedFeatureIds);
+  await applyFeaturesToTarget(targetDir, selectedFeatureIds, { yesAll: flow.yesMode });
   outro('Audit complete');
 }
