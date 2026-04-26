@@ -5,7 +5,7 @@ import { defaultHelpOptions } from 'config/help.config';
 export const depsHelp: HelpConfig = {
   main: {
     bin: 'genx deps',
-    args: '[path] [options]',
+    args: '[path] [--update-policy] [options]',
   },
 
   examples: {
@@ -34,6 +34,10 @@ export const depsHelp: HelpConfig = {
       {
         label: 'Include policy downgrades (dry run)',
         description: 'genx deps --allow-downgrade',
+      },
+      {
+        label: 'Update deps-policy interactively (no dep sync)',
+        description: 'genx deps --update-policy',
       },
     ],
   },

@@ -24,7 +24,9 @@ import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.util
 import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
+import { runPolicyUpdate } from 'utils/policy-update.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
+
 import { dependencyRules } from 'config/dependencies.rules';
 import type { ManagedTarget } from 'types/managed.types';
 
@@ -81,9 +83,26 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
 
   const write = argv.includes('--write');
   const managed = hasManagedFlag(argv);
+  const updatePolicy = argv.includes('--update-policy');
   const yesMode = isYesMode(argv);
   const allowDowngrade = argv.includes('--allow-downgrade');
   const pathArg = getPathArg(argv);
+
+  if (updatePolicy && (managed || pathArg)) {
+    errorMessage('--update-policy cannot be combined with --managed or a path argument');
+    process.exit(1);
+  }
+
+  if (updatePolicy) {
+    const found = await runPolicyUpdate(false);
+    if (!found) {
+      errorMessage(
+        `depsPolicyPath not set in config.\nAdd it to ${pc.cyan(GENX_CONFIG_PATH)} to use --update-policy.`,
+      );
+      process.exit(1);
+    }
+    return;
+  }
 
   if (managed && pathArg) {
     errorMessage('Cannot combine [path] with --managed');
@@ -91,6 +110,8 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   }
 
   if (managed) {
+    // Silently update deps-policy first so the freshest versions are used for all targets.
+    await runPolicyUpdate(true);
     let managedTargets: ManagedTarget[];
     try {
       managedTargets = await readManagedTargets();
