@@ -123,7 +123,10 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
   outro('Feature run complete');
 }
 
-async function applyFeaturesToTarget(targetDir: string, selectedFeatureIds: FeatureId[]): Promise<void> {
+export async function applyFeaturesToTarget(
+  targetDir: string,
+  selectedFeatureIds: FeatureId[],
+): Promise<void> {
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');

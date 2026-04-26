@@ -15,6 +15,7 @@ export const cliHelp: HelpConfig = {
       { label: 'migrate', description: 'Sync conventions to an existing package' },
       { label: 'deps', description: 'Sync dependencies to @finografic/deps-policy' },
       { label: 'features', description: 'Add optional features to an existing package' },
+      { label: 'audit', description: 'Scan features and apply what is missing or partial' },
       { label: 'help', description: 'Show this help message' },
     ],
     options: {
@@ -48,6 +49,10 @@ export const cliHelp: HelpConfig = {
       {
         label: 'Add features to current directory',
         description: 'genx features',
+      },
+      {
+        label: 'Audit features and apply missing ones',
+        description: 'genx audit',
       },
       {
         label: 'Run a command across managed targets',

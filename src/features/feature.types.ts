@@ -45,6 +45,16 @@ export interface FeatureVSCodeConfig {
   extensions?: readonly string[];
 }
 
+/** Tri-state install status used by the audit command. */
+export type AuditStatus = 'installed' | 'partial' | 'missing';
+
+/** Result returned by a feature's `audit()` function. */
+export interface AuditResult {
+  status: AuditStatus;
+  /** Short hint shown in the audit prompt, e.g. "config out of date". */
+  detail?: string;
+}
+
 /**
  * Feature definition. Each feature must implement this interface.
  */
@@ -65,6 +75,12 @@ export interface Feature {
    * false otherwise.
    */
   detect?: (context: FeatureContext) => boolean | Promise<boolean>;
+
+  /**
+   * Optional tri-state audit function. Returns `installed`, `partial`, or `missing`. When omitted, the audit
+   * command falls back to `detect()` and maps the boolean to `installed | missing`.
+   */
+  audit?: (context: FeatureContext) => Promise<AuditResult>;
 
   /**
    * Apply the feature to the target directory. This is where the feature's side effects happen.

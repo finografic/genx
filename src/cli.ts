@@ -5,6 +5,7 @@ import process from 'node:process';
 import { renderHelp } from '@finografic/cli-kit/render-help';
 
 import { cliHelp } from './cli.help.js';
+import { auditPackage } from './commands/audit.cli.js';
 import { createPackage } from './commands/create.cli.js';
 import { syncDeps } from './commands/deps.cli.js';
 import { addFeatures } from './commands/features.cli.js';
@@ -64,6 +65,10 @@ async function main(): Promise<void> {
 
     'features': async (argv, context) => {
       await addFeatures(argv, { targetDir: context.cwd });
+    },
+
+    'audit': async (argv, context) => {
+      await auditPackage(argv, { targetDir: context.cwd });
     },
 
     'update-self': async () => {

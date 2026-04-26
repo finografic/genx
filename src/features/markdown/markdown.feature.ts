@@ -2,7 +2,7 @@ import type { Feature } from '../feature.types';
 
 import { applyMarkdown } from './markdown.apply';
 import { MARKDOWNLINT_VSCODE_EXTENSIONS } from './markdown.constants';
-import { detectMarkdown } from './markdown.detect';
+import { auditMarkdown, detectMarkdown } from './markdown.detect';
 
 /**
  * Markdown linting feature definition.
@@ -15,5 +15,6 @@ export const markdownFeature: Feature = {
     extensions: MARKDOWNLINT_VSCODE_EXTENSIONS,
   },
   detect: detectMarkdown,
+  audit: auditMarkdown,
   apply: applyMarkdown,
 };

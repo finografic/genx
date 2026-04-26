@@ -33,3 +33,20 @@ export function stripDprintFromScripts(scripts: Record<string, string>): boolean
   }
   return modified;
 }
+
+/** Exported for preview / detection — strips dprint sub-commands from simple-git-hooks values in place. */
+export function stripDprintFromSimpleGitHooks(hooks: Record<string, string>): boolean {
+  let modified = false;
+  for (const key of Object.keys(hooks)) {
+    const value = hooks[key];
+    if (typeof value === 'string' && value.includes('dprint')) {
+      const parts = value
+        .split('&&')
+        .map((p) => p.trim())
+        .filter((p) => !p.includes('dprint'));
+      hooks[key] = parts.join(' && ');
+      modified = true;
+    }
+  }
+  return modified;
+}

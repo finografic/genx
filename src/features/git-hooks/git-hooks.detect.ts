@@ -1,6 +1,9 @@
-import type { FeatureContext } from '../feature.types';
+import type { AuditResult, FeatureContext } from '../feature.types';
+
+import { PKG_LINT_STAGED } from 'config/constants.config';
 
 import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
+import { isDependencyDeclared } from '../../utils/package-manager.utils.js';
 import { previewGitHooks } from './git-hooks.preview.js';
 
 /**
@@ -18,4 +21,11 @@ export async function isGitHooksFullyConfigured(targetDir: string): Promise<bool
  */
 export async function detectGitHooks(context: FeatureContext): Promise<boolean> {
   return isGitHooksFullyConfigured(context.targetDir);
+}
+
+export async function auditGitHooks(context: FeatureContext): Promise<AuditResult> {
+  const installed = await isGitHooksFullyConfigured(context.targetDir);
+  if (installed) return { status: 'installed' };
+  const hasPkg = await isDependencyDeclared(context.targetDir, PKG_LINT_STAGED);
+  return hasPkg ? { status: 'partial', detail: 'hooks out of date' } : { status: 'missing' };
 }

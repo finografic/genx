@@ -33,7 +33,11 @@ import {
   PRETTIER_PACKAGES,
   SIMPLE_IMPORT_SORT_PACKAGE,
 } from './oxc-config.constants.js';
-import { stripDprintFromLintStaged, stripDprintFromScripts } from './oxc-config.dprint-cleanup.js';
+import {
+  stripDprintFromLintStaged,
+  stripDprintFromScripts,
+  stripDprintFromSimpleGitHooks,
+} from './oxc-config.dprint-cleanup.js';
 
 function patternToRegex(pattern: string): RegExp {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
@@ -107,6 +111,11 @@ function applyDprintPackageJsonCleanup(packageJson: PackageJson): PackageJson {
     const scripts = { ...next.scripts };
     stripDprintFromScripts(scripts);
     next.scripts = scripts;
+  }
+  if (next['simple-git-hooks'] && typeof next['simple-git-hooks'] === 'object') {
+    const hooks = { ...(next['simple-git-hooks'] as Record<string, string>) };
+    stripDprintFromSimpleGitHooks(hooks);
+    next['simple-git-hooks'] = hooks;
   }
   return next;
 }

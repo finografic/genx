@@ -58,6 +58,7 @@ export const ESLINT_PACKAGES_TO_REMOVE = [
   '@typescript-eslint/eslint-plugin',
   'typescript-eslint',
   'globals',
+  'eslint-plugin-markdownlint',
   'eslint-plugin-simple-import-sort',
   // DEPRECATED: stylelint replaced by oxfmt for CSS formatting.
   'stylelint',
