@@ -6,6 +6,8 @@ import { findPackageRoot } from 'utils/package-root.utils';
 
 // ── subfolder map ─────────────────────────────────────────────────────────────
 
+// DEPRECATED: flat numbered layout (e.g. 01-file-naming.instructions.md). Canonical layout uses
+// subdirectories (code/, naming/, documentation/, git/). FOLDER_MAP drives the migration rename.
 const FOLDER_MAP: Record<string, string> = {
   'typescript-patterns': 'code',
   'eslint-code-style': 'code',
@@ -167,6 +169,8 @@ function layoutPresent(instDir: string): boolean {
   return ['code', 'naming', 'documentation', 'git'].every((d) => fs.existsSync(path.join(instDir, d)));
 }
 
+// DEPRECATED: numbered flat files (e.g. 01-file-naming.instructions.md) at the root of
+// .github/instructions/. Detected and moved to subdirectories by migrateInPlace().
 function numberedFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   return fs
@@ -181,6 +185,8 @@ function stripNumPrefix(filename: string): string {
 
 // ── self-migration ────────────────────────────────────────────────────────────
 
+// DEPRECATED: migrates the old numbered flat layout to the canonical subdirectory layout.
+// After migration, ai-instructions feature apply handles ongoing sync and cleanup.
 function migrateInPlace(instDir: string, result: AgentDocsMigrationResult): void {
   for (const src of numberedFiles(instDir)) {
     const filename = path.basename(src);
