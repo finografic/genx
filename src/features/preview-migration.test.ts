@@ -206,7 +206,8 @@ describe('preview migration — drift vs canonical', () => {
     for (const f of AI_CLAUDE_FILES) {
       const p = join(root, f);
       await mkdir(dirname(p), { recursive: true });
-      await writeFile(p, 'ok\n');
+      // CLAUDE.md must have the canonical content; other files use a placeholder.
+      await writeFile(p, f === 'CLAUDE.md' ? '@AGENTS.md\n' : 'ok\n');
     }
     await mkdir(join(root, '.claude/assets'), { recursive: true });
     await writeFile(join(root, '.gitignore'), `.claude/\n!.claude/settings.json\n`);

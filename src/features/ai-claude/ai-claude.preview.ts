@@ -8,6 +8,7 @@ import type { FeatureContext } from '../feature.types';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
+
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { AI_INSTRUCTIONS_ESLINT_IGNORES } from '../ai-instructions/ai-instructions.constants';
 import { previewAiInstructions } from '../ai-instructions/ai-instructions.preview.js';
@@ -75,11 +76,15 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
     return applyTemplate(raw, vars);
   }
 
-  if (!fileExists(claudeDest)) {
-    const body = await templateBody(claudeFile, baseVars);
-    changes.push(createWritePreviewChange(claudeDest, '', body, claudeFile));
-  } else {
-    applied.push(claudeFile);
+  {
+    const canonical = await templateBody(claudeFile, baseVars);
+    const proposed = canonical.endsWith('\n') ? canonical : `${canonical}\n`;
+    const current = fileExists(claudeDest) ? await readFile(claudeDest, 'utf8') : '';
+    if (proposed !== current) {
+      changes.push(createWritePreviewChange(claudeDest, current, proposed, claudeFile));
+    } else {
+      applied.push(claudeFile);
+    }
   }
 
   if (!fileExists(memoryDest)) {
