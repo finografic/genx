@@ -30,6 +30,7 @@ export async function promptAuditSuggest(
     message: 'Features to apply (deselect to skip):',
     options,
     initialValues,
+    required: true,
   });
 
   return selected.length > 0 ? selected : null;
