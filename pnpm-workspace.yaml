@@ -1,4 +1,2 @@
 allowBuilds:
   esbuild: true
-overrides:
-  '@finografic/cli-kit': link:../@finografic-cli-kit
