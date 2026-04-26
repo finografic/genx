@@ -1,18 +1,20 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPnpm } from '@finografic/cli-kit/package-manager';
+import { createXdgPaths } from '@finografic/cli-kit/xdg';
 import * as clack from '@clack/prompts';
 import { execa } from 'execa';
 import pc from 'picocolors';
 import type { UpdateCache } from './self-update.types.js';
 
-import { GENX_CONFIG_DIR } from 'utils/managed.utils.js';
 import { findPackageRoot } from 'utils/package-root.utils.js';
+
+const xdg = createXdgPaths();
 
 const DEPS_POLICY_PKG = '@finografic/deps-policy';
 const DEPS_POLICY_REGISTRY = 'https://npm.pkg.github.com';
-const UPDATE_CACHE_PATH = join(GENX_CONFIG_DIR, 'update-cache.json');
+const UPDATE_CACHE_PATH = xdg.cachePath('genx');
 const CHECK_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function getGenxRoot(): string {
@@ -76,9 +78,8 @@ async function applyUpdate(genxRoot: string, latestVersion: string): Promise<voi
 }
 
 /**
- * Runs on every genx startup. Silently skips if the cache is still fresh.
- * When the check interval has elapsed, hits the registry and prompts if an
- * update is available.
+ * Runs on every genx startup. Silently skips if the cache is still fresh. When the check interval has
+ * elapsed, hits the registry and prompts if an update is available.
  */
 export async function runSelfUpdateCheck(): Promise<void> {
   const cache = await readCache();
@@ -117,8 +118,8 @@ export async function runSelfUpdateCheck(): Promise<void> {
 }
 
 /**
- * Explicit `genx update-self` command. Bypasses the cache and always checks
- * the registry, showing current vs latest.
+ * Explicit `genx update-self` command. Bypasses the cache and always checks the registry, showing current vs
+ * latest.
  */
 export async function runSelfUpdateForced(): Promise<void> {
   const spin = clack.spinner();

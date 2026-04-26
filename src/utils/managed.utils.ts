@@ -1,14 +1,22 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
-import { getConfigPath } from '@finografic/cli-kit/xdg';
+import { createXdgPaths } from '@finografic/cli-kit/xdg';
 import { z } from 'zod';
 
 import type { ManagedConfig, ManagedTarget } from 'types/managed.types';
+
 import { parseJsoncObject } from './jsonc.utils';
 
-export const GENX_CONFIG_DIR = getConfigPath('genx');
-/** File may be JSON or JSONC (line comments, block comments, trailing commas) despite the `.json` name. */
-export const GENX_CONFIG_PATH = join(GENX_CONFIG_DIR, 'config.jsonc');
+const xdg = createXdgPaths();
+
+export const GENX_CONFIG_PATH = xdg.configPath('genx');
+// ~/.config/finografic/genx.config.json
+
+/** Legacy path — kept so we can emit a one-time migration notice if needed. */
+export const GENX_CONFIG_PATH_LEGACY = join(
+  xdg.configDir().replace(/\/finografic$/, '/genx'),
+  'config.jsonc',
+);
 
 const managedTargetSchema = z.object({
   name: z.string().trim().min(1),
@@ -36,7 +44,14 @@ export function resolveTargetDir(cwd: string, pathArg?: string): string {
 }
 
 export async function readManagedConfig(): Promise<ManagedConfig> {
-  const raw = await readFile(GENX_CONFIG_PATH, 'utf8');
+  let raw: string;
+  try {
+    raw = await readFile(GENX_CONFIG_PATH, 'utf8');
+  } catch {
+    // One-time migration: fall back to the old ~/.config/genx/config.jsonc location
+    raw = await readFile(GENX_CONFIG_PATH_LEGACY, 'utf8');
+    console.warn(`[genx] Config found at legacy path. Move it to: ${GENX_CONFIG_PATH}`);
+  }
   const parsed = managedConfigSchema.parse(parseJsoncObject(raw)) satisfies ManagedConfig;
 
   return {
