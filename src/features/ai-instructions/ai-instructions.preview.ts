@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fileExists } from 'utils';
@@ -8,8 +8,13 @@ import type { FeatureContext } from '../feature.types';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
+
 import type { TemplateVars } from 'types/template.types';
-import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
+
+import {
+  createDeletePreviewChange,
+  createWritePreviewChange,
+} from '../../lib/feature-preview/feature-preview.utils.js';
 import { proposeEslintIgnorePatterns } from '../feature.utils';
 import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
 import {
@@ -58,7 +63,8 @@ async function collectInstructionTemplateFiles(
 }
 
 /**
- * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint ignores.
+ * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint
+ * ignores.
  */
 export async function previewAiInstructions(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
@@ -155,6 +161,26 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
       changes.push(createWritePreviewChange(eslintPath, eslintRaw, out, 'eslint.config.ts (.cursor ignore)'));
     } else {
       applied.push('eslint.config.ts (cursor ignore)');
+    }
+  }
+
+  // Delete legacy numbered flat files from the root of .github/instructions/ (e.g. 00-general.instructions.md).
+  // These were the old layout; the canonical layout uses subdirectories (code/, naming/, etc.).
+  if (fileExists(instructionsDestRoot)) {
+    const rootEntries = await readdir(instructionsDestRoot, { withFileTypes: true });
+    for (const entry of rootEntries) {
+      if (entry.isFile() && /^\d{2}-.*\.instructions\.md$/.test(entry.name)) {
+        const legacyPath = join(instructionsDestRoot, entry.name);
+        const legacyContent = await readFile(legacyPath, 'utf8');
+        changes.push(
+          createDeletePreviewChange(
+            legacyPath,
+            legacyContent,
+            true,
+            `.github/instructions/${entry.name} (legacy numbered file — replaced by subdirectory layout)`,
+          ),
+        );
+      }
     }
   }
 
