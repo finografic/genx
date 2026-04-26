@@ -3,6 +3,7 @@ import { copyFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path';
 
 import type { TemplateVars } from 'types/template.types';
+
 import { applyTemplate } from './template.utils';
 
 /**

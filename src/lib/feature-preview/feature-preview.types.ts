@@ -13,8 +13,8 @@ export interface FeaturePreviewChangeWrite {
 }
 
 /**
- * Whole-file delete preview: remove `path` when it exists.
- * Use `exists` to distinguish a missing path from an empty file (both may use `currentContent === ''`).
+ * Whole-file delete preview: remove `path` when it exists. Use `exists` to distinguish a missing path from an
+ * empty file (both may use `currentContent === ''`).
  */
 export interface FeaturePreviewChangeDelete {
   kind: 'delete';
@@ -28,8 +28,8 @@ export interface FeaturePreviewChangeDelete {
 export type FeaturePreviewChange = FeaturePreviewChangeWrite | FeaturePreviewChangeDelete;
 
 /**
- * Grouped preview for a feature before apply.
- * `applied` may list paths already satisfied while building the preview (optional context for callers).
+ * Grouped preview for a feature before apply. `applied` may list paths already satisfied while building the
+ * preview (optional context for callers).
  */
 export interface FeaturePreviewResult {
   changes: FeaturePreviewChange[];

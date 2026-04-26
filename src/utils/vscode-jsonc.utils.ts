@@ -31,7 +31,8 @@ export function setRootPropertyJsonc(text: string, key: string, value: unknown):
 }
 
 /**
- * Insert a root-level property before another key (e.g. before `prettier.enable`). If the key exists, updates in place.
+ * Insert a root-level property before another key (e.g. before `prettier.enable`). If the key exists, updates
+ * in place.
  */
 export function insertRootPropertyBefore(
   text: string,
@@ -74,8 +75,8 @@ function collectRootPropertySnippet(raw: string, key: string): string | undefine
 }
 
 /**
- * Move `markdownlint.config` and `markdown.styles` to the end of the root object (in that order),
- * preserving the exact source text of each property (including `//` comments inside `markdownlint.config`).
+ * Move `markdownlint.config` and `markdown.styles` to the end of the root object (in that order), preserving
+ * the exact source text of each property (including `//` comments inside `markdownlint.config`).
  */
 export function ensureMarkdownlintConfigAndStylesAtEnd(raw: string): { text: string; changed: boolean } {
   const before = raw;
@@ -175,7 +176,8 @@ export function removeRootKeysWithPrefix(raw: string, prefix: string): { text: s
 }
 
 /**
- * Set `editor.defaultFormatter` on a `[language]` block (`markdownlint.config` / `markdown.styles` are finalized separately via {@link ensureMarkdownlintConfigAndStylesAtEnd}).
+ * Set `editor.defaultFormatter` on a `[language]` block (`markdownlint.config` / `markdown.styles` are
+ * finalized separately via {@link ensureMarkdownlintConfigAndStylesAtEnd}).
  */
 export function setLanguageFormatterBlock(
   raw: string,

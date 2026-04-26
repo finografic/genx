@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { ensureKeyword } from 'lib/migrate/migrate-metadata.utils';
+
 import { migrateConfig } from 'config/migrate.config';
 import type { PackageJson } from 'types/package-json.types';
 
@@ -103,8 +104,8 @@ export async function writePackageJson(path: string, packageJson: PackageJson): 
 }
 
 /**
- * Read package.json, strip inlined `commitlint` if present, and write back when changed.
- * Used when migrate runs the hooks section without the package-json section (`--only=hooks`).
+ * Read package.json, strip inlined `commitlint` if present, and write back when changed. Used when migrate
+ * runs the hooks section without the package-json section (`--only=hooks`).
  */
 export async function stripCommitlintFromPackageJsonFile(packageJsonPath: string): Promise<boolean> {
   const packageJson = await readPackageJson(packageJsonPath);

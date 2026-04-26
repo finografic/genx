@@ -5,11 +5,11 @@ import type { MarkdownSection, ParsedMarkdown, SectionPosition } from './markdow
 /**
  * Parse a markdown file into a preamble and an ordered list of `##` sections.
  *
- * Splits on H2 (`## `) boundaries only. H3+ headings and `##`-like strings
- * inside fenced code blocks are preserved verbatim in the section body.
+ * Splits on H2 (`## `) boundaries only. H3+ headings and `##`-like strings inside fenced code blocks are
+ * preserved verbatim in the section body.
  *
- * The round-trip `serializeSections(parseSections(content)) === content` holds
- * for all well-formed markdown files (no normalisation applied).
+ * The round-trip `serializeSections(parseSections(content)) === content` holds for all well-formed markdown
+ * files (no normalisation applied).
  */
 export function parseSections(content: string): ParsedMarkdown {
   // Split at every point where a line starts with "## ", keeping the heading
@@ -39,8 +39,8 @@ export function parseSections(content: string): ParsedMarkdown {
 }
 
 /**
- * Serialize a `ParsedMarkdown` back to a string.
- * This is the exact inverse of `parseSections` — no formatting is applied.
+ * Serialize a `ParsedMarkdown` back to a string. This is the exact inverse of `parseSections` — no formatting
+ * is applied.
  */
 export function serializeSections({ preamble, sections }: ParsedMarkdown): string {
   return preamble + sections.map(({ heading, body }) => `${heading}\n${body}`).join('');
@@ -49,18 +49,15 @@ export function serializeSections({ preamble, sections }: ParsedMarkdown): strin
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 /**
- * Normalise a heading identifier to its full `## …` form.
- * Accepts either `'## Foo'` or just `'Foo'`.
+ * Normalise a heading identifier to its full `## …` form. Accepts either `'## Foo'` or just `'Foo'`.
  */
 function normalizeHeading(text: string): string {
   return text.startsWith('## ') ? text : `## ${text}`;
 }
 
 /**
- * Return the index of the section whose heading matches `headingText`.
- * Matching is exact and case-sensitive against the heading text with or
- * without the leading `## `.
- * Returns `-1` when not found.
+ * Return the index of the section whose heading matches `headingText`. Matching is exact and case-sensitive
+ * against the heading text with or without the leading `## `. Returns `-1` when not found.
  */
 export function findSectionIndex(parsed: ParsedMarkdown, headingText: string): number {
   const target = normalizeHeading(headingText);
@@ -73,8 +70,8 @@ export function hasSection(parsed: ParsedMarkdown, headingText: string): boolean
 }
 
 /**
- * Return the subset of `required` headings that are absent from `parsed`.
- * Useful for detect logic: if the result is empty, all required sections exist.
+ * Return the subset of `required` headings that are absent from `parsed`. Useful for detect logic: if the
+ * result is empty, all required sections exist.
  */
 export function getMissingHeadings(parsed: ParsedMarkdown, required: string[]): string[] {
   return required.filter((h) => !hasSection(parsed, h));
@@ -86,15 +83,13 @@ export function getMissingHeadings(parsed: ParsedMarkdown, required: string[]): 
 /**
  * Upsert a section by heading text.
  *
- * - **Update:** if a section with `headingText` already exists, its body is
- *   replaced in-place (heading and position are preserved).
- * - **Insert:** if absent, the section is inserted according to `position`
- *   (default: `{ atEnd: true }`).
+ * - **Update:** if a section with `headingText` already exists, its body is replaced in-place (heading and
+ *   position are preserved).
+ * - **Insert:** if absent, the section is inserted according to `position` (default: `{ atEnd: true }`).
  *
- * **Body format convention:**
- * Start with `\n` for a blank line after the heading. End with `\n\n` when
- * more sections follow, or `\n` for the final section. The serialiser adds no
- * extra spacing — what you pass is what gets written.
+ * **Body format convention:** Start with `\n` for a blank line after the heading. End with `\n\n` when more
+ * sections follow, or `\n` for the final section. The serialiser adds no extra spacing — what you pass is
+ * what gets written.
  */
 export function setSection(
   parsed: ParsedMarkdown,
@@ -117,8 +112,8 @@ export function setSection(
 }
 
 /**
- * Insert a new section at `position`.
- * If a section with `headingText` already exists, the input is returned unchanged.
+ * Insert a new section at `position`. If a section with `headingText` already exists, the input is returned
+ * unchanged.
  */
 export function insertSection(
   parsed: ParsedMarkdown,
@@ -155,8 +150,7 @@ export function insertSection(
 }
 
 /**
- * Remove the section with `headingText`.
- * Returns the input unchanged when the section does not exist.
+ * Remove the section with `headingText`. Returns the input unchanged when the section does not exist.
  */
 export function deleteSection(parsed: ParsedMarkdown, headingText: string): ParsedMarkdown {
   const idx = findSectionIndex(parsed, headingText);
@@ -167,9 +161,9 @@ export function deleteSection(parsed: ParsedMarkdown, headingText: string): Pars
 /**
  * Reorder sections to match `headingOrder`.
  *
- * Sections named in `headingOrder` appear first, in that order.
- * Sections absent from `headingOrder` follow in their original relative order.
- * Entries in `headingOrder` that do not exist in `parsed` are silently skipped.
+ * Sections named in `headingOrder` appear first, in that order. Sections absent from `headingOrder` follow in
+ * their original relative order. Entries in `headingOrder` that do not exist in `parsed` are silently
+ * skipped.
  */
 export function reorderSections(parsed: ParsedMarkdown, headingOrder: string[]): ParsedMarkdown {
   const normalizedOrder = headingOrder.map(normalizeHeading);

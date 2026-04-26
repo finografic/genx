@@ -1,6 +1,6 @@
 /**
- * Generates the content of a `src/{binName}.help.ts` file for CLI packages.
- * The output follows the standard @finografic CLI help format.
+ * Generates the content of a `src/{binName}.help.ts` file for CLI packages. The output follows the standard
+ * finografic CLI help format.
  */
 export function generateCliHelpContent(binName: string): string {
   return `import pc from 'picocolors';
@@ -51,8 +51,8 @@ export function printHelp(): void {
 }
 
 /**
- * Extracts the binary name from a package.json `bin` field.
- * Falls back to the provided `fallback` name if not found.
+ * Extracts the binary name from a package.json `bin` field. Falls back to the provided `fallback` name if not
+ * found.
  */
 export function getBinName(packageJson: Record<string, unknown>, fallback: string): string {
   const { bin } = packageJson;

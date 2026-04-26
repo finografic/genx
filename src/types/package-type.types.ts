@@ -1,8 +1,7 @@
 import type { FeatureId } from 'features/feature.types';
 
 /**
- * Package type definition.
- * Each type configures how the scaffolded package is shaped.
+ * Package type definition. Each type configures how the scaffolded package is shaped.
  */
 export interface PackageType {
   /** Unique identifier for the package type */

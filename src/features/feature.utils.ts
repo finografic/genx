@@ -5,8 +5,8 @@ import { fileExists } from 'utils';
 import type { TemplateVars } from 'types/template.types';
 
 /**
- * Build the default template variable set used when copying feature templates.
- * All string vars default to empty; YEAR is computed at call time.
+ * Build the default template variable set used when copying feature templates. All string vars default to
+ * empty; YEAR is computed at call time.
  */
 export function createDefaultTemplateVars(): TemplateVars {
   return {
@@ -21,8 +21,8 @@ export function createDefaultTemplateVars(): TemplateVars {
 }
 
 /**
- * Insert missing ESLint ignore patterns into flat-config source (preview / apply).
- * Returns unchanged `content` when nothing is added.
+ * Insert missing ESLint ignore patterns into flat-config source (preview / apply). Returns unchanged
+ * `content` when nothing is added.
  */
 export function proposeEslintIgnorePatterns(content: string, patterns: readonly string[]): string {
   const missing = patterns.filter((p) => !content.includes(`'${p}'`));
@@ -40,8 +40,8 @@ export function proposeEslintIgnorePatterns(content: string, patterns: readonly 
 }
 
 /**
- * Add ESLint ignore patterns to `globalIgnores([...])` when present, otherwise the
- * first legacy `ignores: [...]` block. Skips patterns already present.
+ * Add ESLint ignore patterns to `globalIgnores([...])` when present, otherwise the first legacy `ignores:
+ * [...]` block. Skips patterns already present.
  */
 export async function addEslintIgnorePatterns(
   targetDir: string,

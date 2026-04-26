@@ -4,8 +4,7 @@ import { features } from 'features/feature-registry';
 import type { FeatureId } from 'features/feature.types';
 
 /**
- * Prompt user to select features.
- * Returns array of selected feature IDs.
+ * Prompt user to select features. Returns array of selected feature IDs.
  */
 export async function promptFeatures(flow: FlowContext, initialValues?: FeatureId[]): Promise<FeatureId[]> {
   const options = features.map((feature) => ({

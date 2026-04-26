@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { DependencyRule } from 'types/dependencies.types';
 import type { PackageJson } from 'types/package-json.types';
+
 import { planDependencyChanges } from './dependencies.utils.js';
 
 function rule(
