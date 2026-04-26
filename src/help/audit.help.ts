@@ -20,7 +20,7 @@ export const auditHelp: HelpConfig = {
         description: 'genx audit ../my-package',
       },
       {
-        label: 'Apply all partial/missing features without prompts',
+        label: 'Apply selected features without per-file confirmation prompts',
         description: 'genx audit -y',
       },
     ],
