@@ -74,8 +74,11 @@ Replace direct write orchestration with:
 
 ```ts
 const preview = await previewFeature(context);
-const result = await applyPreviewChanges(preview);
+const result = await applyPreviewChanges(preview, { yesAll: context.yesAll });
 ```
+
+> **Mandatory:** always pass `{ yesAll: context.yesAll }` as the second argument. This threads the
+> `-y` flag from `genx audit -y` through to per-file confirmation prompts, skipping them automatically.
 
 Only keep narrow follow-up steps outside preview when they are not representable as file changes, such as:
 
@@ -97,7 +100,9 @@ Prefer a few high-signal tests over broad noisy coverage.
 
 - [ ] `previewX()` exists and owns canonical file output
 - [ ] `detectX()` uses `previewX()` + `hasPreviewChanges`
-- [ ] `applyX()` uses `applyPreviewChanges(preview)`
+- [ ] `applyX()` calls `applyPreviewChanges(preview, { yesAll: context.yesAll })`
+- [ ] `auditX()` returns `'installed' | 'partial' | 'missing'` (partial = primary indicator present but preview has changes)
+- [ ] `*.feature.ts` wires `audit: auditX`
 - [ ] any post-write install step uses structured signals, not label matching
 - [ ] feature-specific tests cover drift and canonical cases
 - [ ] `pnpm typecheck` passes
