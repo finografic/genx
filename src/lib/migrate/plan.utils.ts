@@ -12,6 +12,7 @@ import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } f
 import { patchPackageJson } from 'lib/migrate/package-json.utils';
 import { getExistingFiles, planRenames } from 'lib/migrate/rename.utils';
 import { pc } from 'utils/picocolors';
+
 import { dependencyRules } from 'config/dependencies.rules';
 import { mergeConfig } from 'config/merge.rules';
 import { migrateConfig } from 'config/migrate.config';
@@ -82,7 +83,7 @@ export async function planMigration(
     currentNodeState = await detectCurrentNodeState(targetDir);
     nodeRuntimeChanges = planNodeRuntimeChanges(currentNodeState, nodePolicy);
     nodeTypesChange = planNodeTypesChange(
-      (packageJson.devDependencies as Record<string, string> | undefined)?.['@types/node'],
+      (packageJson.devDependencies)?.['@types/node'],
       nodePolicy,
     );
     if (nodeRuntimeChanges.length > 0 || nodeTypesChange) {

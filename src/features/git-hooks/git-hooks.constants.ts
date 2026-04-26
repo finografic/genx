@@ -19,7 +19,7 @@ export const GIT_HOOKS_PACKAGES = {
 } as const;
 
 /**
- * lint-staged configuration for package.json.
+ * Lint-staged configuration for package.json.
  * Matches the code glob used when oxfmt prepends its command in lint-staged.
  */
 export const LINT_STAGED_CONFIG: Record<string, string[]> = {

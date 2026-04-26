@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { fileExists } from 'utils/fs.utils';
+
 import type { NodePolicy } from 'config/node.policy';
 import type { PackageJson } from 'types/package-json.types';
 
@@ -125,7 +126,7 @@ export async function applyNodeRuntimeChanges(targetDir: string, changes: NodeCh
  */
 export function applyNodeTypesChange(packageJson: PackageJson, change: NodeChange): PackageJson {
   const next = { ...packageJson };
-  const devDeps = (next.devDependencies as Record<string, string> | undefined) ?? {};
+  const devDeps = (next.devDependencies) ?? {};
   devDeps['@types/node'] = change.to;
   next.devDependencies = devDeps;
   return next;

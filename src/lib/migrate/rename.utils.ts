@@ -2,6 +2,7 @@ import { rename } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { fileExists } from 'utils/fs.utils';
+
 import type { RenameRule } from 'config/rename.rules';
 
 export interface RenameChange {

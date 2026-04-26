@@ -8,8 +8,8 @@ import type { TemplateVars } from 'types/template.types';
  * files normalize underscore-emphasis to asterisk-emphasis (MD049), so both forms must work.
  *
  * @example
- * applyTemplate("Hello __NAME__!", { NAME: "World" }) // => "Hello World!"
- * applyTemplate("# **PACKAGE_NAME**", { PACKAGE_NAME: "foo" }) // => "# foo"
+ *   applyTemplate('Hello __NAME__!', { NAME: 'World' }); // => "Hello World!"
+ *   applyTemplate('# **PACKAGE_NAME**', { PACKAGE_NAME: 'foo' }); // => "# foo"
  */
 export function applyTemplate(content: string, vars: TemplateVars): string {
   return content.replace(/(?:__|\*\*)([A-Z][A-Z_]*)(?:__|\*\*)/g, (match, key) => {

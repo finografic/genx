@@ -1,15 +1,19 @@
 /**
- * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the only canonical layout for the spine
- * (**Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**).
- * Target-only `##` sections (e.g. Skills, Learned) and the **Rules — Project-Specific** body come from the package
- * being migrated; shared blocks are taken from the template file. Do not mirror ordering from a consumer repo’s
- * hand-edited `AGENTS.md` when changing this module — match **`_templates/AGENTS.md.template`**.
+ * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the only canonical layout for
+ * the spine (**Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git
+ * Policy**). Target-only `##` sections (e.g. Skills, Learned) and the **Rules — Project-Specific** body come
+ * from the package being migrated; shared blocks are taken from the template file. Do not mirror ordering
+ * from a consumer repo’s hand-edited `AGENTS.md` when changing this module — match
+ * **`_templates/AGENTS.md.template`**.
  */
 
 /** Sections taken verbatim from the template (canonical shared lists). Keys via {@link normalizeHeadingKey}. */
 const TEMPLATE_SYNC_KEYS = new Set(['rules - global', 'rules - markdown tables', 'git policy']);
 
-/** Canonical order for shared “Rules / Git” spine (Project-Specific first). Keys via {@link normalizeHeadingKey}. */
+/**
+ * Canonical order for shared “Rules / Git” spine (Project-Specific first). Keys via
+ * {@link normalizeHeadingKey}.
+ */
 const SPINE_KEYS = [
   'rules - project-specific',
   'rules - global',
@@ -52,11 +56,11 @@ export function parseH2Sections(content: string): ParsedAgents {
   if (matches.length === 0) {
     return { preamble: content, sections: [] };
   }
-  const preamble = content.slice(0, matches[0].index!);
+  const preamble = content.slice(0, matches[0].index);
   const sections: H2Section[] = [];
   for (let i = 0; i < matches.length; i++) {
-    const start = matches[i].index!;
-    const end = i + 1 < matches.length ? matches[i + 1].index! : content.length;
+    const start = matches[i].index;
+    const end = i + 1 < matches.length ? matches[i + 1].index : content.length;
     sections.push({
       start,
       end,
@@ -68,9 +72,10 @@ export function parseH2Sections(content: string): ParsedAgents {
 }
 
 /**
- * Reverse merge: template file is the **base**; target contributes extras and Project-Specific.
- * After merge, sections are **reordered** to match **`_templates/AGENTS.md.template`**: **Rules — Project-Specific** first,
- * then **Rules — Global** → **Markdown Tables** → **Git Policy**, then other extras in merge order, then **Learned** last.
+ * Reverse merge: template file is the **base**; target contributes extras and Project-Specific. After merge,
+ * sections are **reordered** to match **`_templates/AGENTS.md.template`**: **Rules — Project-Specific**
+ * first, then **Rules — Global** → **Markdown Tables** → **Git Policy**, then other extras in merge order,
+ * then **Learned** last.
  *
  * Returns `null` if the result equals `target` (already aligned).
  */
@@ -125,6 +130,7 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 
 /**
  * After collecting sections, enforce the same vertical order as **`_templates/AGENTS.md.template`**:
+ *
  * 1. **Rules — Project-Specific** (first `##` after preamble; fixes PS appended at end when missing from target)
  * 2. **Rules — Global**, **Rules — Markdown Tables**, **Git Policy** (bodies from template where applicable)
  * 3. Other non-spine sections — preserve relative order from `merged`

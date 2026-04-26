@@ -31,7 +31,8 @@ export function setRootPropertyJsonc(text: string, key: string, value: unknown):
 }
 
 /**
- * Insert a root-level property before another key (e.g. before `prettier.enable`). If the key exists, updates in place.
+ * Insert a root-level property before another key (e.g. before `prettier.enable`). If the key exists, updates
+ * in place.
  */
 export function insertRootPropertyBefore(
   text: string,
@@ -105,7 +106,7 @@ export function ensureMarkdownlintConfigAndStylesAtEnd(raw: string): { text: str
   }
 
   let t = raw;
-  for (const key of [...VSCODE_MARKDOWN_TAIL_KEYS].reverse()) {
+  for (const key of [...VSCODE_MARKDOWN_TAIL_KEYS].toReversed()) {
     if (rootKeys.includes(key)) {
       t = removeRootPropertyJsonc(t, key);
     }
@@ -142,7 +143,7 @@ export function ensureOxfmtSharedSettingsBeforePrettier(
     ['oxc.typeAware', true],
   ];
 
-  const root = parseJsoncObject(t) as Record<string, unknown>;
+  const root = parseJsoncObject(t);
   for (const [k] of triple) {
     if (k in root) {
       t = removeRootPropertyJsonc(t, k);
@@ -150,7 +151,7 @@ export function ensureOxfmtSharedSettingsBeforePrettier(
   }
 
   for (let i = triple.length - 1; i >= 0; i--) {
-    const [k, v] = triple[i]!;
+    const [k, v] = triple[i];
     t = insertRootPropertyBefore(t, k, v, 'prettier.enable');
   }
 
@@ -165,7 +166,7 @@ export function ensureOxfmtSharedSettingsBeforePrettier(
 export function removeRootKeysWithPrefix(raw: string, prefix: string): { text: string; changed: boolean } {
   let t = raw;
   const before = t;
-  const root = parseJsoncObject(t) as Record<string, unknown>;
+  const root = parseJsoncObject(t);
   for (const key of Object.keys(root)) {
     if (key.startsWith(prefix)) {
       t = removeRootPropertyJsonc(t, key);
@@ -175,7 +176,8 @@ export function removeRootKeysWithPrefix(raw: string, prefix: string): { text: s
 }
 
 /**
- * Set `editor.defaultFormatter` on a `[language]` block (`markdownlint.config` / `markdown.styles` are finalized separately via {@link ensureMarkdownlintConfigAndStylesAtEnd}).
+ * Set `editor.defaultFormatter` on a `[language]` block (`markdownlint.config` / `markdown.styles` are
+ * finalized separately via {@link ensureMarkdownlintConfigAndStylesAtEnd}).
  */
 export function setLanguageFormatterBlock(
   raw: string,
@@ -184,7 +186,7 @@ export function setLanguageFormatterBlock(
 ): { text: string; changed: boolean } {
   const blockKey = `[${language}]`;
   const before = raw;
-  const root = parseJsoncObject(raw) as Record<string, unknown>;
+  const root = parseJsoncObject(raw);
   const existing = root[blockKey] as Record<string, unknown> | undefined;
   const nextBlock = {
     ...(existing && typeof existing === 'object' && !Array.isArray(existing) ? existing : {}),
@@ -215,7 +217,7 @@ export function replaceDprintLanguageFormatters(
   let t = raw;
 
   for (;;) {
-    const root = parseJsoncObject(t) as Record<string, unknown>;
+    const root = parseJsoncObject(t);
     let updated = false;
     for (const key of Object.keys(root)) {
       if (!key.startsWith('[') || !key.endsWith(']')) continue;

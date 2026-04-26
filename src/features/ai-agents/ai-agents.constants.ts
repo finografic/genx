@@ -1,5 +1,5 @@
 /**
- * ai-agents feature constants.
+ * Ai-agents feature constants.
  */
 
 /** Paths created/managed by this feature (relative to targetDir). */

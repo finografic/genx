@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { ensureKeyword } from 'lib/migrate/migrate-metadata.utils';
+
 import { migrateConfig } from 'config/migrate.config';
 import type { PackageJson } from 'types/package-json.types';
 
@@ -68,7 +69,7 @@ export function patchPackageJson(
   // keywords
   const keywordRaw = packageJson.keywords;
   const keywords = Array.isArray(keywordRaw)
-    ? (keywordRaw.filter((k) => typeof k === 'string') as string[])
+    ? (keywordRaw.filter((k) => typeof k === 'string'))
     : [];
   let changedKeywords = false;
 

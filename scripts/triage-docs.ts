@@ -7,7 +7,7 @@
  * then prompts to move each to docs/specs/, docs/drafts/, or discard.
  *
  * Usage: pnpm triage:docs
- *        pnpm triage:docs --scan-dir=custom/path
+ * pnpm triage:docs --scan-dir=custom/path
  */
 
 import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises';

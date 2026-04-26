@@ -86,10 +86,9 @@ export function getMissingHeadings(parsed: ParsedMarkdown, required: string[]): 
 /**
  * Upsert a section by heading text.
  *
- * - **Update:** if a section with `headingText` already exists, its body is
- *   replaced in-place (heading and position are preserved).
- * - **Insert:** if absent, the section is inserted according to `position`
- *   (default: `{ atEnd: true }`).
+ * - **Update:** if a section with `headingText` already exists, its body is replaced in-place (heading and
+ *   position are preserved).
+ * - **Insert:** if absent, the section is inserted according to `position` (default: `{ atEnd: true }`).
  *
  * **Body format convention:**
  * Start with `\n` for a blank line after the heading. End with `\n\n` when
@@ -179,7 +178,7 @@ export function reorderSections(parsed: ParsedMarkdown, headingOrder: string[]):
   for (const target of normalizedOrder) {
     const idx = remaining.findIndex((s) => s.heading === target);
     if (idx !== -1) {
-      ordered.push(remaining[idx]!);
+      ordered.push(remaining[idx]);
       remaining.splice(idx, 1);
     }
   }

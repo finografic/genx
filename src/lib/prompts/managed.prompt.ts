@@ -2,6 +2,7 @@ import * as clack from '@clack/prompts';
 
 import { pc } from 'utils/picocolors';
 import { cancel } from 'utils/prompts.utils';
+
 import type { ManagedTarget } from 'types/managed.types';
 
 export async function promptManagedTargetAction(params: {
