@@ -5,8 +5,6 @@ import { z } from 'zod';
 
 import type { ManagedConfig, ManagedTarget } from 'types/managed.types';
 
-export { parseJsoncObject } from '@finografic/cli-kit/xdg';
-
 const xdg = createXdgPaths();
 
 // JSONC extension — file may contain comments and trailing commas
