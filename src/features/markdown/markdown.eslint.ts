@@ -5,8 +5,8 @@ import { fileExists } from 'utils';
 import { ESLINT_CONFIG_FILES } from 'config/constants.config';
 
 /**
- * Strip `eslint-plugin-markdownlint` imports, the `/// <reference>` to declarations.d.ts,
- * and the `**\/*.md` config block from an ESLint flat-config file body.
+ * Strip `eslint-plugin-markdownlint` imports, the `/// <reference>` to declarations.d.ts, and the `**\/*.md`
+ * config block from an ESLint flat-config file body.
  */
 export function stripMarkdownlintFromEslintConfigContent(content: string): string {
   let s = content;
@@ -39,8 +39,8 @@ export function stripMarkdownlintFromEslintConfigContent(content: string): strin
 }
 
 /**
- * Remove the `{ files: ['**\/*.md'], ... }` config object from an ESLint flat config.
- * Uses line-based brace counting starting from the line containing `files: ['**\/*.md']`.
+ * Remove the `{ files: ['**\/*.md'], ... }` config object from an ESLint flat config. Uses line-based brace
+ * counting starting from the line containing `files: ['**\/*.md']`.
  */
 function stripMarkdownlintConfigBlock(content: string): string {
   const mdFilesPattern = /files:\s*\[['"]?\*\*\/\*\.md['"]?\]/;
@@ -52,7 +52,7 @@ function stripMarkdownlintConfigBlock(content: string): string {
   // Walk back to the opening `{` for this block
   let blockStartIdx = -1;
   for (let i = mdLineIdx - 1; i >= 0; i--) {
-    const trimmed = lines[i]!.trim();
+    const trimmed = lines[i].trim();
     if (trimmed === '{') {
       blockStartIdx = i;
       break;
@@ -65,7 +65,7 @@ function stripMarkdownlintConfigBlock(content: string): string {
   let depth = 0;
   let blockEndIdx = -1;
   for (let i = blockStartIdx; i < lines.length; i++) {
-    for (const ch of lines[i]!) {
+    for (const ch of lines[i]) {
       if (ch === '{') depth++;
       else if (ch === '}') {
         depth--;
@@ -83,8 +83,8 @@ function stripMarkdownlintConfigBlock(content: string): string {
 }
 
 /**
- * Propose stripping the markdownlint ESLint config from the first matching `eslint.config.*` file.
- * Returns `{ path, current, proposed }` when a change is needed, or `null` when already clean.
+ * Propose stripping the markdownlint ESLint config from the first matching `eslint.config.*` file. Returns `{
+ * path, current, proposed }` when a change is needed, or `null` when already clean.
  */
 export async function proposeMarkdownlintEslintConfigChange(
   targetDir: string,

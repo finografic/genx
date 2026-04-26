@@ -98,6 +98,7 @@ export async function patchOxfmtConfigForCss(targetDir: string): Promise<boolean
 
   if (next === normalized) return false;
 
-  await writeFile(configPath, `${next.endsWith('\n') ? next : `${next}\n`}`, 'utf8');
+  const body = next.endsWith('\n') ? next : `${next}\n`;
+  await writeFile(configPath, body, 'utf8');
   return true;
 }

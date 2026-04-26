@@ -13,11 +13,11 @@ import {
   ESLINT_PACKAGES_TO_REMOVE,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
-  LINTING_SCRIPTS,
-  LINTING_SECTION_TITLE,
   LEGACY_OXFMT_CONFIG_PACKAGE,
   LEGACY_OXFMT_UPDATE_SCRIPT_KEY,
   LEGACY_UPDATE_SCRIPTS_TO_REMOVE,
+  LINTING_SCRIPTS,
+  LINTING_SECTION_TITLE,
   OXC_CONFIG_PACKAGE,
   OXFMT_CLI_PACKAGE,
   OXFMT_LINT_STAGED_CODE_PATTERN,
@@ -81,8 +81,8 @@ function collectPrettierPackageNames(packageJson: PackageJson): string[] {
 function stripListedDependencies(packageJson: PackageJson, names: string[]): PackageJson {
   if (names.length === 0) return packageJson;
   const next = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
-  const deps = { ...(next.dependencies as Record<string, string> | undefined) };
-  const devDeps = { ...(next.devDependencies as Record<string, string> | undefined) };
+  const deps = { ...next.dependencies };
+  const devDeps = { ...next.devDependencies };
   for (const n of names) {
     delete deps[n];
     delete devDeps[n];
@@ -94,8 +94,8 @@ function stripListedDependencies(packageJson: PackageJson, names: string[]): Pac
 
 function applyDprintPackageJsonCleanup(packageJson: PackageJson): PackageJson {
   const next = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
-  const deps = { ...(next.dependencies as Record<string, string> | undefined) };
-  const devDeps = { ...(next.devDependencies as Record<string, string> | undefined) };
+  const deps = { ...next.dependencies };
+  const devDeps = { ...next.devDependencies };
   for (const pkg of DPRINT_PACKAGES) {
     delete deps[pkg];
     delete devDeps[pkg];
@@ -122,8 +122,8 @@ function applyDprintPackageJsonCleanup(packageJson: PackageJson): PackageJson {
 
 function removeSimpleImportSortPackage(packageJson: PackageJson): PackageJson {
   const next = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
-  const devDeps = { ...(next.devDependencies as Record<string, string> | undefined) };
-  const deps = { ...(next.dependencies as Record<string, string> | undefined) };
+  const devDeps = { ...next.devDependencies };
+  const deps = { ...next.dependencies };
   delete devDeps[SIMPLE_IMPORT_SORT_PACKAGE];
   delete deps[SIMPLE_IMPORT_SORT_PACKAGE];
   next.devDependencies = devDeps;
@@ -142,7 +142,7 @@ function removeEslintPackages(packageJson: PackageJson): PackageJson {
 }
 
 function ensureOxcToolchainDevDependencies(packageJson: PackageJson): PackageJson {
-  const dev = { ...(packageJson.devDependencies as Record<string, string> | undefined) };
+  const dev = { ...packageJson.devDependencies };
   let changed = false;
 
   if (!dev[OXFMT_CLI_PACKAGE] && formatting['oxfmt']) {
@@ -208,14 +208,14 @@ function ensureUpdateOxcScriptPlacement(scripts: Record<string, string>): {
 
   const updateKeys = sectionKeys.filter((k) => k.startsWith('update:'));
   const insertAfter =
-    updateKeys.length > 0 ? updateKeys[updateKeys.length - 1]! : PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
+    updateKeys.length > 0 ? updateKeys[updateKeys.length - 1] : PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION;
 
   const insertAt = without.indexOf(insertAfter) + 1;
   const newKeys = [...without.slice(0, insertAt), key, ...without.slice(insertAt)];
 
   const next: Record<string, string> = {};
   for (const k of newKeys) {
-    next[k] = k === key ? value : scripts[k]!;
+    next[k] = k === key ? value : scripts[k];
   }
 
   const changed =
@@ -374,7 +374,7 @@ function ensureLintingScriptsPure(packageJson: PackageJson): PackageJson {
 
   const next: Record<string, string> = {};
   for (const k of newKeys) {
-    next[k] = k in LINTING_SCRIPTS ? LINTING_SCRIPTS[k as keyof typeof LINTING_SCRIPTS] : scripts[k]!;
+    next[k] = k in LINTING_SCRIPTS ? LINTING_SCRIPTS[k as keyof typeof LINTING_SCRIPTS] : scripts[k];
   }
 
   return { ...packageJson, scripts: next };
@@ -546,7 +546,7 @@ function addOxfmtToLintStagedPure(packageJson: PackageJson): PackageJson {
 }
 
 function removeLegacyUpdateScriptsPure(packageJson: PackageJson): PackageJson {
-  const scripts = packageJson.scripts as Record<string, string> | undefined;
+  const { scripts } = packageJson;
   if (!scripts) return packageJson;
   const hasAny = LEGACY_UPDATE_SCRIPTS_TO_REMOVE.some((k) => k in scripts);
   if (!hasAny) return packageJson;

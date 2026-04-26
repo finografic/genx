@@ -61,7 +61,7 @@ function stableDependencyJsonSlice(deps: unknown): string {
     return '{}';
   }
   const record = deps as Record<string, string>;
-  const keys = Object.keys(record).sort();
+  const keys = Object.keys(record).toSorted();
   const sorted: Record<string, string> = {};
   for (const k of keys) {
     sorted[k] = record[k]!;
@@ -138,7 +138,7 @@ async function computeCanonicalSettingsFileContent(targetDir: string): Promise<s
 
   // Preserve tail keys (markdownlint.config, markdown.styles) from the existing file
   if (fileExists(filePath)) {
-    const existing = parseJsoncObject(await readFile(filePath, 'utf8')) as Record<string, unknown>;
+    const existing = parseJsoncObject(await readFile(filePath, 'utf8'));
     for (const tailKey of VSCODE_MARKDOWN_TAIL_KEYS) {
       if (tailKey in existing) settings[tailKey] = existing[tailKey];
     }

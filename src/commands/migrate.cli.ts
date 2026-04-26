@@ -49,8 +49,8 @@ import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';
 import { policy } from 'config/policy.js';
 import type { ManagedTarget } from 'types/managed.types';
-import { MIGRATE_ONLY_SECTIONS } from 'types/migrate.types';
 import type { MigrateOnlySection } from 'types/migrate.types';
+import { MIGRATE_ONLY_SECTIONS } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
 
 export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
@@ -203,7 +203,7 @@ async function runAgentDocsMigration(targetDir: string, write: boolean): Promise
       clack.log.info(`- ${line}`);
     }
     for (const line of plan.skipped) {
-      clack.log.info(`${pc.dim(`- skip: ${line}`)}`);
+      clack.log.info(pc.dim(`- skip: ${line}`));
     }
     infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n\n`);
     return;
@@ -483,7 +483,7 @@ async function migrateSingleTarget(params: {
       successMessage(`Created src/${binName}.help.ts`);
 
       // Ensure picocolors is in dependencies (required by the help file)
-      const deps = (updatedPackageJson['dependencies'] ?? {}) as Record<string, string>;
+      const deps = updatedPackageJson['dependencies'] ?? {};
       if (!deps['picocolors']) {
         deps['picocolors'] = policy.cli.dependencies?.['picocolors'] ?? '^1.1.1';
         updatedPackageJson['dependencies'] = deps;

@@ -43,6 +43,11 @@ const CANONICAL: Record<string, string[]> = {
   git: ['git-policy'],
 };
 
+/** “Rules — Global” / rules-files heading in `.github/copilot-instructions.md`. */
+function isCopilotRulesGlobalHeading(h: string): boolean {
+  return /rules?.*global/i.test(h) || /rule\s+files/i.test(h);
+}
+
 // ── result type ───────────────────────────────────────────────────────────────
 
 export interface AgentDocsMigrationResult {
@@ -654,17 +659,16 @@ function patchCopilotInstructions(
   }
 
   const lines = fs.readFileSync(filePath, 'utf8').split('\n');
-  const isRulesSection = (h: string): boolean => /rules?.*global/i.test(h) || /rule\s+files/i.test(h);
-  if (!hasSection(lines, isRulesSection)) {
+  if (!hasSection(lines, isCopilotRulesGlobalHeading)) {
     result.skipped.push('copilot-instructions.md: rules section not found');
     return;
   }
-  if (!sectionHasOldPaths(lines, isRulesSection)) {
+  if (!sectionHasOldPaths(lines, isCopilotRulesGlobalHeading)) {
     result.skipped.push('copilot-instructions.md: already up to date');
     return;
   }
 
-  replaceSection(lines, isRulesSection, buildRulesGlobalLines(extra));
+  replaceSection(lines, isCopilotRulesGlobalHeading, buildRulesGlobalLines(extra));
   fs.writeFileSync(filePath, lines.join('\n'));
   result.applied.push('copilot-instructions.md: Rules — Global updated');
 }
@@ -808,8 +812,10 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
   const copilot = path.join(targetDir, '.github/copilot-instructions.md');
   if (fs.existsSync(copilot)) {
     const lines = fs.readFileSync(copilot, 'utf8').split('\n');
-    const isRules = (h: string): boolean => /rules?.*global/i.test(h) || /rule\s+files/i.test(h);
-    if (hasSection(lines, isRules) && sectionHasOldPaths(lines, isRules)) {
+    if (
+      hasSection(lines, isCopilotRulesGlobalHeading) &&
+      sectionHasOldPaths(lines, isCopilotRulesGlobalHeading)
+    ) {
       result.applied.push('copilot-instructions.md: update Rules — Global section');
     }
   }

@@ -44,7 +44,7 @@ function formatPackageJsonString(packageJson: PackageJson): string {
  * --fix` → `md-lint --fix` on the `*.md` key when present.
  */
 export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): PackageJson {
-  const lintStaged = { ...(packageJson['lint-staged'] as Record<string, string[]> | undefined) };
+  const lintStaged = { ...packageJson['lint-staged'] };
   if (!lintStaged || Object.keys(lintStaged).length === 0) {
     return packageJson;
   }
@@ -79,7 +79,7 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
   const combinedKey = [...OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES].find(
     (k) => lintStaged[k] && Array.isArray(lintStaged[k]),
   );
-  const combined = combinedKey ? (lintStaged[combinedKey] as string[]) : undefined;
+  const combined = combinedKey ? lintStaged[combinedKey] : undefined;
 
   if (combined && combined.includes(LINT_STAGED_OXFMT_CMD) && !combined.some((c) => c.includes('eslint'))) {
     lintStaged[LINT_STAGED_DATA_ONLY_PATTERN] = [LINT_STAGED_OXFMT_CMD];
@@ -99,7 +99,7 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
 
 /** Remove legacy markdown-related ESLint packages that are superseded by `@finografic/md-lint`. */
 function withoutLegacyMarkdownDevDependencies(packageJson: PackageJson): PackageJson {
-  const devDeps = packageJson.devDependencies as Record<string, string> | undefined;
+  const devDeps = packageJson.devDependencies;
   if (!devDeps) return packageJson;
 
   const toRemove = [ESLINT_PLUGIN_MARKDOWNLINT, ESLINT_PLUGIN_SIMPLE_IMPORT_SORT];
@@ -114,19 +114,19 @@ function withoutLegacyMarkdownDevDependencies(packageJson: PackageJson): Package
 }
 
 function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
-  const devDeps = packageJson.devDependencies as Record<string, string> | undefined;
+  const devDeps = packageJson.devDependencies;
   if (devDeps?.[MD_LINT_PACKAGE]) {
     return packageJson;
   }
   const devDependencies = sortedRecord({
-    ...(packageJson.devDependencies as Record<string, string> | undefined),
+    ...packageJson.devDependencies,
     [MD_LINT_PACKAGE]: MD_LINT_PACKAGE_VERSION,
   });
   return { ...packageJson, devDependencies };
 }
 
 function withMarkdownScripts(packageJson: PackageJson): PackageJson {
-  const scripts = (packageJson.scripts as Record<string, string> | undefined) ?? {};
+  const scripts = packageJson.scripts ?? {};
   if (scripts[MD_LINT_SCRIPT] !== undefined && scripts[MD_LINT_FIX_SCRIPT] !== undefined) {
     return packageJson;
   }

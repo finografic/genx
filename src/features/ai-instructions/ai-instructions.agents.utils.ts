@@ -23,6 +23,10 @@ const SPINE_KEYS = [
 
 const SPINE_KEY_SET = new Set<string>(SPINE_KEYS);
 
+function isLearnedSectionKey(key: string): boolean {
+  return key.startsWith('learned ');
+}
+
 export interface ParsedAgents {
   preamble: string;
   sections: H2Section[];
@@ -138,7 +142,6 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
  */
 function reorderMergedAgentSections(merged: string[]): string[] {
   const keyOf = (full: string): string => normalizeHeadingKey(full.split(/\r?\n/, 1)[0] ?? '');
-  const isLearned = (key: string): boolean => key.startsWith('learned ');
 
   const spineParts = new Map<string, string>();
   for (const block of merged) {
@@ -151,7 +154,7 @@ function reorderMergedAgentSections(merged: string[]): string[] {
   const middleExtras: string[] = [];
   for (const block of merged) {
     const key = keyOf(block);
-    if (SPINE_KEY_SET.has(key) || isLearned(key)) {
+    if (SPINE_KEY_SET.has(key) || isLearnedSectionKey(key)) {
       continue;
     }
     middleExtras.push(block);
@@ -159,7 +162,7 @@ function reorderMergedAgentSections(merged: string[]): string[] {
 
   const learned: string[] = [];
   for (const block of merged) {
-    if (isLearned(keyOf(block))) {
+    if (isLearnedSectionKey(keyOf(block))) {
       learned.push(block);
     }
   }

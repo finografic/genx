@@ -250,7 +250,7 @@ export async function apply${pascalName}Extensions(targetDir: string): Promise<s
 
   clack.note(
     [
-      `${pc.cyan('src/features/' + folderName + '/')}`,
+      pc.cyan('src/features/' + folderName + '/'),
       '',
       `  ${folderName}.feature.ts`,
       `  ${folderName}.detect.ts`,
@@ -259,7 +259,7 @@ export async function apply${pascalName}Extensions(targetDir: string): Promise<s
       needsVscode ? `  ${folderName}.vscode.ts` : null,
       '  README.md',
       '',
-      `${pc.cyan('Updated:')}`,
+      pc.cyan('Updated:'),
       `  src/features/feature.types.ts   ${pc.dim('(FeatureId union)')}`,
       `  src/features/feature-registry.ts ${pc.dim('(import + array entry)')}`,
     ]

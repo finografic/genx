@@ -150,7 +150,7 @@ export async function addLanguageFormatterSettings(
   let t = text;
   let anyChange = false;
 
-  const root0 = parseJsoncObject(t) as Record<string, unknown>;
+  const root0 = parseJsoncObject(t);
   let disabledPrettier = false;
   if (root0['prettier.enable'] !== false) {
     t = setRootPropertyJsonc(t, 'prettier.enable', false);

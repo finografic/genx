@@ -35,7 +35,7 @@ function parseFeatureReadme(dir: string): FeatureInfo {
   const h1Index = lines.indexOf(h1Line!);
   let description = '';
   for (let i = h1Index + 1; i < lines.length; i++) {
-    const line = lines[i]!.trim();
+    const line = lines[i].trim();
     if (line) {
       description = line;
       break;
@@ -47,7 +47,7 @@ function parseFeatureReadme(dir: string): FeatureInfo {
   const whatIndex = lines.findIndex((l) => /^##\s+What it does/.test(l));
   if (whatIndex !== -1) {
     for (let i = whatIndex + 1; i < lines.length; i++) {
-      const line = lines[i]!;
+      const line = lines[i];
       if (line.startsWith('## ')) break; // next section
       if (line.startsWith('- ')) bullets.push(line);
     }

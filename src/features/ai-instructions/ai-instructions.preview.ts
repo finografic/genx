@@ -59,7 +59,7 @@ async function collectInstructionTemplateFiles(
   }
 
   await walk(instructionsTemplateRoot);
-  return out.sort((a, b) => a.rel.localeCompare(b.rel));
+  return out.toSorted((a, b) => a.rel.localeCompare(b.rel));
 }
 
 /**

@@ -15,7 +15,7 @@ import { runSelfUpdateCheck, runSelfUpdateForced } from './core/self-update/inde
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };
 
-type CommandHandler = (argv: string[], context: { cwd: string }) => Promise<void> | void;
+type CommandHandler = (args: string[], context: { cwd: string }) => Promise<void> | void;
 
 async function main(): Promise<void> {
   const cwd = process.cwd();
@@ -51,24 +51,24 @@ async function main(): Promise<void> {
   /* ────────────────────────────────────────────────────────── */
 
   const commands: Record<string, CommandHandler> = {
-    'create': async (argv, context) => {
-      await createPackage(argv, context);
+    'create': async (cmdArgs, context) => {
+      await createPackage(cmdArgs, context);
     },
 
-    'migrate': async (argv, context) => {
-      await migratePackage(argv, context);
+    'migrate': async (cmdArgs, context) => {
+      await migratePackage(cmdArgs, context);
     },
 
-    'deps': async (argv, context) => {
-      await syncDeps(argv, context);
+    'deps': async (cmdArgs, context) => {
+      await syncDeps(cmdArgs, context);
     },
 
-    'features': async (argv, context) => {
-      await addFeatures(argv, { targetDir: context.cwd });
+    'features': async (cmdArgs, context) => {
+      await addFeatures(cmdArgs, { targetDir: context.cwd });
     },
 
-    'audit': async (argv, context) => {
-      await auditPackage(argv, { targetDir: context.cwd });
+    'audit': async (cmdArgs, context) => {
+      await auditPackage(cmdArgs, { targetDir: context.cwd });
     },
 
     'update-self': async () => {

@@ -46,7 +46,7 @@ async function withGitHooksDependencies(targetDir: string, packageJson: PackageJ
     return packageJson;
   }
   const devDependencies = sortedRecord({
-    ...(packageJson.devDependencies as Record<string, string> | undefined),
+    ...packageJson.devDependencies,
     ...additions,
   });
   return { ...packageJson, devDependencies };

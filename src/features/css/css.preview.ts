@@ -29,8 +29,8 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 
 // DEPRECATED: stylelint removed in favour of oxfmt CSS support. Kept for removal detection.
 function withoutStylelintDependencies(packageJson: PackageJson): PackageJson {
-  const devDeps = { ...(packageJson.devDependencies as Record<string, string> | undefined) };
-  const deps = { ...(packageJson.dependencies as Record<string, string> | undefined) };
+  const devDeps = { ...packageJson.devDependencies };
+  const deps = { ...packageJson.dependencies };
   let changed = false;
 
   for (const pkg of [STYLELINT_PACKAGE, STYLELINT_STYLISTIC_PACKAGE]) {
@@ -131,7 +131,7 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
     let next = ensureCssImportInOxfmtConfig(normalized);
     next = insertCssOverrideInOxfmtConfig(next);
     if (next !== normalized) {
-      const out = `${next.endsWith('\n') ? next : `${next}\n`}`;
+      const out = next.endsWith('\n') ? next : `${next}\n`;
       changes.push(createWritePreviewChange(oxfmtConfigPath, raw, out, 'oxfmt.config.ts (css override)'));
     } else {
       applied.push('oxfmt.config.ts (css)');

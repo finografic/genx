@@ -37,8 +37,8 @@ function minVersionOfSpec(spec: string): semver.SemVer | null {
 }
 
 /**
- * A representative version from the local spec used to test policy satisfaction
- * (min of range, or coerced version).
+ * A representative version from the local spec used to test policy satisfaction (min of range, or coerced
+ * version).
  */
 function representativeVersion(spec: string): string | null {
   const trimmed = spec.trim();
@@ -102,7 +102,7 @@ export function planDependencyChanges(
 
   for (const rule of rules) {
     const section = packageJson[rule.section] ?? {};
-    const current = section[rule.name as keyof typeof section];
+    const current = section[rule.name];
     if (rule.version === undefined) continue;
     const targetVersion = rule.version;
 
@@ -117,7 +117,7 @@ export function planDependencyChanges(
       continue;
     }
 
-    const currentStr = String(current);
+    const currentStr = current;
     if (currentStr === targetVersion) {
       continue;
     }
@@ -142,9 +142,8 @@ export function planDependencyChanges(
 const DEPENDENCY_SECTIONS: DependencySection[] = ['dependencies', 'devDependencies'];
 
 /**
- * Apply dependency changes to package.json.
- * When adding/updating in one section, removes the dep from the other section
- * (so a dep can be moved from dependencies to devDependencies or vice versa).
+ * Apply dependency changes to package.json. When adding/updating in one section, removes the dep from the
+ * other section (so a dep can be moved from dependencies to devDependencies or vice versa).
  */
 export function applyDependencyChanges(packageJson: PackageJson, changes: DependencyChange[]): PackageJson {
   const next = { ...packageJson };
@@ -153,7 +152,7 @@ export function applyDependencyChanges(packageJson: PackageJson, changes: Depend
     // Remove from the other section so we don't end up with the dep in both
     const otherSection = DEPENDENCY_SECTIONS.find((s) => s !== change.section);
     if (otherSection && next[otherSection] && change.name in (next[otherSection] as object)) {
-      const other = { ...(next[otherSection] as Record<string, string>) };
+      const other = { ...next[otherSection] };
       delete other[change.name];
       if (Object.keys(other).length > 0) {
         (next as Record<string, unknown>)[otherSection] = other;
@@ -172,9 +171,9 @@ export function applyDependencyChanges(packageJson: PackageJson, changes: Depend
   // Sort each modified dependency section alphabetically
   const modifiedSections = new Set(changes.map((change) => change.section));
   for (const sectionName of modifiedSections) {
-    const section = next[sectionName] as Record<string, string> | undefined;
+    const section = next[sectionName];
     if (!section) continue;
-    const sorted = Object.fromEntries(Object.entries(section).sort(([a], [b]) => a.localeCompare(b)));
+    const sorted = Object.fromEntries(Object.entries(section).toSorted(([a], [b]) => a.localeCompare(b)));
     (next as Record<string, unknown>)[sectionName] = sorted;
   }
 

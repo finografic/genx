@@ -18,8 +18,8 @@ import {
   successMessage,
 } from 'utils';
 
-import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import type { DependencyChange } from 'lib/migrate/dependencies.utils';
+import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
 import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
@@ -38,7 +38,7 @@ const OPERATION_COLOR = {
   downgrade: pc.yellow,
 } satisfies Record<DependencyChange['operation'], (s: string) => string>;
 
-const formatVersionChange = (c: DependencyChange): string => `${c.name} ${pc.gray(c.from!)} → ${c.to}`;
+const formatVersionChange = (c: DependencyChange): string => `${c.name} ${pc.gray(c.from)} → ${c.to}`;
 
 const FORMATTERS = {
   add: (c: DependencyChange): string => `${c.name} ${c.to}`,
@@ -61,7 +61,7 @@ function renderDependencyChangeLine(change: DependencyChange, labelColumnWidth: 
 }
 
 function logWrittenDependencyVersions(changes: DependencyChange[]): void {
-  const sorted = [...changes].sort((a, b) => a.name.localeCompare(b.name));
+  const sorted = [...changes].toSorted((a, b) => a.name.localeCompare(b.name));
   const body = sorted.map((c) => pc.gray(`${pc.green('+')} ${pc.white(c.name)} ${pc.gray(c.to)}`)).join('\n');
   logMessage(body);
 }

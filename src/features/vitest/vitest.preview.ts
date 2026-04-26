@@ -96,12 +96,12 @@ function withTestingScripts(packageJson: PackageJson): PackageJson {
 }
 
 function withVitestDependency(packageJson: PackageJson): PackageJson {
-  const devDeps = packageJson.devDependencies as Record<string, string> | undefined;
+  const devDeps = packageJson.devDependencies;
   if (devDeps?.[VITEST_PACKAGE]) {
     return packageJson;
   }
   const devDependencies = sortedRecord({
-    ...(packageJson.devDependencies as Record<string, string> | undefined),
+    ...packageJson.devDependencies,
     [VITEST_PACKAGE]: VITEST_PACKAGE_VERSION,
   });
   return { ...packageJson, devDependencies };

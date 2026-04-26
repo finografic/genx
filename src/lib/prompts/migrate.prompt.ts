@@ -15,7 +15,7 @@ export async function confirmMigrateTarget(pkg: {
     initialValue: true,
   });
 
-  if (clack.isCancel(ok) || ok === false) return cancel();
+  if (clack.isCancel(ok) || !ok) return cancel();
   return true;
 }
 
@@ -29,7 +29,7 @@ export async function confirmNodeVersionUpgrade(params: {
     initialValue: true,
   });
 
-  if (clack.isCancel(ok) || ok === false) return cancel();
+  if (clack.isCancel(ok) || !ok) return cancel();
   return true;
 }
 
@@ -40,7 +40,7 @@ export async function confirmMerges(files: Array<{ file: string }>): Promise<boo
     initialValue: true,
   });
 
-  if (clack.isCancel(ok) || ok === false) return cancel();
+  if (clack.isCancel(ok) || !ok) return cancel();
   return true;
 }
 
@@ -52,6 +52,6 @@ export async function confirmReleasesRename(): Promise<boolean | null> {
     initialValue: true,
   });
 
-  if (clack.isCancel(ok) || ok === false) return cancel();
+  if (clack.isCancel(ok) || !ok) return cancel();
   return true;
 }

@@ -18,13 +18,13 @@ describe('git-hooks preview-driven detect', () => {
 
     const preview = await previewGitHooks({ targetDir: root });
     expect(hasPreviewChanges(preview)).toBe(true);
-    expect(preview.changes.map((change) => change.path).sort()).toEqual(
+    expect(preview.changes.map((change) => change.path).toSorted()).toEqual(
       [
         join(root, '.husky/commit-msg'),
         join(root, '.husky/pre-commit'),
         join(root, 'commitlint.config.mjs'),
         join(root, 'package.json'),
-      ].sort(),
+      ].toSorted(),
     );
     expect(await detectGitHooks({ targetDir: root })).toBe(false);
     expect(await isGitHooksFullyConfigured(root)).toBe(false);
