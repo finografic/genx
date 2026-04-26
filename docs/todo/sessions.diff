@@ -1,0 +1,164 @@
+1 ## Project
+2
+3 `@finografic/genx` v5.12.7 — CLI for scaffolding and maintaining @finografic
+packages. Stable,
+4 in active development.
+5
+6 ## Architecture
+7
+8 Three-layer CLI: `cli.ts` dispatches to command handlers (`src/commands/`),
+which orchestrate
+9 feature modules (`src/features/<name>/`). Each feature is self-contained wit
+h `*.feature.ts`
+(definition), `*.preview.ts` (compute planned changes), `*.detect.ts` (detec
+t/audit), and
+`*.apply.ts` (write changes). The `src/lib/feature-preview/` layer is shared
+infrastructure for
+previewing, diffing, and applying file changes. `src/lib/audit/` holds the n
+ew cross-feature
+audit utility. `src/lib/prompts/` holds reusable prompt helpers. Shared CLI
+primitives come from
+`@finografic/cli-kit`.
+15
+## Stack
+17
+Runtime: `@finografic/cli-kit`, `@clack/prompts`, `execa`, `picocolors`, `@f
+inografic/deps-policy`,
+`@finografic/core`. Build: `tsdown`. Test: `vitest`. Lint/format: `oxlint`,
+`oxfmt`.
+Package manager: `pnpm`. Published to GitHub Packages.
+21
+## Schema / Types
+23
+- `Feature` — definition with `id`, `label`, `detect?`, `audit?`, `apply`
+- `AuditStatus` — `'installed' | 'partial' | 'missing'` (new, 2026-04-26)
+- `AuditResult` — `{ status: AuditStatus; detail?: string }`
+- `FeatureContext` — `{ targetDir: string }`
+- `FeaturePreviewResult` — array of `FeaturePreviewChange` (write or delete)
+- `FeatureApplyResult` — `{ applied, noopMessage?, error?, appliedTargetPath
+s? }`
+- `PackageJson` — typed subset used by oxc-config canonical transforms
+31
+## CLI Commands
+33
+| Command      | Description                                              |
+| ------------ | -------------------------------------------------------- |
+| create       | Scaffold a new @finografic package from templates        |
+| migrate      | Sync conventions to an existing package (dry-run by default
+) |
+| deps         | Sync devDependencies to @finografic/deps-policy versions |
+| features     | Add optional features to an existing package             |
+| audit        | Scan features, show installed/partial/missing, apply select
+ed |
+| update-self  | Self-update genx to latest                               |
+42
+## Decisions
+44
+1. Registry order in `feature-registry.ts` is the canonical sort order for a
+ll feature prompts (2026-04-26)
+2. `audit()` on Feature is optional; fallback is `detect()` → binary `instal
+led | missing` (2026-04-26)
+3. `partial` = primary indicator present (package in devDeps / file exists)
+but preview still has changes (2026-04-26)
+4. `applyFeaturesToTarget` exported from `features.cli.ts` (not extracted to
+lib) — single consumer still (2026-04-26)
+5. `_templates/` is output-only; meta-templates (feature scaffolding) live i
+ ## 2026-04-07 (session 5)
+39
+ Implemented ROADMAP #3 — diff-as-detection. Added grouped `src/lib/feature-preview/`
+ infrastructure, migrated all features to preview-driven detect/apply, added the
+ `scaffold-feature-preview` skill, and marked the roadmap item done after release-level verification.
+-
+-## 2026-04-07 (session 4)
+-
+-Fixed ai-agents apply: call reorderSections(parsed, AI_AGENTS_ALL_CANONICAL_HEADINGS) after
+-seeded/enforced sync so existing files with out-of-order sections are corrected. Also committed
+-leftover diff dep (package.json/pnpm-lock) and AGENTS.md separator from prior session.
+-
+ `scaffold-feature-preview` skill, and marked the roadmap item done after release-level verification.
+-
+-## 2026-04-07 (session 4)
+-
+-Fixed ai-agents apply: call reorderSections(parsed, AI_AGENTS_ALL_CANONICAL_HEADINGS) after
+-guard in `previewMarkdown` (skips when target is `@finografic/md-lint`).
++Migrated markdown feature from `eslint-plugin-markdownlint` to `@finografic/md-lint`. Full rewrite
++of `markdown.preview.ts` / `markdown.vscode.ts` / `markdown.constants.ts`. Fixed `genx create`
++README placeholder bug (`**TOKEN**` form). Added `sortedRecord()` utility applied across all
++`with*DevDependency` helpers. Added self-install guard in `previewMarkdown`.
+37
+ ## 2026-04-07 (session 5)
++
+ ## 2026-04-24
+16
+ Fixed `feature/` folder leaking into generated packages. Root cause: `_templates/feature/` was
+  6 -being copied into every `genx create` output. Fix: (1) moved `_templates/feature/` →
+  7 -`.github/skills/generate-new-genx-feature/feature-template/` — `_templates/` is output-only,
+  8 -meta-templates belong with their skill; (2) added `'feature'` to the unconditional ignore list
+  9 -in `create.cli.ts` as a safety net; (3) renamed skill folder `scaffold-feature/` →
+-`generate-new-genx-feature/`; (4) moved `scripts/new-feature.ts` into the skill folder, updated
+-relative imports and `templateDir` path; (5) updated `package.json` `dev:feature` script and
+-widened both `tsconfig.json` and `tsconfig.scripts.json` to include `.github/skills/**/*.ts`.
+-Renamed `docs/todo/TODO.ROADMAP.md` → `ROADMAP.md`. Updated handoff.md with skills table,
+-decisions #26–28, and corrected ROADMAP reference.
++being copied into every `genx create` output. Fix: moved it to `.github/skills/generate-new-genx-feature/feature-template/`;
++added `'feature'` to ignore list in `create.cli.ts`; renamed skill folder; moved `scripts/new-feature.ts`
++into the skill folder; updated `package.json` `dev:feature` script and `tsconfig` includes.
++Renamed `docs/todo/TODO.ROADMAP.md` → `ROADMAP.md`.
+22
+ ## 2026-04-20
+24
+ **cli-kit Phase 1 migration.** Deleted `src/core/flow/`, `src/core/render-help/`, `src/core/file-diff/`
+ (kept `src/core/self-update/`). All callers migrated to `@finografic/cli-kit/{flow,render-help,file-diff}`.
+ `managed.utils.ts` XDG path → `getConfigPath('genx')` from `cli-kit/xdg`. `tsconfig.json` `baseUrl`
+-removed, `rootDir: ./src` added. Also fixed pre-existing lint issues surfaced by staging: duplicate
+-`utils` imports in commands, `no-await-in-loop` in sequential prompt loops, `unified-signatures` in
+-feature-preview, oxlint test override glob (was comma-joined single string, now proper array).
+-Phase 2 (features injecting cli-kit into generated projects) tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
++removed, `rootDir: ./src` added. Phase 2 (features injecting cli-kit into generated projects)
++tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
+30
+ ## 2026-04-10
+32
+-Migrated markdown feature from `eslint-plugin-markdownlint` to `@finografic/md-lint`. Full
+-rewrite of `markdown.preview.ts` / `markdown.vscode.ts` / `markdown.constants.ts`: adds
+-`lint.md`/`lint.md.fix` scripts, migrates lint-staged `*.md` to `md-lint --fix`, updates
+-`markdown.styles` in settings.json to `node_modules/@finografic/md-lint/styles/`, proposes
+-deletion of old `.vscode/` CSS files, adds CI step. No `.markdownlint.jsonc` needed.
+-Removed CSS override from oxfmt base template (css feature owns it). Fixed `genx create`
+-README placeholder bug: `_templates/README.md` used `**BOLD**` tokens; `applyTemplate`
+-updated to match both `__TOKEN__` and `**TOKEN**` forms (MD049 lint normalises at commit).
+-Fixed URL-stripping regex (runs post-substitution). Added `sortedRecord()` utility applied
+-across all `with*DevDependency` helpers so added deps land in sorted order. Added self-install
+-guard in `previewMarkdown` (skips when target is `@finografic/md-lint`).
++Migrated markdown feature from `eslint-plugin-markdownlint` to `@finografic/md-lint`. Full rewrite
++of `markdown.preview.ts` / `markdown.vscode.ts` / `markdown.constants.ts`. Fixed `genx create`
++README placeholder bug (`**TOKEN**` form). Added `sortedRecord()` utility applied across all
++`with*DevDependency` helpers. Added self-install guard in `previewMarkdown`.
+37
+ ## 2026-04-07 (session 5)
+39
+ Implemented ROADMAP #3 — diff-as-detection. Added grouped `src/lib/feature-preview/`
+ infrastructure, migrated all features to preview-driven detect/apply, added the
+ `scaffold-feature-preview` skill, and marked the roadmap item done after release-level verification.
+-
+-## 2026-04-07 (session 4)
+-
+-Fixed ai-agents apply: call reorderSections(parsed, AI_AGENTS_ALL_CANONICAL_HEADINGS) after
+-seeded/enforced sync so existing files with out-of-order sections are corrected. Also committed
+-leftover diff dep (package.json/pnpm-lock) and AGENTS.md separator from prior session.
+-
+-## 2026-04-07 (session 3)
+-
+-Implemented ROADMAP #8 — `ai-agents` feature. detect: AGENTS.md + all enforced sections present.
+-apply: scaffold _templates/AGENTS.md for new files; sync enforced sections (Rules — General,
+-Rules — Markdown, Git Policy) via lib/markdown-sections + core/file-diff diff confirmation;
+-seed Rules — Project-Specific once; copy .github/skills/ from _templates. Wired registry + FeatureId.
+-_templates: AGENTS.md + 3 skill files added.
+-
+-## 2026-04-07 (session 2)
+-
+-Implemented ROADMAP #7 — `lib/markdown-sections/`. H2-based section parser with lossless
+-round-trip. API: parseSections, serializeSections, setSection (upsert), insertSection,
+-deleteSection, reorderSections, findSectionIndex, hasSection, getMissingHeadings. Fixed
+-JS zero-width split edge case for files starting with `## `. 33 tests. Committed.
+-Updated handoff.md (v4.16.0, new architecture sections, decisions #16/#17). Next: #8 ai-agents.
