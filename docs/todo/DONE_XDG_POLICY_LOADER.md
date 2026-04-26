@@ -1,6 +1,8 @@
-# TODO — XDG-first policy loader in genx
+# DONE — XDG-first policy loader in genx
 
-> **Status:** Not started
+> **Status:** Complete — 2026-04-26
+>
+> Committed as `ba9c9ae` in genx, `71e84e1` in deps-policy.
 
 Make genx read dep versions from `~/.config/finografic/deps-policy.config.json` when it exists,
 falling back to the installed `@finografic/deps-policy` from node_modules. This removes the
