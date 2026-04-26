@@ -82,10 +82,7 @@ export async function planMigration(
   if (shouldRunSection(only, 'node')) {
     currentNodeState = await detectCurrentNodeState(targetDir);
     nodeRuntimeChanges = planNodeRuntimeChanges(currentNodeState, nodePolicy);
-    nodeTypesChange = planNodeTypesChange(
-      (packageJson.devDependencies)?.['@types/node'],
-      nodePolicy,
-    );
+    nodeTypesChange = planNodeTypesChange(packageJson.devDependencies?.['@types/node'], nodePolicy);
     if (nodeRuntimeChanges.length > 0 || nodeTypesChange) {
       plan.push(`${pc.green('node')} version updates`);
     }

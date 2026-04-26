@@ -68,9 +68,7 @@ export function patchPackageJson(
 
   // keywords
   const keywordRaw = packageJson.keywords;
-  const keywords = Array.isArray(keywordRaw)
-    ? (keywordRaw.filter((k) => typeof k === 'string'))
-    : [];
+  const keywords = Array.isArray(keywordRaw) ? keywordRaw.filter((k) => typeof k === 'string') : [];
   let changedKeywords = false;
 
   const { includeFinograficKeyword } = migrateConfig.packageJson.ensureKeywords;

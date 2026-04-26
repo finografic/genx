@@ -126,7 +126,7 @@ export async function applyNodeRuntimeChanges(targetDir: string, changes: NodeCh
  */
 export function applyNodeTypesChange(packageJson: PackageJson, change: NodeChange): PackageJson {
   const next = { ...packageJson };
-  const devDeps = (next.devDependencies) ?? {};
+  const devDeps = next.devDependencies ?? {};
   devDeps['@types/node'] = change.to;
   next.devDependencies = devDeps;
   return next;
