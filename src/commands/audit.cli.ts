@@ -1,12 +1,14 @@
+import { join } from 'node:path';
 import { createFlowContext } from '@finografic/cli-kit/flow';
 import { renderHelp } from '@finografic/cli-kit/render-help';
 import { auditHelp } from 'help/audit.help';
 import { errorMessage, getPathArg, infoMessage, intro, outro, resolveTargetDir } from 'utils';
 
+import { readPackageJson } from 'lib/migrate/package-json.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 
-import { auditFeatures, sortAuditEntries } from '../lib/audit/audit.js';
+import { auditFeatures, filterAuditEntriesForSelfPackage, sortAuditEntries } from '../lib/audit/audit.js';
 import { promptAuditSuggest } from '../lib/prompts/audit.prompt.js';
 import { applyFeaturesToTarget } from './features.cli.js';
 
@@ -32,18 +34,18 @@ export async function auditPackage(argv: string[], options: { targetDir: string 
     process.exit(1);
   }
 
-  const entries = await auditFeatures({ targetDir });
+  const packageJson = await readPackageJson(join(targetDir, 'package.json'));
+  const targetPackageName = typeof packageJson.name === 'string' ? packageJson.name : undefined;
 
-  const installedCount = entries.filter((e) => e.status === 'installed').length;
+  const entries = filterAuditEntriesForSelfPackage(await auditFeatures({ targetDir }), targetPackageName);
+
   const partialCount = entries.filter((e) => e.status === 'partial').length;
   const missingCount = entries.filter((e) => e.status === 'missing').length;
 
-  const parts: string[] = [
-    pc.green(`${installedCount} installed`),
-    pc.yellow(`${partialCount} partial`),
-    pc.red(`${missingCount} missing`),
-  ];
-  infoMessage(parts.join(pc.dim(' · ')));
+  if (partialCount + missingCount > 0) {
+    const parts: string[] = [pc.yellow(`${partialCount} partial`), pc.red(`${missingCount} missing`)];
+    infoMessage(parts.join(pc.dim(' · ')));
+  }
 
   const actionable = sortAuditEntries(entries);
 

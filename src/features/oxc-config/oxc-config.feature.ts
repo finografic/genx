@@ -1,7 +1,7 @@
 import type { Feature } from '../feature.types';
 
 import { applyOxcConfig } from './oxc-config.apply';
-import { OXFMT_VSCODE_EXTENSIONS } from './oxc-config.constants';
+import { OXC_CONFIG_PACKAGE, OXFMT_VSCODE_EXTENSIONS } from './oxc-config.constants';
 import { auditOxcConfig, detectOxcConfig } from './oxc-config.detect';
 
 /**
@@ -9,6 +9,7 @@ import { auditOxcConfig, detectOxcConfig } from './oxc-config.detect';
  */
 export const oxcConfigFeature: Feature = {
   id: 'oxc-config',
+  selfPackageName: OXC_CONFIG_PACKAGE,
   label: 'oxc-config (oxfmt formatter + oxlint linter)',
   hint: 'optional',
   vscode: {

@@ -63,6 +63,11 @@ export interface AuditResult {
 export interface Feature {
   /** Unique feature identifier (matches folder name) */
   id: FeatureId;
+  /**
+   * When set, `genx audit` omits this feature if the target `package.json` `name` equals this value — e.g.
+   * do not offer applying oxc-config while inside `@finografic/oxc-config`.
+   */
+  selfPackageName?: string;
   /** Display label for prompts */
   label: string;
   /** Optional description/hint */

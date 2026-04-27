@@ -41,3 +41,14 @@ export function sortAuditEntries(entries: FeatureAuditEntry[]): FeatureAuditEntr
   const missing = entries.filter((e) => e.status === 'missing');
   return [...partial, ...missing];
 }
+
+/**
+ * Drop features that ship as the target package itself (see {@link Feature.selfPackageName}).
+ */
+export function filterAuditEntriesForSelfPackage(
+  entries: FeatureAuditEntry[],
+  targetPackageName: string | undefined,
+): FeatureAuditEntry[] {
+  if (!targetPackageName) return entries;
+  return entries.filter((e) => e.feature.selfPackageName !== targetPackageName);
+}

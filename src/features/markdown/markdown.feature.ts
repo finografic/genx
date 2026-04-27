@@ -1,7 +1,7 @@
 import type { Feature } from '../feature.types';
 
 import { applyMarkdown } from './markdown.apply';
-import { MARKDOWNLINT_VSCODE_EXTENSIONS } from './markdown.constants';
+import { MARKDOWNLINT_VSCODE_EXTENSIONS, MD_LINT_PACKAGE } from './markdown.constants';
 import { auditMarkdown, detectMarkdown } from './markdown.detect';
 
 /**
@@ -9,6 +9,7 @@ import { auditMarkdown, detectMarkdown } from './markdown.detect';
  */
 export const markdownFeature: Feature = {
   id: 'markdown',
+  selfPackageName: MD_LINT_PACKAGE,
   label: 'Markdown linting (@finografic/md-lint)',
   hint: 'recommended',
   vscode: {
