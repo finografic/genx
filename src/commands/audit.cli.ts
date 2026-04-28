@@ -43,7 +43,13 @@ export async function auditPackage(argv: string[], options: { targetDir: string 
   const missingCount = entries.filter((e) => e.status === 'missing').length;
 
   if (partialCount + missingCount > 0) {
-    const parts: string[] = [pc.yellow(`${partialCount} partial`), pc.red(`${missingCount} missing`)];
+    const parts: string[] = [];
+    if (partialCount > 0) {
+      parts.push(pc.yellow(`${partialCount} partial`));
+    }
+    if (missingCount > 0) {
+      parts.push(pc.red(`${missingCount} missing`));
+    }
     infoMessage(parts.join(pc.dim(' · ')));
   }
 
