@@ -49,6 +49,18 @@ describe('feature-preview — isPreviewChangeChanged', () => {
     expect(isPreviewChangeChanged(change)).toBe(true);
   });
 
+  it('treats equivalent JSON with different formatting as unchanged for .json paths', () => {
+    const before = `{\n  "markdown.styles": ["node_modules/@finografic/md-lint/styles/markdown-github-light.css"]\n}\n`;
+    const after = `{\n  "markdown.styles": [\n    "node_modules/@finografic/md-lint/styles/markdown-github-light.css"\n  ]\n}\n`;
+    const change = createWritePreviewChange('.vscode/settings.json', before, after);
+    expect(isPreviewChangeChanged(change)).toBe(false);
+  });
+
+  it('still detects JSON semantic changes for .json paths', () => {
+    const change = createWritePreviewChange('pkg.json', '{"a":1}', '{"a":2}');
+    expect(isPreviewChangeChanged(change)).toBe(true);
+  });
+
   it('treats delete as unchanged when the path did not exist', () => {
     const change = createDeletePreviewChange('gone.ts', '', false);
     expect(isPreviewChangeChanged(change)).toBe(false);

@@ -1,5 +1,32 @@
 import type { MarkdownSection, ParsedMarkdown, SectionPosition } from './markdown-sections.types.js';
 
+// ─── AGENTS.md / docs formatting ───────────────────────────────────────────────
+
+/**
+ * When a thematic-break line (`---`, `----`, …) is immediately followed by an `##` heading with no blank line
+ * between, inserts an empty line after the rule. Skips YAML-style front matter (`---` then non-heading
+ * lines).
+ *
+ * AGENTS.md convention: horizontal rules separate spine blocks; a blank line before the next `##` improves
+ * readability and matches `_templates/AGENTS.md.template`.
+ */
+export function ensureBlankLineAfterThematicBreakBeforeHeading(content: string): string {
+  const unified = content.replace(/\r\n/g, '\n');
+  const lines = unified.split('\n');
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    out.push(line);
+    if (/^-{3,}\s*$/.test(line)) {
+      const next = lines[i + 1];
+      if (next !== undefined && next.startsWith('## ')) {
+        out.push('');
+      }
+    }
+  }
+  return out.join('\n');
+}
+
 // ─── Parsing ──────────────────────────────────────────────────────────────────
 
 /**

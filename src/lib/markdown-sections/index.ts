@@ -1,5 +1,6 @@
 export {
   deleteSection,
+  ensureBlankLineAfterThematicBreakBeforeHeading,
   findSectionIndex,
   getMissingHeadings,
   hasSection,

@@ -7,6 +7,7 @@ import type { FeatureContext } from '../feature.types';
 import type { Dirent } from 'node:fs';
 
 import {
+  ensureBlankLineAfterThematicBreakBeforeHeading,
   findSectionIndex,
   hasSection,
   parseSections,
@@ -74,7 +75,14 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
   const agentsPath = resolve(targetDir, 'AGENTS.md');
 
   if (!fileExists(agentsPath)) {
-    changes.push(createWritePreviewChange(agentsPath, '', templateContent, 'AGENTS.md'));
+    changes.push(
+      createWritePreviewChange(
+        agentsPath,
+        '',
+        ensureBlankLineAfterThematicBreakBeforeHeading(templateContent),
+        'AGENTS.md',
+      ),
+    );
   } else {
     const currentContent = await readFile(agentsPath, 'utf8');
     let parsed = parseSections(currentContent);
@@ -111,7 +119,7 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
     }
 
     if (changed) {
-      const proposed = serializeSections(parsed);
+      const proposed = ensureBlankLineAfterThematicBreakBeforeHeading(serializeSections(parsed));
       changes.push(createWritePreviewChange(agentsPath, currentContent, proposed, 'AGENTS.md'));
     } else {
       applied.push('AGENTS.md');

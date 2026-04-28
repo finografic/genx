@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fileExists, parseJsoncObject, readExtensionsJson } from 'utils';
+import { fileExists, jsonLikeTextsEquivalent, parseJsoncObject, readExtensionsJson } from 'utils';
 import type {
   FeaturePreviewChange,
   FeaturePreviewChangeWrite,
@@ -269,7 +269,7 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     currentExt = await readFile(extPath, 'utf8');
   }
   const proposedExt = await computeCanonicalExtensionsFileContent(targetDir);
-  if (proposedExt !== currentExt) {
+  if (!jsonLikeTextsEquivalent(proposedExt, currentExt)) {
     changes.push(
       createWritePreviewChange(
         extPath,
@@ -288,7 +288,7 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     currentSettings = await readFile(settingsPath, 'utf8');
   }
   const proposedSettings = await computeCanonicalSettingsFileContent(targetDir);
-  if (proposedSettings !== currentSettings) {
+  if (!jsonLikeTextsEquivalent(proposedSettings, currentSettings)) {
     changes.push(
       createWritePreviewChange(
         settingsPath,

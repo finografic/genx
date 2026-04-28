@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   deleteSection,
+  ensureBlankLineAfterThematicBreakBeforeHeading,
   findSectionIndex,
   getMissingHeadings,
   hasSection,
@@ -39,6 +40,26 @@ const NO_SECTIONS_DOC = `# Title
 
 Some intro text.
 `;
+
+// ─── ensureBlankLineAfterThematicBreakBeforeHeading ──────────────────────────
+
+describe('ensureBlankLineAfterThematicBreakBeforeHeading', () => {
+  it('inserts a blank line between --- and a following ## heading when missing', () => {
+    const input = 'Git policy line.\n---\n## Learned User Preferences\n\n- bullet\n';
+    const out = ensureBlankLineAfterThematicBreakBeforeHeading(input);
+    expect(out).toBe('Git policy line.\n---\n\n## Learned User Preferences\n\n- bullet\n');
+  });
+
+  it('does not duplicate when a blank line already exists', () => {
+    const ok = '---\n\n## Section\n';
+    expect(ensureBlankLineAfterThematicBreakBeforeHeading(ok)).toBe(ok);
+  });
+
+  it('does not insert before YAML front matter continuation (non-heading line after ---)', () => {
+    const fm = '---\ntitle: demo\n---\n';
+    expect(ensureBlankLineAfterThematicBreakBeforeHeading(fm)).toBe(fm);
+  });
+});
 
 // ─── parseSections ────────────────────────────────────────────────────────────
 

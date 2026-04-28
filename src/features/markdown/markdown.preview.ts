@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { sortedRecord } from '@finografic/cli-kit/package-manager';
-import { fileExists, isDependencyDeclared } from 'utils';
+import { fileExists, isDependencyDeclared, jsonLikeTextsEquivalent } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -187,7 +187,7 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
   pkg = withMarkdownScripts(pkg);
 
   const proposedPkgRaw = formatPackageJsonString(pkg);
-  if (proposedPkgRaw !== rawPkg) {
+  if (!jsonLikeTextsEquivalent(proposedPkgRaw, rawPkg)) {
     changes.push(
       createWritePreviewChange(
         packageJsonPath,
@@ -201,7 +201,7 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
   }
 
   const settings = await computeProposedMarkdownSettingsText(targetDir);
-  if (settings.proposed !== settings.current) {
+  if (!jsonLikeTextsEquivalent(settings.proposed, settings.current)) {
     changes.push(
       createWritePreviewChange(
         settings.path,
@@ -215,7 +215,7 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
   }
 
   const ext = await computeProposedMarkdownExtensionsText(targetDir);
-  if (ext.proposed !== ext.current) {
+  if (!jsonLikeTextsEquivalent(ext.proposed, ext.current)) {
     changes.push(
       createWritePreviewChange(ext.path, ext.current, ext.proposed, '.vscode/extensions.json (markdownlint)'),
     );

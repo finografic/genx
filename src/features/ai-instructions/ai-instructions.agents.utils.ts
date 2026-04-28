@@ -1,3 +1,5 @@
+import { ensureBlankLineAfterThematicBreakBeforeHeading } from 'lib/markdown-sections';
+
 /**
  * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the only canonical layout for
  * the spine (**Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git
@@ -124,7 +126,9 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 
   const reordered = reorderMergedAgentSections(out);
 
-  const proposed = ensureTrailingNewline(templatePreamble + reordered.join(''));
+  const proposed = ensureTrailingNewline(
+    ensureBlankLineAfterThematicBreakBeforeHeading(templatePreamble + reordered.join('')),
+  );
   const normalizedTarget = ensureTrailingNewline(target);
   if (proposed === normalizedTarget) {
     return null;

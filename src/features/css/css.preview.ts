@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { sortedRecord } from '@finografic/cli-kit/package-manager';
-import { fileExists } from 'utils';
+import { fileExists, jsonLikeTextsEquivalent } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -141,11 +141,7 @@ export async function previewCss(context: FeatureContext): Promise<FeaturePrevie
   const extPath = resolve(targetDir, '.vscode', 'extensions.json');
   const extCurrentRaw = fileExists(extPath) ? await readFile(extPath, 'utf8') : undefined;
   const extPreview = proposeCssExtensionsJsonText(extCurrentRaw);
-  // Detect a change: proposed !== current (including stylelint removal from recommendations)
-  const extCurrentNormalized = extCurrentRaw
-    ? JSON.stringify(JSON.parse(extCurrentRaw), null, 2) + '\n'
-    : undefined;
-  if (extPreview.proposed !== (extCurrentNormalized ?? BASE_EXTENSIONS_JSON)) {
+  if (!jsonLikeTextsEquivalent(extPreview.proposed, extCurrentRaw ?? BASE_EXTENSIONS_JSON)) {
     changes.push(
       createWritePreviewChange(
         extPath,

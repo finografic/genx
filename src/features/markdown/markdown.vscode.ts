@@ -13,6 +13,7 @@ import {
   ensureVSCodeDir,
   fileExists,
   insertRootPropertyBefore,
+  jsonLikeTextsEquivalent,
   parseJsoncObject,
   readExtensionsJson,
   removeRootPropertyJsonc,
@@ -128,7 +129,7 @@ export async function applyMarkdownExtensions(targetDir: string): Promise<string
 export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   await ensureVSCodeDir(targetDir);
   const { path: filePath, current, proposed } = await computeProposedMarkdownSettingsText(targetDir);
-  if (proposed === current) {
+  if (jsonLikeTextsEquivalent(proposed, current)) {
     return false;
   }
   await writeFile(filePath, proposed, 'utf8');

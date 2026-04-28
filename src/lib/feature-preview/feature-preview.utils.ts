@@ -1,5 +1,5 @@
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, extname } from 'node:path';
 import type { DiffAction, DiffConfirmState } from '@finografic/cli-kit/file-diff';
 import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
@@ -11,6 +11,12 @@ import type {
   FeaturePreviewChangeWrite,
   FeaturePreviewResult,
 } from './feature-preview.types.js';
+
+import { jsonLikeTextsEquivalent } from '../../utils/jsonc.utils.js';
+
+function useSemanticJsonComparison(filePath: string): boolean {
+  return extname(filePath).toLowerCase() === '.json';
+}
 
 /**
  * Empty-file deletes cannot use `confirmFileWrite('', '')` (core skips as identical). Using a fake proposed
@@ -65,7 +71,14 @@ function appliedLabelForChange(change: FeaturePreviewChange): string {
 
 export function isPreviewChangeChanged(change: FeaturePreviewChange): boolean {
   if (change.kind === 'write') {
-    return change.currentContent !== change.proposedContent;
+    if (change.currentContent === change.proposedContent) return false;
+    if (
+      useSemanticJsonComparison(change.path) &&
+      jsonLikeTextsEquivalent(change.currentContent, change.proposedContent)
+    ) {
+      return false;
+    }
+    return true;
   }
   return change.exists;
 }
