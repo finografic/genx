@@ -108,10 +108,19 @@ function ensureAgentsGitignore(targetDir: string, result: AgentDocsMigrationResu
     return;
   }
 
-  // Find the # Agents section and insert right after it; otherwise append a new section
   const agentsSectionIdx = lines.findIndex((l) => /^#\s*agents/i.test(l.trim()));
+
   if (agentsSectionIdx !== -1) {
-    lines.splice(agentsSectionIdx + 1, 0, ...missingEntries);
+    // Insert each missing entry at the right position within the # Agents section:
+    // .agents/ goes right after the comment; !.agents/handoff.md goes right after .agents/.
+    for (const entry of missingEntries) {
+      if (entry === AGENTS_GITIGNORE_ENTRIES[0]) {
+        lines.splice(agentsSectionIdx + 1, 0, entry);
+      } else {
+        const parentIdx = lines.findIndex((l) => l.trim() === AGENTS_GITIGNORE_ENTRIES[0]);
+        lines.splice(parentIdx !== -1 ? parentIdx + 1 : agentsSectionIdx + 1, 0, entry);
+      }
+    }
   } else {
     lines.push('', '# Agents', ...missingEntries);
   }
