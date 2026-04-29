@@ -25,7 +25,6 @@
       "commands/*": ["./src/commands/*"],
       "config/*": ["./src/config/*"],
       "features/*": ["./src/features/*"],
-      "help/*": ["./src/help/*"],
       "lib/*": ["./src/lib/*"],
       "types": ["./src/types"],
       "types/*": ["./src/types/*"],

@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { cliHelp as rootHelp } from '../src/cli.help';
-import { createHelp } from '../src/help/create.help';
-import { depsHelp } from '../src/help/deps.help';
-import { featuresHelp } from '../src/help/features.help';
-import { migrateHelp } from '../src/help/migrate.help';
+import { help as createHelp } from '../src/commands/create/create.help';
+import { help as depsHelp } from '../src/commands/deps/deps.help';
+import { help as featuresHelp } from '../src/commands/features/features.help';
+import { help as migrateHelp } from '../src/commands/migrate/migrate.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -113,25 +113,24 @@ function generateUsageSection(): string {
     { name: 'features', help: featuresHelp },
   ] as const;
 
-  for (const { name, help } of commandConfigs) {
+  for (const { name, cmdHelp } of commandConfigs.map((c) => ({ name: c.name, cmdHelp: c.help }))) {
     lines.push(`### \`${bin} ${name}\``);
     lines.push('');
 
     // Usage line
-    const usage = [help.main.bin, help.main.args].filter(Boolean).join(' ');
     lines.push('```bash');
-    lines.push(usage);
+    lines.push(cmdHelp.usage);
     lines.push('```');
     lines.push('');
 
     // Examples
-    if (help.examples && help.examples.list.length > 0) {
+    if (cmdHelp.examples && cmdHelp.examples.length > 0) {
       lines.push('**Examples:**');
       lines.push('');
       lines.push('```bash');
-      for (const ex of help.examples.list) {
-        lines.push(`# ${ex.label}`);
-        lines.push(ex.description);
+      for (const ex of cmdHelp.examples) {
+        lines.push(`# ${ex.description}`);
+        lines.push(ex.command);
         lines.push('');
       }
       // remove trailing blank line inside code block

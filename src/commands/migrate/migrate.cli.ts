@@ -3,11 +3,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
 import { createFlowContext } from '@finografic/cli-kit/flow';
-import { renderHelp } from '@finografic/cli-kit/render-help';
+import { withHelp } from '@finografic/cli-kit/render-help';
 import * as clack from '@clack/prompts';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
-import { migrateHelp } from 'help/migrate.help';
 import {
   GENX_CONFIG_PATH,
   errorMessage,
@@ -21,25 +20,25 @@ import {
 } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
+import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from './lib/agent-docs-migration.js';
+import { restructureDocs } from './lib/docs-restructure.utils.js';
+import { applyMerges } from './lib/merge.utils.js';
+import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from './lib/migrate.prompt.js';
+import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from './lib/node.utils.js';
+import { planMigration } from './lib/plan.utils.js';
+import { applyRenames } from './lib/rename.utils.js';
+import { copyLicenseIfMissing, syncFromTemplate } from './lib/template-sync.utils.js';
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
-import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from 'lib/migrate/agent-docs-migration';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
-import { restructureDocs } from 'lib/migrate/docs-restructure.utils';
-import { applyMerges } from 'lib/migrate/merge.utils';
 import { getScopeAndName, parseMigrateArgs, shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
-import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from 'lib/migrate/node.utils';
 import {
   patchPackageJson,
   readPackageJson,
   stripCommitlintFromPackageJsonFile,
   writePackageJson,
 } from 'lib/migrate/package-json.utils';
-import { planMigration } from 'lib/migrate/plan.utils';
-import { applyRenames } from 'lib/migrate/rename.utils';
-import { copyLicenseIfMissing, syncFromTemplate } from 'lib/migrate/template-sync.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
-import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from 'lib/prompts/migrate.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
@@ -53,60 +52,129 @@ import type { MigrateOnlySection } from 'types/migrate.types';
 import { MIGRATE_ONLY_SECTIONS } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
 
+import { help } from './migrate.help.js';
+
 export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
-  if (argv.includes('--help') || argv.includes('-h')) {
-    renderHelp(migrateHelp);
-    return;
-  }
+  return withHelp(argv, help, async () => {
+    intro('Migrate existing @finografic package');
 
-  intro('Migrate existing @finografic package');
+    // Helpful debug info (always on in dev)
+    const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
+    if (debug) {
+      infoMessage(`execPath: ${process.execPath}`);
+      infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
+    }
 
-  // Helpful debug info (always on in dev)
-  const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
-  if (debug) {
-    infoMessage(`execPath: ${process.execPath}`);
-    infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
-  }
+    const flow = createFlowContext(argv, { y: { type: 'boolean' } });
+    const managed = hasManagedFlag(argv);
+    const { targetDir, write, only } = parseMigrateArgs(argv, context.cwd);
 
-  const flow = createFlowContext(argv, { y: { type: 'boolean' } });
-  const managed = hasManagedFlag(argv);
-  const { targetDir, write, only } = parseMigrateArgs(argv, context.cwd);
+    if (managed && targetDir !== context.cwd) {
+      errorMessage('Cannot combine [path] with --managed');
+      process.exit(1);
+      return;
+    }
 
-  if (managed && targetDir !== context.cwd) {
-    errorMessage('Cannot combine [path] with --managed');
-    process.exit(1);
-    return;
-  }
+    if (only) {
+      const invalid = [...only].filter((section) => !MIGRATE_ONLY_SECTIONS.includes(section));
+      if (invalid.length > 0) {
+        errorMessage(
+          `Unknown --only section(s): ${invalid.join(', ')}. Valid values: ${MIGRATE_ONLY_SECTIONS.join(', ')}`,
+        );
+        process.exit(1);
+        return;
+      }
+    }
 
-  if (only) {
-    const invalid = [...only].filter((section) => !MIGRATE_ONLY_SECTIONS.includes(section));
-    if (invalid.length > 0) {
-      errorMessage(
-        `Unknown --only section(s): ${invalid.join(', ')}. Valid values: ${MIGRATE_ONLY_SECTIONS.join(', ')}`,
+    if (managed) {
+      let managedTargets: ManagedTarget[];
+      try {
+        managedTargets = await readManagedTargets();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unable to read managed config';
+        errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
+        process.exit(1);
+        return;
+      }
+
+      if (managedTargets.length === 0) {
+        infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
+        return;
+      }
+
+      let selectedFeatureIds: FeatureId[] = [];
+      if (!only) {
+        const prompted = await promptFeatures(flow);
+        if (!prompted) {
+          process.exit(0);
+          return;
+        }
+        selectedFeatureIds = prompted;
+      }
+
+      let appliedCount = 0;
+      let skippedCount = 0;
+
+      for (const [index, target] of managedTargets.entries()) {
+        if (write && !flow.yesMode) {
+          const action = await promptManagedTargetAction({
+            actionLabel: 'Migrate',
+            target,
+            currentIndex: index + 1,
+            total: managedTargets.length,
+          });
+
+          if (action === null) {
+            process.exit(0);
+            return;
+          }
+
+          if (action === 'skip') {
+            skippedCount += 1;
+            continue;
+          }
+        }
+
+        await migrateSingleTarget({
+          targetDir: target.path,
+          write,
+          only,
+          debug,
+          selectedFeatureIds,
+        });
+        appliedCount += 1;
+      }
+
+      successMessage(
+        `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
       );
-      process.exit(1);
-      return;
-    }
-  }
-
-  if (managed) {
-    let managedTargets: ManagedTarget[];
-    try {
-      managedTargets = await readManagedTargets();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to read managed config';
-      errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
-      process.exit(1);
-      return;
-    }
-
-    if (managedTargets.length === 0) {
-      infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
       return;
     }
 
     let selectedFeatureIds: FeatureId[] = [];
     if (!only) {
+      const mode = await clack.select({
+        message: 'What would you like to do?',
+        options: [
+          { value: 'features', label: 'Select optional features' },
+          {
+            value: 'agent-docs',
+            label: 'Migrate AI agent docs',
+            hint: 'restructure .github/instructions/, AGENTS.md, CLAUDE.md',
+          },
+        ],
+      });
+
+      if (clack.isCancel(mode)) {
+        process.exit(0);
+        return;
+      }
+
+      if (mode === 'agent-docs') {
+        await runAgentDocsMigration(targetDir, write);
+        return;
+      }
+
       const prompted = await promptFeatures(flow);
       if (!prompted) {
         process.exit(0);
@@ -115,83 +183,13 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       selectedFeatureIds = prompted;
     }
 
-    let appliedCount = 0;
-    let skippedCount = 0;
-
-    for (const [index, target] of managedTargets.entries()) {
-      if (write && !flow.yesMode) {
-        const action = await promptManagedTargetAction({
-          actionLabel: 'Migrate',
-          target,
-          currentIndex: index + 1,
-          total: managedTargets.length,
-        });
-
-        if (action === null) {
-          process.exit(0);
-          return;
-        }
-
-        if (action === 'skip') {
-          skippedCount += 1;
-          continue;
-        }
-      }
-
-      await migrateSingleTarget({
-        targetDir: target.path,
-        write,
-        only,
-        debug,
-        selectedFeatureIds,
-      });
-      appliedCount += 1;
-    }
-
-    successMessage(
-      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
-    );
-    return;
-  }
-
-  let selectedFeatureIds: FeatureId[] = [];
-  if (!only) {
-    const mode = await clack.select({
-      message: 'What would you like to do?',
-      options: [
-        { value: 'features', label: 'Select optional features' },
-        {
-          value: 'agent-docs',
-          label: 'Migrate AI agent docs',
-          hint: 'restructure .github/instructions/, AGENTS.md, CLAUDE.md',
-        },
-      ],
+    await migrateSingleTarget({
+      targetDir,
+      write,
+      only,
+      debug,
+      selectedFeatureIds,
     });
-
-    if (clack.isCancel(mode)) {
-      process.exit(0);
-      return;
-    }
-
-    if (mode === 'agent-docs') {
-      await runAgentDocsMigration(targetDir, write);
-      return;
-    }
-
-    const prompted = await promptFeatures(flow);
-    if (!prompted) {
-      process.exit(0);
-      return;
-    }
-    selectedFeatureIds = prompted;
-  }
-
-  await migrateSingleTarget({
-    targetDir,
-    write,
-    only,
-    debug,
-    selectedFeatureIds,
   });
 }
 

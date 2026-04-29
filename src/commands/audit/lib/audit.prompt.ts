@@ -1,6 +1,6 @@
 import { promptMultiSelect } from '@finografic/cli-kit/flow';
 import type { FlowContext } from '@finografic/cli-kit/flow';
-import type { FeatureAuditEntry } from '../audit/audit.js';
+import type { FeatureAuditEntry } from './audit.js';
 import type { FeatureId } from 'features/feature.types';
 
 import { pc } from 'utils/picocolors';

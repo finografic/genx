@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
-import { renderHelp } from '@finografic/cli-kit/render-help';
+import { withHelp } from '@finografic/cli-kit/render-help';
 import type { ColumnDef, MultiselectOption, TableInstance } from '@finografic/cli-kit/tui';
 import { createTable, isCancel, multiselectLineBreak } from '@finografic/cli-kit/tui';
 import type { DepEntryWithLatest } from '@finografic/deps-policy/display';
@@ -11,7 +11,6 @@ import {
   printDepsTable,
 } from '@finografic/deps-policy/display';
 import { execa } from 'execa';
-import { depsHelp } from 'help/deps.help';
 import {
   GENX_CONFIG_PATH,
   errorMessage,
@@ -39,6 +38,8 @@ import { validateExistingPackage } from 'utils/validation.utils';
 import { dependencyRules } from 'config/dependencies.rules';
 import type { DependencyRule } from 'types/dependencies.types';
 import type { ManagedTarget } from 'types/managed.types';
+
+import { help } from './deps.help.js';
 
 function parsePrefix(version: string): string {
   return version.match(/^[\^~]/)?.[0] ?? '';
@@ -109,99 +110,96 @@ function logWrittenDependencyVersions(changes: DependencyChange[]): void {
 }
 
 export async function syncDeps(argv: string[], context: { cwd: string }): Promise<void> {
-  if (argv.includes('--help') || argv.includes('-h')) {
-    renderHelp(depsHelp);
-    return;
-  }
+  return withHelp(argv, help, async () => {
+    console.log('');
+    intro('Sync dependencies to @finografic/deps-policy');
 
-  console.log('');
-  intro('Sync dependencies to @finografic/deps-policy');
+    const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
+    if (debug) {
+      infoMessage(`execPath: ${process.execPath}`);
+      infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
+    }
 
-  const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
-  if (debug) {
-    infoMessage(`execPath: ${process.execPath}`);
-    infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
-  }
+    const managed = hasManagedFlag(argv);
+    const updatePolicy = argv.includes('--update-policy');
+    const yesMode = isYesMode(argv);
+    const allowDowngrade = argv.includes('--allow-downgrade');
+    const pathArg = getPathArg(argv);
 
-  const managed = hasManagedFlag(argv);
-  const updatePolicy = argv.includes('--update-policy');
-  const yesMode = isYesMode(argv);
-  const allowDowngrade = argv.includes('--allow-downgrade');
-  const pathArg = getPathArg(argv);
-
-  if (updatePolicy && (managed || pathArg)) {
-    errorMessage('--update-policy cannot be combined with --managed or a path argument');
-    process.exit(1);
-  }
-
-  if (updatePolicy) {
-    const found = await runPolicyUpdate(false);
-    if (!found) {
-      errorMessage(
-        `depsPolicyPath not set in config.\nAdd it to ${pc.cyan(GENX_CONFIG_PATH)} to use --update-policy.`,
-      );
+    if (updatePolicy && (managed || pathArg)) {
+      errorMessage('--update-policy cannot be combined with --managed or a path argument');
       process.exit(1);
     }
-    return;
-  }
 
-  if (managed && pathArg) {
-    errorMessage('Cannot combine [path] with --managed');
-    process.exit(1);
-  }
-
-  if (managed) {
-    // Silently update deps-policy first so the freshest versions are used for all targets.
-    await runPolicyUpdate(true);
-    let managedTargets: ManagedTarget[];
-    try {
-      managedTargets = await readManagedTargets();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to read managed config';
-      errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
-      process.exit(1);
+    if (updatePolicy) {
+      const found = await runPolicyUpdate(false);
+      if (!found) {
+        errorMessage(
+          `depsPolicyPath not set in config.\nAdd it to ${pc.cyan(GENX_CONFIG_PATH)} to use --update-policy.`,
+        );
+        process.exit(1);
+      }
       return;
     }
 
-    if (managedTargets.length === 0) {
-      infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
-      return;
+    if (managed && pathArg) {
+      errorMessage('Cannot combine [path] with --managed');
+      process.exit(1);
     }
 
-    let appliedCount = 0;
-    let skippedCount = 0;
-
-    for (const [index, target] of managedTargets.entries()) {
-      if (!yesMode) {
-        const action = await promptManagedTargetAction({
-          actionLabel: 'Sync dependencies for',
-          target,
-          currentIndex: index + 1,
-          total: managedTargets.length,
-        });
-
-        if (action === null) {
-          process.exit(0);
-        }
-
-        if (action === 'skip') {
-          skippedCount += 1;
-          continue;
-        }
+    if (managed) {
+      // Silently update deps-policy first so the freshest versions are used for all targets.
+      await runPolicyUpdate(true);
+      let managedTargets: ManagedTarget[];
+      try {
+        managedTargets = await readManagedTargets();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unable to read managed config';
+        errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
+        process.exit(1);
+        return;
       }
 
-      await syncDepsForTarget(target.path, { allowDowngrade, yesMode });
-      appliedCount += 1;
+      if (managedTargets.length === 0) {
+        infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
+        return;
+      }
+
+      let appliedCount = 0;
+      let skippedCount = 0;
+
+      for (const [index, target] of managedTargets.entries()) {
+        if (!yesMode) {
+          const action = await promptManagedTargetAction({
+            actionLabel: 'Sync dependencies for',
+            target,
+            currentIndex: index + 1,
+            total: managedTargets.length,
+          });
+
+          if (action === null) {
+            process.exit(0);
+          }
+
+          if (action === 'skip') {
+            skippedCount += 1;
+            continue;
+          }
+        }
+
+        await syncDepsForTarget(target.path, { allowDowngrade, yesMode });
+        appliedCount += 1;
+      }
+
+      successMessage(
+        `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})\n`,
+      );
+      return;
     }
 
-    successMessage(
-      `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})\n`,
-    );
-    return;
-  }
-
-  const targetDir = resolveTargetDir(context.cwd, pathArg);
-  await syncDepsForTarget(targetDir, { allowDowngrade, yesMode });
+    const targetDir = resolveTargetDir(context.cwd, pathArg);
+    await syncDepsForTarget(targetDir, { allowDowngrade, yesMode });
+  });
 }
 
 async function syncDepsForTarget(

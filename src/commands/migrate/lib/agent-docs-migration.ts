@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url';
 
 import { findPackageRoot } from 'utils/package-root.utils';
 
-import { proposeAgentsGitignoreMerge, rewriteDotAiPathsToAgents } from '../agents-gitignore.utils.js';
+import {
+  proposeAgentsGitignoreMerge,
+  rewriteDotAiPathsToAgents,
+} from '../../../lib/agents-gitignore.utils.js';
 
 // ── subfolder map ─────────────────────────────────────────────────────────────
 

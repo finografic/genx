@@ -6,11 +6,8 @@ import { errorMessage, fileExists, findPackageRoot, getTemplatesDir, infoMessage
 import type { FeatureId } from 'features/feature.types';
 
 import { planDependencyChanges } from 'lib/migrate/dependencies.utils';
-import { planMerges } from 'lib/migrate/merge.utils';
 import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
-import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from 'lib/migrate/node.utils';
 import { patchPackageJson } from 'lib/migrate/package-json.utils';
-import { getExistingFiles, planRenames } from 'lib/migrate/rename.utils';
 import { pc } from 'utils/picocolors';
 
 import { dependencyRules } from 'config/dependencies.rules';
@@ -20,6 +17,10 @@ import { nodePolicy } from 'config/node.policy';
 import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
 import type { PackageJson } from 'types/package-json.types';
+
+import { planMerges } from './merge.utils.js';
+import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from './node.utils.js';
+import { getExistingFiles, planRenames } from './rename.utils.js';
 
 export interface MigrationPlanState {
   currentNodeState: Awaited<ReturnType<typeof detectCurrentNodeState>> | null;
