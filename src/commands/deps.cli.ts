@@ -123,7 +123,6 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
   }
 
-  const write = argv.includes('--write');
   const managed = hasManagedFlag(argv);
   const updatePolicy = argv.includes('--update-policy');
   const yesMode = isYesMode(argv);
@@ -173,7 +172,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     let skippedCount = 0;
 
     for (const [index, target] of managedTargets.entries()) {
-      if (write && !yesMode) {
+      if (!yesMode) {
         const action = await promptManagedTargetAction({
           actionLabel: 'Sync dependencies for',
           target,
@@ -191,7 +190,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
         }
       }
 
-      await syncDepsForTarget(target.path, write, { allowDowngrade });
+      await syncDepsForTarget(target.path, { allowDowngrade, yesMode });
       appliedCount += 1;
     }
 
@@ -202,13 +201,12 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   }
 
   const targetDir = resolveTargetDir(context.cwd, pathArg);
-  await syncDepsForTarget(targetDir, write, { allowDowngrade });
+  await syncDepsForTarget(targetDir, { allowDowngrade, yesMode });
 }
 
 async function syncDepsForTarget(
   targetDir: string,
-  write: boolean,
-  options: { allowDowngrade: boolean },
+  options: { allowDowngrade: boolean; yesMode: boolean },
 ): Promise<void> {
   const validation = validateExistingPackage(targetDir);
   if (!validation.ok) {
@@ -223,7 +221,7 @@ async function syncDepsForTarget(
     allowDowngrade: options.allowDowngrade,
   });
 
-  const header = `${pc.cyan(targetDir.replace(homedir(), ''))}${write ? '' : pc.white(pc.dim(' (DRY RUN)'))}`;
+  const header = `${pc.cyan(targetDir.replace(homedir(), ''))}`;
   infoMessage(`\n${header}`);
 
   if (allChanges.length === 0) {
@@ -251,28 +249,27 @@ async function syncDepsForTarget(
     console.log();
   }
 
-  if (!write) {
-    infoMessage(
-      `${pc.white(pc.dim('Re-run with'))} ${pc.yellow('--write')} ${pc.white(pc.dim('to apply changes.'))}`,
-    );
-    return;
-  }
-
-  // ─── Interactive selection ───────────────────────────────────────
+  // ─── Select packages (interactive) or apply all (--yes / -y) ─────────
   const selectedChanges: DependencyChange[] = [];
 
-  if (updateChanges.length > 0) {
-    const updateEntries = updateChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
-    const selectedEntries = await selectEntries(updateEntries, columns, 'Select packages to update');
-    const selectedNames = new Set(selectedEntries.map((e) => e.name));
-    selectedChanges.push(...updateChanges.filter((c) => selectedNames.has(c.name)));
-  }
+  if (options.yesMode) {
+    selectedChanges.push(...updateChanges, ...addChanges);
+  } else {
+    if (updateChanges.length > 0) {
+      const updateEntries = updateChanges.map((c) =>
+        changeToEntry(c, ruleByName.get(c.name), packageJsonPath),
+      );
+      const selectedEntries = await selectEntries(updateEntries, columns, 'Select packages to update');
+      const selectedNames = new Set(selectedEntries.map((e) => e.name));
+      selectedChanges.push(...updateChanges.filter((c) => selectedNames.has(c.name)));
+    }
 
-  if (addChanges.length > 0) {
-    const addEntries = addChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
-    const selectedEntries = await selectEntries(addEntries, columns, 'Select packages to add');
-    const selectedNames = new Set(selectedEntries.map((e) => e.name));
-    selectedChanges.push(...addChanges.filter((c) => selectedNames.has(c.name)));
+    if (addChanges.length > 0) {
+      const addEntries = addChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
+      const selectedEntries = await selectEntries(addEntries, columns, 'Select packages to add');
+      const selectedNames = new Set(selectedEntries.map((e) => e.name));
+      selectedChanges.push(...addChanges.filter((c) => selectedNames.has(c.name)));
+    }
   }
 
   if (selectedChanges.length === 0) {

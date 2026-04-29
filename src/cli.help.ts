@@ -39,12 +39,8 @@ export const cliHelp: HelpConfig = {
         description: 'genx migrate --only=package-json,oxc-config --write',
       },
       {
-        label: 'Sync deps (dry run)',
+        label: 'Sync deps (interactive package selection)',
         description: 'genx deps',
-      },
-      {
-        label: 'Sync deps (apply changes)',
-        description: 'genx deps --write',
       },
       {
         label: 'Add features to current directory',
@@ -55,8 +51,8 @@ export const cliHelp: HelpConfig = {
         description: 'genx audit',
       },
       {
-        label: 'Run a command across managed targets',
-        description: 'genx deps --managed --write',
+        label: 'Run deps across managed targets',
+        description: 'genx deps --managed',
       },
     ],
   },

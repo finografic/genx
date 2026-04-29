@@ -14,7 +14,16 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 
 // ── Feature READMEs ──────────────────────────────────────────────────
 
-const FEATURE_DIRS = ['oxfmt', 'vitest', 'ai-instructions', 'markdown', 'css', 'git-hooks'] as const;
+const FEATURES_ROOT = path.join(ROOT, 'src', 'features');
+
+function getDirsWithReadme(rootDir: string): string[] {
+  return fs
+    .readdirSync(rootDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((dir) => fs.existsSync(path.join(rootDir, dir, 'README.md')))
+    .toSorted((a, b) => a.localeCompare(b));
+}
 
 interface FeatureInfo {
   name: string;
@@ -23,7 +32,7 @@ interface FeatureInfo {
 }
 
 function parseFeatureReadme(dir: string): FeatureInfo {
-  const readmePath = path.join(ROOT, 'src', 'features', dir, 'README.md');
+  const readmePath = path.join(FEATURES_ROOT, dir, 'README.md');
   const content = fs.readFileSync(readmePath, 'utf-8');
   const lines = content.split('\n');
 
@@ -124,7 +133,7 @@ function generateUsageSection(): string {
 function generateFeaturesSection(): string {
   const lines: string[] = [];
 
-  for (const dir of FEATURE_DIRS) {
+  for (const dir of getDirsWithReadme(FEATURES_ROOT)) {
     const feature = parseFeatureReadme(dir);
     lines.push(`### ${feature.name}`);
     lines.push('');
@@ -167,7 +176,7 @@ function replaceBetweenMarkers(
 const COMMAND_OPTIONS: Record<string, string> = {
   create: 'Interactive prompts',
   migrate: '`--write`, `--only=<sections>`, `--managed`, `--yes`',
-  deps: '`--write`, `--managed`, `--yes`, `--allow-downgrade`',
+  deps: '`--managed`, `--yes`, `--allow-downgrade`, `--update-policy`',
   features: '`--managed`, `--yes`',
   help: '-',
 };

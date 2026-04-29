@@ -132,7 +132,7 @@ ecosystem matures, some package types legitimately need a different dep surface.
 - [x] status: **DONE**
 
 **Goal:** A script (or separate package) that discovers all `@finografic` packages by
-filesystem and runs `genx deps --write` (or `genx migrate --only=dependencies --write`)
+filesystem and runs `genx deps` / `genx deps --yes` (or `genx migrate --only=dependencies --write`)
 against each, reporting a summary.
 
 **Why:** The current pull model requires running `genx deps` per-project manually. Fine for one

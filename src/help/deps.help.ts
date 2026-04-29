@@ -12,27 +12,23 @@ export const depsHelp: HelpConfig = {
     title: 'Examples',
     list: [
       {
-        label: 'Dry run in current directory',
+        label: 'Interactive sync in current directory (select packages to apply)',
         description: 'genx deps',
       },
       {
-        label: 'Dry run against a specific directory',
+        label: 'Interactive sync for a specific directory',
         description: 'genx deps ../my-package',
       },
       {
-        label: 'Apply changes to current directory',
-        description: 'genx deps --write',
+        label: 'Apply all planned changes without multiselect (CI / non-interactive)',
+        description: 'genx deps --yes',
       },
       {
-        label: 'Apply changes to a specific directory',
-        description: 'genx deps ../my-package --write',
+        label: 'Sync all managed targets (prompt per target unless --yes)',
+        description: 'genx deps --managed',
       },
       {
-        label: 'Sync all managed targets',
-        description: 'genx deps --managed --write',
-      },
-      {
-        label: 'Include policy downgrades (dry run)',
+        label: 'Include policy downgrades when planning changes',
         description: 'genx deps --allow-downgrade',
       },
       {

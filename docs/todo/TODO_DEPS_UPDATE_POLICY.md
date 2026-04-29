@@ -148,9 +148,9 @@ genx deps --update-policy
 # → exits after update, does not sync any projects
 
 # Test --managed (silent pre-update)
-genx deps --managed --write
+genx deps --managed --yes
 # → no policy prompts, silent update runs first
-# → managed target loop uses freshly-written XDG snapshot versions
+# → managed target loop uses freshly-written XDG snapshot versions (non-interactive)
 ```
 
 ---

@@ -22,13 +22,14 @@ Run directly using `pnpm dlx`:
 pnpm dlx @finografic/genx <command> [options]
 ```
 
-| Command    | Description                                  |
-| ---------- | -------------------------------------------- |
-| `create`   | Scaffold a new @finografic package           |
-| `migrate`  | Sync conventions to an existing package      |
-| `deps`     | Sync dependencies to @finografic/deps-policy |
-| `features` | Add optional features to an existing package |
-| `help`     | Show this help message                       |
+| Command    | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `create`   | Scaffold a new @finografic package                 |
+| `migrate`  | Sync conventions to an existing package            |
+| `deps`     | Sync dependencies to @finografic/deps-policy       |
+| `features` | Add optional features to an existing package       |
+| `audit`    | Scan features and apply what is missing or partial |
+| `help`     | Show this help message                             |
 
 ### `genx create`
 
@@ -62,7 +63,7 @@ genx migrate ../my-package
 genx migrate ../my-package --write
 
 # Only update specific sections
-genx migrate --only=package-json,eslint --write
+genx migrate --only=package-json,oxc-config --write
 
 # Update dependencies and Node version
 genx migrate --only=dependencies,node --write
@@ -77,29 +78,29 @@ genx migrate --managed --write
 ### `genx deps`
 
 ```bash
-genx deps [path] [options]
+genx deps [path] [--update-policy] [options]
 ```
 
 **Examples:**
 
 ```bash
-# Dry run in current directory
+# Interactive sync in current directory (select packages to apply)
 genx deps
 
-# Dry run against a specific directory
+# Interactive sync for a specific directory
 genx deps ../my-package
 
-# Apply changes to current directory
-genx deps --write
+# Apply all planned changes without multiselect (CI / non-interactive)
+genx deps --yes
 
-# Apply changes to a specific directory
-genx deps ../my-package --write
+# Sync all managed targets (prompt per target unless --yes)
+genx deps --managed
 
-# Sync all managed targets
-genx deps --managed --write
-
-# Include policy downgrades (dry run)
+# Include policy downgrades when planning changes
 genx deps --allow-downgrade
+
+# Update deps-policy interactively (no dep sync)
+genx deps --update-policy
 ```
 
 ### `genx features`
@@ -126,47 +127,35 @@ genx features --managed
 
 <!-- GENERATED:FEATURES:START -->
 
-### oxfmt
+### AI Agents (AGENTS.md + skills)
 
-Migrate an existing package to `oxfmt` + `@finografic/oxfmt-config` (for repos not created from the latest genx template).
+Scaffolds and syncs the agent interface layer of a `@finografic` project.
 
-- Installs `oxfmt` and `@finografic/oxfmt-config`
-- Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
-- Adds `format:check` / `format:fix` and `update:oxfmt-config` in the **PACKAGES** scripts section
-- Replaces Prettier if present (uninstall + backup configs)
-- Removes **dprint** / `@finografic/dprint-config` if still present (deps, `dprint.json(c)` / `dprint.config.jsonc`, lint-staged, scripts, VS Code `dprint.*` settings)
-- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` / `pnpm dprint check` steps use `pnpm format:check` instead
-- Normalizes `lint-staged`: `*.{ts,…,cjs}` → `oxfmt` then `eslint --fix`; `*.md` → `eslint --fix` only; `*.{json,jsonc,md,yml,yaml,toml}` → `oxfmt` only (legacy data globs are merged)
-- Adds format check to `release:check` / CI when missing
-- Recommends `oxc.oxc-vscode`, marks the Prettier extension as unwanted
-- Updates `.vscode/settings.json` with JSONC-aware patches (keeps `//` comments and unrelated keys): global oxc options sit just before `prettier.enable`; `[markdown]` is inserted before `markdownlint.config` when present
-- Strips redundant `@stylistic/*` rules from `eslint.config.ts` that oxfmt fully covers
+- Creates `AGENTS.md` from the canonical template if absent
+- Keeps three enforced sections in sync with the template: **Rules — Global**,
+- Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
+- Copies agent skill procedures into `.github/skills/` (scaffold-cli-help,
 
-### vitest
+### ai-claude
 
-Testing via Vitest.
+Claude Code support: CLAUDE.md, session memory, handoff document, and settings.
 
-- Installs `vitest`
-- Adds `test` / `test:run` / `test:coverage` scripts
+- Creates `CLAUDE.md` — project-specific instructions for Claude Code
+- Creates `.claude/memory.md` — session breadcrumb log (gitignored)
+- Creates `.agents/handoff.md` — project snapshot for bridging Claude Code ↔ Claude.ai (gitignored)
+- Creates `.claude/settings.json` — Claude Code permissions (checked in)
+- Creates `.claude/assets/.gitkeep` — keeps the shared Claude assets area scaffolded even when empty
+- Adds `.claude/` to `.gitignore`, re-admitting `settings.json`
+- Auto-installs `ai-instructions` if `.github/instructions/` is missing
 
 ### ai-instructions
 
 Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 
-- Creates `.github/copilot-instructions.md` — summary index for GitHub Copilot
-- Creates `.github/instructions/` — canonical rule files shared across all AI tools
-- Creates `.github/instructions/project/` — empty folder for project-specific rules
-
-### markdown
-
-Markdown linting via `eslint-plugin-markdownlint`.
-
-- Installs `eslint-plugin-markdownlint`
-- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
-- Adds markdown block to `eslint.config.ts`
-- Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
-- Adds VSCode extension recommendation
-- Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
+- Syncs `.github/copilot-instructions.md` from `_templates` (full file when content differs).
+- Syncs each file under `.github/instructions/` from `_templates`, **except** the `project/` subtree — that folder is never overwritten by genx (per-repo rules stay put).
+- Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**, plus shared bodies for General / Markdown / Git). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
+- Optionally updates `eslint.config.ts` ignore patterns for `.cursor/` paths.
 
 ### css
 
@@ -191,6 +180,44 @@ Pre-commit linting + conventional commits.
 - Removes an inlined `commitlint` key from package.json if present (config lives in `commitlint.config.mjs`)
 - Removes legacy `simple-git-hooks` config/files when present
 - Ensures `prepare` script runs `husky`
+
+### markdown
+
+Markdown linting via `eslint-plugin-markdownlint`.
+
+- Installs `eslint-plugin-markdownlint`
+- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
+- Adds markdown block to `eslint.config.ts`
+- Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
+- Adds VSCode extension recommendation
+- Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
+
+### oxc-config
+
+Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (for repos not created from the latest genx template).
+
+- Installs `oxfmt`, `oxlint`, `oxlint-tsgolint`, and `@finografic/oxc-config`
+- Removes legacy `@finografic/oxfmt-config` if present
+- Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
+- Ensures `lint` / `lint:fix` / `lint:ci` scripts use oxlint
+- Creates or updates `update:oxc-config` in the **PACKAGES** scripts section
+- Adds `format:check` / `format:fix` scripts
+- Removes legacy update scripts (`update:eslint-config`, `update:oxfmt-config`)
+- Replaces Prettier if present (uninstall + remove configs)
+- Removes **dprint** / `@finografic/dprint-config` if still present (deps, config files, lint-staged, scripts)
+- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` steps use `pnpm format:check` instead
+- Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
+- Adds format check to `release:check` / CI when missing
+- Removes the ESLint/`@stylistic`/`globals` package stack and `eslint.config.*` files
+- Recommends `oxc.oxc-vscode`, removes legacy `dprint.dprint` / `dbaeumer.vscode-eslint` recommendations
+- Writes canonical `.vscode/settings.json` (oxc formatter, all language blocks, oxc/typescript preferences)
+
+### vitest
+
+Testing via Vitest.
+
+- Installs `vitest`
+- Adds `test` / `test:run` / `test:coverage` scripts
 
 <!-- GENERATED:FEATURES:END -->
 
@@ -243,14 +270,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                  | Options                                              |
-| --------------- | -------------------------------------------- | ---------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package           | Interactive prompts                                  |
-| `migrate`       | Sync conventions to an existing package      | `--write`, `--only=<sections>`, `--managed`, `--yes` |
-| `deps`          | Sync dependencies to @finografic/deps-policy | `--write`, `--managed`, `--yes`, `--allow-downgrade` |
-| `features`      | Add optional features to an existing package | `--managed`, `--yes`                                 |
-| `help`          | Show this help message                       | -                                                    |
-| `--help` / `-h` | Show help (works with commands too)          | -                                                    |
+| Command         | Description                                        | Options                                                      |
+| --------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| `create`        | Scaffold a new @finografic package                 | Interactive prompts                                          |
+| `migrate`       | Sync conventions to an existing package            | `--write`, `--only=<sections>`, `--managed`, `--yes`         |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `--managed`, `--yes`, `--allow-downgrade`, `--update-policy` |
+| `features`      | Add optional features to an existing package       | `--managed`, `--yes`                                         |
+| `audit`         | Scan features and apply what is missing or partial | -                                                            |
+| `help`          | Show this help message                             | -                                                            |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                            |
 
 See `genx <command> --help` for detailed usage.
 
