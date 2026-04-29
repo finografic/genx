@@ -11,6 +11,11 @@ import { applyTemplate } from 'utils/template.utils';
 
 import type { TemplateVars } from 'types/template.types';
 
+import { proposeAgentsGitignoreMerge, rewriteDotAiPathsToAgents } from '../../lib/agents-gitignore.utils.js';
+import {
+  collectDotAiMarkdownReferenceUpdates,
+  collectLegacyAiFolderMigrationChanges,
+} from '../../lib/agents-legacy-ai-folder.utils.js';
 import {
   createDeletePreviewChange,
   createWritePreviewChange,
@@ -62,14 +67,32 @@ async function collectInstructionTemplateFiles(
   return out.toSorted((a, b) => a.rel.localeCompare(b.rel));
 }
 
+export interface PreviewAiInstructionsOptions {
+  /**
+   * When true (e.g. `previewAiClaude` already applied `.ai` → `.agents`, path refs, and `.gitignore`), skip
+   * those steps to avoid duplicate preview entries.
+   */
+  skipAgentsInfrastructure?: boolean;
+}
+
 /**
  * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint
  * ignores.
  */
-export async function previewAiInstructions(context: FeatureContext): Promise<FeaturePreviewResult> {
+export async function previewAiInstructions(
+  context: FeatureContext,
+  options?: PreviewAiInstructionsOptions,
+): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
   const changes: FeaturePreviewResult['changes'] = [];
   const applied: string[] = [];
+
+  const { skipAgentsInfrastructure = false } = options ?? {};
+
+  if (!skipAgentsInfrastructure) {
+    changes.push(...(await collectLegacyAiFolderMigrationChanges(targetDir)));
+    changes.push(...(await collectDotAiMarkdownReferenceUpdates(targetDir)));
+  }
 
   const fromDir = fileURLToPath(new URL('.', import.meta.url));
   const templateDir = getTemplatesDir(fromDir);
@@ -181,6 +204,28 @@ export async function previewAiInstructions(context: FeatureContext): Promise<Fe
           ),
         );
       }
+    }
+  }
+
+  if (!skipAgentsInfrastructure) {
+    const gitignorePath = resolve(targetDir, '.gitignore');
+    let gitignoreCurrent = '';
+    if (fileExists(gitignorePath)) {
+      gitignoreCurrent = await readFile(gitignorePath, 'utf8');
+    }
+    const gitignoreProposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreCurrent));
+    if (gitignoreProposed !== gitignoreCurrent) {
+      const out = gitignoreProposed.endsWith('\n') ? gitignoreProposed : `${gitignoreProposed}\n`;
+      changes.push(
+        createWritePreviewChange(
+          gitignorePath,
+          gitignoreCurrent,
+          out,
+          '.gitignore (# Agents, Claude, Codex, worktrees)',
+        ),
+      );
+    } else {
+      applied.push('.gitignore (agents)');
     }
   }
 

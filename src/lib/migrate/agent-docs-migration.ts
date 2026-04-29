@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import { findPackageRoot } from 'utils/package-root.utils';
 
+import { proposeAgentsGitignoreMerge, rewriteDotAiPathsToAgents } from '../agents-gitignore.utils.js';
+
 // ── subfolder map ─────────────────────────────────────────────────────────────
 
 // DEPRECATED: flat numbered layout (e.g. 01-file-naming.instructions.md). Canonical layout uses
@@ -81,8 +83,6 @@ const LEGACY_AI_FOLDER = '.ai';
 /** Files (excluding .gitignore) to scan for `.ai/` path references when renaming the folder. */
 const AI_REF_FILES = ['CLAUDE.md', 'AGENTS.md', 'README.md', '.github/copilot-instructions.md'] as const;
 
-const AGENTS_GITIGNORE_ENTRIES = ['.agents/', '!.agents/handoff.md'] as const;
-
 function replaceAiRefsInFile(filePath: string, result: AgentDocsMigrationResult): void {
   if (!fs.existsSync(filePath)) return;
   const content = fs.readFileSync(filePath, 'utf8');
@@ -98,36 +98,14 @@ function ensureAgentsGitignore(targetDir: string, result: AgentDocsMigrationResu
   const gitignorePath = path.join(targetDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) return;
 
-  let content = fs.readFileSync(gitignorePath, 'utf8');
-  const lines = content.split('\n');
-
-  // Check if canonical entries already present
-  const missingEntries = AGENTS_GITIGNORE_ENTRIES.filter((e) => !lines.some((l) => l.trim() === e));
-  if (missingEntries.length === 0) {
-    result.skipped.push('.gitignore: .agents/ entries already present');
+  const raw = fs.readFileSync(gitignorePath, 'utf8');
+  const proposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(raw));
+  if (proposed === raw) {
+    result.skipped.push('.gitignore: agents/claude entries already present');
     return;
   }
-
-  const agentsSectionIdx = lines.findIndex((l) => /^#\s*agents/i.test(l.trim()));
-
-  if (agentsSectionIdx !== -1) {
-    // Insert each missing entry at the right position within the # Agents section:
-    // .agents/ goes right after the comment; !.agents/handoff.md goes right after .agents/.
-    for (const entry of missingEntries) {
-      if (entry === AGENTS_GITIGNORE_ENTRIES[0]) {
-        lines.splice(agentsSectionIdx + 1, 0, entry);
-      } else {
-        const parentIdx = lines.findIndex((l) => l.trim() === AGENTS_GITIGNORE_ENTRIES[0]);
-        lines.splice(parentIdx !== -1 ? parentIdx + 1 : agentsSectionIdx + 1, 0, entry);
-      }
-    }
-  } else {
-    lines.push('', '# Agents', ...missingEntries);
-  }
-
-  content = lines.join('\n');
-  fs.writeFileSync(gitignorePath, content, 'utf8');
-  result.applied.push(`.gitignore: added ${missingEntries.join(', ')}`);
+  fs.writeFileSync(gitignorePath, proposed, 'utf8');
+  result.applied.push('.gitignore: canonical # Agents block (agents, Claude, Codex, worktrees)');
 }
 
 function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): void {
@@ -758,13 +736,13 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
     result.skipped.push('.ai/ not found — Step 1 skipped');
   }
 
-  // Check gitignore regardless — .agents/ entries may be missing even without .ai/
+  // Check gitignore regardless — full block may be missing even without .ai/
   const gitignorePath = path.join(targetDir, '.gitignore');
   if (fs.existsSync(gitignorePath)) {
-    const lines = fs.readFileSync(gitignorePath, 'utf8').split('\n');
-    const missing = AGENTS_GITIGNORE_ENTRIES.filter((e) => !lines.some((l) => l.trim() === e));
-    if (missing.length > 0) {
-      result.applied.push(`.gitignore: add ${missing.join(', ')}`);
+    const raw = fs.readFileSync(gitignorePath, 'utf8');
+    const proposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(raw));
+    if (proposed !== raw) {
+      result.applied.push('.gitignore: canonical # Agents block (agents, Claude, Codex, worktrees)');
     }
   }
 

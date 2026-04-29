@@ -9,11 +9,16 @@ import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
 
+import { proposeAgentsGitignoreMerge, rewriteDotAiPathsToAgents } from '../../lib/agents-gitignore.utils.js';
+import {
+  collectDotAiMarkdownReferenceUpdates,
+  collectLegacyAiFolderMigrationChanges,
+} from '../../lib/agents-legacy-ai-folder.utils.js';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { AI_INSTRUCTIONS_ESLINT_IGNORES } from '../ai-instructions/ai-instructions.constants';
 import { previewAiInstructions } from '../ai-instructions/ai-instructions.preview.js';
 import { createDefaultTemplateVars, proposeEslintIgnorePatterns } from '../feature.utils';
-import { AI_CLAUDE_ESLINT_IGNORES, AI_CLAUDE_FILES, AI_CLAUDE_GITIGNORE_LINES } from './ai-claude.constants';
+import { AI_CLAUDE_ESLINT_IGNORES, AI_CLAUDE_FILES } from './ai-claude.constants';
 
 async function readPackageVars(targetDir: string): Promise<{ PACKAGE_NAME: string; DESCRIPTION: string }> {
   try {
@@ -28,15 +33,6 @@ async function readPackageVars(targetDir: string): Promise<{ PACKAGE_NAME: strin
   }
 }
 
-function proposeGitignoreWithClaudeLines(content: string): string {
-  const missingLines = AI_CLAUDE_GITIGNORE_LINES.filter((line) => !content.includes(line));
-  if (missingLines.length === 0) {
-    return content;
-  }
-  const linesToAdd = missingLines.join('\n');
-  return content.endsWith('\n') ? `${content}${linesToAdd}\n` : `${content}\n${linesToAdd}\n`;
-}
-
 /**
  * Preview Claude Code support: optional ai-instructions tree, template files, .gitignore, ESLint.
  */
@@ -45,9 +41,13 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
   const changes: FeaturePreviewResult['changes'] = [];
   const applied: string[] = [];
 
+  const legacyAiChanges = await collectLegacyAiFolderMigrationChanges(targetDir);
+  changes.push(...legacyAiChanges);
+  changes.push(...(await collectDotAiMarkdownReferenceUpdates(targetDir)));
+
   const instructionsDir = resolve(targetDir, '.github/instructions');
   if (!fileExists(instructionsDir)) {
-    const sub = await previewAiInstructions(context);
+    const sub = await previewAiInstructions(context, { skipAgentsInfrastructure: true });
     for (const c of sub.changes) {
       if (c.kind === 'write' && c.path.endsWith('eslint.config.ts')) {
         continue;
@@ -63,6 +63,10 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
   const memoryDest = resolve(targetDir, memoryFile);
   const settingsDest = resolve(targetDir, settingsFile);
   const handoffDest = resolve(targetDir, handoffFile);
+
+  const handoffWrittenByLegacyMigration = legacyAiChanges.some(
+    (c) => c.kind === 'write' && resolve(c.path) === handoffDest,
+  );
 
   const fromDir = fileURLToPath(new URL('.', import.meta.url));
   const templateDir = getTemplatesDir(fromDir);
@@ -101,7 +105,7 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
     applied.push(settingsFile);
   }
 
-  if (!fileExists(handoffDest)) {
+  if (!fileExists(handoffDest) && !handoffWrittenByLegacyMigration) {
     const body = await templateBody(handoffFile, handoffVars);
     changes.push(createWritePreviewChange(handoffDest, '', body, handoffFile));
   } else {
@@ -121,14 +125,19 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
   if (fileExists(gitignorePath)) {
     gitignoreCurrent = await readFile(gitignorePath, 'utf8');
   }
-  const gitignoreProposed = proposeGitignoreWithClaudeLines(gitignoreCurrent);
+  const gitignoreProposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreCurrent));
   if (gitignoreProposed !== gitignoreCurrent) {
     const out = gitignoreProposed.endsWith('\n') ? gitignoreProposed : `${gitignoreProposed}\n`;
     changes.push(
-      createWritePreviewChange(gitignorePath, gitignoreCurrent, out, '.gitignore (.claude entries)'),
+      createWritePreviewChange(
+        gitignorePath,
+        gitignoreCurrent,
+        out,
+        '.gitignore (# Agents, Claude, Codex, worktrees)',
+      ),
     );
   } else {
-    applied.push('.gitignore (.claude)');
+    applied.push('.gitignore (agents)');
   }
 
   const eslintPath = resolve(targetDir, 'eslint.config.ts');

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
 
+import { CANONICAL_AGENTS_GITIGNORE_LINES } from '../lib/agents-gitignore.utils.js';
 import { hasPreviewChanges } from '../lib/feature-preview/feature-preview.utils.js';
 import { AI_CLAUDE_FILES } from './ai-claude/ai-claude.constants.js';
 import { previewAiClaude } from './ai-claude/ai-claude.preview.js';
@@ -46,6 +47,7 @@ async function seedCanonicalAiInstructions(root: string): Promise<void> {
     join(root, 'AGENTS.md'),
     await readFile(join(repoRoot, '_templates/AGENTS.md.template'), 'utf8'),
   );
+  await writeFile(join(root, '.gitignore'), `${CANONICAL_AGENTS_GITIGNORE_LINES.join('\n')}\n`);
 }
 
 describe('preview migration — drift vs canonical', () => {
@@ -183,7 +185,7 @@ describe('preview migration — drift vs canonical', () => {
       await mkdir(dirname(p), { recursive: true });
       await writeFile(p, 'ok\n');
     }
-    await writeFile(join(root, '.gitignore'), `.claude/\n!.claude/settings.json\n`);
+    await writeFile(join(root, '.gitignore'), `${CANONICAL_AGENTS_GITIGNORE_LINES.join('\n')}\n`);
     await writeFile(join(root, 'eslint.config.ts'), `export default { ignores: ['**/.claude/**'] };\n`);
 
     const preview = await previewAiClaude({ targetDir: root });
@@ -210,7 +212,7 @@ describe('preview migration — drift vs canonical', () => {
       await writeFile(p, f === 'CLAUDE.md' ? '@AGENTS.md\n' : 'ok\n');
     }
     await mkdir(join(root, '.claude/assets'), { recursive: true });
-    await writeFile(join(root, '.gitignore'), `.claude/\n!.claude/settings.json\n`);
+    await writeFile(join(root, '.gitignore'), `${CANONICAL_AGENTS_GITIGNORE_LINES.join('\n')}\n`);
     await writeFile(join(root, 'eslint.config.ts'), `export default { ignores: ['**/.claude/**'] };\n`);
 
     const preview = await previewAiClaude({ targetDir: root });

@@ -1,5 +1,6 @@
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
+import { finalizeLegacyAiFolderAfterApply } from '../../lib/agents-legacy-ai-folder.utils.js';
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewAiClaude } from './ai-claude.preview.js';
 
@@ -9,5 +10,7 @@ import { previewAiClaude } from './ai-claude.preview.js';
  */
 export async function applyAiClaude(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewAiClaude(context);
-  return applyPreviewChanges(preview, { yesAll: context.yesAll });
+  const result = await applyPreviewChanges(preview, { yesAll: context.yesAll });
+  await finalizeLegacyAiFolderAfterApply(context.targetDir);
+  return result;
 }
