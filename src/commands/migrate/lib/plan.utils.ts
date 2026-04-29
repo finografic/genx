@@ -6,7 +6,6 @@ import { errorMessage, fileExists, findPackageRoot, getTemplatesDir, infoMessage
 import type { FeatureId } from 'features/feature.types';
 
 import { planDependencyChanges } from 'lib/migrate/dependencies.utils';
-import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import { patchPackageJson } from 'lib/migrate/package-json.utils';
 import { pc } from 'utils/picocolors';
 
@@ -19,6 +18,7 @@ import type { MigrateOnlySection } from 'types/migrate.types';
 import type { PackageJson } from 'types/package-json.types';
 
 import { planMerges } from './merge.utils.js';
+import { shouldRunSection } from './migrate-metadata.utils.js';
 import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from './node.utils.js';
 import { getExistingFiles, planRenames } from './rename.utils.js';
 

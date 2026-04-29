@@ -1,9 +1,14 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-import { ensureKeyword } from 'lib/migrate/migrate-metadata.utils';
-
 import { migrateConfig } from 'config/migrate.config';
 import type { PackageJson } from 'types/package-json.types';
+
+function ensureKeyword(keywords: string[], keyword: string): { keywords: string[]; changed: boolean } {
+  if (keywords.some((k) => k.toLowerCase() === keyword.toLowerCase())) {
+    return { keywords, changed: false };
+  }
+  return { keywords: [...keywords, keyword], changed: true };
+}
 
 /**
  * Keep `lint-staged` and `simple-git-hooks` at the end of package.json (repo convention).

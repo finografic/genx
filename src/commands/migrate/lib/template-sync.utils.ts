@@ -4,12 +4,13 @@ import * as clack from '@clack/prompts';
 import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils';
 
 import { isCliPackage } from 'lib/generators/cli-help.generator';
-import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 
 import { migrateConfig } from 'config/migrate.config';
 import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
+
+import { shouldRunSection } from './migrate-metadata.utils.js';
 
 /**
  * Sync files from template to target directory.

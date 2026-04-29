@@ -3,10 +3,9 @@ import { rename } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ensureDir, fileExists, infoMessage } from 'utils';
 
-import { shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
-
 import type { MigrateOnlySection } from 'types/migrate.types';
 
+import { shouldRunSection } from './migrate-metadata.utils.js';
 import { confirmReleasesRename } from './migrate.prompt.js';
 
 /**

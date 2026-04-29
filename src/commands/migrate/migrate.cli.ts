@@ -23,6 +23,7 @@ import type { FeatureId } from 'features/feature.types';
 import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from './lib/agent-docs-migration.js';
 import { restructureDocs } from './lib/docs-restructure.utils.js';
 import { applyMerges } from './lib/merge.utils.js';
+import { getScopeAndName, parseMigrateArgs, shouldRunSection } from './lib/migrate-metadata.utils.js';
 import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from './lib/migrate.prompt.js';
 import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from './lib/node.utils.js';
 import { planMigration } from './lib/plan.utils.js';
@@ -30,7 +31,6 @@ import { applyRenames } from './lib/rename.utils.js';
 import { copyLicenseIfMissing, syncFromTemplate } from './lib/template-sync.utils.js';
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
-import { getScopeAndName, parseMigrateArgs, shouldRunSection } from 'lib/migrate/migrate-metadata.utils';
 import {
   patchPackageJson,
   readPackageJson,
