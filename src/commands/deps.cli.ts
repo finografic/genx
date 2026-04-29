@@ -1,15 +1,15 @@
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { renderHelp } from '@finografic/cli-kit/render-help';
-import { createTable, isCancel, multiselectLineBreak } from '@finografic/cli-kit/tui';
 import type { ColumnDef, MultiselectOption, TableInstance } from '@finografic/cli-kit/tui';
+import { createTable, isCancel, multiselectLineBreak } from '@finografic/cli-kit/tui';
+import type { DepEntryWithLatest } from '@finografic/deps-policy/display';
 import {
   CLACK_MULTISELECT_PREFIX_WIDTH,
   getDepsColumns,
   printDepsRow,
   printDepsTable,
 } from '@finografic/deps-policy/display';
-import type { DepEntryWithLatest } from '@finografic/deps-policy/display';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
 import {
@@ -221,7 +221,7 @@ async function syncDepsForTarget(
     allowDowngrade: options.allowDowngrade,
   });
 
-  const header = `${pc.cyan(targetDir.replace(homedir(), ''))}`;
+  const header = pc.cyan(targetDir.replace(homedir(), ''));
   infoMessage(`\n${header}`);
 
   if (allChanges.length === 0) {
