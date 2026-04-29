@@ -93,7 +93,7 @@
     "@clack/prompts": "1.1.0",
     "@finografic/cli-kit": "^1.4.0",
     "@finografic/core": "^0.9.2",
-    "@finografic/deps-policy": "file:../_@finografic-deps-policy",
+    "@finografic/deps-policy": "^0.18.0",
     "clack-tree-select": "^1.0.8",
     "diff": "^8.0.4",
     "execa": "^9.6.1",
