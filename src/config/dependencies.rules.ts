@@ -11,50 +11,57 @@ const dev = policy.base.devDependencies ?? {};
  * — never force-added.
  */
 export const dependencyRules: DependencyRule[] = [
-  // core tooling
-  { name: 'typescript', version: dev['typescript'], section: 'devDependencies' },
-  { name: 'tsdown', version: dev['tsdown'], section: 'devDependencies' },
-  { name: '@types/node', version: dev['@types/node'], section: 'devDependencies' },
-  { name: 'vitest', version: dev['vitest'], section: 'devDependencies' },
-  { name: 'husky', version: dev['husky'], section: 'devDependencies' },
-  { name: 'lint-staged', version: dev['lint-staged'], section: 'devDependencies' },
+  // build
+  { name: 'typescript', version: dev['typescript'], section: 'devDependencies', group: 'build' },
+  { name: 'tsdown', version: dev['tsdown'], section: 'devDependencies', group: 'build' },
+  { name: '@types/node', version: dev['@types/node'], section: 'devDependencies', group: 'build' },
 
-  // markdown linting (optional — only aligned if already present)
-  {
-    name: '@finografic/md-lint',
-    version: dev['@finografic/md-lint'],
-    section: 'devDependencies',
-    optional: true,
-  },
+  // testing
+  { name: 'vitest', version: dev['vitest'], section: 'devDependencies', group: 'testing' },
 
-  // oxc toolchain (oxfmt formatter + oxlint linter)
-  { name: 'oxfmt', version: dev['oxfmt'], section: 'devDependencies', optional: true },
-  {
-    name: '@finografic/oxc-config',
-    version: dev['@finografic/oxc-config'],
-    section: 'devDependencies',
-    optional: true,
-  },
-  { name: 'oxlint', version: dev['oxlint'], section: 'devDependencies', optional: true },
+  // linting
+  { name: 'oxlint', version: dev['oxlint'], section: 'devDependencies', optional: true, group: 'linting' },
   {
     name: 'oxlint-tsgolint',
     version: dev['oxlint-tsgolint'],
     section: 'devDependencies',
     optional: true,
+    group: 'linting',
+  },
+  {
+    name: '@finografic/md-lint',
+    version: dev['@finografic/md-lint'],
+    section: 'devDependencies',
+    optional: true,
+    group: 'linting',
+  },
+  {
+    name: '@finografic/oxc-config',
+    version: dev['@finografic/oxc-config'],
+    section: 'devDependencies',
+    optional: true,
+    group: 'linting',
   },
 
-  // commitlint
-  { name: '@commitlint/cli', version: dev['@commitlint/cli'], section: 'devDependencies' },
+  // formatting
+  { name: 'oxfmt', version: dev['oxfmt'], section: 'devDependencies', optional: true, group: 'formatting' },
+
+  // hooks
+  { name: 'husky', version: dev['husky'], section: 'devDependencies', group: 'hooks' },
+  { name: 'lint-staged', version: dev['lint-staged'], section: 'devDependencies', group: 'hooks' },
+  { name: '@commitlint/cli', version: dev['@commitlint/cli'], section: 'devDependencies', group: 'hooks' },
   {
     name: '@commitlint/config-conventional',
     version: dev['@commitlint/config-conventional'],
     section: 'devDependencies',
+    group: 'hooks',
   },
 
-  // finografic ecosystem
+  // ecosystem
   {
     name: '@finografic/project-scripts',
     version: dev['@finografic/project-scripts'],
     section: 'devDependencies',
+    group: 'ecosystem',
   },
 ];

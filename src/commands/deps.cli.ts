@@ -1,6 +1,15 @@
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { renderHelp } from '@finografic/cli-kit/render-help';
+import { createTable, isCancel, multiselectLineBreak } from '@finografic/cli-kit/tui';
+import type { ColumnDef, MultiselectOption, TableInstance } from '@finografic/cli-kit/tui';
+import {
+  CLACK_MULTISELECT_PREFIX_WIDTH,
+  getDepsColumns,
+  printDepsRow,
+  printDepsTable,
+} from '@finografic/deps-policy/display';
+import type { DepEntryWithLatest } from '@finografic/deps-policy/display';
 import { execa } from 'execa';
 import { depsHelp } from 'help/deps.help';
 import {
@@ -28,36 +37,69 @@ import { runPolicyUpdate } from 'utils/policy-update.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 
 import { dependencyRules } from 'config/dependencies.rules';
+import type { DependencyRule } from 'types/dependencies.types';
 import type { ManagedTarget } from 'types/managed.types';
 
-const SEPARATOR = '—'.repeat(50);
-
-const OPERATION_COLOR = {
-  add: pc.green,
-  upgrade: pc.cyan,
-  downgrade: pc.yellow,
-} satisfies Record<DependencyChange['operation'], (s: string) => string>;
-
-const formatVersionChange = (c: DependencyChange): string => `${c.name} ${pc.gray(c.from)} → ${c.to}`;
-
-const FORMATTERS = {
-  add: (c: DependencyChange): string => `${c.name} ${c.to}`,
-  upgrade: formatVersionChange,
-  downgrade: formatVersionChange,
-} satisfies Record<DependencyChange['operation'], (c: DependencyChange) => string>;
-
-function padLeft(value: string, width: number): string {
-  return ' '.repeat(Math.max(0, width - value.length)) + value;
+function parsePrefix(version: string): string {
+  return version.match(/^[\^~]/)?.[0] ?? '';
 }
 
-function renderDependencyChangeLine(change: DependencyChange, labelColumnWidth: number): string {
-  const label = `[${change.operation}]`;
+function changeToEntry(
+  change: DependencyChange,
+  rule: DependencyRule | undefined,
+  packageJsonPath: string,
+): DepEntryWithLatest {
+  const prefix = parsePrefix(change.to);
+  const bare = change.to.replace(/^[\^~]/, '');
+  return {
+    name: change.name,
+    current: change.from ?? '—',
+    prefix,
+    bare,
+    group: rule?.group ?? 'other',
+    sourceFile: packageJsonPath,
+    depKind: change.section,
+    latest: bare,
+    outdated: true,
+    pinned: false,
+  };
+}
 
-  return (
-    OPERATION_COLOR[change.operation](padLeft(label, labelColumnWidth)) +
-    '  ' +
-    pc.white(FORMATTERS[change.operation](change))
+function buildSelectOptions(
+  entries: DepEntryWithLatest[],
+  table: TableInstance<DepEntryWithLatest>,
+): Array<MultiselectOption<DepEntryWithLatest>> {
+  return entries.map((entry) => ({
+    value: entry,
+    label: printDepsRow(entry, table.renderRow(entry)),
+    initialValue: true,
+  }));
+}
+
+async function selectEntries(
+  entries: DepEntryWithLatest[],
+  columns: Array<ColumnDef<DepEntryWithLatest>>,
+  message: string,
+): Promise<DepEntryWithLatest[]> {
+  const msColumns = columns.map((col, i) =>
+    i === 0
+      ? {
+          ...col,
+          padding: {
+            ...col.padding,
+            right: (col.padding?.right ?? 0) - CLACK_MULTISELECT_PREFIX_WIDTH,
+          },
+        }
+      : col,
   );
+  const table = createTable<DepEntryWithLatest>(entries, msColumns);
+  const options = buildSelectOptions(entries, table);
+
+  const selected = await multiselectLineBreak({ message: `${message}\n`, options, required: false });
+  if (isCancel(selected)) {
+    process.exit(0);
+  }
+  return selected;
 }
 
 function logWrittenDependencyVersions(changes: DependencyChange[]): void {
@@ -177,46 +219,81 @@ async function syncDepsForTarget(
   const packageJsonPath = resolve(targetDir, 'package.json');
   const packageJson = await readPackageJson(packageJsonPath);
 
-  const changes = planDependencyChanges(packageJson, dependencyRules, {
+  const allChanges = planDependencyChanges(packageJson, dependencyRules, {
     allowDowngrade: options.allowDowngrade,
   });
 
+  const header = `${pc.cyan(targetDir.replace(homedir(), ''))}${write ? '' : pc.white(pc.dim(' (DRY RUN)'))}`;
+  infoMessage(`\n${header}`);
+
+  if (allChanges.length === 0) {
+    infoMessage(pc.white('All dependencies already aligned with policy.'));
+    return;
+  }
+
+  const ruleByName = new Map(dependencyRules.map((r) => [r.name, r]));
+  const updateChanges = allChanges.filter((c) => c.operation !== 'add');
+  const addChanges = allChanges.filter((c) => c.operation === 'add');
+
+  const columns = getDepsColumns();
+
+  // ─── Show upgrade/downgrade table ──────────────────────────────
+  if (updateChanges.length > 0) {
+    const updateEntries = updateChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
+    printDepsTable(updateEntries, columns);
+    console.log();
+  }
+
+  // ─── Show add table ─────────────────────────────────────────────
+  if (addChanges.length > 0) {
+    const addEntries = addChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
+    printDepsTable(addEntries, columns);
+    console.log();
+  }
+
   if (!write) {
-    infoMessage(
-      `${pc.gray(pc.dim(SEPARATOR))}\n\n${pc.cyan(targetDir.replace(homedir(), ''))} ${pc.white(pc.dim('(DRY RUN)'))}`,
-    );
-    if (changes.length === 0) {
-      infoMessage(pc.white('All dependencies already aligned with policy.'));
-    } else {
-      const maxLabelLen = Math.max(...changes.map((c) => `[${c.operation}]`.length));
-      const labelColumnWidth = maxLabelLen;
-      for (const change of changes) {
-        logMessage(renderDependencyChangeLine(change, labelColumnWidth));
-      }
-    }
     infoMessage(
       `${pc.white(pc.dim('Re-run with'))} ${pc.yellow('--write')} ${pc.white(pc.dim('to apply changes.'))}`,
     );
     return;
   }
 
-  if (changes.length === 0) {
-    infoMessage(pc.white('All dependencies already aligned with policy. No changes made.'));
+  // ─── Interactive selection ───────────────────────────────────────
+  const selectedChanges: DependencyChange[] = [];
+
+  if (updateChanges.length > 0) {
+    const updateEntries = updateChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
+    const selectedEntries = await selectEntries(updateEntries, columns, 'Select packages to update');
+    const selectedNames = new Set(selectedEntries.map((e) => e.name));
+    selectedChanges.push(...updateChanges.filter((c) => selectedNames.has(c.name)));
+  }
+
+  if (addChanges.length > 0) {
+    const addEntries = addChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
+    const selectedEntries = await selectEntries(addEntries, columns, 'Select packages to add');
+    const selectedNames = new Set(selectedEntries.map((e) => e.name));
+    selectedChanges.push(...addChanges.filter((c) => selectedNames.has(c.name)));
+  }
+
+  if (selectedChanges.length === 0) {
+    infoMessage(pc.white('No changes selected.'));
     return;
   }
 
-  const updatedPackageJson = applyDependencyChanges(packageJson, changes);
+  const updatedPackageJson = applyDependencyChanges(packageJson, selectedChanges);
   await writePackageJson(packageJsonPath, updatedPackageJson);
 
   const installSpin = spinner();
   const updatingLabel =
-    changes.length === 1 ? 'Updating 1 dependency' : `Updating ${changes.length} dependencies`;
+    selectedChanges.length === 1
+      ? 'Updating 1 dependency'
+      : `Updating ${selectedChanges.length} dependencies`;
   installSpin.start(pc.cyan(updatingLabel));
 
   try {
     await execa('pnpm', ['install'], { cwd: targetDir });
     installSpin.stop(pc.green('Dependencies installed'));
-    logWrittenDependencyVersions(changes);
+    logWrittenDependencyVersions(selectedChanges);
     successMessage('Done\n');
   } catch {
     installSpin.stop('Failed to install dependencies');

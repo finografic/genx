@@ -7,4 +7,6 @@ export interface DependencyRule {
   section: DependencySection;
   /** When true, only updates if already present — never adds to a project that doesn't have it. */
   optional?: boolean;
+  /** Display group for the table UI (e.g. 'build', 'linting'). */
+  group?: string;
 }
