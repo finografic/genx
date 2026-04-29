@@ -135,6 +135,25 @@ to be self-contained.
 
 ---
 
+## 7. Extract “find file section” helpers → `@finografic/cli-kit`
+
+- [ ] status: pending
+
+**Goal:** Promote reusable **section find/replace** helpers (starting with `.gitignore` `# Title`
+blocks) from genx into **`@finografic/cli-kit`**, under an **`fs/`** or **`fs-helpers/`** namespace
+(or `fs.utils.ts` / `fs.helpers.ts`—see package conventions).
+
+**Why:** Multiple tools need the same pattern: locate `# Agents` … `# IDE`, replace in place with
+template-backed canonical content, insert after `# Environment files` when missing. Genx already
+implements the gitignore slice in `src/lib/gitignore-section.utils.ts` and Agents merge in
+`src/lib/agents-gitignore.utils.ts` (single source: **`_templates/.gitignore`**).
+
+**Docs:** `docs/todo/TODO.FIND_FILE_SECTION.md`.
+
+**Status:** Genx-side behavior shipped; **port to cli-kit** + re-export for genx still pending.
+
+---
+
 ## Non-starters (excluded)
 
 - **Auto-publish on version bump** — too much automation risk; manual release gates are intentional.

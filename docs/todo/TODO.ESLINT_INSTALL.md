@@ -101,7 +101,7 @@ Migration should be non-destructive and reversible.
 
 ---
 
-## oxfmt (formatting)
+## oxfmt (lint & format)
 
 Formatting is standardized on **`oxfmt`** + **`@finografic/oxfmt-config`**. New packages already include `oxfmt.config.ts` in `_templates/`; the **`oxfmt`** genx feature migrates older repos.
 
