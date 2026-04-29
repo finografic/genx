@@ -22,14 +22,14 @@ Run directly using `pnpm dlx`:
 pnpm dlx @finografic/genx <command> [options]
 ```
 
-| Command | Description |
-| ------- | ----------- |
-| `create` | Scaffold a new @finografic package |
-| `migrate` | Sync conventions to an existing package |
-| `deps` | Sync dependencies to @finografic/deps-policy |
-| `features` | Add optional features to an existing package |
-| `audit` | Scan features and apply what is missing or partial |
-| `help` | Show this help message |
+| Command    | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `create`   | Scaffold a new @finografic package                 |
+| `migrate`  | Sync conventions to an existing package            |
+| `deps`     | Sync dependencies to @finografic/deps-policy       |
+| `features` | Add optional features to an existing package       |
+| `audit`    | Scan features and apply what is missing or partial |
+| `help`     | Show this help message                             |
 
 ### `genx create`
 
@@ -270,15 +270,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command | Description | Options |
-| ------- | ----------- | ------- |
-| `create` | Scaffold a new @finografic package | Interactive prompts |
-| `migrate` | Sync conventions to an existing package | `--write`, `--only=<sections>`, `--managed`, `--yes` |
-| `deps` | Sync dependencies to @finografic/deps-policy | `--managed`, `--yes`, `--allow-downgrade`, `--update-policy` |
-| `features` | Add optional features to an existing package | `--managed`, `--yes` |
-| `audit` | Scan features and apply what is missing or partial | - |
-| `help` | Show this help message | - |
-| `--help` / `-h` | Show help (works with commands too) | - |
+| Command         | Description                                        | Options                                                   |
+| --------------- | -------------------------------------------------- | --------------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | Interactive prompts                                       |
+| `migrate`       | Sync conventions to an existing package            | `--write`, `--only=<sections>`, `--managed`, `--yes`      |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `--managed`, `--yes`, `--no-downgrade`, `--update-policy` |
+| `features`      | Add optional features to an existing package       | `--managed`, `--yes`                                      |
+| `audit`         | Scan features and apply what is missing or partial | -                                                         |
+| `help`          | Show this help message                             | -                                                         |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                         |
 
 See `genx <command> --help` for detailed usage.
 <!-- GENERATED:COMMANDS_REF:END -->

@@ -31,6 +31,21 @@ interface FeatureInfo {
   bullets: string[];
 }
 
+function buildMarkdownTable(headers: string[], rows: string[][]): string[] {
+  const widths = headers.map((header, idx) =>
+    Math.max(header.length, ...rows.map((row) => (row[idx] ?? '').length)),
+  );
+
+  const formatRow = (cells: string[]): string =>
+    `| ${cells.map((cell, idx) => (cell ?? '').padEnd(widths[idx])).join(' | ')} |`;
+
+  return [
+    formatRow(headers),
+    `| ${widths.map((width) => '-'.repeat(width)).join(' | ')} |`,
+    ...rows.map((row) => formatRow(row)),
+  ];
+}
+
 function parseFeatureReadme(dir: string): FeatureInfo {
   const readmePath = path.join(FEATURES_ROOT, dir, 'README.md');
   const content = fs.readFileSync(readmePath, 'utf-8');
@@ -81,11 +96,12 @@ function generateUsageSection(): string {
 
   // Commands table
   if (rootHelp.commands) {
-    lines.push('| Command | Description |');
-    lines.push('| ------- | ----------- |');
-    for (const cmd of rootHelp.commands.list) {
-      lines.push(`| \`${cmd.label}\` | ${cmd.description} |`);
-    }
+    lines.push(
+      ...buildMarkdownTable(
+        ['Command', 'Description'],
+        rootHelp.commands.list.map((cmd) => [`\`${cmd.label}\``, cmd.description]),
+      ),
+    );
     lines.push('');
   }
 
@@ -176,7 +192,7 @@ function replaceBetweenMarkers(
 const COMMAND_OPTIONS: Record<string, string> = {
   create: 'Interactive prompts',
   migrate: '`--write`, `--only=<sections>`, `--managed`, `--yes`',
-  deps: '`--managed`, `--yes`, `--allow-downgrade`, `--update-policy`',
+  deps: '`--managed`, `--yes`, `--no-downgrade`, `--update-policy`',
   features: '`--managed`, `--yes`',
   help: '-',
 };
@@ -185,16 +201,14 @@ function generateCommandsRefSection(): string {
   if (!rootHelp.commands) return '';
 
   const lines: string[] = [];
-  lines.push('| Command | Description | Options |');
-  lines.push('| ------- | ----------- | ------- |');
+  const rows = rootHelp.commands.list.map((cmd) => [
+    `\`${cmd.label}\``,
+    cmd.description,
+    COMMAND_OPTIONS[cmd.label] ?? '-',
+  ]);
+  rows.push(['`--help` / `-h`', 'Show help (works with commands too)', '-']);
+  lines.push(...buildMarkdownTable(['Command', 'Description', 'Options'], rows));
 
-  for (const cmd of rootHelp.commands.list) {
-    const opts = COMMAND_OPTIONS[cmd.label] ?? '-';
-    lines.push(`| \`${cmd.label}\` | ${cmd.description} | ${opts} |`);
-  }
-
-  // Global flags
-  lines.push('| `--help` / `-h` | Show help (works with commands too) | - |');
   lines.push('');
   lines.push('See `genx <command> --help` for detailed usage.');
 
