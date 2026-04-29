@@ -8,22 +8,22 @@ import * as clack from '@clack/prompts';
 import { execa } from 'execa';
 import { getFeature } from 'features/feature-registry';
 import {
-  GENX_CONFIG_PATH,
   errorMessage,
   hasManagedFlag,
   infoMessage,
   intro,
-  readManagedTargets,
   spinner,
   successMessage,
   successUpdatedMessage,
 } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
-import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from './lib/agent-docs-migration.js';
+import { runAgentDocsMigration } from './lib/agent-docs.runner.js';
 import { restructureDocs } from './lib/docs-restructure.utils.js';
+import { runManagedMigrate } from './lib/managed-migrate.runner.js';
 import { applyMerges } from './lib/merge.utils.js';
 import { getScopeAndName, parseMigrateArgs, shouldRunSection } from './lib/migrate-metadata.utils.js';
+import { promptMigrateMode } from './lib/migrate-mode.prompt.js';
 import { confirmMerges, confirmMigrateTarget, confirmNodeVersionUpgrade } from './lib/migrate.prompt.js';
 import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from './lib/node.utils.js';
 import { planMigration } from './lib/plan.utils.js';
@@ -38,7 +38,6 @@ import {
   writePackageJson,
 } from 'lib/migrate/package-json.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
-import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
@@ -47,7 +46,6 @@ import { dependencyRules } from 'config/dependencies.rules';
 import { migrateConfig } from 'config/migrate.config';
 import { nodePolicy } from 'config/node.policy';
 import { policy } from 'config/policy.js';
-import type { ManagedTarget } from 'types/managed.types';
 import type { MigrateOnlySection } from 'types/migrate.types';
 import { MIGRATE_ONLY_SECTIONS } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
@@ -87,21 +85,6 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     }
 
     if (managed) {
-      let managedTargets: ManagedTarget[];
-      try {
-        managedTargets = await readManagedTargets();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unable to read managed config';
-        errorMessage(`${message}\nExpected config: ${pc.cyan(GENX_CONFIG_PATH)}`);
-        process.exit(1);
-        return;
-      }
-
-      if (managedTargets.length === 0) {
-        infoMessage(`No managed targets found in ${pc.cyan(GENX_CONFIG_PATH)}`);
-        return;
-      }
-
       let selectedFeatureIds: FeatureId[] = [];
       if (!only) {
         const prompted = await promptFeatures(flow);
@@ -112,60 +95,27 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
         selectedFeatureIds = prompted;
       }
 
-      let appliedCount = 0;
-      let skippedCount = 0;
-
-      for (const [index, target] of managedTargets.entries()) {
-        if (write && !flow.yesMode) {
-          const action = await promptManagedTargetAction({
-            actionLabel: 'Migrate',
-            target,
-            currentIndex: index + 1,
-            total: managedTargets.length,
+      await runManagedMigrate({
+        write,
+        yesMode: flow.yesMode,
+        actionLabel: 'Migrate',
+        runTarget: async (target) => {
+          await migrateSingleTarget({
+            targetDir: target.path,
+            write,
+            only,
+            debug,
+            selectedFeatureIds,
           });
-
-          if (action === null) {
-            process.exit(0);
-            return;
-          }
-
-          if (action === 'skip') {
-            skippedCount += 1;
-            continue;
-          }
-        }
-
-        await migrateSingleTarget({
-          targetDir: target.path,
-          write,
-          only,
-          debug,
-          selectedFeatureIds,
-        });
-        appliedCount += 1;
-      }
-
-      successMessage(
-        `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
-      );
+        },
+      });
       return;
     }
 
     let selectedFeatureIds: FeatureId[] = [];
     if (!only) {
-      const mode = await clack.select({
-        message: 'What would you like to do?',
-        options: [
-          { value: 'features', label: 'Select optional features' },
-          {
-            value: 'agent-docs',
-            label: 'Migrate AI agent docs',
-            hint: 'restructure .github/instructions/, AGENTS.md, CLAUDE.md',
-          },
-        ],
-      });
-
-      if (clack.isCancel(mode)) {
+      const mode = await promptMigrateMode();
+      if (!mode) {
         process.exit(0);
         return;
       }
@@ -191,40 +141,6 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       selectedFeatureIds,
     });
   });
-}
-
-async function runAgentDocsMigration(targetDir: string, write: boolean): Promise<void> {
-  if (!write) {
-    const plan = await migrateAgentDocs(targetDir, { dryRun: true });
-    infoMessage(`${pc.green('DRY RUN.')} ${pc.white('Planned changes for:')}\n${pc.cyan(targetDir)}`);
-    for (const line of plan.applied) {
-      clack.log.info(`- ${line}`);
-    }
-    for (const line of plan.skipped) {
-      clack.log.info(pc.dim(`- skip: ${line}`));
-    }
-    infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n\n`);
-    return;
-  }
-
-  if (isAgentDocsAlreadyMigrated(targetDir)) {
-    infoMessage('AI agent docs already in canonical structure. No changes needed.');
-    return;
-  }
-
-  const spin = spinner();
-  spin.start('Migrating AI agent docs...');
-  const result = await migrateAgentDocs(targetDir, { dryRun: false });
-  spin.stop('Done');
-
-  if (result.errors.length > 0) {
-    for (const err of result.errors) errorMessage(err);
-  }
-  if (result.applied.length > 0) {
-    successUpdatedMessage(`Updated ${result.applied.length} item(s)`);
-  } else {
-    infoMessage('Nothing to change.');
-  }
 }
 
 async function migrateSingleTarget(params: {

@@ -1,6 +1,6 @@
 # TODO — Refactor `migrate` Command
 
-> **Status:** Phase 1 complete. Phase 2 not started.
+> **Status:** Phase 2 complete. Phase 3 not started.
 
 Refactor `src/commands/migrate/migrate.cli.ts` into a thinner command entry that matches the newer
 `@finografic/cli-kit`-oriented command style:
@@ -29,11 +29,11 @@ Pause after each phase to review and check off the section before moving to the 
 
 ## Phase 2 — Thin the command entry
 
-- [ ] Extract managed-target orchestration from `migrate.cli.ts` into a command-local runner
-- [ ] Extract single-target interactive mode selection from `migrate.cli.ts`
-- [ ] Extract `agent-docs` mode into its own command-local runner module
-- [ ] Keep `migrate.cli.ts` focused on `withHelp()`, argument parsing, and top-level dispatch
-- [ ] Leave behavior unchanged
+- [x] Extract managed-target orchestration from `migrate.cli.ts` into a command-local runner
+- [x] Extract single-target interactive mode selection from `migrate.cli.ts`
+- [x] Extract `agent-docs` mode into its own command-local runner module
+- [x] Keep `migrate.cli.ts` focused on `withHelp()`, argument parsing, and top-level dispatch
+- [x] Leave behavior unchanged
 
 **Pause here:** confirm the entrypoint shape before splitting the single-target write flow.
 
