@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 # If README.md was changed by codegen, create a follow-up commit that contains only README.md.
 # This runs after the user's commit so tests can proceed without failures.
 #
