@@ -1,6 +1,6 @@
 # TODO — Refactor `migrate` Command
 
-> **Status:** Phase 2 complete. Phase 3 not started.
+> **Status:** Phase 3 complete. Phase 4 not started.
 
 Refactor `src/commands/migrate/migrate.cli.ts` into a thinner command entry that matches the newer
 `@finografic/cli-kit`-oriented command style:
@@ -41,12 +41,12 @@ Pause after each phase to review and check off the section before moving to the 
 
 ## Phase 3 — Split single-target migrate flow
 
-- [ ] Extract single-target validation/read/setup into a dedicated helper
-- [ ] Extract dry-run rendering into a read-only helper
-- [ ] Extract write/apply flow into a dedicated helper or module
-- [ ] Extract feature-application tail work into a helper
-- [ ] Extract dependency-install tail work into a helper
-- [ ] Keep the same user-facing behavior and prompts
+- [x] Extract single-target validation/read/setup into a dedicated helper
+- [x] Extract dry-run rendering into a read-only helper
+- [x] Extract write/apply flow into a dedicated helper or module
+- [x] Extract feature-application tail work into a helper
+- [x] Extract dependency-install tail work into a helper
+- [x] Keep the same user-facing behavior and prompts
 
 **Pause here:** confirm the internal shape before considering any cli-kit extraction.
 
