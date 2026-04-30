@@ -5,21 +5,18 @@ export const help: CommandHelpConfig = {
   description: 'Migrate an existing @finografic package to the latest conventions',
   usage: 'genx migrate [path] [options]',
   examples: [
-    { command: 'genx migrate', description: 'Dry run in current directory' },
-    { command: 'genx migrate ../my-package', description: 'Dry run against a specific directory' },
-    { command: 'genx migrate ../my-package --write', description: 'Apply changes to a directory' },
+    { command: 'genx migrate', description: 'Select migrate operations for the current directory' },
     {
-      command: 'genx migrate --only=package-json,oxc-config --write',
-      description: 'Only update specific sections',
+      command: 'genx migrate ../my-package',
+      description: 'Select migrate operations for a specific directory',
     },
     {
-      command: 'genx migrate --only=dependencies,node --write',
-      description: 'Update dependencies and Node version',
+      command: 'genx migrate --managed',
+      description: 'Run the same migrate selections across managed targets',
     },
     {
-      command: 'genx migrate --only=renames,merges --write',
-      description: 'Normalize file names and merge configs',
+      command: 'genx migrate --yes',
+      description: 'Skip per-file and per-target confirms once selections are chosen',
     },
-    { command: 'genx migrate --managed --write', description: 'Migrate all managed targets' },
   ],
 };

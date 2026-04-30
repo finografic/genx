@@ -108,7 +108,7 @@ export async function writePackageJson(path: string, packageJson: PackageJson): 
 
 /**
  * Read package.json, strip inlined `commitlint` if present, and write back when changed.
- * Used when migrate runs the hooks section without the package-json section (`--only=hooks`).
+ * Used when migrate runs hooks without the package-json operation selected.
  */
 export async function stripCommitlintFromPackageJsonFile(packageJsonPath: string): Promise<boolean> {
   const packageJson = await readPackageJson(packageJsonPath);

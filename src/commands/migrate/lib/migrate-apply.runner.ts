@@ -159,8 +159,13 @@ export async function applyMigrateTarget(params: {
     }
   }
 
-  await copyLicenseIfMissing(context.targetDir, templateDir, context.vars, shouldCopyLicense);
-  if (shouldCopyLicense) {
+  await copyLicenseIfMissing(
+    context.targetDir,
+    templateDir,
+    context.vars,
+    Boolean(only && only.size > 0) && shouldCopyLicense,
+  );
+  if (Boolean(only && only.size > 0) && shouldCopyLicense) {
     successMessage('Added LICENSE file');
   }
 

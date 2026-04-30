@@ -5,18 +5,17 @@ import { pc } from 'utils/picocolors';
 
 import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from './agent-docs-migration.js';
 
-export async function runAgentDocsMigration(targetDir: string, write: boolean): Promise<void> {
-  if (!write) {
-    const plan = await migrateAgentDocs(targetDir, { dryRun: true });
-    infoMessage(`${pc.green('DRY RUN.')} ${pc.white('Planned changes for:')}\n${pc.cyan(targetDir)}`);
-    for (const line of plan.applied) {
-      clack.log.info(`- ${line}`);
+export async function runAgentDocsMigration(targetDir: string, yesMode: boolean): Promise<void> {
+  if (!yesMode) {
+    const confirmed = await clack.confirm({
+      message: `Migrate AI agent docs for ${pc.cyan(targetDir)}?`,
+      initialValue: true,
+    });
+
+    if (clack.isCancel(confirmed) || !confirmed) {
+      process.exit(0);
+      return;
     }
-    for (const line of plan.skipped) {
-      clack.log.info(pc.dim(`- skip: ${line}`));
-    }
-    infoMessage(`${pc.white('Re-run with')} ${pc.yellow('--write')} ${pc.white('to apply changes.')}\n\n`);
-    return;
   }
 
   if (isAgentDocsAlreadyMigrated(targetDir)) {

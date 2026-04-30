@@ -29,14 +29,14 @@ export const cliHelp: HelpConfig = {
     title: 'Examples',
     list: [
       { label: 'Create a new package', description: 'genx create' },
-      { label: 'Migrate current directory (dry-run)', description: 'genx migrate' },
+      { label: 'Migrate current directory', description: 'genx migrate' },
       {
-        label: 'Migrate a specific directory (apply changes)',
-        description: 'genx migrate ../my-package --write',
+        label: 'Migrate a specific directory',
+        description: 'genx migrate ../my-package',
       },
       {
-        label: 'Migrate only specific sections',
-        description: 'genx migrate --only=package-json,oxc-config --write',
+        label: 'Run migrate across managed targets',
+        description: 'genx migrate --managed',
       },
       {
         label: 'Sync deps (interactive package selection)',

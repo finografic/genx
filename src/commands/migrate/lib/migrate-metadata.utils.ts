@@ -5,8 +5,6 @@ import type { MigrateOnlySection } from 'types/migrate.types';
 
 interface MigrateArgs {
   targetDir: string;
-  write: boolean;
-  only: Set<MigrateOnlySection> | null;
 }
 
 export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
@@ -15,29 +13,14 @@ export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
   if (args[0] === 'migrate') args.shift();
 
   let targetDir = cwd;
-  let write = false;
-  let only: Set<MigrateOnlySection> | null = null;
 
   for (const arg of args) {
-    if (arg === '--write') {
-      write = true;
-      continue;
-    }
-    if (arg.startsWith('--only=')) {
-      const raw = arg.slice('--only='.length);
-      const parts = raw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      only = new Set(parts as MigrateOnlySection[]);
-      continue;
-    }
     if (!arg.startsWith('-')) {
       targetDir = resolve(cwd, arg);
     }
   }
 
-  return { targetDir, write, only };
+  return { targetDir };
 }
 
 export function shouldRunSection(only: Set<MigrateOnlySection> | null, section: MigrateOnlySection): boolean {

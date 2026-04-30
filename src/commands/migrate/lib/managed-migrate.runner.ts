@@ -6,7 +6,6 @@ import { pc } from 'utils/picocolors';
 import type { ManagedTarget } from 'types/managed.types';
 
 export async function runManagedMigrate(params: {
-  write: boolean;
   yesMode: boolean;
   actionLabel: string;
   runTarget: (target: ManagedTarget) => Promise<void>;
@@ -30,7 +29,7 @@ export async function runManagedMigrate(params: {
   let skippedCount = 0;
 
   for (const [index, target] of managedTargets.entries()) {
-    if (params.write && !params.yesMode) {
+    if (!params.yesMode) {
       const action = await promptManagedTargetAction({
         actionLabel: params.actionLabel,
         target,

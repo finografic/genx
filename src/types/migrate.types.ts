@@ -28,7 +28,7 @@ export interface MigrateConfig {
     templatePath: string;
     /** Path relative to target repo root */
     targetPath: string;
-    /** Which `--only` section controls this item */
+    /** Which migrate operation controls this item */
     section: MigrateOnlySection;
   }>;
 

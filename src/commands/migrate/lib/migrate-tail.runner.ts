@@ -73,7 +73,7 @@ export async function ensureCliHelpFile(params: {
   only: Set<MigrateOnlySection> | null;
   hasDependencyChanges: boolean;
 }): Promise<boolean> {
-  if (params.only || !isCliPackage(params.context.packageJson)) {
+  if ((params.only && params.only.size === 0) || !isCliPackage(params.context.packageJson)) {
     return params.hasDependencyChanges;
   }
 
