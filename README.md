@@ -53,26 +53,17 @@ genx migrate [path] [options]
 **Examples:**
 
 ```bash
-# Dry run in current directory
+# Select migrate operations for the current directory
 genx migrate
 
-# Dry run against a specific directory
+# Select migrate operations for a specific directory
 genx migrate ../my-package
 
-# Apply changes to a directory
-genx migrate ../my-package --write
+# Run the same migrate selections across managed targets
+genx migrate --managed
 
-# Only update specific sections
-genx migrate --only=package-json,oxc-config --write
-
-# Update dependencies and Node version
-genx migrate --only=dependencies,node --write
-
-# Normalize file names and merge configs
-genx migrate --only=renames,merges --write
-
-# Migrate all managed targets
-genx migrate --managed --write
+# Skip per-file and per-target confirms once selections are chosen
+genx migrate --yes
 ```
 
 ### `genx deps`
@@ -273,7 +264,7 @@ my-package/
 | Command         | Description                                        | Options                                                   |
 | --------------- | -------------------------------------------------- | --------------------------------------------------------- |
 | `create`        | Scaffold a new @finografic package                 | Interactive prompts                                       |
-| `migrate`       | Sync conventions to an existing package            | `--write`, `--only=<sections>`, `--managed`, `--yes`      |
+| `migrate`       | Sync conventions to an existing package            | `--managed`, `--yes`                                      |
 | `deps`          | Sync dependencies to @finografic/deps-policy       | `--managed`, `--yes`, `--no-downgrade`, `--update-policy` |
 | `features`      | Add optional features to an existing package       | `--managed`, `--yes`                                      |
 | `audit`         | Scan features and apply what is missing or partial | -                                                         |
