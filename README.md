@@ -272,6 +272,7 @@ my-package/
 | `--help` / `-h` | Show help (works with commands too)                | -                                                         |
 
 See `genx <command> --help` for detailed usage.
+
 <!-- GENERATED:COMMANDS_REF:END -->
 
 ---

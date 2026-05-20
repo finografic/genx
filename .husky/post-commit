@@ -26,6 +26,9 @@ fi
 # Run generator. It should only touch README.md.
 pnpm docs:usage >/dev/null 2>&1 || exit 0
 
+# Format the generated README so CI format:check never sees unformatted output.
+pnpm exec oxfmt --no-error-on-unmatched-pattern README.md >/dev/null 2>&1 || true
+
 # If README.md didn't change, nothing to do.
 AFTER_HAS_README="$(git diff --name-only | rg -q '^README\.md$' && echo yes || echo no)"
 if [ "$AFTER_HAS_README" != "yes" ]; then exit 0; fi
