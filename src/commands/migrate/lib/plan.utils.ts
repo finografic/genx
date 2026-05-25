@@ -12,7 +12,7 @@ import { pc } from 'utils/picocolors';
 import { dependencyRules } from 'config/dependencies.rules';
 import { mergeConfig } from 'config/merge.rules';
 import { migrateConfig } from 'config/migrate.config';
-import { nodePolicy } from 'config/node.policy';
+import { policy, toolchain } from 'config/policy';
 import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
 import type { PackageJson } from 'types/package-json.types';
@@ -82,8 +82,11 @@ export async function planMigration(
   let nodeTypesChange: ReturnType<typeof planNodeTypesChange> = null;
   if (shouldRunSection(only, 'node')) {
     currentNodeState = await detectCurrentNodeState(targetDir);
-    nodeRuntimeChanges = planNodeRuntimeChanges(currentNodeState, nodePolicy);
-    nodeTypesChange = planNodeTypesChange(packageJson.devDependencies?.['@types/node'], nodePolicy);
+    nodeRuntimeChanges = planNodeRuntimeChanges(currentNodeState, toolchain.node);
+    const policyTypesVersion = policy.base.devDependencies?.['@types/node'];
+    nodeTypesChange = policyTypesVersion
+      ? planNodeTypesChange(packageJson.devDependencies?.['@types/node'], policyTypesVersion)
+      : null;
     if (nodeRuntimeChanges.length > 0 || nodeTypesChange) {
       plan.push(`${pc.green('node')} version updates`);
     }

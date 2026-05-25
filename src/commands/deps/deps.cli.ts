@@ -29,6 +29,7 @@ import {
 import type { DependencyChange } from 'lib/migrate/dependencies.utils';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
+import { applyToolchainChanges, planToolchainChanges } from 'lib/migrate/toolchain.utils';
 import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
@@ -36,6 +37,7 @@ import { runPolicyUpdate } from 'utils/policy-update.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 
 import { dependencyRules } from 'config/dependencies.rules';
+import { toolchain } from 'config/policy';
 import type { DependencyRule } from 'types/dependencies.types';
 import type { ManagedTarget } from 'types/managed.types';
 
@@ -222,8 +224,10 @@ async function syncDepsForTarget(
   const header = pc.cyan(targetDir.replace(homedir(), ''));
   infoMessage(`\n${header}`);
 
-  if (allChanges.length === 0) {
-    infoMessage(pc.white('All dependencies already aligned with policy.'));
+  const toolchainChanges = await planToolchainChanges(targetDir, packageJson, toolchain);
+
+  if (allChanges.length === 0 && toolchainChanges.length === 0) {
+    infoMessage(pc.white('All dependencies and toolchain versions already aligned with policy.'));
     return;
   }
 
@@ -275,23 +279,39 @@ async function syncDepsForTarget(
     return;
   }
 
-  const updatedPackageJson = applyDependencyChanges(packageJson, selectedChanges);
-  await writePackageJson(packageJsonPath, updatedPackageJson);
+  let updatedPackageJson = applyDependencyChanges(packageJson, selectedChanges);
 
-  const installSpin = spinner();
-  const updatingLabel =
-    selectedChanges.length === 1
-      ? 'Updating 1 dependency'
-      : `Updating ${selectedChanges.length} dependencies`;
-  installSpin.start(pc.cyan(updatingLabel));
+  if (selectedChanges.length > 0) {
+    await writePackageJson(packageJsonPath, updatedPackageJson);
 
-  try {
-    await execa('pnpm', ['install'], { cwd: targetDir });
-    installSpin.stop(pc.green('Dependencies installed'));
-    logWrittenDependencyVersions(selectedChanges);
-    successMessage('Done\n');
-  } catch {
-    installSpin.stop('Failed to install dependencies');
-    errorMessage('pnpm install failed — run it manually');
+    const installSpin = spinner();
+    const updatingLabel =
+      selectedChanges.length === 1
+        ? 'Updating 1 dependency'
+        : `Updating ${selectedChanges.length} dependencies`;
+    installSpin.start(pc.cyan(updatingLabel));
+
+    try {
+      await execa('pnpm', ['install'], { cwd: targetDir });
+      installSpin.stop(pc.green('Dependencies installed'));
+      logWrittenDependencyVersions(selectedChanges);
+    } catch {
+      installSpin.stop('Failed to install dependencies');
+      errorMessage('pnpm install failed — run it manually');
+    }
   }
+
+  if (toolchainChanges.length > 0) {
+    const labels = toolchainChanges.map((c) => {
+      const from = c.from ? ` ${pc.gray(`from ${c.from}`)}` : '';
+      return `  ${pc.green('+')} ${pc.white(c.target)} ${pc.cyan(c.to)}${from}`;
+    });
+    logMessage(`${pc.cyan('Toolchain versions:')}\n${labels.join('\n')}`);
+
+    updatedPackageJson = await applyToolchainChanges(targetDir, updatedPackageJson, toolchainChanges);
+    await writePackageJson(packageJsonPath, updatedPackageJson);
+    successMessage('Toolchain versions updated');
+  }
+
+  successMessage('Done\n');
 }

@@ -13,7 +13,7 @@ import {
 } from 'lib/migrate/package-json.utils';
 
 import { dependencyRules } from 'config/dependencies.rules';
-import { nodePolicy } from 'config/node.policy';
+import { toolchain } from 'config/policy';
 import type { MigrateOnlySection } from 'types/migrate.types';
 
 import { applyMerges } from './merge.utils.js';
@@ -47,11 +47,12 @@ export async function applyMigrateTarget(params: {
 
   if (shouldRunSection(only, 'node') && currentNodeState) {
     const currentMajor = detectNodeMajor(currentNodeState.nvmrc || '');
-    if (currentMajor !== null && currentMajor !== nodePolicy.major) {
+    const policyMajor = detectNodeMajor(toolchain.node);
+    if (currentMajor !== null && policyMajor !== null && currentMajor !== policyMajor) {
       const confirmed = await confirmNodeVersionUpgrade({
         from: currentMajor,
-        to: nodePolicy.major,
-        nvmrc: nodePolicy.local.nvmrc,
+        to: policyMajor,
+        nvmrc: toolchain.node,
       });
       if (!confirmed) {
         process.exit(0);

@@ -193,7 +193,7 @@ paths before removing detection code.
 
 ## 9. Toolchain version consumption from deps-policy
 
-- [ ] status: pending — **priority: do second**
+- [x] status: done
 
 **Goal:** Consume the new `toolchain` export from `@finografic/deps-policy` to keep `.nvmrc`,
 `engines.node`, and `packageManager` in sync across all `@finografic` packages.

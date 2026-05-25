@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 
 import { fileExists } from 'utils/fs.utils';
 
-import type { NodePolicy } from 'config/node.policy';
 import type { PackageJson } from 'types/package-json.types';
 
 export interface NodeChange {
@@ -32,7 +31,6 @@ export function detectNodeMajor(version: string): number | null {
 export async function detectCurrentNodeState(targetDir: string): Promise<CurrentNodeState> {
   const state: CurrentNodeState = {};
 
-  // Check .nvmrc
   const nvmrcPath = resolve(targetDir, '.nvmrc');
   if (fileExists(nvmrcPath)) {
     try {
@@ -43,7 +41,6 @@ export async function detectCurrentNodeState(targetDir: string): Promise<Current
     }
   }
 
-  // Check GitHub Actions workflow
   const workflowPath = resolve(targetDir, '.github/workflows/release.yml');
   if (fileExists(workflowPath)) {
     try {
@@ -61,43 +58,33 @@ export async function detectCurrentNodeState(targetDir: string): Promise<Current
 }
 
 /**
- * Plan Node runtime changes (.nvmrc, GitHub Actions).
+ * Plan Node runtime changes (.nvmrc, GitHub Actions) from a bare node version string.
  */
-export function planNodeRuntimeChanges(current: CurrentNodeState, policy: NodePolicy): NodeChange[] {
+export function planNodeRuntimeChanges(current: CurrentNodeState, nodeVersion: string): NodeChange[] {
   const changes: NodeChange[] = [];
 
-  if (current.nvmrc !== policy.local.nvmrc) {
-    changes.push({
-      target: '.nvmrc',
-      from: current.nvmrc,
-      to: policy.local.nvmrc,
-    });
+  if (current.nvmrc !== nodeVersion) {
+    changes.push({ target: '.nvmrc', from: current.nvmrc, to: nodeVersion });
   }
 
-  if (current.githubActionsNode !== policy.ci.githubActions) {
-    changes.push({
-      target: 'github-actions-node',
-      from: current.githubActionsNode,
-      to: policy.ci.githubActions,
-    });
+  const major = detectNodeMajor(nodeVersion);
+  const ciVersion = major ? `${major}.x` : nodeVersion;
+  if (current.githubActionsNode !== ciVersion) {
+    changes.push({ target: 'github-actions-node', from: current.githubActionsNode, to: ciVersion });
   }
 
   return changes;
 }
 
 /**
- * Plan @types/node change.
+ * Plan @types/node change. Uses the version from deps-policy devDependencies.
  */
 export function planNodeTypesChange(
   currentTypesVersion: string | undefined,
-  policy: NodePolicy,
+  policyTypesVersion: string,
 ): NodeChange | null {
-  if (currentTypesVersion !== policy.types.node) {
-    return {
-      target: '@types/node',
-      from: currentTypesVersion,
-      to: policy.types.node,
-    };
+  if (currentTypesVersion !== policyTypesVersion) {
+    return { target: '@types/node', from: currentTypesVersion, to: policyTypesVersion };
   }
   return null;
 }

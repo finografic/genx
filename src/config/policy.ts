@@ -1,5 +1,5 @@
 import { createXdgPaths, readJsonc } from '@finografic/cli-kit/xdg';
-import type { DependencyGroup } from '@finografic/deps-policy/deps.types';
+import type { DependencyGroup, ToolchainPolicy } from '@finografic/deps-policy/deps.types';
 
 interface PolicySnapshot {
   _meta: { package: string; version: string; generatedAt: string };
@@ -9,6 +9,7 @@ interface PolicySnapshot {
   config: DependencyGroup;
   formatting: Record<string, string>;
   linting: Record<string, string>;
+  toolchain?: ToolchainPolicy;
 }
 
 const xdg = createXdgPaths();
@@ -27,5 +28,8 @@ export const policy = xdgSnapshot
     }
   : installed.policy;
 
-export const formatting: Record<string, string> = xdgSnapshot?.formatting ?? installed.formatting ?? {};
-export const linting: Record<string, string> = xdgSnapshot?.linting ?? installed.linting ?? {};
+const lintingAndFormattingFallback: Record<string, string> = installed.lintingAndFormatting ?? {};
+export const formatting: Record<string, string> = xdgSnapshot?.formatting ?? lintingAndFormattingFallback;
+export const linting: Record<string, string> = xdgSnapshot?.linting ?? lintingAndFormattingFallback;
+
+export const toolchain: ToolchainPolicy = xdgSnapshot?.toolchain ?? installed.toolchain;

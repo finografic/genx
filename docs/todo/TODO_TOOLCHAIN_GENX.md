@@ -1,6 +1,6 @@
 # TODO — Toolchain Version Consumption in genx
 
-> **Status:** Not started. Policy-side work complete (2026-05-26). Genx integration pending.
+> **Status:** Done (2026-05-26). Toolchain consumed from `@finografic/deps-policy@0.22.0`.
 
 This document specifies what `@finografic/genx` needs to do to consume the new `toolchain` export from `@finografic/deps-policy`. It is a handoff spec from the policy repo.
 
@@ -69,9 +69,9 @@ Package deps use `pnpm add`. Toolchain versions use direct file mutations. These
 ## Progress
 
 - [x] Policy-side: `ToolchainPolicy` type, `toolchain` export, snapshot inclusion, docs
-- [ ] Genx: import `toolchain` from deps-policy
-- [ ] Genx: write `.nvmrc` with `toolchain.node`
-- [ ] Genx: set `engines.node` to `>=toolchain.node` in target `package.json`
-- [ ] Genx: set `packageManager` to `pnpm@toolchain.pnpm` in target `package.json`
-- [ ] Genx: integrate into `genx deps` command flow
-- [ ] Genx: integrate into `genx create` scaffold flow
+- [x] Genx: import `toolchain` from deps-policy
+- [x] Genx: write `.nvmrc` with `toolchain.node`
+- [x] Genx: set `engines.node` to `>=toolchain.node` in target `package.json`
+- [x] Genx: set `packageManager` to `pnpm@toolchain.pnpm` in target `package.json`
+- [x] Genx: integrate into `genx deps` command flow
+- [x] Genx: integrate into `genx create` scaffold flow

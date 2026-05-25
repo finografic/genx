@@ -26,7 +26,7 @@ import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
 
 import { createConfig } from 'config/create.config';
-import { policy } from 'config/policy.js';
+import { policy, toolchain } from 'config/policy.js';
 
 import { help } from './create.help.js';
 
@@ -147,7 +147,16 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
         author['url'] = config.author.url;
       }
 
+      // Toolchain versions from deps-policy
+      const engines = (pkgJson['engines'] ?? {}) as Record<string, string>;
+      engines['node'] = `>=${toolchain.node}`;
+      pkgJson['engines'] = engines;
+      pkgJson['packageManager'] = `pnpm@${toolchain.pnpm}`;
+
       await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
+
+      // Write .nvmrc with policy-driven node version (overwrite template copy)
+      await writeFile(resolve(targetDir, '.nvmrc'), `${toolchain.node}\n`, 'utf8');
 
       // Conditionally strip author URL link from README when URL is blank.
       // applyTemplate has already replaced __AUTHOR_URL__ with '', leaving [Name]() — strip the empty link.
