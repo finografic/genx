@@ -15,7 +15,7 @@ import {
 // subdirectories (code/, naming/, documentation/, git/). FOLDER_MAP drives the migration rename.
 const FOLDER_MAP: Record<string, string> = {
   'typescript-patterns': 'code',
-  'oxlint-code-style': 'code',
+  'linting-code-style': 'code',
   'modern-typescript-patterns': 'code',
   'provider-context-patterns': 'code',
   'picocolors-cli-styling': 'code',
@@ -32,7 +32,7 @@ const FOLDER_MAP: Record<string, string> = {
 const CANONICAL: Record<string, string[]> = {
   code: [
     'typescript-patterns',
-    'oxlint-code-style',
+    'linting-code-style',
     'modern-typescript-patterns',
     'provider-context-patterns',
     'picocolors-cli-styling',
@@ -504,7 +504,7 @@ function buildRulesGlobalLines(extra: Array<{ folder: string; name: string }>): 
     '',
     '- TypeScript patterns: `.github/instructions/code/typescript-patterns.instructions.md`',
     '- Modern TS patterns: `.github/instructions/code/modern-typescript-patterns.instructions.md`',
-    '- Oxlint & style: `.github/instructions/code/oxlint-code-style.instructions.md`',
+    '- Oxlint & style: `.github/instructions/code/linting-code-style.instructions.md`',
     '- Provider/context patterns: `.github/instructions/code/provider-context-patterns.instructions.md`',
     '- Picocolors CLI styling: `.github/instructions/code/picocolors-cli-styling.instructions.md`',
     '',
@@ -787,7 +787,9 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
   const agentsMd = path.join(targetDir, 'AGENTS.md');
   if (fs.existsSync(agentsMd)) {
     const lines = fs.readFileSync(agentsMd, 'utf8').split('\n');
-    if (!hasSection(lines, (h) => /roadmap/i.test(h))) result.applied.push('AGENTS.md: add Roadmap section');
+    if (!hasSection(lines, (h) => /roadmap/i.test(h))) {
+      result.applied.push('AGENTS.md: add Roadmap section');
+    }
     if (
       sectionHasOldPaths(lines, (h) => /rules.*global/i.test(h)) ||
       !hasSection(lines, (h) => /rules.*global/i.test(h))

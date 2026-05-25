@@ -176,7 +176,7 @@ makes it obvious that oxc-config is the sole path.
 - `eslint.config.*` references in `src/config/rename.rules.ts`, `merge.rules.ts`
 - ESLint-specific VS Code extension/settings handling in `src/types/vscode.types.ts`, `src/utils/vscode.utils.ts`
 - Legacy ESLint entries in `_templates/.vscode/settings.json`, `_templates/.vscode/extensions.json`
-- `_templates/.github/instructions/code/eslint-code-style.instructions.md` (superseded by oxlint)
+- `_templates/.github/instructions/code/linting-code-style.instructions.md` (superseded by oxlint)
 - ESLint references in `_templates/AGENTS.md.template`, `_templates/.github/copilot-instructions.md`
 - `DEPRECATED` detection/removal code in oxc-config, markdown, css, git-hooks features — can be
   simplified once no target project could plausibly still have the old stack
