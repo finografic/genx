@@ -11,10 +11,6 @@ export const help: CommandHelpConfig = {
       description: 'Select migrate operations for a specific directory',
     },
     {
-      command: 'genx migrate --managed',
-      description: 'Run the same migrate selections across managed targets',
-    },
-    {
       command: 'genx migrate --yes',
       description: 'Skip per-file and per-target confirms once selections are chosen',
     },

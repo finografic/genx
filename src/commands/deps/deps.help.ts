@@ -12,10 +12,6 @@ export const help: CommandHelpConfig = {
       description: 'Apply all planned changes without multiselect (CI / non-interactive)',
     },
     {
-      command: 'genx deps --managed',
-      description: 'Sync all managed targets (prompt per target unless --yes)',
-    },
-    {
       command: 'genx deps --allow-downgrade',
       description: 'Include policy downgrades when planning changes',
     },

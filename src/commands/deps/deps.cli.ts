@@ -24,13 +24,14 @@ import {
   resolveTargetDir,
   spinner,
   successMessage,
+  warnMessage,
 } from 'utils';
 
+import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
 import type { DependencyChange } from 'lib/migrate/dependencies.utils';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
 import { applyToolchainChanges, planToolchainChanges } from 'lib/migrate/toolchain.utils';
-import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { runPolicyUpdate } from 'utils/policy-update.utils';
@@ -150,6 +151,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     }
 
     if (managed) {
+      warnMessage('--managed is deprecated. Use: genx managed deps');
       // Silently update deps-policy first so the freshest versions are used for all targets.
       await runPolicyUpdate(true);
       let managedTargets: ManagedTarget[];
@@ -204,7 +206,7 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
   });
 }
 
-async function syncDepsForTarget(
+export async function syncDepsForTarget(
   targetDir: string,
   options: { allowDowngrade: boolean; yesMode: boolean },
 ): Promise<void> {

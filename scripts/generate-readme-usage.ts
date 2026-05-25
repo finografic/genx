@@ -190,9 +190,10 @@ function replaceBetweenMarkers(
 /** Extra info not in helpConfig — maps command label to options column */
 const COMMAND_OPTIONS: Record<string, string> = {
   create: 'Interactive prompts',
-  migrate: '`--managed`, `--yes`',
-  deps: '`--managed`, `--yes`, `--no-downgrade`, `--update-policy`',
-  features: '`--managed`, `--yes`',
+  migrate: '`--yes`',
+  deps: '`--yes`, `--no-downgrade`, `--update-policy`',
+  features: '`--yes`',
+  managed: '`migrate`, `deps`, `features`, `--yes`',
   help: '-',
 };
 

@@ -12,11 +12,12 @@ import {
   readManagedTargets,
   resolveTargetDir,
   successMessage,
+  warnMessage,
 } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
+import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
 import { promptFeatures } from 'lib/prompts/features.prompt';
-import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
@@ -51,6 +52,7 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
     }
 
     if (managed) {
+      warnMessage('--managed is deprecated. Use: genx managed features');
       let managedTargets: ManagedTarget[];
       try {
         managedTargets = await readManagedTargets();

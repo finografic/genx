@@ -15,6 +15,7 @@ export const cliHelp: HelpConfig = {
       { label: 'migrate', description: 'Sync conventions to an existing package' },
       { label: 'deps', description: 'Sync dependencies to @finografic/deps-policy' },
       { label: 'features', description: 'Add optional features to an existing package' },
+      { label: 'managed', description: 'Run a command across all managed targets' },
       { label: 'audit', description: 'Scan features and apply what is missing or partial' },
       { label: 'help', description: 'Show this help message' },
     ],
@@ -35,10 +36,6 @@ export const cliHelp: HelpConfig = {
         description: 'genx migrate ../my-package',
       },
       {
-        label: 'Run migrate across managed targets',
-        description: 'genx migrate --managed',
-      },
-      {
         label: 'Sync deps (interactive package selection)',
         description: 'genx deps',
       },
@@ -51,8 +48,12 @@ export const cliHelp: HelpConfig = {
         description: 'genx audit',
       },
       {
+        label: 'Run migrate across managed targets',
+        description: 'genx managed migrate',
+      },
+      {
         label: 'Run deps across managed targets',
-        description: 'genx deps --managed',
+        description: 'genx managed deps',
       },
     ],
   },

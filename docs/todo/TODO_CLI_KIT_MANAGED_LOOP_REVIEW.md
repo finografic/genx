@@ -52,9 +52,9 @@ Potential shape:
 
 ## Phase 3 — Prototype locally in genx first
 
-- [ ] Refactor current managed command flows to a cleaner local generic helper
-- [ ] Reuse it from more than one command
-- [ ] Confirm that command-specific differences do not force awkward options into the abstraction
+- [x] Refactor current managed command flows to a cleaner local generic helper
+- [x] Reuse it from more than one command
+- [x] Confirm that command-specific differences do not force awkward options into the abstraction
 
 ---
 

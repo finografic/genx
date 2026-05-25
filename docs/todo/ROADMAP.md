@@ -220,7 +220,7 @@ and `packageManager`. Currently these values are manually maintained per project
 
 ## 10. Convert `--managed` flag into a `managed` command
 
-- [ ] status: pending — **priority: do third**
+- [x] status: **done** (2026-05-26)
 
 **Goal:** Replace the cross-cutting `--managed` flag with `genx managed <command>` so multi-repo
 execution is a first-class command rather than a flag bolted onto `migrate`, `deps`, and `features`.
@@ -229,22 +229,15 @@ execution is a first-class command rather than a flag bolted onto `migrate`, `de
 three commands. A dedicated `managed` command owns that loop once, and each subcommand stays
 focused on single-target execution.
 
-**What changes:**
+**What changed:**
 
-- Add `src/commands/managed/` with target-iteration orchestration
-- Route `managed migrate`, `managed deps`, `managed features` through existing single-target runners
-- Keep `--managed` temporarily as a compatibility alias with a deprecation hint
-- Add `managed` to root CLI help, dedicated help file, README examples
-- Remove the flag once the new command is established
+- Extracted shared `runManagedLoop` into `src/lib/managed/managed-loop.runner.ts`
+- Added `src/commands/managed/` with `managed.cli.ts`, `managed.help.ts`, and per-subcommand flows
+- Routed `managed migrate`, `managed deps`, `managed features` through existing single-target runners
+- `--managed` flag kept as compatibility alias with deprecation warning
+- Added `managed` to root CLI help, dedicated help file, README examples
 
-**Prerequisite:** Consider extracting the managed-target loop into a local generic helper first
-(see `docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`).
-
-**Risk:** Medium — touches CLI routing, help system, and all three command entry points.
-
-**Status:** Not started.
-
-**Docs:** `docs/todo/TODO_MANAGED_COMMAND.md`, `docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`
+**Docs:** `docs/todo/DONE_MANAGED_COMMAND.md`, `docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`
 
 ---
 

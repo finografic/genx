@@ -9,6 +9,7 @@ import { auditPackage } from './commands/audit/audit.cli.js';
 import { createPackage } from './commands/create/create.cli.js';
 import { syncDeps } from './commands/deps/deps.cli.js';
 import { addFeatures } from './commands/features/features.cli.js';
+import { runManaged } from './commands/managed/managed.cli.js';
 import { migratePackage } from './commands/migrate/migrate.cli.js';
 import { runSelfUpdateCheck, runSelfUpdateForced } from './core/self-update/index.js';
 
@@ -65,6 +66,10 @@ async function main(): Promise<void> {
 
     'features': async (cmdArgs, context) => {
       await addFeatures(cmdArgs, { targetDir: context.cwd });
+    },
+
+    'managed': async (cmdArgs, context) => {
+      await runManaged(cmdArgs, context);
     },
 
     'audit': async (cmdArgs, context) => {

@@ -1,16 +1,16 @@
 import { createFlowContext } from '@finografic/cli-kit/flow';
 import { withHelp } from '@finografic/cli-kit/render-help';
-import { errorMessage, hasManagedFlag, infoMessage, intro } from 'utils';
+import { errorMessage, hasManagedFlag, infoMessage, intro, warnMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { runAgentDocsMigration } from './lib/agent-docs.runner.js';
 import { restructureDocs } from './lib/docs-restructure.utils.js';
-import { runManagedMigrate } from './lib/managed-migrate.runner.js';
 import { applyMigrateTarget } from './lib/migrate-apply.runner.js';
 import { parseMigrateArgs } from './lib/migrate-metadata.utils.js';
 import { promptMigrateMode } from './lib/migrate-mode.prompt.js';
 import { promptMigrateOperations } from './lib/migrate-operations.prompt.js';
 import { createMigrateTargetContext } from './lib/migrate-target-context.js';
+import { runManagedLoop } from 'lib/managed/managed-loop.runner';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
 
@@ -31,6 +31,10 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     const flow = createFlowContext(argv, { y: { type: 'boolean' } });
     const managed = hasManagedFlag(argv);
     const { targetDir } = parseMigrateArgs(argv, context.cwd);
+
+    if (managed) {
+      warnMessage('--managed is deprecated. Use: genx managed migrate');
+    }
 
     if (managed && targetDir !== context.cwd) {
       errorMessage('Cannot combine [path] with --managed');
@@ -59,7 +63,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     }
 
     if (managed) {
-      await runManagedMigrate({
+      await runManagedLoop({
         yesMode: flow.yesMode,
         actionLabel: 'Migrate',
         runTarget: async (target) => {
@@ -83,7 +87,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   });
 }
 
-async function migrateSingleTarget(params: {
+export async function migrateSingleTarget(params: {
   targetDir: string;
   selectedOperations: Set<MigrateOnlySection>;
   debug: boolean;

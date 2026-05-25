@@ -28,6 +28,7 @@ pnpm dlx @finografic/genx <command> [options]
 | `migrate`  | Sync conventions to an existing package            |
 | `deps`     | Sync dependencies to @finografic/deps-policy       |
 | `features` | Add optional features to an existing package       |
+| `managed`  | Run a command across all managed targets           |
 | `audit`    | Scan features and apply what is missing or partial |
 | `help`     | Show this help message                             |
 
@@ -59,9 +60,6 @@ genx migrate
 # Select migrate operations for a specific directory
 genx migrate ../my-package
 
-# Run the same migrate selections across managed targets
-genx migrate --managed
-
 # Skip per-file and per-target confirms once selections are chosen
 genx migrate --yes
 ```
@@ -84,9 +82,6 @@ genx deps ../my-package
 # Apply all planned changes without multiselect (CI / non-interactive)
 genx deps --yes
 
-# Sync all managed targets (prompt per target unless --yes)
-genx deps --managed
-
 # Include policy downgrades when planning changes
 genx deps --allow-downgrade
 
@@ -105,9 +100,6 @@ genx features [path] [options]
 ```bash
 # Add features to current directory
 genx features
-
-# Add the same features across managed targets
-genx features --managed
 ```
 
 <!-- GENERATED:USAGE:END -->
@@ -261,15 +253,16 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                                   |
-| --------------- | -------------------------------------------------- | --------------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | Interactive prompts                                       |
-| `migrate`       | Sync conventions to an existing package            | `--managed`, `--yes`                                      |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `--managed`, `--yes`, `--no-downgrade`, `--update-policy` |
-| `features`      | Add optional features to an existing package       | `--managed`, `--yes`                                      |
-| `audit`         | Scan features and apply what is missing or partial | -                                                         |
-| `help`          | Show this help message                             | -                                                         |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                         |
+| Command         | Description                                        | Options                                      |
+| --------------- | -------------------------------------------------- | -------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | Interactive prompts                          |
+| `migrate`       | Sync conventions to an existing package            | `--yes`                                      |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `--yes`, `--no-downgrade`, `--update-policy` |
+| `features`      | Add optional features to an existing package       | `--yes`                                      |
+| `managed`       | Run a command across all managed targets           | `migrate`, `deps`, `features`, `--yes`       |
+| `audit`         | Scan features and apply what is missing or partial | -                                            |
+| `help`          | Show this help message                             | -                                            |
+| `--help` / `-h` | Show help (works with commands too)                | -                                            |
 
 See `genx <command> --help` for detailed usage.
 

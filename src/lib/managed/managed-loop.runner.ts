@@ -1,11 +1,12 @@
 import { GENX_CONFIG_PATH, errorMessage, infoMessage, readManagedTargets, successMessage } from 'utils';
 
-import { promptManagedTargetAction } from 'lib/prompts/managed.prompt';
 import { pc } from 'utils/picocolors';
 
 import type { ManagedTarget } from 'types/managed.types';
 
-export async function runManagedMigrate(params: {
+import { promptManagedTargetAction } from './managed.prompt.js';
+
+export async function runManagedLoop(params: {
   yesMode: boolean;
   actionLabel: string;
   runTarget: (target: ManagedTarget) => Promise<void>;
