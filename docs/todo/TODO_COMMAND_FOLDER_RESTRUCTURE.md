@@ -2,7 +2,7 @@
 
 **Status:** DONE
 
-Align `src/commands/` with the established pattern used in `_@finografic-deps-policy/src/deps-cli/`:
+Align `src/commands/` with the established pattern used in `@finografic-deps-policy/src/deps-cli/`:
 
 - Each command gets its own subfolder `commands/{name}/`
 - Help is co-located as `{name}.help.ts`
@@ -13,7 +13,7 @@ Align `src/commands/` with the established pattern used in `_@finografic-deps-po
 
 ## Reference Pattern
 
-**Source:** `_@finografic-deps-policy/src/deps-cli/commands/outdated/`
+**Source:** `@finografic-deps-policy/src/deps-cli/commands/outdated/`
 
 ```
 commands/outdated/

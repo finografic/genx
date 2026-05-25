@@ -1,7 +1,7 @@
 # ROADMAP.md
 
 Future enhancements identified during the deps-policy → genx → target pipeline walkthrough (2026-04-06).
-Updated 2026-04-24.
+Updated 2026-05-26.
 Ordered roughly by dependency: earlier items are prerequisites for later ones.
 
 ---
@@ -154,8 +154,102 @@ implements the gitignore slice in `src/lib/gitignore-section.utils.ts` and Agent
 
 ---
 
+## 8. Remove legacy ESLint from genx codebase
+
+- [ ] status: pending — **priority: do first**
+
+**Goal:** Delete all remaining ESLint detection, apply, and generation code from genx. The project
+has fully migrated to `@finografic/oxc-config` (oxfmt + oxlint). ESLint references now exist only
+for legacy removal/migration in target projects, but the detection constants, generator file,
+VS Code types, package-type config, and `_templates/` references are dead weight.
+
+**Why:** ~250 ESLint references remain across `src/` and `_templates/`. These add confusion, test
+surface, and maintenance burden for a stack that is no longer installed or used. Every feature
+that touches ESLint is already marked `// DEPRECATED`. Removing them reduces cognitive load and
+makes it obvious that oxc-config is the sole path.
+
+**What to remove:**
+
+- `src/lib/generators/eslint-config.generator.ts` (dead file)
+- `eslint` type fields in `src/types/package-type.types.ts` and `src/config/package-types.config.ts`
+- ESLint constants in `src/config/constants.config.ts` (files, package names)
+- `eslint.config.*` references in `src/config/rename.rules.ts`, `merge.rules.ts`
+- ESLint-specific VS Code extension/settings handling in `src/types/vscode.types.ts`, `src/utils/vscode.utils.ts`
+- Legacy ESLint entries in `_templates/.vscode/settings.json`, `_templates/.vscode/extensions.json`
+- `_templates/.github/instructions/code/eslint-code-style.instructions.md` (superseded by oxlint)
+- ESLint references in `_templates/AGENTS.md.template`, `_templates/.github/copilot-instructions.md`
+- `DEPRECATED` detection/removal code in oxc-config, markdown, css, git-hooks features — can be
+  simplified once no target project could plausibly still have the old stack
+- Update `--only=eslint` references in non-starters below
+
+**Risk:** Low — purely subtractive. Must verify no managed target still relies on ESLint migration
+paths before removing detection code.
+
+**Status:** Not started. No dedicated TODO doc yet — scope is defined here.
+
+**Docs:** See `// DEPRECATED` markers in affected files.
+
+---
+
+## 9. Toolchain version consumption from deps-policy
+
+- [ ] status: pending — **priority: do second**
+
+**Goal:** Consume the new `toolchain` export from `@finografic/deps-policy` to keep `.nvmrc`,
+`engines.node`, and `packageManager` in sync across all `@finografic` packages.
+
+**Why:** `deps-policy` now exports `toolchain.node` and `toolchain.pnpm` as bare semver strings.
+These are not npm packages — they require direct file/JSON writes to `.nvmrc`, `engines.node`,
+and `packageManager`. Currently these values are manually maintained per project.
+
+**What genx needs:**
+
+- Import `toolchain` from `@finografic/deps-policy`
+- Write `.nvmrc` with `toolchain.node`
+- Set `engines.node` to `>=toolchain.node` in target `package.json`
+- Set `packageManager` to `pnpm@toolchain.pnpm` in target `package.json`
+- Wire into both `genx deps` and `genx create` flows
+
+**Risk:** Low — additive file writes alongside existing dependency sync.
+
+**Status:** Policy-side complete. Genx integration not started.
+
+**Docs:** `docs/todo/TODO_TOOLCHAIN_GENX.md`
+
+---
+
+## 10. Convert `--managed` flag into a `managed` command
+
+- [ ] status: pending — **priority: do third**
+
+**Goal:** Replace the cross-cutting `--managed` flag with `genx managed <command>` so multi-repo
+execution is a first-class command rather than a flag bolted onto `migrate`, `deps`, and `features`.
+
+**Why:** `--managed` duplicates orchestration logic (target iteration, prompts, summary) across
+three commands. A dedicated `managed` command owns that loop once, and each subcommand stays
+focused on single-target execution.
+
+**What changes:**
+
+- Add `src/commands/managed/` with target-iteration orchestration
+- Route `managed migrate`, `managed deps`, `managed features` through existing single-target runners
+- Keep `--managed` temporarily as a compatibility alias with a deprecation hint
+- Add `managed` to root CLI help, dedicated help file, README examples
+- Remove the flag once the new command is established
+
+**Prerequisite:** Consider extracting the managed-target loop into a local generic helper first
+(see `docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`).
+
+**Risk:** Medium — touches CLI routing, help system, and all three command entry points.
+
+**Status:** Not started.
+
+**Docs:** `docs/todo/TODO_MANAGED_COMMAND.md`, `docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`
+
+---
+
 ## Non-starters (excluded)
 
 - **Auto-publish on version bump** — too much automation risk; manual release gates are intentional.
 - **Removing `--only` from `migrate`** — `deps` command coexists as a fast path; `--only` retains
-  value for other granular migrate operations (e.g. `--only=eslint`).
+  value for other granular migrate operations.

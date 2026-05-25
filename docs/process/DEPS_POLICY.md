@@ -13,7 +13,7 @@ local `file:` path. Before publishing a `genx` release, switch it to a proper se
 ### Current reference (development)
 
 ```json
-"@finografic/deps-policy": "file:../_@finografic-deps-policy"
+"@finografic/deps-policy": "file:../@finografic-deps-policy"
 ```
 
 ### Switching to a published version
@@ -43,7 +43,7 @@ Commit: `deps: pin deps-policy to <version>`
 ## Ongoing: updating dependency versions
 
 1. Edit the version in `deps-policy/src/policy/base.ts` (or the relevant type file).
-2. Build and release `deps-policy` — see its [Release Process](../../_@finografic-deps-policy/docs/process/RELEASE_PROCESS.md).
+2. Build and release `deps-policy` — see its [Release Process](../../@finografic-deps-policy/docs/process/RELEASE_PROCESS.md).
 3. In this repo: `pnpm update @finografic/deps-policy`
 4. Run `pnpm typecheck && pnpm build` — must pass clean.
 5. Commit: `deps: update deps-policy to <version>`
@@ -60,7 +60,7 @@ Commit: `deps: pin deps-policy to <version>`
 { name: 'new-package', version: dev['new-package'], section: 'devDependencies' },
 ```
 
-4. Commit: `feat(deps): add new-package to migrate rules`
+1. Commit: `feat(deps): add new-package to migrate rules`
 
 ---
 

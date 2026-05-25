@@ -16,7 +16,7 @@ After the update, `src/config/policy.ts` picks up the fresh XDG snapshot automat
 ## Context
 
 - `depsPolicyPath` is a top-level key in `~/.config/finografic/genx.config.jsonc`
-  (already added — `/Users/justin/repos-finografic/_@finografic-deps-policy`)
+  (already added — `/Users/justin/repos-finografic/@finografic-deps-policy`)
 - `readDepsPolicyPath()` is already implemented in `src/utils/managed.utils.ts`
   — returns the path or `null` if not set
 - `pnpm policy:update` patches source files AND auto-writes

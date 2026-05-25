@@ -69,35 +69,35 @@ run via `pnpm dev:feature`) and `feature-template/` (the `.ts.template` source f
 
 ## Key Decisions (recent)
 
-25. **cli-kit Phase 1 complete** (2026-04-20): `src/core/flow/`, `src/core/render-help/`,
-    `src/core/file-diff/` deleted. Phase 2 (features injecting cli-kit into generated/migrated
-    projects) tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
-26. **`_templates/` is output-only** (2026-04-24): `feature/` scaffold templates moved out of
-    `_templates/` and into `.github/skills/generate-new-genx-feature/feature-template/`.
-    `create.cli.ts` ignores `feature` in copy scope as a safety net.
-27. **Skill folder renamed** (2026-04-24): `scaffold-feature/` → `generate-new-genx-feature/`;
-    `scripts/new-feature.ts` → `generate-new-genx-feature/new-feature.ts`. `dev:feature` script
-    in `package.json` updated to new path.
-28. **`genx create` — `feature/` folder leak fixed** (2026-04-24): Generated packages were
-    incorrectly receiving a `feature/` folder from genx's template copy. Root cause: `feature/`
-    was inside `_templates/` and wasn't excluded. Fixed by moving templates out and adding
-    `'feature'` to the unconditional ignore list in `create.cli.ts`.
-29. **Command folder restructure** (2026-04-29): All commands moved from flat `src/commands/<cmd>.cli.ts`
-    into subfolders `src/commands/<cmd>/<cmd>.cli.ts`. Help files co-located as `<cmd>.help.ts`
-    (type changed to `CommandHelpConfig`; export renamed to `help`). `withHelp()` wrapper replaces
-    manual `--help` check + `renderHelp()` in all 5 commands. Audit-exclusive lib
-    (`src/lib/audit/audit.ts`, `src/lib/prompts/audit.prompt.ts`) moved to `src/commands/audit/lib/`.
-    Migrate-exclusive lib (8 files: `agent-docs-migration`, `docs-restructure.utils`, `merge.utils`,
-    `node.utils`, `plan.utils`, `rename.utils`, `template-sync.utils`, `migrate.prompt`) moved to
-    `src/commands/migrate/lib/`. Shared lib (`dependencies.utils`, `package-json.utils`,
-    `migrate-metadata.utils`, `features.prompt`, `managed.prompt`) stays in `src/lib/`. `src/help/`
-    folder deleted; `"help/*"` path alias removed from `tsconfig.json`.
-    Pattern matches `_@finografic-deps-policy/src/deps-cli/commands/`.
-30. **`genx deps` UI unified with `deps-policy update`** (2026-04-29): `deps-policy` gained a
-    `./display` export; `DependencyRule` got a `group?` field; `dependencyRules` carries group
-    labels. `deps.cli.ts` now renders a grouped `printDepsTable` preview and, in `--write` mode,
-    a dual multiselect (upgrades/downgrades then adds). Requires `deps-policy ≥0.17.0`; currently
-    linked via `file:../_@finografic-deps-policy` — switch to `^0.17.0` after publishing.
+1. **cli-kit Phase 1 complete** (2026-04-20): `src/core/flow/`, `src/core/render-help/`,
+   `src/core/file-diff/` deleted. Phase 2 (features injecting cli-kit into generated/migrated
+   projects) tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
+2. **`_templates/` is output-only** (2026-04-24): `feature/` scaffold templates moved out of
+   `_templates/` and into `.github/skills/generate-new-genx-feature/feature-template/`.
+   `create.cli.ts` ignores `feature` in copy scope as a safety net.
+3. **Skill folder renamed** (2026-04-24): `scaffold-feature/` → `generate-new-genx-feature/`;
+   `scripts/new-feature.ts` → `generate-new-genx-feature/new-feature.ts`. `dev:feature` script
+   in `package.json` updated to new path.
+4. **`genx create` — `feature/` folder leak fixed** (2026-04-24): Generated packages were
+   incorrectly receiving a `feature/` folder from genx's template copy. Root cause: `feature/`
+   was inside `_templates/` and wasn't excluded. Fixed by moving templates out and adding
+   `'feature'` to the unconditional ignore list in `create.cli.ts`.
+5. **Command folder restructure** (2026-04-29): All commands moved from flat `src/commands/<cmd>.cli.ts`
+   into subfolders `src/commands/<cmd>/<cmd>.cli.ts`. Help files co-located as `<cmd>.help.ts`
+   (type changed to `CommandHelpConfig`; export renamed to `help`). `withHelp()` wrapper replaces
+   manual `--help` check + `renderHelp()` in all 5 commands. Audit-exclusive lib
+   (`src/lib/audit/audit.ts`, `src/lib/prompts/audit.prompt.ts`) moved to `src/commands/audit/lib/`.
+   Migrate-exclusive lib (8 files: `agent-docs-migration`, `docs-restructure.utils`, `merge.utils`,
+   `node.utils`, `plan.utils`, `rename.utils`, `template-sync.utils`, `migrate.prompt`) moved to
+   `src/commands/migrate/lib/`. Shared lib (`dependencies.utils`, `package-json.utils`,
+   `migrate-metadata.utils`, `features.prompt`, `managed.prompt`) stays in `src/lib/`. `src/help/`
+   folder deleted; `"help/*"` path alias removed from `tsconfig.json`.
+   Pattern matches `@finografic-deps-policy/src/deps-cli/commands/`.
+6. **`genx deps` UI unified with `deps-policy update`** (2026-04-29): `deps-policy` gained a
+   `./display` export; `DependencyRule` got a `group?` field; `dependencyRules` carries group
+   labels. `deps.cli.ts` now renders a grouped `printDepsTable` preview and, in `--write` mode,
+   a dual multiselect (upgrades/downgrades then adds). Requires `deps-policy ≥0.17.0`; currently
+   linked via `file:../@finografic-deps-policy` — switch to `^0.17.0` after publishing.
 
 ## Open Questions
 
