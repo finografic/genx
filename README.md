@@ -138,18 +138,16 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 - Syncs `.github/copilot-instructions.md` from `_templates` (full file when content differs).
 - Syncs each file under `.github/instructions/` from `_templates`, **except** the `project/` subtree — that folder is never overwritten by genx (per-repo rules stay put).
 - Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**, plus shared bodies for General / Markdown / Git). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
-- Optionally updates `eslint.config.ts` ignore patterns for `.cursor/` paths.
 
 ### css
 
-CSS linting via `stylelint` + `@stylistic/stylelint-plugin`.
+CSS/SCSS formatting via oxfmt with CSS-aware overrides.
 
-- Installs `stylelint` and `@stylistic/stylelint-plugin`
-- Creates `stylelint.config.ts` with stylistic indentation/spacing rules (`satisfies Config`)
-- Enables stylelint in `.vscode/settings.json` (disables built-in `css.validate`)
+- Removes legacy `stylelint` and `@stylistic/stylelint-plugin` dependencies
+- Removes legacy `stylelint.config.ts` and `.stylelintrc.json` config files
 - Configures oxfmt (oxc) as the default formatter for `css` and `scss`
 - Patches `oxfmt.config.ts`: adds `css` import and `{ files: ['*.css', '*.scss'], options: { ...css } }` when missing (standard genx layout)
-- Adds VSCode extension recommendation
+- Removes legacy stylelint VSCode settings and extension recommendation
 
 ### git-hooks
 
@@ -157,7 +155,7 @@ Pre-commit linting + conventional commits.
 
 - Installs `lint-staged`, `husky`
 - Installs `@commitlint/cli`, `@commitlint/config-conventional`
-- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `eslint --fix`; the **oxfmt** feature prepends `oxfmt` when applied)
+- Adds `lint-staged` config to package.json (`*.{ts,tsx,js,jsx,mjs,cjs}` → `oxfmt` then `oxlint --fix`)
 - Scaffolds `.husky/pre-commit` and `.husky/commit-msg`
 - Ensures `commitlint.config.mjs` exists (copies from genx `_templates/` when missing)
 - Removes an inlined `commitlint` key from package.json if present (config lives in `commitlint.config.mjs`)
@@ -166,11 +164,10 @@ Pre-commit linting + conventional commits.
 
 ### markdown
 
-Markdown linting via `eslint-plugin-markdownlint`.
+Markdown linting via `@finografic/md-lint`.
 
-- Installs `eslint-plugin-markdownlint`
-- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
-- Adds markdown block to `eslint.config.ts`
+- Installs `@finografic/md-lint`
+- Splits a combined `*.{json,…,md}` lint-staged glob into data-only + `*.md` with `md-lint --fix`
 - Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
 - Adds VSCode extension recommendation
 - Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
@@ -213,17 +210,17 @@ Every scaffolded package includes:
 - `package.json` — configured with scope, name, and package type
 - `tsconfig.json` — strict TypeScript config
 - `tsdown.config.ts` — modern bundler setup
-- `eslint.config.ts` — ESLint v9 flat config
+- `oxfmt.config.ts` — oxfmt formatting config
 - `.gitignore`, `LICENSE`, `README.md`
 
 Optional features (selected during `create` or added via `features`):
 
-- **oxfmt** — migrate older repos to oxfmt + `@finografic/oxfmt-config`
+- **oxc-config** — migrate older repos to oxfmt + oxlint + `@finografic/oxc-config`
 - **vitest** — unit testing
 - **git-hooks** — pre-commit linting + conventional commits
 - **ai-instructions** — shared AI rules (Copilot, Cursor, Claude)
-- **markdown** — markdown linting via ESLint
-- **css** — CSS linting via Stylelint + Stylistic plugin
+- **markdown** — markdown linting via `@finografic/md-lint`
+- **css** — CSS/SCSS formatting via oxfmt
 
 ---
 
@@ -237,7 +234,7 @@ my-package/
 ├── package.json
 ├── tsconfig.json
 ├── tsdown.config.ts
-├── eslint.config.ts
+├── oxfmt.config.ts
 ├── .gitignore
 ├── LICENSE
 ├── README.md

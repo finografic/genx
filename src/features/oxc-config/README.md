@@ -35,4 +35,3 @@ When dependency fields in `package.json` change, genx follows up with `pnpm inst
 | `oxc-config.template.ts`                       | Generate `oxfmt.config.ts` content            |
 | `oxc-config.workflows.ts`                      | Strip dprint from `ci.yml` / `release.yml`    |
 | `oxc-config.dprint-cleanup.ts`                 | Strip dprint from lint-staged and scripts     |
-| `oxc-config.simple-import-sort.ts`             | Strip `eslint-plugin-simple-import-sort`      |

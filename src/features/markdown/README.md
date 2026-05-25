@@ -1,25 +1,24 @@
 # markdown
 
-Markdown linting via `eslint-plugin-markdownlint`.
+Markdown linting via `@finografic/md-lint`.
 
 ## What it does
 
-- Installs `eslint-plugin-markdownlint`
-- When needed, splits a combined `*.{json,…,md}` oxfmt glob into data-only + `*.md` with `eslint --fix` only (oxfmt for `*.md` still runs via the data glob that includes `md`)
-- Adds markdown block to `eslint.config.ts`
+- Installs `@finografic/md-lint`
+- Splits a combined `*.{json,…,md}` lint-staged glob into data-only + `*.md` with `md-lint --fix`
 - Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
 - Adds VSCode extension recommendation
 - Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
 
 ## Files
 
-| File                    | Purpose                                     |
-| ----------------------- | ------------------------------------------- |
-| `markdown.constants.ts` | Package name, VSCode settings, ESLint block |
-| `markdown.detect.ts`    | Check if markdownlint installed             |
-| `markdown.apply.ts`     | Install + configure                         |
-| `markdown.vscode.ts`    | VSCode settings logic (lang detection)      |
-| `markdown.feature.ts`   | Feature definition                          |
+| File                    | Purpose                                          |
+| ----------------------- | ------------------------------------------------ |
+| `markdown.constants.ts` | Package name, VSCode settings, lint-staged globs |
+| `markdown.detect.ts`    | Check if markdownlint installed                  |
+| `markdown.apply.ts`     | Install + configure                              |
+| `markdown.vscode.ts`    | VSCode settings logic (lang detection)           |
+| `markdown.feature.ts`   | Feature definition                               |
 
 ## VSCode Extension
 
