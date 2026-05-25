@@ -214,7 +214,7 @@ and `packageManager`. Currently these values are manually maintained per project
 
 **Status:** Policy-side complete. Genx integration not started.
 
-**Docs:** `docs/todo/TODO_TOOLCHAIN_GENX.md`
+**Docs:** `docs/todo/DONE_TOOLCHAIN_GENX.md`
 
 ---
 

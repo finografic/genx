@@ -1,4 +1,4 @@
-# TODO — Toolchain Version Consumption in genx
+# DONE — Toolchain Version Consumption in genx
 
 > **Status:** Done (2026-05-26). Toolchain consumed from `@finografic/deps-policy@0.22.0`.
 
