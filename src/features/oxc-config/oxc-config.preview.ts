@@ -13,7 +13,6 @@ import { findPackageRoot } from 'utils/package-root.utils';
 import { VSCODE_MARKDOWN_TAIL_KEYS } from 'utils/vscode-jsonc.utils.js';
 
 import {
-  ESLINT_CONFIG_FILES,
   PACKAGE_JSON,
   VSCODE_DIR,
   VSCODE_EXTENSIONS_JSON,
@@ -33,7 +32,6 @@ import {
   OXFMT_FORMATTER_ID,
   OXFMT_VSCODE_EXTENSIONS,
   PRETTIER_CONFIG_FILES,
-  STYLELINT_CONFIG_FILES,
 } from './oxc-config.constants.js';
 import { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
@@ -120,8 +118,6 @@ async function computeCanonicalSettingsFileContent(targetDir: string): Promise<s
     'editor.formatOnSaveMode': 'file',
     'editor.defaultFormatter': OXFMT_FORMATTER_ID,
     'editor.codeActionsOnSave': { 'source.fixAll.oxc': 'explicit', 'source.organizeImports': 'explicit' },
-    'eslint.enable': false,
-    'eslint.validate': ['javascript', 'typescript'],
     'prettier.enable': false,
     'oxc.typeAware': true,
     'oxc.lint.run': 'onSave',
@@ -221,13 +217,6 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     changes.push(createDeletePreviewChange(abs, body, true, `remove legacy ${file}`));
   }
 
-  for (const file of STYLELINT_CONFIG_FILES) {
-    const abs = resolve(targetDir, file);
-    if (!fileExists(abs)) continue;
-    const body = await readFile(abs, 'utf8');
-    changes.push(createDeletePreviewChange(abs, body, true, `remove ${file} (replaced by oxfmt)`));
-  }
-
   const ciAbs = resolve(targetDir, CI_WORKFLOW_REL);
 
   for (const rel of OXFMT_GITHUB_WORKFLOW_PATHS) {
@@ -299,14 +288,6 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     );
   } else {
     applied.push('.vscode/settings.json');
-  }
-
-  // DEPRECATED: eslint.config.* files removed — oxlint replaces ESLint.
-  for (const name of ESLINT_CONFIG_FILES) {
-    const abs = resolve(targetDir, name);
-    if (!fileExists(abs)) continue;
-    const raw = await readFile(abs, 'utf8');
-    changes.push(createDeletePreviewChange(abs, raw, true, `remove ${name} (replaced by oxlint)`));
   }
 
   const noopMessage =

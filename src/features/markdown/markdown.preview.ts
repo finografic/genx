@@ -15,21 +15,16 @@ import {
 import { OXFMT_LINT_STAGED_DATA_PATTERN_ALIASES } from '../oxc-config/oxc-config.constants.js';
 import { packageJsonManifestDependencyFieldsChanged } from '../oxc-config/oxc-config.preview.js';
 import {
-  ESLINT_PLUGIN_MARKDOWNLINT,
-  ESLINT_PLUGIN_SIMPLE_IMPORT_SORT,
   LINT_STAGED_DATA_ONLY_PATTERN,
   LINT_STAGED_MD_LINT_CMD,
   LINT_STAGED_MD_PATTERN,
   LINT_STAGED_OXFMT_CMD,
-  MARKDOWNLINT_DECLARATIONS_FILE,
-  MARKDOWNLINT_DECLARATIONS_MARKER,
   MD_LINT_CSS_FILES,
   MD_LINT_FIX_SCRIPT,
   MD_LINT_PACKAGE,
   MD_LINT_PACKAGE_VERSION,
   MD_LINT_SCRIPT,
 } from './markdown.constants';
-import { proposeMarkdownlintEslintConfigChange } from './markdown.eslint.js';
 import {
   computeProposedMarkdownExtensionsText,
   computeProposedMarkdownSettingsText,
@@ -40,8 +35,7 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 }
 
 /**
- * Applies lint-staged markdown splits / `*.md` commands — same rules as `markdown.apply`. Migrates `eslint
- * --fix` → `md-lint --fix` on the `*.md` key when present.
+ * Applies lint-staged markdown splits / `*.md` commands. Ensures `*.md` key has both oxfmt and md-lint.
  */
 export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): PackageJson {
   const lintStaged = { ...packageJson['lint-staged'] };
@@ -51,27 +45,11 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
 
   const mdCommands = lintStaged[LINT_STAGED_MD_PATTERN];
 
-  // Already fully configured with the new stack
   if (mdCommands?.some((c) => c.includes('oxfmt')) && mdCommands.includes(LINT_STAGED_MD_LINT_CMD)) {
     return packageJson;
   }
 
-  // Migrate: has oxfmt + eslint --fix → replace eslint with md-lint --fix
-  if (mdCommands?.some((c) => c.includes('oxfmt')) && mdCommands.some((c) => c.includes('eslint'))) {
-    lintStaged[LINT_STAGED_MD_PATTERN] = mdCommands.map((c) =>
-      c.includes('eslint') ? LINT_STAGED_MD_LINT_CMD : c,
-    );
-    return { ...packageJson, 'lint-staged': lintStaged };
-  }
-
-  // Has eslint only → replace with oxfmt + md-lint
-  if (mdCommands?.some((c) => c.includes('eslint')) && !mdCommands.some((c) => c.includes('oxfmt'))) {
-    lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, LINT_STAGED_MD_LINT_CMD];
-    return { ...packageJson, 'lint-staged': lintStaged };
-  }
-
-  // Has oxfmt only → add md-lint
-  if (mdCommands?.some((c) => c.includes('oxfmt')) && !mdCommands.some((c) => c.includes('eslint'))) {
+  if (mdCommands?.some((c) => c.includes('oxfmt')) && !mdCommands.includes(LINT_STAGED_MD_LINT_CMD)) {
     lintStaged[LINT_STAGED_MD_PATTERN] = [LINT_STAGED_OXFMT_CMD, LINT_STAGED_MD_LINT_CMD];
     return { ...packageJson, 'lint-staged': lintStaged };
   }
@@ -95,22 +73,6 @@ export function applyMarkdownLintStagedTransforms(packageJson: PackageJson): Pac
   }
 
   return packageJson;
-}
-
-/** Remove legacy markdown-related ESLint packages that are superseded by `@finografic/md-lint`. */
-function withoutLegacyMarkdownDevDependencies(packageJson: PackageJson): PackageJson {
-  const devDeps = packageJson.devDependencies;
-  if (!devDeps) return packageJson;
-
-  const toRemove = [ESLINT_PLUGIN_MARKDOWNLINT, ESLINT_PLUGIN_SIMPLE_IMPORT_SORT];
-  const hasAny = toRemove.some((p) => Object.prototype.hasOwnProperty.call(devDeps, p));
-  if (!hasAny) return packageJson;
-
-  const next = { ...devDeps };
-  for (const p of toRemove) {
-    delete next[p];
-  }
-  return { ...packageJson, devDependencies: next };
 }
 
 function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
@@ -182,7 +144,6 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
     pkg = withMarkdownDevDependency(pkg);
   }
 
-  pkg = withoutLegacyMarkdownDevDependencies(pkg);
   pkg = applyMarkdownLintStagedTransforms(pkg);
   pkg = withMarkdownScripts(pkg);
 
@@ -229,37 +190,6 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
       const cssBody = await readFile(cssPath, 'utf8');
       changes.push(
         createDeletePreviewChange(cssPath, cssBody, true, `.vscode/${cssFile} (moved to md-lint package)`),
-      );
-    }
-  }
-
-  // Strip markdownlint block + imports from eslint.config.*
-  const eslintChange = await proposeMarkdownlintEslintConfigChange(targetDir);
-  if (eslintChange !== null) {
-    changes.push(
-      createWritePreviewChange(
-        eslintChange.path,
-        eslintChange.current,
-        eslintChange.proposed,
-        'eslint.config (remove markdownlint plugin block)',
-      ),
-    );
-  } else {
-    applied.push('eslint.config (markdownlint already removed)');
-  }
-
-  // Delete src/declarations.d.ts if it is solely for eslint-plugin-markdownlint typings
-  const declarationsPath = resolve(targetDir, MARKDOWNLINT_DECLARATIONS_FILE);
-  if (fileExists(declarationsPath)) {
-    const declBody = await readFile(declarationsPath, 'utf8');
-    if (declBody.includes(MARKDOWNLINT_DECLARATIONS_MARKER)) {
-      changes.push(
-        createDeletePreviewChange(
-          declarationsPath,
-          declBody,
-          true,
-          `${MARKDOWNLINT_DECLARATIONS_FILE} (markdownlint type declarations — no longer needed)`,
-        ),
       );
     }
   }

@@ -11,9 +11,6 @@
     "source.addMissingImports": "explicit"
   },
 
-  "eslint.enable": false,
-  "eslint.validate": ["javascript", "typescript"],
-
   "prettier.enable": false,
 
   "oxc.typeAware": true,

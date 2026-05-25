@@ -20,11 +20,9 @@ import {
   createDeletePreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
-import { proposeEslintIgnorePatterns } from '../feature.utils';
 import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
 import {
   AI_INSTRUCTIONS_AGENTS_MD,
-  AI_INSTRUCTIONS_ESLINT_IGNORES,
   AI_INSTRUCTIONS_FILES,
   AI_INSTRUCTIONS_SKIP_SUBDIR,
 } from './ai-instructions.constants';
@@ -172,18 +170,6 @@ export async function previewAiInstructions(
       } else {
         applied.push(AI_INSTRUCTIONS_AGENTS_MD);
       }
-    }
-  }
-
-  const eslintPath = resolve(targetDir, 'eslint.config.ts');
-  if (fileExists(eslintPath)) {
-    const eslintRaw = await readFile(eslintPath, 'utf8');
-    const proposed = proposeEslintIgnorePatterns(eslintRaw, AI_INSTRUCTIONS_ESLINT_IGNORES);
-    if (proposed !== eslintRaw) {
-      const out = proposed.endsWith('\n') ? proposed : `${proposed}\n`;
-      changes.push(createWritePreviewChange(eslintPath, eslintRaw, out, 'eslint.config.ts (.cursor ignore)'));
-    } else {
-      applied.push('eslint.config.ts (cursor ignore)');
     }
   }
 

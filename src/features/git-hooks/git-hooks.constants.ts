@@ -23,7 +23,7 @@ export const GIT_HOOKS_PACKAGES = {
  * Matches the code glob used when oxfmt prepends its command in lint-staged.
  */
 export const LINT_STAGED_CONFIG: Record<string, string[]> = {
-  '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'],
+  '*.{ts,tsx,js,jsx,mjs,cjs}': ['oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern'],
 };
 
 /**

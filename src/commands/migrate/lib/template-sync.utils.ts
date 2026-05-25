@@ -1,12 +1,10 @@
-import { rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import * as clack from '@clack/prompts';
-import { copyDir, copyTemplate, ensureDir, fileExists, infoMessage } from 'utils';
+import { copyDir, copyTemplate, ensureDir } from 'utils';
 
 import { isCliPackage } from 'lib/generators/cli-help.generator';
 
 import { migrateConfig } from 'config/migrate.config';
-import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
 import type { TemplateVars } from 'types/template.types';
 
@@ -36,24 +34,6 @@ export async function syncFromTemplate(
   for (const item of syncTasks) {
     const sourcePath = resolve(templateDir, item.templatePath);
     const destinationPath = resolve(targetDir, item.targetPath);
-
-    // Special handling for eslint.config.ts: backup existing alternatives first
-    if (item.targetPath === 'eslint.config.ts') {
-      const eslintRule = renameRules.find((rule) => rule.canonical === 'eslint.config.ts');
-      if (eslintRule) {
-        const filesToCheck = [...eslintRule.alternatives, eslintRule.canonical];
-
-        for (const file of filesToCheck) {
-          const filePath = resolve(targetDir, file);
-          if (fileExists(filePath)) {
-            const ext = file.includes('.') ? file.split('.').pop() : 'mjs';
-            const backupPath = resolve(targetDir, `eslint.config--backup.${ext}`);
-            await rename(filePath, backupPath);
-            infoMessage(`Backed up ${file} to eslint.config--backup.${ext}`);
-          }
-        }
-      }
-    }
 
     // Directory copy — `docs/spec/` is only for CLI packages (see docs/spec/CLI_CORE.md)
     if (item.templatePath === 'docs') {

@@ -11,6 +11,3 @@ export const AI_CLAUDE_FILES = [
   '.claude/settings.json',
   '.agents/handoff.md',
 ] as const;
-
-/** ESLint ignore patterns added when this feature is installed */
-export const AI_CLAUDE_ESLINT_IGNORES = ['**/.claude/**'] as const;

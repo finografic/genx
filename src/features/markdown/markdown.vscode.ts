@@ -16,7 +16,6 @@ import {
   jsonLikeTextsEquivalent,
   parseJsoncObject,
   readExtensionsJson,
-  removeRootPropertyJsonc,
   setRootPropertyJsonc,
 } from 'utils';
 
@@ -47,16 +46,6 @@ export async function computeProposedMarkdownSettingsText(targetDir: string): Pr
 
   let t = current || `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
   const root = (): Record<string, unknown> => parseJsoncObject(t);
-
-  // Remove 'markdown' from eslint.validate if present (markdown is linted by md-lint, not ESLint)
-  const eslintValidate = root()['eslint.validate'] as string[] | undefined;
-  if (eslintValidate?.includes('markdown')) {
-    const updated = eslintValidate.filter((v) => v !== 'markdown');
-    t =
-      updated.length > 0
-        ? setRootPropertyJsonc(t, 'eslint.validate', updated)
-        : removeRootPropertyJsonc(t, 'eslint.validate');
-  }
 
   if (!root()[MARKDOWNLINT_CONFIG_KEY]) {
     if (root()[MARKDOWN_STYLES_KEY]) {

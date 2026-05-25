@@ -118,12 +118,12 @@ describe('oxfmt.apply — preview-driven apply', () => {
     };
     previewOxcConfigMock.mockResolvedValue(preview);
     applyPreviewChangesMock.mockResolvedValue({
-      applied: ['remove eslint.config.ts (replaced by oxlint)'],
-      appliedTargetPaths: [resolve(targetDir, 'eslint.config.ts')],
+      applied: ['oxlint.config.ts'],
+      appliedTargetPaths: [resolve(targetDir, 'oxlint.config.ts')],
     });
 
     const result = await applyOxcConfig({ targetDir });
     expect(execaMock).not.toHaveBeenCalled();
-    expect(result.applied).toEqual(['remove eslint.config.ts (replaced by oxlint)']);
+    expect(result.applied).toEqual(['oxlint.config.ts']);
   });
 });

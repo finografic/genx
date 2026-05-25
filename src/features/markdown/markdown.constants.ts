@@ -22,18 +22,6 @@ export const LINT_STAGED_MD_LINT_CMD = 'md-lint --fix';
 export const MD_LINT_SCRIPT = 'lint:md';
 export const MD_LINT_FIX_SCRIPT = 'lint:md:fix';
 
-/** Legacy ESLint plugin replaced by `@finografic/md-lint`. */
-export const ESLINT_PLUGIN_MARKDOWNLINT = 'eslint-plugin-markdownlint';
-
-/** Legacy import-sort plugin — removed alongside markdownlint in the md-lint migration. */
-export const ESLINT_PLUGIN_SIMPLE_IMPORT_SORT = 'eslint-plugin-simple-import-sort';
-
-/** TypeScript declarations file that exists solely to type `eslint-plugin-markdownlint`. */
-export const MARKDOWNLINT_DECLARATIONS_FILE = 'src/declarations.d.ts';
-
-/** Marker string used to confirm a declarations.d.ts is markdownlint-only and safe to delete. */
-export const MARKDOWNLINT_DECLARATIONS_MARKER = 'eslint-plugin-markdownlint';
-
 /** VSCode extension IDs for markdownlint */
 export const MARKDOWNLINT_VSCODE_EXTENSIONS = ['davidanson.vscode-markdownlint'] as const;
 

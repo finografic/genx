@@ -11,7 +11,7 @@ Template: day-to-day development for a **pnpm** monorepo or multi-package repo. 
 Typical scripts (yours may differ):
 
 ```bash
-pnpm lint          # ESLint / project lint
+pnpm lint          # oxlint
 pnpm lint:fix      # Lint with fixes, if defined
 pnpm format:fix    # Formatter (e.g. oxfmt)
 pnpm format:check  # Check formatting without writing
@@ -92,7 +92,7 @@ optional interactive helper; it does not replace Commitlint.
 A typical **pre-commit** hook runs some combination of:
 
 1. **lint-staged** on staged files
-2. **ESLint** (or similar) on JS/TS
+2. **oxlint** on JS/TS
 3. **Formatter** (e.g. oxfmt) on staged paths
 4. **typecheck** (often whole workspace for safety)
 

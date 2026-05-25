@@ -156,7 +156,7 @@ implements the gitignore slice in `src/lib/gitignore-section.utils.ts` and Agent
 
 ## 8. Remove legacy ESLint from genx codebase
 
-- [ ] status: pending — **priority: do first**
+- [x] status: done
 
 **Goal:** Delete all remaining ESLint detection, apply, and generation code from genx. The project
 has fully migrated to `@finografic/oxc-config` (oxfmt + oxlint). ESLint references now exist only

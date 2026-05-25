@@ -29,8 +29,6 @@ export const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'editor.formatOnSaveMode': 'file',
   'editor.defaultFormatter': 'oxc.oxc-vscode',
   'editor.codeActionsOnSave': { 'source.fixAll.oxc': 'explicit', 'source.organizeImports': 'explicit' },
-  'eslint.enable': false,
-  'eslint.validate': ['javascript', 'typescript'],
   'prettier.enable': false,
   'oxc.typeAware': true,
   'oxc.lint.run': 'onSave',

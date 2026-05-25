@@ -15,7 +15,7 @@ import {
 // subdirectories (code/, naming/, documentation/, git/). FOLDER_MAP drives the migration rename.
 const FOLDER_MAP: Record<string, string> = {
   'typescript-patterns': 'code',
-  'eslint-code-style': 'code',
+  'oxlint-code-style': 'code',
   'modern-typescript-patterns': 'code',
   'provider-context-patterns': 'code',
   'picocolors-cli-styling': 'code',
@@ -32,7 +32,7 @@ const FOLDER_MAP: Record<string, string> = {
 const CANONICAL: Record<string, string[]> = {
   code: [
     'typescript-patterns',
-    'eslint-code-style',
+    'oxlint-code-style',
     'modern-typescript-patterns',
     'provider-context-patterns',
     'picocolors-cli-styling',
@@ -306,7 +306,7 @@ as a rule file — it exists purely for navigation and to define how this folder
 | Folder             | Contents                                                                   |
 | ------------------ | -------------------------------------------------------------------------- |
 | (root)             | \`general.instructions.md\` — baseline rules that apply everywhere           |
-| \`code/\`            | TypeScript patterns, ESLint/oxlint style, code conventions, CLI styling    |
+| \`code/\`            | TypeScript patterns, oxlint style, code conventions, CLI styling           |
 | \`naming/\`          | File naming, variable naming, identifier conventions                       |
 | \`documentation/\`   | Documentation standards, README rules, agent-facing markdown, design specs |
 | \`git/\`             | Commit conventions, branch policy, release process                         |
@@ -504,7 +504,7 @@ function buildRulesGlobalLines(extra: Array<{ folder: string; name: string }>): 
     '',
     '- TypeScript patterns: `.github/instructions/code/typescript-patterns.instructions.md`',
     '- Modern TS patterns: `.github/instructions/code/modern-typescript-patterns.instructions.md`',
-    '- ESLint & style: `.github/instructions/code/eslint-code-style.instructions.md`',
+    '- Oxlint & style: `.github/instructions/code/oxlint-code-style.instructions.md`',
     '- Provider/context patterns: `.github/instructions/code/provider-context-patterns.instructions.md`',
     '- Picocolors CLI styling: `.github/instructions/code/picocolors-cli-styling.instructions.md`',
     '',

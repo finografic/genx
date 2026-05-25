@@ -188,7 +188,6 @@ describe('preview migration — drift vs canonical', () => {
       join(root, '.gitignore'),
       await readFile(join(repoRoot, '_templates/.gitignore'), 'utf8'),
     );
-    await writeFile(join(root, 'eslint.config.ts'), `export default { ignores: ['**/.claude/**'] };\n`);
 
     const preview = await previewAiClaude({ targetDir: root });
     expect(
@@ -210,7 +209,6 @@ describe('preview migration — drift vs canonical', () => {
     for (const f of AI_CLAUDE_FILES) {
       const p = join(root, f);
       await mkdir(dirname(p), { recursive: true });
-      // CLAUDE.md must have the canonical content; other files use a placeholder.
       await writeFile(p, f === 'CLAUDE.md' ? '@AGENTS.md\n' : 'ok\n');
     }
     await mkdir(join(root, '.claude/assets'), { recursive: true });
@@ -218,7 +216,6 @@ describe('preview migration — drift vs canonical', () => {
       join(root, '.gitignore'),
       await readFile(join(repoRoot, '_templates/.gitignore'), 'utf8'),
     );
-    await writeFile(join(root, 'eslint.config.ts'), `export default { ignores: ['**/.claude/**'] };\n`);
 
     const preview = await previewAiClaude({ targetDir: root });
     expect(preview.changes.some((c) => c.path.endsWith('.gitkeep'))).toBe(false);

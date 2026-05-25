@@ -28,9 +28,9 @@ describe('planDependencyChanges', () => {
     const pkg: PackageJson = {
       name: '@finografic/test',
       version: '0.0.0',
-      devDependencies: { eslint: '^9.20.0' },
+      devDependencies: { oxlint: '^0.17.0' },
     };
-    const changes = planDependencyChanges(pkg, [rule('eslint', '^9.0.0')]);
+    const changes = planDependencyChanges(pkg, [rule('oxlint', '^0.16.0')]);
     expect(changes).toEqual([]);
   });
 

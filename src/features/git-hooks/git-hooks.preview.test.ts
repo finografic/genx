@@ -44,7 +44,9 @@ describe('git-hooks preview-driven detect', () => {
         'husky': 'latest',
         'lint-staged': 'latest',
       },
-      'lint-staged': { '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'] },
+      'lint-staged': {
+        '*.{ts,tsx,js,jsx,mjs,cjs}': ['oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern'],
+      },
     };
     await writeFile(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
 
@@ -76,7 +78,7 @@ describe('git-hooks preview-driven detect', () => {
         'lint-staged': 'latest',
         'simple-git-hooks': '^2.13.1',
       },
-      'lint-staged': { '*.{ts,tsx}': ['eslint --fix'] },
+      'lint-staged': { '*.{ts,tsx}': ['oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern'] },
       'simple-git-hooks': { 'pre-commit': 'npx lint-staged --allow-empty' },
       'commitlint': { extends: ['@commitlint/config-conventional'] },
     };
@@ -104,7 +106,9 @@ describe('git-hooks preview-driven detect', () => {
         'husky': 'latest',
         'lint-staged': 'latest',
       },
-      'lint-staged': { '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix'] },
+      'lint-staged': {
+        '*.{ts,tsx,js,jsx,mjs,cjs}': ['oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern'],
+      },
     };
     await writeFile(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
 

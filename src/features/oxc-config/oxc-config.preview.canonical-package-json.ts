@@ -10,7 +10,6 @@ import type { PackageJson } from 'types/package-json.types';
 
 import {
   DPRINT_PACKAGES,
-  ESLINT_PACKAGES_TO_REMOVE,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
   LEGACY_OXFMT_CONFIG_PACKAGE,
@@ -31,7 +30,6 @@ import {
   OXLINT_TSGOLINT_PACKAGE,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
-  SIMPLE_IMPORT_SORT_PACKAGE,
 } from './oxc-config.constants.js';
 import {
   stripDprintFromLintStaged,
@@ -120,25 +118,8 @@ function applyDprintPackageJsonCleanup(packageJson: PackageJson): PackageJson {
   return next;
 }
 
-function removeSimpleImportSortPackage(packageJson: PackageJson): PackageJson {
-  const next = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
-  const devDeps = { ...next.devDependencies };
-  const deps = { ...next.dependencies };
-  delete devDeps[SIMPLE_IMPORT_SORT_PACKAGE];
-  delete deps[SIMPLE_IMPORT_SORT_PACKAGE];
-  next.devDependencies = devDeps;
-  next.dependencies = deps;
-  return next;
-}
-
-// DEPRECATED: @finografic/oxfmt-config replaced by @finografic/oxc-config. Remove on apply.
 function removeLegacyOxfmtConfigPackage(packageJson: PackageJson): PackageJson {
   return stripListedDependencies(packageJson, [LEGACY_OXFMT_CONFIG_PACKAGE]);
-}
-
-// DEPRECATED: ESLint stack replaced by oxlint. Remove on apply.
-function removeEslintPackages(packageJson: PackageJson): PackageJson {
-  return stripListedDependencies(packageJson, [...ESLINT_PACKAGES_TO_REMOVE]);
 }
 
 function ensureOxcToolchainDevDependencies(packageJson: PackageJson): PackageJson {
@@ -257,8 +238,7 @@ function mergeDataGlobAliasesIntoCanonical(lintStaged: Record<string, string[] |
     delete lintStaged[key];
   }
 
-  const finalCmds = [oxfmtCmd].filter((c) => !c.includes('eslint'));
-  lintStaged[canonical] = finalCmds.length > 0 ? finalCmds : [OXFMT_LINT_STAGED_COMMAND];
+  lintStaged[canonical] = [oxfmtCmd];
 }
 
 function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | string>): void {
@@ -269,24 +249,21 @@ function normalizeCodeGlobOxfmtFirst(lintStaged: Record<string, string[] | strin
     return;
   }
 
-  // DEPRECATED: eslint commands removed — replaced by oxlint.
-  const withoutEslint = cmds.filter((c) => !c.includes('eslint'));
-  const hasOxfmt = withoutEslint.some((c) => c.includes('oxfmt'));
-  const hasOxlint = withoutEslint.some((c) => c.includes('oxlint'));
+  const hasOxfmt = cmds.some((c) => c.includes('oxfmt'));
+  const hasOxlint = cmds.some((c) => c.includes('oxlint'));
 
   const result: string[] = [];
   if (hasOxfmt) {
-    result.push(withoutEslint.find((c) => c.includes('oxfmt'))!);
+    result.push(cmds.find((c) => c.includes('oxfmt'))!);
   } else {
     result.push(OXFMT_LINT_STAGED_COMMAND);
   }
   if (hasOxlint) {
-    result.push(...withoutEslint.filter((c) => c.includes('oxlint')));
+    result.push(...cmds.filter((c) => c.includes('oxlint')));
   } else {
     result.push(OXLINT_LINT_STAGED_COMMAND);
   }
-  // Preserve any other non-eslint commands
-  result.push(...withoutEslint.filter((c) => !c.includes('oxfmt') && !c.includes('oxlint')));
+  result.push(...cmds.filter((c) => !c.includes('oxfmt') && !c.includes('oxlint')));
 
   lintStaged[pattern] = result;
 }
@@ -300,23 +277,20 @@ function normalizeMdGlobOxfmtFirst(lintStaged: Record<string, string[] | string>
     return;
   }
 
-  // DEPRECATED: eslint commands removed — replaced by oxlint.
-  const withoutEslint = cmds.filter((c) => !c.includes('eslint'));
-  const hasOxfmt = withoutEslint.some((c) => c.includes('oxfmt'));
-  const hasMdLint = withoutEslint.some((c) => c.includes('md-lint'));
-  const hasOxlint = withoutEslint.some((c) => c.includes('oxlint'));
+  const hasOxfmt = cmds.some((c) => c.includes('oxfmt'));
+  const hasMdLint = cmds.some((c) => c.includes('md-lint'));
+  const hasOxlint = cmds.some((c) => c.includes('oxlint'));
 
   const result: string[] = [];
   if (hasOxfmt) {
-    result.push(withoutEslint.find((c) => c.includes('oxfmt'))!);
+    result.push(cmds.find((c) => c.includes('oxfmt'))!);
   } else {
     result.push(OXFMT_LINT_STAGED_COMMAND);
   }
-  // Prefer md-lint if present; otherwise use oxlint
   if (hasMdLint) {
-    result.push(...withoutEslint.filter((c) => c.includes('md-lint')));
+    result.push(...cmds.filter((c) => c.includes('md-lint')));
   } else if (hasOxlint) {
-    result.push(...withoutEslint.filter((c) => c.includes('oxlint')));
+    result.push(...cmds.filter((c) => c.includes('oxlint')));
   } else {
     result.push(OXLINT_LINT_STAGED_COMMAND);
   }
@@ -530,10 +504,8 @@ function addOxfmtToLintStagedPure(packageJson: PackageJson): PackageJson {
   const dataCmds = lintStaged[dataPattern];
   if (!Array.isArray(dataCmds) || dataCmds.length === 0) {
     lintStaged[dataPattern] = [OXFMT_LINT_STAGED_COMMAND];
-  } else {
-    // DEPRECATED: remove any eslint commands from data glob
-    const stripped = dataCmds.filter((c) => !c.includes('eslint'));
-    lintStaged[dataPattern] = stripped.length > 0 ? stripped : [OXFMT_LINT_STAGED_COMMAND];
+  } else if (!dataCmds.some((c) => c.includes('oxfmt'))) {
+    lintStaged[dataPattern] = [OXFMT_LINT_STAGED_COMMAND];
   }
 
   normalizeMdGlobOxfmtFirst(lintStaged);
@@ -581,10 +553,7 @@ export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJs
   const prettierNames = collectPrettierPackageNames(pkg);
   pkg = stripListedDependencies(pkg, prettierNames);
   pkg = applyDprintPackageJsonCleanup(pkg);
-  pkg = removeSimpleImportSortPackage(pkg);
-  // DEPRECATED: remove legacy @finografic/oxfmt-config and ESLint stack
   pkg = removeLegacyOxfmtConfigPackage(pkg);
-  pkg = removeEslintPackages(pkg);
   pkg = ensureOxcToolchainDevDependencies(pkg);
   pkg = applyOxfmtPackageJsonLayoutTransforms(pkg);
 

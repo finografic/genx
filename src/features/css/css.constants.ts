@@ -2,12 +2,8 @@
  * CSS feature configuration.
  */
 
-import { PKG_STYLELINT, PKG_STYLELINT_STYLISTIC } from 'config/constants.config';
-
-// DEPRECATED: stylelint replaced by oxfmt for CSS. Kept for removal detection.
-export const STYLELINT_PACKAGE = PKG_STYLELINT;
-// DEPRECATED: @stylistic/stylelint-plugin replaced by oxfmt. Kept for removal detection.
-export const STYLELINT_STYLISTIC_PACKAGE = PKG_STYLELINT_STYLISTIC;
+export const STYLELINT_PACKAGE = 'stylelint';
+export const STYLELINT_STYLISTIC_PACKAGE = '@stylistic/stylelint-plugin';
 
 /** VSCode extension ID for stylelint — kept to remove from recommendations */
 // DEPRECATED: stylelint.vscode-stylelint removed in favour of oxc.oxc-vscode.

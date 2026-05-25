@@ -10,8 +10,4 @@ export const mergeConfig: MergeRule[] = [
     file: 'package.json',
     strategy: 'custom',
   },
-  {
-    file: 'eslint.config.ts',
-    strategy: 'overwrite',
-  },
 ];

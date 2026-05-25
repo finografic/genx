@@ -26,15 +26,9 @@ export interface VSCodeLanguageSettings {
 export interface VSCodeSettingsJson {
   'editor.codeActionsOnSave'?: Record<string, string>;
   'editor.formatOnSave'?: boolean;
-  'eslint.enable'?: boolean;
-  'eslint.useFlatConfig'?: boolean;
-  'eslint.format.enable'?: boolean;
-  'eslint.validate'?: string[];
   'prettier.enable'?: boolean;
   'npm.packageManager'?: 'npm' | 'yarn' | 'pnpm';
   'markdownlint.config'?: Record<string, unknown>;
-  'stylelint.enable'?: boolean;
-  'stylelint.validate'?: string[];
   'css.validate'?: boolean;
   'scss.validate'?: boolean;
   // Language-specific settings (e.g., "[typescript]", "[javascript]")

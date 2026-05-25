@@ -15,10 +15,9 @@ import {
   collectLegacyAiFolderMigrationChanges,
 } from '../../lib/agents-legacy-ai-folder.utils.js';
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
-import { AI_INSTRUCTIONS_ESLINT_IGNORES } from '../ai-instructions/ai-instructions.constants';
 import { previewAiInstructions } from '../ai-instructions/ai-instructions.preview.js';
-import { createDefaultTemplateVars, proposeEslintIgnorePatterns } from '../feature.utils';
-import { AI_CLAUDE_ESLINT_IGNORES, AI_CLAUDE_FILES } from './ai-claude.constants';
+import { createDefaultTemplateVars } from '../feature.utils';
+import { AI_CLAUDE_FILES } from './ai-claude.constants';
 
 async function readPackageVars(targetDir: string): Promise<{ PACKAGE_NAME: string; DESCRIPTION: string }> {
   try {
@@ -48,12 +47,7 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
   const instructionsDir = resolve(targetDir, '.github/instructions');
   if (!fileExists(instructionsDir)) {
     const sub = await previewAiInstructions(context, { skipAgentsInfrastructure: true });
-    for (const c of sub.changes) {
-      if (c.kind === 'write' && c.path.endsWith('eslint.config.ts')) {
-        continue;
-      }
-      changes.push(c);
-    }
+    changes.push(...sub.changes);
     applied.push(...sub.applied);
   }
 
@@ -138,24 +132,6 @@ export async function previewAiClaude(context: FeatureContext): Promise<FeatureP
     );
   } else {
     applied.push('.gitignore (agents)');
-  }
-
-  const eslintPath = resolve(targetDir, 'eslint.config.ts');
-  if (fileExists(eslintPath)) {
-    const eslintRaw = await readFile(eslintPath, 'utf8');
-    let proposed: string;
-    if (fileExists(instructionsDir)) {
-      proposed = proposeEslintIgnorePatterns(eslintRaw, AI_CLAUDE_ESLINT_IGNORES);
-    } else {
-      proposed = proposeEslintIgnorePatterns(eslintRaw, AI_INSTRUCTIONS_ESLINT_IGNORES);
-      proposed = proposeEslintIgnorePatterns(proposed, AI_CLAUDE_ESLINT_IGNORES);
-    }
-    if (proposed !== eslintRaw) {
-      const out = proposed.endsWith('\n') ? proposed : `${proposed}\n`;
-      changes.push(createWritePreviewChange(eslintPath, eslintRaw, out, 'eslint.config.ts (.claude ignore)'));
-    } else {
-      applied.push('eslint.config.ts (.claude)');
-    }
   }
 
   const noopMessage =

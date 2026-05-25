@@ -9,17 +9,6 @@ export const renameRules: RenameRule[] = [
     alternatives: ['.nvm'],
   },
   {
-    canonical: 'eslint.config.ts',
-    alternatives: [
-      '.eslintrc',
-      '.eslintrc.js',
-      '.eslintrc.cjs',
-      'eslint.config.mjs',
-      'eslint.config.cjs',
-      'eslint.config.js',
-    ],
-  },
-  {
     canonical: 'commitlint.config.mjs',
     alternatives: [
       '.commitlintrc',
