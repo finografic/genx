@@ -21,4 +21,10 @@ export interface PackageType {
   scripts?: Record<string, string>;
   /** Features pre-selected by default for this type */
   defaultFeatures: FeatureId[];
+  /**
+   * Optional overlay directory relative to `_templates/`.
+   * Copied on top of the base template during `create`, using the same variable
+   * substitution and ignore rules as the base copy.
+   */
+  templateOverlayDir?: string;
 }

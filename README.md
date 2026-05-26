@@ -60,15 +60,19 @@ genx create --type library --name my-lib
 
 # Create a shared config package
 genx create --type config
+
+# Create a Vite + React app
+genx create --type react
 ```
 
 **PACKAGE TYPES:**
 
-| Type      | Description                  |
-| --------- | ---------------------------- |
-| `library` | reusable TypeScript library  |
-| `cli`     | command-line tool            |
-| `config`  | shared configuration package |
+| Type      | Description                   |
+| --------- | ----------------------------- |
+| `library` | reusable TypeScript library   |
+| `cli`     | command-line tool             |
+| `config`  | shared configuration package  |
+| `react`   | Vite + React + TypeScript app |
 
 **How it works:**
 
@@ -338,6 +342,17 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode` in `.vscode/extensions.json`
 - Writes canonical `.vscode/settings.json` (oxc formatter, all language blocks, oxc/typescript preferences)
+
+### React + Vite
+
+Ensures a Vite + React + TypeScript app surface is fully configured with Panda CSS,
+
+- Ensures `react`, `react-dom`, `@finografic/design-system`, and `@finografic/icons` are
+- Ensures `vite`, `@vitejs/plugin-react`, `@pandacss/dev`, `concurrently`, and React type
+- Creates `vite.config.ts` with React plugin and path aliases when missing
+- Creates `panda.config.ts` with design-system preset when missing
+- Creates `postcss.config.mjs` with Panda CSS plugin when missing
+- Creates `src/vite-env.d.ts`, `src/main.tsx`, and `src/App.tsx` when missing
 
 ### vitest
 

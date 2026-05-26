@@ -125,7 +125,7 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",
-      "oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern"
+      "oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern --ignore-pattern '_templates/package-types/**'"
     ],
     "*.md": [
       "oxfmt --no-error-on-unmatched-pattern",

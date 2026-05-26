@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createFlowContext } from '@finografic/cli-kit/flow';
@@ -104,6 +104,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       const isCli = config.packageType.entryPoints.includes('src/cli.ts');
       const ignorePatterns = [
         'feature',
+        'package-types',
         ...(selectedFeatures.has('aiInstructions') ? [] : createConfig.ignorePatterns.aiInstructions),
         ...(selectedFeatures.has('aiClaude') ? [] : createConfig.ignorePatterns.aiClaude),
         ...(!isCli ? ['docs/spec'] : []),
@@ -112,6 +113,28 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       await copyDir(templateDir, targetDir, vars, {
         ignore: ignorePatterns,
       });
+
+      // Copy package-type template overlay (e.g. _templates/package-types/react/)
+      if (config.packageType.templateOverlayDir) {
+        const overlayDir = resolve(templateDir, config.packageType.templateOverlayDir);
+        if (existsSync(overlayDir)) {
+          await copyDir(overlayDir, targetDir, vars, {
+            ignore: ignorePatterns,
+            templateExtensions: [
+              '.json',
+              '.ts',
+              '.tsx',
+              '.md',
+              '.yml',
+              '.yaml',
+              '.mjs',
+              '.js',
+              '.html',
+              '.css',
+            ],
+          });
+        }
+      }
 
       // Apply package type effects
       const pkgJsonPath = resolve(targetDir, 'package.json');
@@ -165,6 +188,60 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
         const readmeContent = await readFile(readmePath, 'utf8');
         const updated = readmeContent.replace(/\[([^\]]+)\]\(\)/g, '$1');
         await writeFile(readmePath, updated, 'utf8');
+      }
+
+      // React app: strip library-oriented fields and add React dependencies
+      const isReact = config.packageType.id === 'react';
+      if (isReact) {
+        for (const key of ['main', 'types', 'module', 'files', 'exports']) {
+          delete pkgJson[key];
+        }
+
+        // Remove library-only devDeps (tsdown is replaced by Vite)
+        const devDeps = (pkgJson['devDependencies'] ?? {}) as Record<string, string>;
+        delete devDeps['tsdown'];
+
+        // Remove tsdown-oriented scripts; React scripts are merged via packageType.scripts
+        const scripts = (pkgJson['scripts'] ?? {}) as Record<string, string>;
+        delete scripts['link'];
+        delete scripts['unlink'];
+        delete scripts['prepack'];
+
+        // Replace library dev/build scripts with React equivalents (already merged via scripts)
+        // The base template's `dev: tsdown --watch` and `build: tsdown` are overwritten above
+
+        // Runtime deps
+        const deps = (pkgJson['dependencies'] ?? {}) as Record<string, string>;
+        deps['react'] = '^19.2.0';
+        deps['react-dom'] = '^19.2.0';
+        deps['@finografic/design-system'] = '^1.18.2';
+        deps['@finografic/icons'] = '^1.18.2';
+        pkgJson['dependencies'] = deps;
+
+        // Dev deps
+        devDeps['@pandacss/dev'] = '^1.11.1';
+        devDeps['@types/react'] = '^19.2.2';
+        devDeps['@types/react-dom'] = '^19.2.2';
+        devDeps['@vitejs/plugin-react'] = '^5.1.0';
+        devDeps['concurrently'] = '^9.2.1';
+        devDeps['vite'] = '^7.1.10';
+
+        // Update prepare script for Panda codegen
+        scripts['prepare'] = 'husky && pnpm panda:codegen';
+
+        await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n', 'utf8');
+
+        // Remove the library entry point (src/index.ts) — React uses src/main.tsx
+        const indexPath = resolve(targetDir, 'src/index.ts');
+        if (existsSync(indexPath)) {
+          await unlink(indexPath);
+        }
+
+        // Remove tsdown.config.ts — React uses vite.config.ts
+        const tsdownConfigPath = resolve(targetDir, 'tsdown.config.ts');
+        if (existsSync(tsdownConfigPath)) {
+          await unlink(tsdownConfigPath);
+        }
       }
 
       // Create CLI entry point and help file if type is CLI

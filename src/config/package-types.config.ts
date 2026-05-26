@@ -36,4 +36,22 @@ export const PACKAGE_TYPES: PackageType[] = [
     keywords: ['config', 'shared-config'],
     defaultFeatures: [],
   },
+  {
+    id: 'react',
+    label: 'React',
+    description: 'Vite + React + TypeScript app',
+    packageJsonDefaults: {},
+    entryPoints: ['src/main.tsx'],
+    keywords: ['react', 'vite'],
+    scripts: {
+      'dev': 'concurrently -n panda,vite "pnpm panda:watch" "vite"',
+      'build': 'pnpm panda:codegen && tsc --project tsconfig.json && vite build',
+      'preview': 'vite preview',
+      'panda:watch': 'panda --watch',
+      'panda:codegen': 'panda codegen',
+      'panda:clean': 'panda codegen --clean',
+    },
+    defaultFeatures: ['vitest', 'gitHooks'],
+    templateOverlayDir: 'package-types/react',
+  },
 ];

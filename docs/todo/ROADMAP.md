@@ -74,13 +74,6 @@ Detail: [`docs/todo/TODO_FIND_FILE_SECTION.md`](./TODO_FIND_FILE_SECTION.md)
 
 ## P3 — Backlog / Ideas
 
-### 13. React feature / package type
-
-Add a `react` feature and/or package type to genx. Concrete use case: `cv-justin-rankin` was
-created with `genx create library` but required extensive manual changes for React (JSX/TSX
-formatter settings, `typescriptreact`/`javascriptreact`/`html` language blocks in oxfmt/VSCode,
-CSS feature alignment). A dedicated React feature or package type would handle this automatically.
-
 ### cli-kit managed-loop extraction review
 
 Review whether the managed-target prompt/loop primitive (`runManagedLoop`) is generic enough
@@ -123,6 +116,7 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 
 | Date       | Item                                                                                                             |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                 |
 | 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                         |
 | 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                      |
 | 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)   |

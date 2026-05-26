@@ -6,12 +6,12 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.claude/memory.md` = session work log. `.agents/handoff.md` = project state snapshot. Never duplicate between the two.
 
-📅 Apr 29, 2026
+📅 May 27, 2026
 
 ## Project
 
 `@finografic/genx` — Opinionated generator and codemod toolkit for the @finografic ecosystem.
-Current version **v5.8.0**.
+Current version **v5.28.1**.
 
 ## Architecture
 
@@ -21,10 +21,15 @@ Each command folder contains `<cmd>.help.ts` (co-located, `CommandHelpConfig`) a
 
 **Create path:** command → `src/utils/prompts.ts` (orchestrator) → `src/lib/prompts/*.prompt.ts`
 → `src/utils/flow.utils.ts` (flag-aware helpers: `createFlowContext`, gated `prompt*`).
+Package types may declare `templateOverlayDir` for type-specific files copied after the base
+template (e.g. `_templates/package-types/react/`).
 
 **Features:** Self-contained modules under `src/features/` (`detect`, `apply`, `*.preview.ts`, `*.feature.ts`).
 `_templates/` contains output-only scaffolding for generated packages. `migrate` syncs template
 conventions into existing packages.
+
+**Package types:** `library`, `cli`, `config`, `react`. The `react` type uses a template overlay
+and strips library-oriented package.json fields (`main`, `types`, `module`, `files`, `exports`).
 
 **`src/core/`:** Only `core/self-update/` remains (genx-specific). All other core modules deleted
 — callers import from `@finografic/cli-kit` subpaths.
@@ -111,10 +116,15 @@ run via `pnpm dev:feature`) and `feature-template/` (the `.ts.template` source f
 ## Status
 
 Build: clean. Features use preview-driven detect/apply across `oxfmt`, `markdown`, `git-hooks`,
-`vitest`, `ai-agents`, `ai-claude`, `ai-instructions`, and `css`.
+`vitest`, `ai-agents`, `ai-claude`, `ai-instructions`, `css`, and `react-vite`.
+
+`react` package type shipped (2026-05-27): `genx create --type react` scaffolds a Vite + TS +
+React app with Panda CSS, `@finografic/design-system`, path aliases. Template overlay system
+introduced (`PackageType.templateOverlayDir`). `react-vite` feature provides preview-driven
+detect/apply for existing React repos.
 
 **cli-kit Phase 2 pending:** features that scaffold/migrate other CLI projects should inject
 `@finografic/cli-kit` as a dep instead of copying `src/core/` files.
 Tracked in `docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`.
 
-**Roadmap:** `docs/todo/ROADMAP.md` (renamed from `TODO.ROADMAP.md`). Items 1, 2, 4, 5, 6 pending.
+**Roadmap:** `docs/todo/ROADMAP.md`. Items 1, 2, 4, 5, 6 pending. #13 (React) done.

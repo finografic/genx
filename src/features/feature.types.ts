@@ -2,15 +2,16 @@
  * Feature ID type - must match the feature folder name.
  */
 export type FeatureId =
-  | 'oxc-config'
-  | 'vitest'
-  | 'githubWorkflow'
   | 'aiAgents'
   | 'aiClaude'
   | 'aiInstructions'
-  | 'markdown'
+  | 'css'
   | 'gitHooks'
-  | 'css';
+  | 'githubWorkflow'
+  | 'markdown'
+  | 'oxc-config'
+  | 'reactVite'
+  | 'vitest';
 
 /**
  * Context passed to feature detection and application.

@@ -24,6 +24,7 @@ export const help: CommandHelpConfig = {
       description: 'Create a library with a specific name',
     },
     { command: 'genx create --type config', description: 'Create a shared config package' },
+    { command: 'genx create --type react', description: 'Create a Vite + React app' },
   ],
   howItWorks: [
     'Prompts for package type, name, author, and optional features',

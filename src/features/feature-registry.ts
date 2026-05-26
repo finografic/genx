@@ -7,6 +7,7 @@ import { cssFeature } from './css/css.feature';
 import { gitHooksFeature } from './git-hooks/git-hooks.feature';
 import { markdownFeature } from './markdown/markdown.feature';
 import { oxcConfigFeature } from './oxc-config/oxc-config.feature';
+import { reactViteFeature } from './react-vite/react-vite.feature';
 import { vitestFeature } from './vitest/vitest.feature';
 
 /**
@@ -16,6 +17,7 @@ export const features: Feature[] = [
   oxcConfigFeature,
   vitestFeature,
   cssFeature,
+  reactViteFeature,
   aiAgentsFeature,
   aiInstructionsFeature,
   aiClaudeFeature,
