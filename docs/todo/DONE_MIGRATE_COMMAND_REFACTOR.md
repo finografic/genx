@@ -1,6 +1,6 @@
-# TODO — Refactor `migrate` Command
+# DONE — Refactor `migrate` Command
 
-> **Status:** Phase 3 complete. Phase 4 not started.
+> **Completed:** 2026-05-26. Phase 4 (cli-kit extraction review) tracked in `TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`.
 
 Refactor `src/commands/migrate/migrate.cli.ts` into a thinner command entry that matches the newer
 `@finografic/cli-kit`-oriented command style:

@@ -1,6 +1,6 @@
-# TODO: Command Folder Restructure
+# DONE — Command Folder Restructure
 
-**Status:** DONE
+> **Completed:** 2026-05-26
 
 Align `src/commands/` with the established pattern used in `@finografic-deps-policy/src/deps-cli/`:
 

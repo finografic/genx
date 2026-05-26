@@ -1,243 +1,121 @@
-# ROADMAP.md
+# genx — Roadmap
 
-Future enhancements identified during the deps-policy → genx → target pipeline walkthrough (2026-04-06).
-Updated 2026-05-26.
-Ordered roughly by dependency: earlier items are prerequisites for later ones.
-
----
-
-## 1. `genx create` — apply resolvePolicy() immediately after scaffold
-
-- [ ] status: pending
-
-**Goal:** After scaffolding a new package, run `resolvePolicy(packageType)` and write the
-resolved dependency versions directly into the new `package.json` instead of relying on the
-hardcoded versions in `_templates/package.json`.
-
-**Why:** `_templates/package.json` is a structural blueprint, not a version source of truth.
-Newly created packages should get live versions from `@finografic/deps-policy` at scaffold time,
-not stale versions baked into the template.
-
-**Impact:** `_templates/package.json` dependency versions become irrelevant / can be cleared.
-`genx create` already has access to `resolvePolicy()` through `dependencies.rules.ts`.
-
-**Status:** Not started. Low risk — additive change to the create pipeline.
+> **This is the primary high-level plan for the project.**
+> Agents and contributors: check this file before proposing new work. Add new items here when
+> conceiving features. Keep it ordered by priority — move items down as priorities shift, and
+> move completed items to the Done section at the bottom.
 
 ---
 
-## 2. Type-specific policy divergence in deps-policy
+## How to use this file
 
-- [ ] status: pending
+| Tier | Meaning                                   |
+| ---- | ----------------------------------------- |
+| P0   | Active — being worked on now              |
+| P1   | Next — fully scoped, ready to start       |
+| P2   | Planned — direction decided, detail TBD   |
+| P3   | Backlog — good ideas, not yet prioritised |
 
-**Goal:** Allow `library.ts` and `config.ts` in `@finografic/deps-policy` to intentionally
-diverge from `base` where it makes sense (e.g., `config` packages probably do not need
-`vitest` or `@types/node`).
-
-**Why:** Currently both are empty, inheriting everything from `base` via `resolvePolicy`. As the
-ecosystem matures, some package types legitimately need a different dep surface.
-
-**Candidates:**
-
-- `config` type: drop `vitest`, possibly `@types/node`
-- `library` type: possibly add `@types/<something>` specific to the domain
-
-**Status:** Deferred until concrete need arises. No urgency — empty files are correct today.
+Each item: one-line description + link to detail doc if one exists in `docs/todo/`.
+When an item is done, move it to the Done section at the bottom with a completion date.
 
 ---
 
-## 3. Husky template completion
+## P0 — Active
 
-- [x] status: **DONE**
-
-**Status:** Done. Root + `_templates/` now use Husky with `.husky/pre-commit` and
-`.husky/commit-msg`, the `git-hooks` feature preview/detect/apply flow is Husky-based, legacy
-`simple-git-hooks` config is cleaned up, and docs/tests were updated to match.
+_Nothing active right now — pick from P1._
 
 ---
 
-## 4. `design-docs` genx feature
+## P1 — Next Up
 
-- [ ] status: pending
+### 11. Remove legacy stylelint logic from genx
 
-**Goal:** Add a `design-docs` feature to the genx feature registry that sets up the `docs/specs/`
-and `docs/scratch/` directory structure, gitignore entry, triage script, and the
-`12-design-specs.instructions.md` instruction file in any `@finografic` package.
+Delete all remaining stylelint detection, removal, and constant code. The CSS feature has migrated
+to oxfmt CSS overrides — stylelint references now exist only as `// DEPRECATED` removal logic.
 
-**Why:** Agents across the ecosystem produce planning artifacts in ad-hoc locations without a
-canonical structure. The triage system currently lives only in genx — it should be portable.
+### 12. Remove legacy dprint logic from genx
 
-**What the feature would apply:**
-
-- Create `docs/specs/` and `docs/scratch/` directories
-- Add `docs/scratch/` to `.gitignore`
-- Copy `scripts/triage-docs.ts` to target project (pending #6 portability decision)
-- Add `triage:docs` script to `package.json`
-- Copy `12-design-specs.instructions.md` to `.github/instructions/`
-- Add triage-docs SKILL to `.github/skills/triage-docs/`
-- Wire entries into `AGENTS.md` if the `ai-agents` feature is present (optional, graceful skip)
-
-**Detection:** Preview-driven — compute canonical state of all owned files, diff against disk.
-
-**Status:** Not started. Blocked on #6 (triage-docs portability).
+Delete all remaining dprint detection, removal, and cleanup code. The oxc-config feature has fully
+replaced dprint with oxfmt — dprint references now exist only as `// DEPRECATED` removal logic.
 
 ---
 
-## 5. `generate-new-genx-feature` skill — modernize for diff-as-detection
+## P2 — Planned
 
-- [ ] status: pending
+### 1. `genx create` — apply resolvePolicy() immediately after scaffold
 
-**Goal:** Update the `feature-template/` skeleton and `generate-new-genx-feature` SKILL so that
-newly scaffolded features use the preview-driven detect/apply pattern (`*.preview.ts` module)
-instead of the old signal-based detection.
+After scaffolding, run `resolvePolicy(packageType)` and write resolved dependency versions directly
+into the new `package.json` instead of relying on hardcoded versions in `_templates/package.json`.
+Low risk — additive change to the create pipeline.
 
-**Why:** All existing features have been migrated to diff-as-detection via `src/lib/feature-preview/`.
-New features scaffolded from the template still follow the old pattern — an immediate pattern
-mismatch that must be manually corrected after scaffolding.
+### 2. Type-specific policy divergence in deps-policy
 
-**What changes:**
+Allow `library.ts` and `config.ts` in `@finografic/deps-policy` to intentionally diverge from
+`base` where it makes sense (e.g., `config` packages may not need `vitest` or `@types/node`).
+Deferred until concrete need arises.
 
-- Add `__FOLDER_NAME__.preview.ts` to `.github/skills/generate-new-genx-feature/feature-template/`
-- Update `__FOLDER_NAME__.detect.ts` template to call preview and check for emptiness
-- Update `__FOLDER_NAME__.apply.ts` template to call preview and use `applyPreviewChanges()`
-- Update `__FOLDER_NAME__.feature.ts` template with preview import
-- Update `new-feature.ts` (scaffold script) to emit the preview file
-- Update `.github/skills/generate-new-genx-feature/SKILL.md` to document the preview pattern
-- Update `.github/instructions/project/feature-patterns.instructions.md` with preview conventions
+### 4. `design-docs` genx feature
 
-**Prerequisite:** Need a stable reference feature to use as the template source. Candidates:
-`oxfmt` (complex, many file mutations), `git-hooks` (medium complexity), or `vitest` (simpler).
+Add a `design-docs` feature to set up `docs/specs/`, `docs/scratch/`, triage script, and
+instruction file in any `@finografic` package. Blocked on #6 (triage-docs portability).
 
-**Status:** Not started. Blocked on choosing the reference feature.
+### 5. `generate-new-genx-feature` skill — modernize for diff-as-detection
 
----
+Update the `feature-template/` skeleton so newly scaffolded features use the preview-driven
+detect/apply pattern (`*.preview.ts`) instead of the old signal-based detection.
+Blocked on choosing a reference feature.
 
-## 6. `triage-docs` — cross-project portability
+### 6. `triage-docs` — cross-project portability
 
-- [ ] status: pending
+Make `scripts/triage-docs.ts` work as a standalone script that any `@finografic` project can use
+without depending on genx's internal utilities. Decision needed on approach before implementing #4.
 
-**Goal:** Make `scripts/triage-docs.ts` work as a standalone script that any `@finografic` project
-can use without depending on genx's internal utilities.
+### 7. Extract "find file section" helpers to `@finografic/cli-kit`
 
-**Why:** The current script imports from `utils` and `utils/picocolors` — genx-internal barrel
-exports. For the `design-docs` feature (#4) to copy this script into other projects, it needs
-to be self-contained.
+Promote reusable section find/replace helpers (`.gitignore` `# Title` blocks) from genx into
+`@finografic/cli-kit`. Genx-side behavior shipped; port to cli-kit still pending.
 
-**Options:**
-
-- **A)** Inline the two utility dependencies (`fileExists`, `pc`) directly in the script. Simple,
-  no external dep, works anywhere with `tsx` installed.
-- **B)** Move the script into `@finografic/project-scripts` as a shared binary. More principled
-  but adds a dependency.
-- **C)** Keep it genx-internal and have the `design-docs` feature generate a simplified version
-  for target projects.
-
-**Status:** Not started. Decision needed on approach before implementing #4.
+Detail: [`docs/todo/TODO_FIND_FILE_SECTION.md`](./TODO_FIND_FILE_SECTION.md)
 
 ---
 
-## 7. Extract “find file section” helpers → `@finografic/cli-kit`
+## P3 — Backlog / Ideas
 
-- [ ] status: pending
+### 13. React feature / package type
 
-**Goal:** Promote reusable **section find/replace** helpers (starting with `.gitignore` `# Title`
-blocks) from genx into **`@finografic/cli-kit`**, under an **`fs/`** or **`fs-helpers/`** namespace
-(or `fs.utils.ts` / `fs.helpers.ts`—see package conventions).
+Add a `react` feature and/or package type to genx. Concrete use case: `cv-justin-rankin` was
+created with `genx create library` but required extensive manual changes for React (JSX/TSX
+formatter settings, `typescriptreact`/`javascriptreact`/`html` language blocks in oxfmt/VSCode,
+CSS feature alignment). A dedicated React feature or package type would handle this automatically.
 
-**Why:** Multiple tools need the same pattern: locate `# Agents` … `# IDE`, replace in place with
-template-backed canonical content, insert after `# Environment files` when missing. Genx already
-implements the gitignore slice in `src/lib/gitignore-section.utils.ts` and Agents merge in
-`src/lib/agents-gitignore.utils.ts` (single source: **`_templates/.gitignore`**).
+### cli-kit managed-loop extraction review
 
-**Docs:** `docs/todo/TODO.FIND_FILE_SECTION.md`.
+Review whether the managed-target prompt/loop primitive (`runManagedLoop`) is generic enough
+to move into `@finografic/cli-kit` or should stay local to genx.
 
-**Status:** Genx-side behavior shipped; **port to cli-kit** + re-export for genx still pending.
+Detail: [`docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`](./TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md)
 
----
+### cli-kit Phase 2 — features inject cli-kit into generated projects
 
-## 8. Remove legacy ESLint from genx codebase
+Audit `create` command + `_templates/package.json` — add `@finografic/cli-kit` as a generated dep.
+Update `_templates/` skeleton imports to use `cli-kit/*` subpaths.
 
-- [x] status: done
+Detail: [`docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`](./TODO_MIGRATE_TO_CLI_KIT.md)
 
-**Goal:** Delete all remaining ESLint detection, apply, and generation code from genx. The project
-has fully migrated to `@finografic/oxc-config` (oxfmt + oxlint). ESLint references now exist only
-for legacy removal/migration in target projects, but the detection constants, generator file,
-VS Code types, package-type config, and `_templates/` references are dead weight.
+### `genx deps --update-policy` and managed policy pre-update
 
-**Why:** ~250 ESLint references remain across `src/` and `_templates/`. These add confusion, test
-surface, and maintenance burden for a stack that is no longer installed or used. Every feature
-that touches ESLint is already marked `// DEPRECATED`. Removing them reduces cognitive load and
-makes it obvious that oxc-config is the sole path.
+Add `--update-policy` flag for interactive-only policy update, and silent policy pre-update
+before `genx managed deps` runs.
 
-**What to remove:**
+Detail: [`docs/todo/TODO_DEPS_UPDATE_POLICY.md`](./TODO_DEPS_UPDATE_POLICY.md)
 
-- `src/lib/generators/eslint-config.generator.ts` (dead file)
-- `eslint` type fields in `src/types/package-type.types.ts` and `src/config/package-types.config.ts`
-- ESLint constants in `src/config/constants.config.ts` (files, package names)
-- `eslint.config.*` references in `src/config/rename.rules.ts`, `merge.rules.ts`
-- ESLint-specific VS Code extension/settings handling in `src/types/vscode.types.ts`, `src/utils/vscode.utils.ts`
-- Legacy ESLint entries in `_templates/.vscode/settings.json`, `_templates/.vscode/extensions.json`
-- `_templates/.github/instructions/code/linting-code-style.instructions.md` (superseded by oxlint)
-- ESLint references in `_templates/AGENTS.md.template`, `_templates/.github/copilot-instructions.md`
-- `DEPRECATED` detection/removal code in oxc-config, markdown, css, git-hooks features — can be
-  simplified once no target project could plausibly still have the old stack
-- Update `--only=eslint` references in non-starters below
+### Migrate command — cli-kit extraction review (Phase 4)
 
-**Risk:** Low — purely subtractive. Must verify no managed target still relies on ESLint migration
-paths before removing detection code.
+Review managed-target config/path handling, per-target apply/skip/cancel loop, and migrate-mode
+branching for reuse potential in `@finografic/cli-kit`.
 
-**Status:** Not started. No dedicated TODO doc yet — scope is defined here.
-
-**Docs:** See `// DEPRECATED` markers in affected files.
-
----
-
-## 9. Toolchain version consumption from deps-policy
-
-- [x] status: done
-
-**Goal:** Consume the new `toolchain` export from `@finografic/deps-policy` to keep `.nvmrc`,
-`engines.node`, and `packageManager` in sync across all `@finografic` packages.
-
-**Why:** `deps-policy` now exports `toolchain.node` and `toolchain.pnpm` as bare semver strings.
-These are not npm packages — they require direct file/JSON writes to `.nvmrc`, `engines.node`,
-and `packageManager`. Currently these values are manually maintained per project.
-
-**What genx needs:**
-
-- Import `toolchain` from `@finografic/deps-policy`
-- Write `.nvmrc` with `toolchain.node`
-- Set `engines.node` to `>=toolchain.node` in target `package.json`
-- Set `packageManager` to `pnpm@toolchain.pnpm` in target `package.json`
-- Wire into both `genx deps` and `genx create` flows
-
-**Risk:** Low — additive file writes alongside existing dependency sync.
-
-**Status:** Policy-side complete. Genx integration not started.
-
-**Docs:** `docs/todo/DONE_TOOLCHAIN_GENX.md`
-
----
-
-## 10. Convert `--managed` flag into a `managed` command
-
-- [x] status: **done** (2026-05-26)
-
-**Goal:** Replace the cross-cutting `--managed` flag with `genx managed <command>` so multi-repo
-execution is a first-class command rather than a flag bolted onto `migrate`, `deps`, and `features`.
-
-**Why:** `--managed` duplicates orchestration logic (target iteration, prompts, summary) across
-three commands. A dedicated `managed` command owns that loop once, and each subcommand stays
-focused on single-target execution.
-
-**What changed:**
-
-- Extracted shared `runManagedLoop` into `src/lib/managed/managed-loop.runner.ts`
-- Added `src/commands/managed/` with `managed.cli.ts`, `managed.help.ts`, and per-subcommand flows
-- Routed `managed migrate`, `managed deps`, `managed features` through existing single-target runners
-- `--managed` flag kept as compatibility alias with deprecation warning
-- Added `managed` to root CLI help, dedicated help file, README examples
-
-**Docs:** `docs/todo/DONE_MANAGED_COMMAND.md`, `docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`
+Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md) (Phase 4)
 
 ---
 
@@ -246,3 +124,30 @@ focused on single-target execution.
 - **Auto-publish on version bump** — too much automation risk; manual release gates are intentional.
 - **Removing `--only` from `migrate`** — `deps` command coexists as a fast path; `--only` retains
   value for other granular migrate operations.
+
+---
+
+## Done
+
+| Date       | Item                                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)   |
+| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)         |
+| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                       |
+| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)        |
+| 2026-05-26 | Migrate command refactor (Phases 1-3) — [`DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md) |
+| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                             |
+| 2026-04-07 | #3 Husky template completion                                                                                     |
+| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                  |
+| 2026-04-07 | jsdiff per-file diff display                                                                                     |
+| 2026-04-07 | Structured markdown section management                                                                           |
+| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                |
+| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                      |
+
+| Date       | Deleted file (obsolete)                                                   |
+| ---------- | ------------------------------------------------------------------------- |
+| 2026-05-26 | `TODO.ESLINT_INSTALL.md` — ESLint fully removed from genx                 |
+| 2026-05-26 | `TODO.NEW_HELP.md` — `withHelp` migration completed in folder restructure |
+| 2026-05-26 | `TODO.ROADMAP_HISTORIC.md` — superseded by current ROADMAP                |
+| 2026-05-26 | `TODO.react-feature.md` — promoted to ROADMAP #13                         |
+| 2026-05-26 | `sessions.diff` — raw session artifact, not a planning doc                |

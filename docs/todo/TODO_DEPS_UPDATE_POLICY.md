@@ -1,11 +1,11 @@
-# TODO — genx deps --update-policy and --managed policy pre-update
+# TODO — genx deps --update-policy and managed policy pre-update
 
 > **Status:** Not started
 
 Two related additions to `genx deps`:
 
 1. `genx deps --update-policy` — interactive policy update only (no dep sync)
-2. `genx deps --managed` — runs policy update silently first, then cycles repos
+2. `genx managed deps` — runs policy update silently first, then cycles repos
 
 Both use execa to call `pnpm policy:update` in the local deps-policy repo, whose
 path is read from `depsPolicyPath` in `~/.config/finografic/genx.config.jsonc`.
@@ -36,7 +36,7 @@ import { readDepsPolicyPath } from './managed.utils.js';
 
 /**
  * Runs `pnpm policy:update` in the local deps-policy repo.
- * @param silent - When true, passes --yes and suppresses output (for --managed).
+ * @param silent - When true, passes --yes and suppresses output (for managed command).
  * @returns true if the update ran, false if depsPolicyPath is not set in config.
  */
 export async function runPolicyUpdate(silent: boolean): Promise<boolean> {
@@ -78,11 +78,11 @@ import { runPolicyUpdate } from 'utils/policy-update.utils.js';
 const updatePolicy = argv.includes('--update-policy');
 ```
 
-**Guard — mutually exclusive with `--managed` and `[path]`:**
+**Guard — mutually exclusive with `[path]`:**
 
 ```ts
-if (updatePolicy && (managed || pathArg)) {
-  errorMessage('--update-policy cannot be combined with --managed or a path argument');
+if (updatePolicy && pathArg) {
+  errorMessage('--update-policy cannot be combined with a path argument');
   process.exit(1);
 }
 ```
@@ -104,9 +104,9 @@ if (updatePolicy) {
 
 ---
 
-## Step 3 — `genx deps --managed` silent pre-update
+## Step 3 — `genx managed deps` silent pre-update
 
-In the `if (managed)` block, **before** the `readManagedTargets()` call, add:
+In `src/commands/managed/managed.deps.ts`, **before** the managed loop runs, add:
 
 ```ts
 // Silently update deps-policy first so the freshest versions are used for all targets.
@@ -147,8 +147,8 @@ genx deps --update-policy
 # → clack prompts from policy:update appear in terminal
 # → exits after update, does not sync any projects
 
-# Test --managed (silent pre-update)
-genx deps --managed --yes
+# Test managed deps (silent pre-update)
+genx managed deps --yes
 # → no policy prompts, silent update runs first
 # → managed target loop uses freshly-written XDG snapshot versions (non-interactive)
 ```
@@ -158,5 +158,5 @@ genx deps --managed --yes
 ## Step 6 — Commit
 
 ```
-feat(deps): add --update-policy flag and silent policy pre-update for --managed
+feat(deps): add --update-policy flag and silent policy pre-update for managed deps
 ```
