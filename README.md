@@ -35,7 +35,7 @@ pnpm dlx @finografic/genx <command> [options]
 ### `genx create`
 
 ```bash
-genx create
+genx create [options]
 ```
 
 **Examples:**
@@ -43,6 +43,12 @@ genx create
 ```bash
 # Create a new package interactively
 genx create
+
+# Create a CLI package
+genx create --type cli
+
+# Create a library with a specific name
+genx create --type library --name my-lib
 ```
 
 ### `genx migrate`
@@ -54,38 +60,38 @@ genx migrate [path] [options]
 **Examples:**
 
 ```bash
-# Select migrate operations for the current directory
+# Migrate current directory interactively
 genx migrate
 
-# Select migrate operations for a specific directory
+# Migrate a specific directory
 genx migrate ../my-package
 
-# Skip per-file and per-target confirms once selections are chosen
+# Apply changes without per-file confirms
 genx migrate --yes
 ```
 
 ### `genx deps`
 
 ```bash
-genx deps [path] [--update-policy] [options]
+genx deps [path] [options]
 ```
 
 **Examples:**
 
 ```bash
-# Interactive sync in current directory (select packages to apply)
+# Interactive sync in current directory
 genx deps
 
-# Interactive sync for a specific directory
+# Sync deps for a specific directory
 genx deps ../my-package
 
-# Apply all planned changes without multiselect (CI / non-interactive)
+# Apply all changes non-interactively
 genx deps --yes
 
-# Include policy downgrades when planning changes
+# Include downgrades when planning
 genx deps --allow-downgrade
 
-# Update deps-policy interactively (no dep sync)
+# Update @finografic/deps-policy
 genx deps --update-policy
 ```
 
@@ -100,6 +106,12 @@ genx features [path] [options]
 ```bash
 # Add features to current directory
 genx features
+
+# Add features to a specific directory
+genx features ../my-package
+
+# Apply without per-file confirms
+genx features --yes
 ```
 
 <!-- GENERATED:USAGE:END -->
