@@ -9,7 +9,8 @@ import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewVitest } from './vitest.preview.js';
 
 /**
- * Apply vitest feature using `previewVitest` + `pnpm install` when manifest deps change.
+ * Apply vitest feature using `previewVitest` + `pnpm install` whenever package.json was written to ensure
+ * devDependencies are installed.
  */
 export async function applyVitest(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewVitest(context);
@@ -20,10 +21,9 @@ export async function applyVitest(context: FeatureContext): Promise<FeatureApply
   }
 
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
-  const shouldRunInstall =
-    preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
+  const packageJsonWasWritten = result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
-  if (!shouldRunInstall) {
+  if (!packageJsonWasWritten) {
     return result;
   }
 

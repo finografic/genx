@@ -9,8 +9,9 @@ import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewGitHooks } from './git-hooks.preview.js';
 
 /**
- * Apply git-hooks feature using `previewGitHooks` + `applyPreviewChanges`, then `pnpm install` when
- * package.json dependency lists change. Successful install already runs `prepare` (husky).
+ * Apply git-hooks feature using `previewGitHooks` + `applyPreviewChanges`, then `pnpm install` whenever
+ * package.json was written to ensure devDependencies are installed. Successful install already runs
+ * `prepare` (husky).
  */
 export async function applyGitHooks(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewGitHooks(context);
@@ -21,10 +22,9 @@ export async function applyGitHooks(context: FeatureContext): Promise<FeatureApp
   }
 
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
-  const shouldRunInstall =
-    preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
+  const packageJsonWasWritten = result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
-  if (!shouldRunInstall) {
+  if (!packageJsonWasWritten) {
     warnMessage('Run "pnpm prepare" to activate git hooks');
     return result;
   }

@@ -9,8 +9,8 @@ import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { previewCss } from './css.preview.js';
 
 /**
- * Apply CSS linting feature using `previewCss` + `applyPreviewChanges`, then `pnpm install` when package.json
- * dependency lists change.
+ * Apply CSS feature using `previewCss` + `applyPreviewChanges`, then `pnpm install` whenever package.json
+ * was written to ensure devDependencies are installed.
  */
 export async function applyCss(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewCss(context);
@@ -21,10 +21,9 @@ export async function applyCss(context: FeatureContext): Promise<FeatureApplyRes
   }
 
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
-  const shouldRunInstall =
-    preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
+  const packageJsonWasWritten = result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
-  if (!shouldRunInstall) {
+  if (!packageJsonWasWritten) {
     return result;
   }
 

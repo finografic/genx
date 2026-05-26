@@ -10,8 +10,8 @@ import { previewOxcConfig } from './oxc-config.preview.js';
 
 /**
  * Apply oxc-config to an existing package (Prettier → oxfmt/oxlint migration path). Uses `previewOxcConfig`
- * as the single source of truth for file changes, then runs `pnpm install` when the manifest dependency lists
- * change and package.json was applied.
+ * as the single source of truth for file changes, then runs `pnpm install` whenever package.json was written
+ * to ensure devDependencies are installed (fast no-op when already up to date).
  */
 export async function applyOxcConfig(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewOxcConfig(context);
@@ -22,10 +22,9 @@ export async function applyOxcConfig(context: FeatureContext): Promise<FeatureAp
   }
 
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
-  const shouldRunInstall =
-    preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
+  const packageJsonWasWritten = result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
-  if (!shouldRunInstall) {
+  if (!packageJsonWasWritten) {
     return result;
   }
 

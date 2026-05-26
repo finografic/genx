@@ -10,7 +10,7 @@ import { previewMarkdown } from './markdown.preview.js';
 
 /**
  * Apply markdown feature to an existing package. Uses `previewMarkdown` for file changes, then `pnpm install`
- * when package.json dependency lists change.
+ * whenever package.json was written to ensure devDependencies are installed.
  */
 export async function applyMarkdown(context: FeatureContext): Promise<FeatureApplyResult> {
   const preview = await previewMarkdown(context);
@@ -21,10 +21,9 @@ export async function applyMarkdown(context: FeatureContext): Promise<FeatureApp
   }
 
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
-  const shouldRunInstall =
-    preview.needsInstall === true && result.appliedTargetPaths?.includes(packageJsonPath) === true;
+  const packageJsonWasWritten = result.appliedTargetPaths?.includes(packageJsonPath) === true;
 
-  if (!shouldRunInstall) {
+  if (!packageJsonWasWritten) {
     return result;
   }
 
