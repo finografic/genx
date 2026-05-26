@@ -1,16 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import type { CommandHelpConfig } from '@finografic/cli-kit/render-help';
 
 import { cliHelp as rootHelp } from '../src/cli.help';
+import { help as auditHelp } from '../src/commands/audit/audit.help';
 import { help as createHelp } from '../src/commands/create/create.help';
 import { help as depsHelp } from '../src/commands/deps/deps.help';
 import { help as featuresHelp } from '../src/commands/features/features.help';
+import { help as managedHelp } from '../src/commands/managed/managed.help';
 import { help as migrateHelp } from '../src/commands/migrate/migrate.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-
-// IMPORTANT: to be migrated..
-// TODO: MAKE THIS A SCRIPT FOR 🦋 @finografic/project-scripts
 
 // ── Feature READMEs ──────────────────────────────────────────────────
 
@@ -51,11 +51,9 @@ function parseFeatureReadme(dir: string): FeatureInfo {
   const content = fs.readFileSync(readmePath, 'utf-8');
   const lines = content.split('\n');
 
-  // h1 title
   const h1Line = lines.find((l) => l.startsWith('# '));
   const name = h1Line ? h1Line.replace(/^#\s+/, '').trim() : dir;
 
-  // description = first non-empty line after h1
   const h1Index = lines.indexOf(h1Line!);
   let description = '';
   for (let i = h1Index + 1; i < lines.length; i++) {
@@ -66,13 +64,12 @@ function parseFeatureReadme(dir: string): FeatureInfo {
     }
   }
 
-  // bullets under "## What it does"
   const bullets: string[] = [];
   const whatIndex = lines.findIndex((l) => /^##\s+What it does/.test(l));
   if (whatIndex !== -1) {
     for (let i = whatIndex + 1; i < lines.length; i++) {
       const line = lines[i];
-      if (line.startsWith('## ')) break; // next section
+      if (line.startsWith('## ')) break;
       if (line.startsWith('- ')) bullets.push(line);
     }
   }
@@ -80,13 +77,93 @@ function parseFeatureReadme(dir: string): FeatureInfo {
   return { name, description, bullets };
 }
 
+// ── CommandHelpConfig → Markdown ─────────────────────────────────────
+
+function commandHelpToMarkdown(config: CommandHelpConfig): string {
+  const lines: string[] = [];
+
+  lines.push(`### \`${config.command}\``);
+  lines.push('');
+  lines.push(config.description);
+  lines.push('');
+
+  lines.push('```bash');
+  lines.push(config.usage);
+  lines.push('```');
+  lines.push('');
+
+  if (config.subcommands && config.subcommands.length > 0) {
+    lines.push(
+      ...buildMarkdownTable(
+        ['Subcommand', 'Description'],
+        config.subcommands.map((s) => [`\`${s.name}\``, s.description]),
+      ),
+    );
+    lines.push('');
+  }
+
+  if (config.options && config.options.length > 0) {
+    lines.push(
+      ...buildMarkdownTable(
+        ['Flag', 'Description'],
+        config.options.map((o) => [`\`${o.flag}\``, o.description]),
+      ),
+    );
+    lines.push('');
+  }
+
+  if (config.examples && config.examples.length > 0) {
+    lines.push('**Examples:**');
+    lines.push('');
+    lines.push('```bash');
+    for (const ex of config.examples) {
+      lines.push(`# ${ex.description}`);
+      lines.push(ex.command);
+      lines.push('');
+    }
+    if (lines[lines.length - 1] === '') lines.pop();
+    lines.push('```');
+    lines.push('');
+  }
+
+  if (config.howItWorks && config.howItWorks.length > 0) {
+    lines.push('**How it works:**');
+    lines.push('');
+    for (let i = 0; i < config.howItWorks.length; i++) {
+      lines.push(`${i + 1}. ${config.howItWorks[i]}`);
+    }
+    lines.push('');
+  }
+
+  if (config.sections && config.sections.length > 0) {
+    for (const section of config.sections) {
+      lines.push(`**${section.title}:**`);
+      lines.push('');
+      lines.push(section.content);
+      lines.push('');
+    }
+  }
+
+  return lines.join('\n');
+}
+
 // ── Usage section ────────────────────────────────────────────────────
+
+const COMMAND_CONFIGS: ReadonlyArray<{ name: string; help: CommandHelpConfig }> = [
+  { name: 'create', help: createHelp },
+  { name: 'migrate', help: migrateHelp },
+  { name: 'deps', help: depsHelp },
+  { name: 'features', help: featuresHelp },
+  { name: 'managed', help: managedHelp },
+  { name: 'audit', help: auditHelp },
+];
+
+const COMMAND_HELP_BY_NAME = new Map(COMMAND_CONFIGS.map((c) => [c.name, c.help]));
 
 function generateUsageSection(): string {
   const lines: string[] = [];
 
-  // Root signature
-  const { bin, args } = rootHelp.main;
+  const { args } = rootHelp.main;
   lines.push('Run directly using `pnpm dlx`:');
   lines.push('');
   lines.push('```bash');
@@ -94,7 +171,6 @@ function generateUsageSection(): string {
   lines.push('```');
   lines.push('');
 
-  // Commands table
   if (rootHelp.commands) {
     lines.push(
       ...buildMarkdownTable(
@@ -105,39 +181,8 @@ function generateUsageSection(): string {
     lines.push('');
   }
 
-  // Per-command subsections
-  const commandConfigs = [
-    { name: 'create', help: createHelp },
-    { name: 'migrate', help: migrateHelp },
-    { name: 'deps', help: depsHelp },
-    { name: 'features', help: featuresHelp },
-  ] as const;
-
-  for (const { name, cmdHelp } of commandConfigs.map((c) => ({ name: c.name, cmdHelp: c.help }))) {
-    lines.push(`### \`${bin} ${name}\``);
-    lines.push('');
-
-    // Usage line
-    lines.push('```bash');
-    lines.push(cmdHelp.usage);
-    lines.push('```');
-    lines.push('');
-
-    // Examples
-    if (cmdHelp.examples && cmdHelp.examples.length > 0) {
-      lines.push('**Examples:**');
-      lines.push('');
-      lines.push('```bash');
-      for (const ex of cmdHelp.examples) {
-        lines.push(`# ${ex.description}`);
-        lines.push(ex.command);
-        lines.push('');
-      }
-      // remove trailing blank line inside code block
-      if (lines[lines.length - 1] === '') lines.pop();
-      lines.push('```');
-      lines.push('');
-    }
+  for (const { help } of COMMAND_CONFIGS) {
+    lines.push(commandHelpToMarkdown(help));
   }
 
   return lines.join('\n');
@@ -187,15 +232,22 @@ function replaceBetweenMarkers(
 
 // ── Commands Reference section ────────────────────────────────────────
 
-/** Extra info not in helpConfig — maps command label to options column */
-const COMMAND_OPTIONS: Record<string, string> = {
-  create: 'Interactive prompts',
-  migrate: '`--yes`',
-  deps: '`--yes`, `--no-downgrade`, `--update-policy`',
-  features: '`--yes`',
-  managed: '`migrate`, `deps`, `features`, `--yes`',
-  help: '-',
-};
+function formatOptionsColumn(name: string): string {
+  const help = COMMAND_HELP_BY_NAME.get(name);
+  if (!help) return '-';
+
+  const parts: string[] = [];
+
+  if (help.subcommands && help.subcommands.length > 0) {
+    parts.push(...help.subcommands.map((s) => `\`${s.name}\``));
+  }
+
+  if (help.options && help.options.length > 0) {
+    parts.push(...help.options.map((o) => `\`${o.flag.split(',')[0].trim()}\``));
+  }
+
+  return parts.length > 0 ? parts.join(', ') : '-';
+}
 
 function generateCommandsRefSection(): string {
   if (!rootHelp.commands) return '';
@@ -204,7 +256,7 @@ function generateCommandsRefSection(): string {
   const rows = rootHelp.commands.list.map((cmd) => [
     `\`${cmd.label}\``,
     cmd.description,
-    COMMAND_OPTIONS[cmd.label] ?? '-',
+    formatOptionsColumn(cmd.label),
   ]);
   rows.push(['`--help` / `-h`', 'Show help (works with commands too)', '-']);
   lines.push(...buildMarkdownTable(['Command', 'Description', 'Options'], rows));
