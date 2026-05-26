@@ -81,8 +81,8 @@ describe('oxfmt.preview — package.json drift', () => {
   });
 });
 
-describe('oxfmt.preview — non-package.json drift', () => {
-  it('reports workflow changes when GitHub workflow still runs dprint', async () => {
+describe('oxfmt.preview — CI workflow drift', () => {
+  it('reports ci.yml changes when format:check step is missing', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-wf-'));
     const base: PackageJson = {
       name: '@finografic/wf-pkg',
@@ -97,7 +97,7 @@ describe('oxfmt.preview — non-package.json drift', () => {
     await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
     await mkdir(resolve(dir, '.github/workflows'), { recursive: true });
     const wfPath = resolve(dir, '.github/workflows/ci.yml');
-    await writeFile(wfPath, `jobs:\n  x:\n    steps:\n      - run: pnpm dprint check\n`, 'utf8');
+    await writeFile(wfPath, `jobs:\n  x:\n    steps:\n      - run: pnpm lint\n`, 'utf8');
 
     const preview = await previewOxcConfig({ targetDir: dir });
     const changed = getChangedPreviewChanges(preview.changes);
@@ -106,7 +106,7 @@ describe('oxfmt.preview — non-package.json drift', () => {
     );
     expect(wfChange).toBeDefined();
     expect(wfChange!.proposedContent).toContain('pnpm format:check');
-    expect(wfChange!.currentContent).toContain('dprint');
+    expect(wfChange!.proposedContent).toContain('pnpm lint:ci');
   });
 });
 

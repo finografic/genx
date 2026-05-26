@@ -143,11 +143,8 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 
 CSS/SCSS formatting via oxfmt with CSS-aware overrides.
 
-- Removes legacy `stylelint` and `@stylistic/stylelint-plugin` dependencies
-- Removes legacy `stylelint.config.ts` and `.stylelintrc.json` config files
 - Configures oxfmt (oxc) as the default formatter for `css` and `scss`
 - Patches `oxfmt.config.ts`: adds `css` import and `{ files: ['*.css', '*.scss'], options: { ...css } }` when missing (standard genx layout)
-- Removes legacy stylelint VSCode settings and extension recommendation
 
 ### git-hooks
 
@@ -184,12 +181,9 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Adds `format:check` / `format:fix` scripts
 - Removes legacy update scripts (`update:eslint-config`, `update:oxfmt-config`)
 - Replaces Prettier if present (uninstall + remove configs)
-- Removes **dprint** / `@finografic/dprint-config` if still present (deps, config files, lint-staged, scripts)
-- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` steps use `pnpm format:check` instead
 - Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
 - Adds format check to `release:check` / CI when missing
-- Removes the ESLint/`@stylistic`/`globals` package stack and `eslint.config.*` files
-- Recommends `oxc.oxc-vscode`, removes legacy `dprint.dprint` / `dbaeumer.vscode-eslint` recommendations
+- Recommends `oxc.oxc-vscode` in `.vscode/extensions.json`
 - Writes canonical `.vscode/settings.json` (oxc formatter, all language blocks, oxc/typescript preferences)
 
 ### vitest

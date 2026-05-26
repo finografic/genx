@@ -32,7 +32,7 @@ async function convergePreviewWrites(targetDir: string, maxIterations = 8): Prom
 }
 
 describe('detectOxcConfig', () => {
-  it('returns false when preview finds non-package drift (e.g. workflow still uses dprint)', async () => {
+  it('returns false when preview finds non-package drift (e.g. ci.yml missing format:check)', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-detect-false-'));
     const base: PackageJson = {
       name: '@finografic/detect-pkg',
@@ -48,7 +48,7 @@ describe('detectOxcConfig', () => {
     await mkdir(resolve(dir, '.github/workflows'), { recursive: true });
     await writeFile(
       resolve(dir, '.github/workflows/ci.yml'),
-      `jobs:\n  x:\n    steps:\n      - run: pnpm dprint check\n`,
+      `jobs:\n  x:\n    steps:\n      - run: pnpm lint\n`,
       'utf8',
     );
 

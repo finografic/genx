@@ -21,9 +21,6 @@ export const OXFMT_VSCODE_EXTENSIONS = ['oxc.oxc-vscode'] as const;
 
 export const OXFMT_FORMATTER_ID = 'oxc.oxc-vscode';
 
-/** Legacy VSCode extensions removed when migrating to oxc-config. */
-export const LEGACY_VSCODE_EXTENSIONS_TO_REMOVE = ['dprint.dprint'] as const;
-
 /**
  * Exact Prettier-related package names to uninstall when replacing with oxfmt.
  */
@@ -34,14 +31,8 @@ export const PRETTIER_PACKAGES = ['prettier'] as const;
  */
 export const PRETTIER_PACKAGE_PATTERNS = ['*prettier-plugin-*'] as const;
 
-/** Legacy formatter packages to remove when migrating to oxfmt. */
-export const DPRINT_PACKAGES = ['dprint', '@finografic/dprint-config'] as const;
-
 /** Legacy @finografic/oxfmt-config replaced by @finografic/oxc-config. */
 export const LEGACY_OXFMT_CONFIG_PACKAGE = '@finografic/oxfmt-config' as const;
-
-/** Legacy formatter config files to delete when migrating away. */
-export const DPRINT_CONFIG_FILES = ['dprint.jsonc', 'dprint.json', 'dprint.config.jsonc'] as const;
 
 /**
  * Legacy lint-staged keys merged into {@link OXFMT_LINT_STAGED_DATA_PATTERN} (data files only; `*.md` is

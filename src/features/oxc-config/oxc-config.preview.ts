@@ -26,8 +26,6 @@ import {
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
   CANONICAL_VSCODE_LANGUAGES,
-  DPRINT_CONFIG_FILES,
-  LEGACY_VSCODE_EXTENSIONS_TO_REMOVE,
   OXFMT_CI_STEP,
   OXFMT_FORMATTER_ID,
   OXFMT_VSCODE_EXTENSIONS,
@@ -35,7 +33,6 @@ import {
 } from './oxc-config.constants.js';
 import { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
-import { OXFMT_GITHUB_WORKFLOW_PATHS, scrubDprintFromWorkflowContent } from './oxc-config.workflows.js';
 
 export { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 
@@ -93,10 +90,7 @@ function proposeCiYmlContent(current: string): string {
 
 async function computeCanonicalExtensionsFileContent(targetDir: string): Promise<string> {
   const content = await readExtensionsJson(targetDir);
-  const recommendations = [...(content.recommendations ?? [])].filter(
-    (id) =>
-      !LEGACY_VSCODE_EXTENSIONS_TO_REMOVE.includes(id as (typeof LEGACY_VSCODE_EXTENSIONS_TO_REMOVE)[number]),
-  );
+  const recommendations = [...(content.recommendations ?? [])];
   for (const ext of OXFMT_VSCODE_EXTENSIONS) {
     if (!recommendations.includes(ext)) {
       recommendations.push(ext);
@@ -168,7 +162,7 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
         packageJsonPath,
         currentPkgRaw,
         proposedPkgRaw,
-        'package.json (oxfmt, Prettier/dprint cleanup, scripts, lint-staged)',
+        'package.json (oxfmt, Prettier cleanup, scripts, lint-staged)',
       ),
     );
   } else {
@@ -210,42 +204,13 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     changes.push(createDeletePreviewChange(abs, body, true, `remove Prettier config (${file})`));
   }
 
-  for (const file of DPRINT_CONFIG_FILES) {
-    const abs = resolve(targetDir, file);
-    if (!fileExists(abs)) continue;
-    const body = await readFile(abs, 'utf8');
-    changes.push(createDeletePreviewChange(abs, body, true, `remove legacy ${file}`));
-  }
-
   const ciAbs = resolve(targetDir, CI_WORKFLOW_REL);
-
-  for (const rel of OXFMT_GITHUB_WORKFLOW_PATHS) {
-    const abs = resolve(targetDir, rel);
-    if (!fileExists(abs)) continue;
-    if (abs === ciAbs) {
-      continue;
-    }
-    const raw = await readFile(abs, 'utf8');
-    const { content: scrubbed, changed } = scrubDprintFromWorkflowContent(raw);
-    if (changed) {
-      changes.push(createWritePreviewChange(abs, raw, scrubbed, `${rel} (dprint → pnpm format:check)`));
-    } else {
-      applied.push(`${rel} (no dprint drift)`);
-    }
-  }
-
   if (fileExists(ciAbs)) {
     const raw = await readFile(ciAbs, 'utf8');
-    const { content: afterDprint } = scrubDprintFromWorkflowContent(raw);
-    const proposed = proposeCiYmlContent(afterDprint);
+    const proposed = proposeCiYmlContent(raw);
     if (proposed !== raw) {
       changes.push(
-        createWritePreviewChange(
-          ciAbs,
-          raw,
-          proposed,
-          '.github/workflows/ci.yml (dprint scrub + format check)',
-        ),
+        createWritePreviewChange(ciAbs, raw, proposed, '.github/workflows/ci.yml (lint:ci + format check)'),
       );
     } else {
       applied.push('ci.yml (no workflow drift)');

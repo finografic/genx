@@ -12,12 +12,9 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Adds `format:check` / `format:fix` scripts
 - Removes legacy update scripts (`update:eslint-config`, `update:oxfmt-config`)
 - Replaces Prettier if present (uninstall + remove configs)
-- Removes **dprint** / `@finografic/dprint-config` if still present (deps, config files, lint-staged, scripts)
-- Rewrites `.github/workflows/ci.yml` and `release.yml` so any `dprint` steps use `pnpm format:check` instead
 - Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
 - Adds format check to `release:check` / CI when missing
-- Removes the ESLint/`@stylistic`/`globals` package stack and `eslint.config.*` files
-- Recommends `oxc.oxc-vscode`, removes legacy `dprint.dprint` / `dbaeumer.vscode-eslint` recommendations
+- Recommends `oxc.oxc-vscode` in `.vscode/extensions.json`
 - Writes canonical `.vscode/settings.json` (oxc formatter, all language blocks, oxc/typescript preferences)
 
 When dependency fields in `package.json` change, genx follows up with `pnpm install` automatically.
@@ -33,5 +30,3 @@ When dependency fields in `package.json` change, genx follows up with `pnpm inst
 | `oxc-config.preview.ts`                        | Canonical file changes for all owned surfaces |
 | `oxc-config.preview.canonical-package-json.ts` | Compute canonical `package.json`              |
 | `oxc-config.template.ts`                       | Generate `oxfmt.config.ts` content            |
-| `oxc-config.workflows.ts`                      | Strip dprint from `ci.yml` / `release.yml`    |
-| `oxc-config.dprint-cleanup.ts`                 | Strip dprint from lint-staged and scripts     |

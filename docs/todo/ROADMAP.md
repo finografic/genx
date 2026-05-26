@@ -29,15 +29,7 @@ _Nothing active right now — pick from P1._
 
 ## P1 — Next Up
 
-### 11. Remove legacy stylelint logic from genx
-
-Delete all remaining stylelint detection, removal, and constant code. The CSS feature has migrated
-to oxfmt CSS overrides — stylelint references now exist only as `// DEPRECATED` removal logic.
-
-### 12. Remove legacy dprint logic from genx
-
-Delete all remaining dprint detection, removal, and cleanup code. The oxc-config feature has fully
-replaced dprint with oxfmt — dprint references now exist only as `// DEPRECATED` removal logic.
+No items.
 
 ---
 
@@ -131,6 +123,8 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 
 | Date       | Item                                                                                                             |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                         |
+| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                      |
 | 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)   |
 | 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)         |
 | 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                       |

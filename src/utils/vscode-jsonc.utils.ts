@@ -161,7 +161,7 @@ export function ensureOxfmtSharedSettingsBeforePrettier(
 }
 
 /**
- * Remove root keys whose names start with `prefix` (e.g. `dprint.`).
+ * Remove root keys whose names start with `prefix` (e.g. `stylelint.`).
  */
 export function removeRootKeysWithPrefix(raw: string, prefix: string): { text: string; changed: boolean } {
   let t = raw;
@@ -202,36 +202,6 @@ export function setLanguageFormatterBlock(
     t = removeRootPropertyJsonc(t, blockKey);
   }
   t = setRootPropertyJsonc(t, blockKey, nextBlock);
-
-  return { text: t, changed: t !== before };
-}
-
-const DPRINT_FORMATTER_ID = 'dprint.dprint';
-
-/** Replace `editor.defaultFormatter: dprint.dprint` inside `[…]` language blocks with the given formatter. */
-export function replaceDprintLanguageFormatters(
-  raw: string,
-  formatterId: string,
-): { text: string; changed: boolean } {
-  const before = raw;
-  let t = raw;
-
-  for (;;) {
-    const root = parseJsoncObject(t);
-    let updated = false;
-    for (const key of Object.keys(root)) {
-      if (!key.startsWith('[') || !key.endsWith(']')) continue;
-      const block = root[key];
-      if (!block || typeof block !== 'object' || Array.isArray(block)) continue;
-      if ((block as Record<string, unknown>)['editor.defaultFormatter'] !== DPRINT_FORMATTER_ID) continue;
-
-      const language = key.slice(1, -1);
-      t = setLanguageFormatterBlock(t, language, formatterId).text;
-      updated = true;
-      break;
-    }
-    if (!updated) break;
-  }
 
   return { text: t, changed: t !== before };
 }

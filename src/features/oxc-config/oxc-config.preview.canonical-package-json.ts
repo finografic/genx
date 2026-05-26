@@ -9,7 +9,6 @@ import { formatting, linting } from 'config/policy.js';
 import type { PackageJson } from 'types/package-json.types';
 
 import {
-  DPRINT_PACKAGES,
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
   LEGACY_OXFMT_CONFIG_PACKAGE,
@@ -31,11 +30,6 @@ import {
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
 } from './oxc-config.constants.js';
-import {
-  stripDprintFromLintStaged,
-  stripDprintFromScripts,
-  stripDprintFromSimpleGitHooks,
-} from './oxc-config.dprint-cleanup.js';
 
 function patternToRegex(pattern: string): RegExp {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
@@ -87,34 +81,6 @@ function stripListedDependencies(packageJson: PackageJson, names: string[]): Pac
   }
   next.dependencies = deps;
   next.devDependencies = devDeps;
-  return next;
-}
-
-function applyDprintPackageJsonCleanup(packageJson: PackageJson): PackageJson {
-  const next = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
-  const deps = { ...next.dependencies };
-  const devDeps = { ...next.devDependencies };
-  for (const pkg of DPRINT_PACKAGES) {
-    delete deps[pkg];
-    delete devDeps[pkg];
-  }
-  next.dependencies = deps;
-  next.devDependencies = devDeps;
-  if (next['lint-staged'] && typeof next['lint-staged'] === 'object') {
-    const ls = { ...(next['lint-staged'] as Record<string, string[] | string>) };
-    stripDprintFromLintStaged(ls);
-    next['lint-staged'] = ls as Record<string, string[]>;
-  }
-  if (next.scripts) {
-    const scripts = { ...next.scripts };
-    stripDprintFromScripts(scripts);
-    next.scripts = scripts;
-  }
-  if (next['simple-git-hooks'] && typeof next['simple-git-hooks'] === 'object') {
-    const hooks = { ...(next['simple-git-hooks'] as Record<string, string>) };
-    stripDprintFromSimpleGitHooks(hooks);
-    next['simple-git-hooks'] = hooks;
-  }
   return next;
 }
 
@@ -544,7 +510,7 @@ function applyOxfmtPackageJsonLayoutTransforms(packageJson: PackageJson): Packag
 }
 
 /**
- * Full canonical `package.json` after oxc-config apply: Prettier/dprint/simple-import-sort/eslint cleanup,
+ * Full canonical `package.json` after oxc-config apply: Prettier cleanup,
  * policy devDependencies, then scripts / lint-staged layout.
  */
 export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJson {
@@ -552,7 +518,6 @@ export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJs
 
   const prettierNames = collectPrettierPackageNames(pkg);
   pkg = stripListedDependencies(pkg, prettierNames);
-  pkg = applyDprintPackageJsonCleanup(pkg);
   pkg = removeLegacyOxfmtConfigPackage(pkg);
   pkg = ensureOxcToolchainDevDependencies(pkg);
   pkg = applyOxfmtPackageJsonLayoutTransforms(pkg);
