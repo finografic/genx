@@ -3,18 +3,24 @@ import type { CommandHelpConfig } from '@finografic/cli-kit/render-help';
 export const help: CommandHelpConfig = {
   command: 'genx deps',
   description: 'Sync package dependencies to @finografic/deps-policy',
-  usage: 'genx deps [path] [--update-policy] [options]',
+  usage: 'genx deps [path] [options]',
+  options: [
+    { flag: '-y, --yes', description: 'Apply all planned changes without prompting' },
+    { flag: '--allow-downgrade', description: 'Include policy downgrades in the plan' },
+    { flag: '--update-policy', description: 'Update deps-policy itself (no dep sync)' },
+  ],
   examples: [
-    { command: 'genx deps', description: 'Interactive sync in current directory (select packages to apply)' },
-    { command: 'genx deps ../my-package', description: 'Interactive sync for a specific directory' },
-    {
-      command: 'genx deps --yes',
-      description: 'Apply all planned changes without multiselect (CI / non-interactive)',
-    },
-    {
-      command: 'genx deps --allow-downgrade',
-      description: 'Include policy downgrades when planning changes',
-    },
-    { command: 'genx deps --update-policy', description: 'Update deps-policy interactively (no dep sync)' },
+    { command: 'genx deps', description: 'Interactive sync in current directory' },
+    { command: 'genx deps ../my-package', description: 'Sync deps for a specific directory' },
+    { command: 'genx deps --yes', description: 'Apply all changes non-interactively' },
+    { command: 'genx deps --allow-downgrade', description: 'Include downgrades when planning' },
+    { command: 'genx deps --update-policy', description: 'Update @finografic/deps-policy' },
+  ],
+  howItWorks: [
+    'Reads policy versions from @finografic/deps-policy',
+    'Compares against local package.json dependencies',
+    'Shows a table of planned upgrades, adds, and downgrades',
+    'Prompts to select packages (or applies all with --yes)',
+    'Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)',
   ],
 };
