@@ -79,6 +79,18 @@ function parseFeatureReadme(dir: string): FeatureInfo {
 
 // ── CommandHelpConfig → Markdown ─────────────────────────────────────
 
+function sectionContentToTableRows(content: string): string[][] {
+  const rows: string[][] = [];
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const match = trimmed.match(/^(\S+)\s{2,}(.+)$/);
+    if (!match) return [];
+    rows.push([`\`${match[1]}\``, match[2]]);
+  }
+  return rows;
+}
+
 function commandHelpToMarkdown(config: CommandHelpConfig): string {
   const lines: string[] = [];
 
@@ -126,6 +138,20 @@ function commandHelpToMarkdown(config: CommandHelpConfig): string {
     lines.push('');
   }
 
+  if (config.sections && config.sections.length > 0) {
+    for (const section of config.sections) {
+      lines.push(`**${section.title}:**`);
+      lines.push('');
+      const rows = sectionContentToTableRows(section.content);
+      if (rows.length > 0) {
+        lines.push(...buildMarkdownTable(['Type', 'Description'], rows));
+      } else {
+        lines.push(section.content);
+      }
+      lines.push('');
+    }
+  }
+
   if (config.howItWorks && config.howItWorks.length > 0) {
     lines.push('**How it works:**');
     lines.push('');
@@ -133,15 +159,6 @@ function commandHelpToMarkdown(config: CommandHelpConfig): string {
       lines.push(`${i + 1}. ${config.howItWorks[i]}`);
     }
     lines.push('');
-  }
-
-  if (config.sections && config.sections.length > 0) {
-    for (const section of config.sections) {
-      lines.push(`**${section.title}:**`);
-      lines.push('');
-      lines.push(section.content);
-      lines.push('');
-    }
   }
 
   return lines.join('\n');

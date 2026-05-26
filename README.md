@@ -40,11 +40,11 @@ Create a new @finografic package from template
 genx create [options]
 ```
 
-| Flag            | Description                         |
-| --------------- | ----------------------------------- |
-| `--type <type>` | Package type (cli, library, config) |
-| `--name <name>` | Package name (@finografic/...)      |
-| `-y, --yes`     | Accept defaults without prompting   |
+| Flag            | Description                       |
+| --------------- | --------------------------------- |
+| `--type <type>` | Package type (see below)          |
+| `--name <name>` | Package name (@finografic/...)    |
+| `-y, --yes`     | Accept defaults without prompting |
 
 **Examples:**
 
@@ -57,7 +57,18 @@ genx create --type cli
 
 # Create a library with a specific name
 genx create --type library --name my-lib
+
+# Create a shared config package
+genx create --type config
 ```
+
+**PACKAGE TYPES:**
+
+| Type      | Description                  |
+| --------- | ---------------------------- |
+| `library` | reusable TypeScript library  |
+| `cli`     | command-line tool            |
+| `config`  | shared configuration package |
 
 **How it works:**
 
