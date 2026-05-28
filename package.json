@@ -54,6 +54,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "smoke:ai-memory": "tsx scripts/smoke-ai-memory.ts",
     "·········· LINTING": "···················································",
     "lint": "oxlint -c oxlint.config.ts",
     "lint:fix": "oxlint -c oxlint.config.ts --fix",

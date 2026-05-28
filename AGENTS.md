@@ -132,12 +132,23 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 
 ---
 
-## Claude Code — Session Memory and Handoff
+## Project Memory Model
 
-> This section applies to Claude Code only. Other agents can ignore it.
+- `docs/todo/ROADMAP.md` = curated milestone plan + completed milestone history.
+- `docs/todo/NEXT_STEPS.md` = near-term working list, manual testing, and small follow-ups.
+- `.agents/handoff.md` = current project state snapshot.
+- `.agents/memory.md` = chronological working memory / session log.
 
-- **Session log:** `.claude/memory.md` (gitignored) — maintenance rules are in that file.
-- **Project state snapshot:** `.agents/handoff.md` (git-tracked) — maintenance rules are in that file.
+Promotion rule:
+
+- session detail, partial work, and temporary context belong in `.agents/memory.md`
+- stable current truth belongs in `.agents/handoff.md`
+- project priorities and completed milestone-scale work belong in `ROADMAP.md`
+- small actionable follow-ups and manual verification belong in `NEXT_STEPS.md`
+
+Do not duplicate the same item across all four files unless it truly belongs in each role.
+
+Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMORY_MODEL.md)
 
 ---
 
@@ -170,7 +181,7 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 - `.husky/post-commit` runs `pnpm docs:usage`, then `pnpm exec oxfmt --no-error-on-unmatched-pattern README.md`, before the docs auto-commit so CI `format:check` matches generated README output
 - Project-specific JSDoc block tags (e.g. `@finografic`) are allowed in oxlint via `jsdoc/check-tag-names` with `definedTags: ['finografic']` — use the tag name without `@` in `definedTags`
 - `ai-instructions` AGENTS sync runs `rewriteLegacyAgentDocPaths` on legacy `.github/instructions/NN-*.instructions.md` and `project/NN-` path strings before/after `mergeAgentsFromTemplate`; `normalizeHeadingKey` yields lowercase keys (e.g. `rules - global`) and spine map lookups must use those keys, not display titles like `Rules — Global`, or merge output breaks
-- `ai-claude` preview: when `.agents/handoff.md` is missing but legacy `.claude/handoff.md` exists, the preview proposes merging the legacy body into `.agents/handoff.md` (under an “Imported from” section) and deleting `.claude/handoff.md`; tracked handoff lives under `.agents/` (`.gitignore` uses `.agents/` + `!.agents/handoff.md`)
+- `ai-memory` preview: when `.agents/handoff.md` is missing but legacy `.claude/handoff.md` exists, the preview proposes merging the legacy body into `.agents/handoff.md` (under an “Imported from” section) and deleting `.claude/handoff.md`; tracked handoff lives under `.agents/` (`.gitignore` uses `.agents/*` + `!.agents/handoff.md`)
 - Multi-repo execution uses `genx managed <command>` (subcommands: `migrate`, `deps`, `features`); the shared target loop lives in `src/lib/managed/managed-loop.runner.ts` (`runManagedLoop`); `--managed` flag is kept as a deprecated compatibility alias with a warning
 - The **css** feature no longer handles Stylelint — all Stylelint detection, constants, removal logic, and VSCode settings stripping were removed; it now only handles `oxfmt.config.ts` CSS/SCSS overrides
 - The **oxc-config** feature no longer handles dprint cleanup — `oxc-config.dprint-cleanup.ts`, `oxc-config.workflows.ts`, and their tests were deleted; the feature no longer strips dprint from target projects

@@ -4,7 +4,7 @@
 > Update after sessions that change architecture, add/remove features, resolve open questions, or shift priorities — not every session.
 > — Update only the sections that changed. Keep the total under 150 lines.
 > — Write in present tense. No code snippets — describe what exists, not how it works.
-> — `.claude/memory.md` = session work log. `.agents/handoff.md` = project state snapshot. Never duplicate between the two.
+> — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
 📅 May 27, 2026
 
@@ -116,7 +116,7 @@ run via `pnpm dev:feature`) and `feature-template/` (the `.ts.template` source f
 ## Status
 
 Build: clean. Features use preview-driven detect/apply across `oxfmt`, `markdown`, `git-hooks`,
-`vitest`, `ai-agents`, `ai-claude`, `ai-instructions`, `css`, and `react-vite`.
+`vitest`, `ai-agents`, `ai-memory`, `ai-instructions`, `css`, and `react-vite`.
 
 `react` package type shipped (2026-05-27): `genx create --type react` scaffolds a Vite + TS +
 React app with Panda CSS, `@finografic/design-system`, path aliases. Template overlay system

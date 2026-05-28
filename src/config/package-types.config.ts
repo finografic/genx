@@ -11,7 +11,7 @@ export const PACKAGE_TYPES: PackageType[] = [
     packageJsonDefaults: {},
     entryPoints: ['src/index.ts'],
     keywords: ['library'],
-    defaultFeatures: ['vitest'],
+    defaultFeatures: ['vitest', 'aiMemory'],
   },
   {
     id: 'cli',
@@ -25,7 +25,7 @@ export const PACKAGE_TYPES: PackageType[] = [
     scripts: {
       'dev:cli': 'NODE_ENV=development tsx src/cli.ts --',
     },
-    defaultFeatures: ['vitest'],
+    defaultFeatures: ['vitest', 'aiMemory'],
   },
   {
     id: 'config',

@@ -106,7 +106,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
         'feature',
         'package-types',
         ...(selectedFeatures.has('aiInstructions') ? [] : createConfig.ignorePatterns.aiInstructions),
-        ...(selectedFeatures.has('aiClaude') ? [] : createConfig.ignorePatterns.aiClaude),
+        ...(selectedFeatures.has('aiMemory') ? [] : createConfig.ignorePatterns.aiMemory),
         ...(!isCli ? ['docs/spec'] : []),
       ];
 

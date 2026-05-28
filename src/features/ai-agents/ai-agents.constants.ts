@@ -21,9 +21,13 @@ export const AI_AGENTS_ENFORCED_HEADINGS = [
   'Rules — Global',
   'Rules — Markdown Tables',
   'Git Policy',
+  'Project Memory Model',
 ] as const;
 
 export const AI_AGENTS_ALL_CANONICAL_HEADINGS = [
   ...AI_AGENTS_SEEDED_HEADINGS,
   ...AI_AGENTS_ENFORCED_HEADINGS,
 ] as const;
+
+/** Legacy section removed when syncing AGENTS.md to the project memory model. */
+export const AI_AGENTS_LEGACY_SECTION_HEADING = 'Claude Code — Session Memory and Handoff';

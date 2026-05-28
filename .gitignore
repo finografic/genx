@@ -12,11 +12,11 @@ build/
 .env.*.local
 
 # Agents
-.agents/
+.agents/*
+!.agents/
 !.agents/handoff.md
 .codex/
 .claude/
-!.claude/handoff.md
 !.claude/settings.json
 .worktrees/
 **/worktrees/
@@ -32,6 +32,9 @@ build/
 
 # Docs
 docs/drafts/
+
+# Template sources excluded by _templates/.gitignore but required in this repo
+!_templates/.agents/memory.md
 
 # Logs
 *.log

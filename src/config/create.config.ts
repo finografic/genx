@@ -19,8 +19,8 @@ export interface CreateConfig {
   ignorePatterns: {
     /** Ignore AI instructions if not selected */
     aiInstructions: string[];
-    /** Ignore Claude Code files if not selected */
-    aiClaude: string[];
+    /** Ignore AI memory model files if not selected */
+    aiMemory: string[];
   };
 }
 
@@ -35,7 +35,7 @@ export const createConfig: CreateConfig = {
   ignorePatterns: {
     /** Ignore AI instructions if not selected */
     aiInstructions: ['.github/copilot-instructions.md', '.github/instructions', '.cursor'],
-    /** Ignore Claude Code files if not selected */
-    aiClaude: ['CLAUDE.md', '.claude'],
+    /** Ignore AI memory model files if not selected */
+    aiMemory: ['CLAUDE.md', '.claude', 'docs/process/PROJECT_MEMORY_MODEL.md', 'docs/todo', '.agents'],
   },
 };

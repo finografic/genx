@@ -3,7 +3,7 @@
  */
 export type FeatureId =
   | 'aiAgents'
-  | 'aiClaude'
+  | 'aiMemory'
   | 'aiInstructions'
   | 'css'
   | 'gitHooks'

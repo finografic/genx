@@ -7,8 +7,6 @@ import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
 
 import { hasPreviewChanges } from '../lib/feature-preview/feature-preview.utils.js';
-import { AI_CLAUDE_FILES } from './ai-claude/ai-claude.constants.js';
-import { previewAiClaude } from './ai-claude/ai-claude.preview.js';
 import { detectAiInstructions } from './ai-instructions/ai-instructions.detect.js';
 import { previewAiInstructions } from './ai-instructions/ai-instructions.preview.js';
 import { detectCss } from './css/css.detect.js';
@@ -170,57 +168,4 @@ describe('preview migration — drift vs canonical', () => {
       await rm(root, { recursive: true, force: true });
     },
   );
-
-  it('ai-claude: preview includes .claude/assets/.gitkeep when the assets directory is missing', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'genx-claude-'));
-    await writeFile(
-      join(root, 'package.json'),
-      `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
-    );
-    await mkdir(join(root, '.github/instructions'), { recursive: true });
-
-    for (const f of AI_CLAUDE_FILES) {
-      const p = join(root, f);
-      await mkdir(dirname(p), { recursive: true });
-      await writeFile(p, 'ok\n');
-    }
-    await writeFile(
-      join(root, '.gitignore'),
-      await readFile(join(repoRoot, '_templates/.gitignore'), 'utf8'),
-    );
-
-    const preview = await previewAiClaude({ targetDir: root });
-    expect(
-      preview.changes.some((c) => c.kind === 'write' && c.path.endsWith('.claude/assets/.gitkeep')),
-    ).toBe(true);
-    expect(hasPreviewChanges(preview)).toBe(true);
-
-    await rm(root, { recursive: true, force: true });
-  });
-
-  it('ai-claude: no assets gitkeep change when .claude/assets exists (preview/apply parity)', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'genx-claude-'));
-    await writeFile(
-      join(root, 'package.json'),
-      `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
-    );
-    await mkdir(join(root, '.github/instructions'), { recursive: true });
-
-    for (const f of AI_CLAUDE_FILES) {
-      const p = join(root, f);
-      await mkdir(dirname(p), { recursive: true });
-      await writeFile(p, f === 'CLAUDE.md' ? '@AGENTS.md\n' : 'ok\n');
-    }
-    await mkdir(join(root, '.claude/assets'), { recursive: true });
-    await writeFile(
-      join(root, '.gitignore'),
-      await readFile(join(repoRoot, '_templates/.gitignore'), 'utf8'),
-    );
-
-    const preview = await previewAiClaude({ targetDir: root });
-    expect(preview.changes.some((c) => c.path.endsWith('.gitkeep'))).toBe(false);
-    expect(hasPreviewChanges(preview)).toBe(false);
-
-    await rm(root, { recursive: true, force: true });
-  });
 });

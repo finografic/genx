@@ -19,9 +19,11 @@ import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
+import { normalizeHeadingKey } from '../ai-instructions/ai-instructions.agents.utils.js';
 import {
   AI_AGENTS_ALL_CANONICAL_HEADINGS,
   AI_AGENTS_ENFORCED_HEADINGS,
+  AI_AGENTS_LEGACY_SECTION_HEADING,
   AI_AGENTS_SEEDED_HEADINGS,
   AI_AGENTS_SKILLS_DIR,
 } from './ai-agents.constants';
@@ -87,6 +89,13 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
     const currentContent = await readFile(agentsPath, 'utf8');
     let parsed = parseSections(currentContent);
     let changed = false;
+
+    const legacyKey = normalizeHeadingKey(`## ${AI_AGENTS_LEGACY_SECTION_HEADING}`);
+    const withoutLegacy = parsed.sections.filter((s) => normalizeHeadingKey(s.heading) !== legacyKey);
+    if (withoutLegacy.length !== parsed.sections.length) {
+      parsed = { ...parsed, sections: withoutLegacy };
+      changed = true;
+    }
 
     for (const heading of AI_AGENTS_SEEDED_HEADINGS) {
       if (!hasSection(parsed, heading)) {

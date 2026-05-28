@@ -6,7 +6,7 @@ export interface GeneratorContext {
   config: PackageConfig;
   features: {
     aiInstructions: boolean;
-    aiClaude: boolean;
+    aiMemory: boolean;
     vitest: boolean;
     githubWorkflow: boolean;
   };

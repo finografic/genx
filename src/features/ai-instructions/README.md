@@ -25,7 +25,7 @@ Canonical numbered `*.instructions.md` files live under `.github/instructions/`.
 
 ## Dependency
 
-`ai-claude` lists `ai-instructions` as an auto-dependency — running `ai-claude` on a project without `.github/instructions/` will install `ai-instructions` first.
+`ai-memory` lists `ai-instructions` as an auto-dependency — running `ai-memory` on a project without `.github/instructions/` will install `ai-instructions` first.
 
 ## See also
 
