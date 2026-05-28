@@ -231,17 +231,17 @@ function migrateInPlace(instDir: string, result: AgentDocsMigrationResult): void
 
 // ── copy from source ──────────────────────────────────────────────────────────
 
-function copyFromSource(instSrc: string, instDst: string, result: AgentDocsMigrationResult): void {
-  const walk = (dir: string): string[] => {
-    if (!fs.existsSync(dir)) return [];
-    return fs.readdirSync(dir).flatMap((entry) => {
-      const full = path.join(dir, entry);
-      return fs.statSync(full).isDirectory() ? walk(full) : [full];
-    });
-  };
+function listFilesRecursive(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).flatMap((entry) => {
+    const full = path.join(dir, entry);
+    return fs.statSync(full).isDirectory() ? listFilesRecursive(full) : [full];
+  });
+}
 
+function copyFromSource(instSrc: string, instDst: string, result: AgentDocsMigrationResult): void {
   const SKIP_NAMES = new Set(['general.instructions.md', 'README.md']);
-  for (const srcFile of walk(instSrc)) {
+  for (const srcFile of listFilesRecursive(instSrc)) {
     const rel = path.relative(instSrc, srcFile);
     if (rel.startsWith('project/') || SKIP_NAMES.has(path.basename(srcFile))) continue;
     const dst = path.join(instDst, rel);
