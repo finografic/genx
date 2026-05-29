@@ -109,7 +109,7 @@
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@finografic/md-lint": "^0.9.4",
-    "@finografic/oxc-config": "^2.3.11",
+    "@finografic/oxc-config": "^2.6.0",
     "@finografic/project-scripts": "^1.3.3",
     "@types/node": "24.0.0",
     "@types/semver": "^7.7.1",
