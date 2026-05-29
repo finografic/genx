@@ -18,8 +18,8 @@ importers:
         specifier: ^0.9.2
         version: 0.9.3
       '@finografic/deps-policy':
-        specifier: ^0.25.0
-        version: 0.25.0
+        specifier: ^0.26.0
+        version: 0.26.0
       clack-tree-select:
         specifier: ^1.0.8
         version: 1.0.8(@clack/prompts@1.1.0)
@@ -403,8 +403,8 @@ packages:
   '@finografic/core@0.9.3':
     resolution: {integrity: sha512-hIBBkflRHk9d5NBi13Ks4rTuvkre4B0KcVxLE/uYIvQCR1DVMqbMITW7avO+LHpJI9MVra97xkNBGeUhzOr7Lg==, tarball: https://npm.pkg.github.com/download/@finografic/core/0.9.3/529abd625a89365e028b2813a6f7b46695680b22}
 
-  '@finografic/deps-policy@0.25.0':
-    resolution: {integrity: sha512-PTGfWbr8nOsZcb2Zq3cXd4S2f9s9RlqzSwyWmyVyedw3TD/DtqbBEOeQBvXZtHPcRJOtTQba0ABlk7jrLUoasw==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.25.0/479ffe2b47c474d91a20f15b81cdc9b1bd06b73d}
+  '@finografic/deps-policy@0.26.0':
+    resolution: {integrity: sha512-j7qekeJOIdjV/obuXjyIHBmf8aJDL2szC6MxfaS1Pb9o54AdLhjmofmWWvK+lDlOQYggmSABohrQO5dFDP9+9w==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.26.0/6c373806835a8f2f820414da22929ff3ebb0c9a8}
     engines: {node: '>=24.3.0'}
     hasBin: true
 
@@ -2607,7 +2607,7 @@ snapshots:
     dependencies:
       lodash: 4.17.21
 
-  '@finografic/deps-policy@0.25.0':
+  '@finografic/deps-policy@0.26.0':
     dependencies:
       '@finografic/cli-kit': 1.4.0
       '@finografic/core': 0.13.0
