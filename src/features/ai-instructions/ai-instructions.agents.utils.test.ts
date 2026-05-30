@@ -133,6 +133,74 @@ OLD_GIT
     expect(aligned).toBeNull();
   });
 
+  it('syncs Project Memory Model and Roadmap from template as an adjacent pair', () => {
+    const templateWithFrontMatter = `# AGENTS
+
+## Project Memory Model
+
+TEMPLATE_MEMORY
+
+---
+
+## Roadmap and Planning Docs
+
+TEMPLATE_ROADMAP
+
+## Rules — Project-Specific
+
+TEMPLATE_PS
+
+## Rules — Global
+
+TEMPLATE_GENERAL
+
+---
+
+## Rules — Markdown Tables
+
+TEMPLATE_MD
+
+---
+
+## Git Policy
+
+TEMPLATE_GIT
+
+---
+`;
+
+    const target = `# Title
+
+## Roadmap and Planning Docs
+
+STALE_ROADMAP
+
+## Project Memory Model
+
+STALE_MEMORY
+
+## Rules — Project-Specific
+
+LOCAL_PS
+`;
+
+    const next = mergeAgentsFromTemplate(target, templateWithFrontMatter);
+    expect(next).not.toBeNull();
+    expect(next).toContain('TEMPLATE_MEMORY');
+    expect(next).toContain('TEMPLATE_ROADMAP');
+    expect(next).not.toContain('STALE_ROADMAP');
+    expect(next).not.toContain('STALE_MEMORY');
+
+    const keys = next!
+      .split(/^## /gm)
+      .slice(1)
+      .map((block) => normalizeHeadingKey(`## ${block.split('\n', 1)[0] ?? ''}`));
+    const memIdx = keys.indexOf('project memory model');
+    const roadIdx = keys.indexOf('roadmap and planning docs');
+    expect(memIdx).toBeGreaterThan(-1);
+    expect(roadIdx).toBe(memIdx + 1);
+  });
+
   it('extractRulesGeneralSection reads Global block', () => {
     expect(extractRulesGeneralSection(template)).toContain('TEMPLATE_GENERAL');
   });

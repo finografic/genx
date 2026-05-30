@@ -80,6 +80,7 @@ Legacy paths list.
       keys.indexOf('project memory model'),
     );
     expect(keys.indexOf('project memory model')).toBeLessThan(keys.indexOf('roadmap and planning docs'));
+    expect(keys.indexOf('roadmap and planning docs')).toBe(keys.indexOf('project memory model') + 1);
     expect(keys.indexOf('roadmap and planning docs')).toBeLessThan(keys.indexOf('rules - project-specific'));
     expect(keys.indexOf('rules - project-specific')).toBeLessThan(keys.indexOf('git policy'));
     expect(keys.indexOf('git policy')).toBeLessThan(keys.indexOf('learned user preferences'));
@@ -110,6 +111,38 @@ ps
     expect(once).not.toBeNull();
     const twice = mergeAgentsMdFromTemplate(once!, { templateParsed });
     expect(twice).toBeNull();
+  });
+
+  it('enforces Roadmap body from template and keeps it adjacent to Project Memory Model', async () => {
+    const templateContent = await readFile(join(repoRoot, '_templates/AGENTS.md.template'), 'utf8');
+    const templateParsed = parseSections(templateContent);
+    const memoryBody =
+      templateParsed.sections.find((s) => s.heading === '## Project Memory Model')?.body ?? '';
+
+    const stale = `# AGENTS.md
+
+## Project Memory Model
+
+${memoryBody}
+
+## Roadmap and Planning Docs
+
+**ROADMAP intro line to remove.**
+
+- Old workflow bullet.
+
+## Rules — Project-Specific
+
+ps
+`;
+
+    const proposed = mergeAgentsMdFromTemplate(stale, { templateParsed });
+    expect(proposed).not.toBeNull();
+    expect(proposed).not.toContain('ROADMAP intro line to remove');
+    expect(proposed).toContain('check `ROADMAP.md` for existing priorities');
+
+    const keys = sectionKeys(proposed!);
+    expect(keys.indexOf('roadmap and planning docs')).toBe(keys.indexOf('project memory model') + 1);
   });
 
   it('reorderAgentsMdSections places Project Memory Model before Rules spine', () => {

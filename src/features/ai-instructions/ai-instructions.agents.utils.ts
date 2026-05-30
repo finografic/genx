@@ -16,10 +16,11 @@ import { AI_AGENTS_REMOVED_SECTION_HEADING_KEYS } from '../ai-agents/ai-agents.c
 
 /** Sections taken verbatim from the template (canonical shared lists). Keys via {@link normalizeHeadingKey}. */
 const TEMPLATE_SYNC_KEYS = new Set([
+  'project memory model',
+  'roadmap and planning docs',
   'rules - global',
   'rules - markdown tables',
   'git policy',
-  'project memory model',
 ]);
 
 export interface ParsedAgents {

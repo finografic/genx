@@ -50,7 +50,7 @@ export function dedupeMarkdownTablesSections(sections: readonly MarkdownSection[
 /**
  * Canonical AGENTS.md section order after sync:
  *
- * 1. Front matter (INITIAL CONTEXT, Project Memory Model, Roadmap — when present)
+ * 1. Front matter (INITIAL CONTEXT when present, then Project Memory Model + Roadmap as an adjacent pair)
  * 2. Rules spine (Project-Specific → Global → Markdown Tables → Git Policy)
  * 3. Other project sections (Skills, IMPORTANT, …) in prior relative order
  * 4. Learned sections last

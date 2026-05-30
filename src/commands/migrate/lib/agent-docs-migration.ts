@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ROADMAP_AND_PLANNING_DOCS_PATCH_LINES } from 'features/ai-agents/ai-agents.constants.js';
 
 import { findPackageRoot } from 'utils/package-root.utils';
 
@@ -541,22 +542,6 @@ function buildRulesGlobalLines(extra: Array<{ folder: string; name: string }>): 
   return lines;
 }
 
-const ROADMAP_SECTION_LINES = [
-  '## Roadmap and Planning Docs',
-  '',
-  '**`docs/todo/ROADMAP.md` is the primary high-level plan for this project.**',
-  '**`docs/todo/NEXT_STEPS.md` is the near-term working list** — small tasks, fixes, and manual testing checklists too small for ROADMAP.',
-  '',
-  '- Before proposing or generating new features, check the roadmap for existing items.',
-  '- When conceiving a new feature or initiative, add it to the appropriate priority tier.',
-  '- Detailed planning docs live alongside in `docs/todo/` as `TODO_*.md` (active) or `DONE_*.md` (complete).',
-  '- **TODO/DONE doc conventions:** `.github/instructions/documentation/todo-done-docs.instructions.md`',
-  '  — rules for naming, status headers, checkboxes, and graduating `TODO_` → `DONE_`.',
-  '',
-  '---',
-  '',
-];
-
 const CLAUDE_CODE_SECTION_LINES = [
   '## Claude Code — Session Memory and Handoff',
   '',
@@ -609,7 +594,12 @@ function patchAgentsMd(
   let changed = false;
 
   if (!hasSection(lines, (h) => /roadmap/i.test(h))) {
-    insertBeforeFirstSection(lines, ROADMAP_SECTION_LINES);
+    const roadmapLines = [...ROADMAP_AND_PLANNING_DOCS_PATCH_LINES];
+    if (hasSection(lines, (h) => /project memory model/i.test(h))) {
+      insertAfterSection(lines, (h) => /project memory model/i.test(h), roadmapLines);
+    } else {
+      insertBeforeFirstSection(lines, roadmapLines);
+    }
     result.applied.push('AGENTS.md: Roadmap section added');
     changed = true;
   }

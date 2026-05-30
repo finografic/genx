@@ -22,10 +22,6 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 
 ## Roadmap and Planning Docs
 
-**`docs/todo/ROADMAP.md` is the primary high-level plan for this project.**
-**`docs/todo/NEXT_STEPS.md` is the near-term working list** — small tasks, fixes, and manual
-testing checklists too small for ROADMAP.
-
 - Before proposing or generating new features, check `ROADMAP.md` for existing priorities.
 - When conceiving a new feature or initiative, add it to the appropriate roadmap tier.
 - Use `NEXT_STEPS.md` for concrete follow-ups, manual validation, and small tasks that do not need full roadmap treatment.
