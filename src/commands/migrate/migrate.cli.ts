@@ -56,7 +56,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       }
     }
 
-    const selectedFeatureIds = await promptFeatures(flow, []);
+    const selectedFeatureIds = await promptFeatures(flow);
     if (selectedOperations.size === 0 && selectedFeatureIds.length === 0) {
       infoMessage('No migrate operations or features selected.');
       return;

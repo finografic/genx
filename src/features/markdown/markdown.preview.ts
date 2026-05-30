@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { sortedRecord } from '@finografic/cli-kit/package-manager';
-import { fileExists, isDependencyDeclared, jsonLikeTextsEquivalent } from 'utils';
+import { fileExists, isDependencyDeclared, jsonLikeTextsEquivalent, parseJsoncObject } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
@@ -19,6 +19,10 @@ import {
   LINT_STAGED_MD_LINT_CMD,
   LINT_STAGED_MD_PATTERN,
   LINT_STAGED_OXFMT_CMD,
+  MARKDOWNLINT_CONFIG_EXTENDS_KEY,
+  MARKDOWNLINT_CONFIG_EXTENDS_VALUE,
+  MARKDOWNLINT_CONFIG_FILE,
+  MARKDOWNLINT_CONFIG_FILE_TEXT,
   MD_LINT_CSS_FILES,
   MD_LINT_FIX_SCRIPT,
   MD_LINT_PACKAGE,
@@ -32,6 +36,21 @@ import {
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
+}
+
+function computeProposedMarkdownlintConfigText(currentRaw: string): string {
+  if (currentRaw) {
+    try {
+      const parsed = parseJsoncObject(currentRaw);
+      if (parsed[MARKDOWNLINT_CONFIG_EXTENDS_KEY] === MARKDOWNLINT_CONFIG_EXTENDS_VALUE) {
+        return currentRaw;
+      }
+    } catch {
+      // Fall through to canonical rewrite for invalid/partial JSONC.
+    }
+  }
+
+  return MARKDOWNLINT_CONFIG_FILE_TEXT;
 }
 
 /**
@@ -173,6 +192,24 @@ export async function previewMarkdown(context: FeatureContext): Promise<FeatureP
     );
   } else {
     applied.push('.vscode/settings.json (markdown)');
+  }
+
+  const markdownlintConfigPath = resolve(targetDir, MARKDOWNLINT_CONFIG_FILE);
+  const currentMarkdownlintConfig = fileExists(markdownlintConfigPath)
+    ? await readFile(markdownlintConfigPath, 'utf8')
+    : '';
+  const proposedMarkdownlintConfig = computeProposedMarkdownlintConfigText(currentMarkdownlintConfig);
+  if (!jsonLikeTextsEquivalent(proposedMarkdownlintConfig, currentMarkdownlintConfig)) {
+    changes.push(
+      createWritePreviewChange(
+        markdownlintConfigPath,
+        currentMarkdownlintConfig,
+        proposedMarkdownlintConfig,
+        MARKDOWNLINT_CONFIG_FILE,
+      ),
+    );
+  } else {
+    applied.push(MARKDOWNLINT_CONFIG_FILE);
   }
 
   const ext = await computeProposedMarkdownExtensionsText(targetDir);

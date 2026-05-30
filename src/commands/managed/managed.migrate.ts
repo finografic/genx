@@ -23,7 +23,7 @@ export async function runManagedMigrateFlow(argv: string[]): Promise<void> {
   const flow = createFlowContext(argv, { y: { type: 'boolean' } });
 
   const selectedOperations = new Set<MigrateOnlySection>(await promptMigrateOperations(flow));
-  const selectedFeatureIds: FeatureId[] = await promptFeatures(flow, []);
+  const selectedFeatureIds: FeatureId[] = await promptFeatures(flow);
 
   if (selectedOperations.size === 0 && selectedFeatureIds.length === 0) {
     infoMessage('No migrate operations or features selected.');

@@ -15,6 +15,8 @@ interface PackageConfigWithFeatures extends PackageConfig {
   packageType: PackageType;
 }
 
+const FIXED_CREATE_FEATURES = ['markdown', 'oxc-config'] as const satisfies readonly FeatureId[];
+
 /**
  * Prompt for package configuration.
  *
@@ -28,7 +30,11 @@ export async function promptCreatePackage(flow: FlowContext): Promise<PackageCon
   const manifest = await promptPackageManifest(flow, defaultValuesConfig);
   const { scope } = manifest;
   const author = await promptAuthor(flow, defaultValuesConfig.author, scope);
-  const features = await promptFeatures(flow, packageType.defaultFeatures);
+  const selectedFeatures = await promptFeatures(flow, {
+    excludedValues: FIXED_CREATE_FEATURES,
+    initialValues: packageType.defaultFeatures,
+  });
+  const features = [...new Set<FeatureId>([...FIXED_CREATE_FEATURES, ...selectedFeatures])];
 
   return {
     ...manifest,

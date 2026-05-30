@@ -25,7 +25,7 @@ export const MD_LINT_FIX_SCRIPT = 'lint:md:fix';
 /** VSCode extension IDs for markdownlint */
 export const MARKDOWNLINT_VSCODE_EXTENSIONS = ['davidanson.vscode-markdownlint'] as const;
 
-/** VSCode settings key for markdownlint config */
+/** @deprecated Legacy inline VSCode markdownlint settings block. Remove after migration window. */
 export const MARKDOWNLINT_CONFIG_KEY = 'markdownlint.config';
 
 /** VSCode settings key for markdown preview styles */
@@ -37,20 +37,14 @@ export const MARKDOWN_STYLES_LEGACY_PATH = '.vscode/markdown-github-light.css';
 /** CSS asset filenames shipped in the md-lint package (and previously copied into .vscode/). */
 export const MD_LINT_CSS_FILES = ['markdown-github-light.css', 'markdown-custom-dark.css'] as const;
 
+export const MARKDOWNLINT_CONFIG_FILE = '.markdownlint.jsonc';
+export const MARKDOWNLINT_CONFIG_EXTENDS_KEY = 'extends';
+export const MARKDOWNLINT_CONFIG_EXTENDS_VALUE = 'node_modules/@finografic/md-lint/.markdownlint.jsonc';
+export const MARKDOWNLINT_CONFIG_FILE_TEXT = `{\n  "${MARKDOWNLINT_CONFIG_EXTENDS_KEY}": "${MARKDOWNLINT_CONFIG_EXTENDS_VALUE}"\n}\n`;
+
 /**
- * VSCode settings for markdown (markdownlint + preview styles only). Does NOT set [markdown] or
- * oxc.oxc-vscode.
+ * VSCode settings for markdown preview styles only. Does NOT set [markdown] or oxc.oxc-vscode.
  */
 export const MARKDOWN_VSCODE_SETTINGS = {
-  [MARKDOWNLINT_CONFIG_KEY]: {
-    default: true,
-    MD013: { line_length: 120, tables: false, code_blocks: false }, // Allow line length
-    MD024: false, // Allow duplicate headings
-    MD025: false, // Allow multiple top-level headings
-    MD036: false, // No emphasis as heading
-    MD040: false, // Allow fenced code blocks
-    MD041: false, // Don't require first line to be a top-level heading
-    MD060: { style: 'aligned' }, // Allow heading indentation
-  },
   [MARKDOWN_STYLES_KEY]: ['node_modules/@finografic/md-lint/styles/markdown-github-light.css'],
 } as const;

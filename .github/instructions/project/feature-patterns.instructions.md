@@ -75,7 +75,8 @@ export const MY_VSCODE_EXTENSIONS = ['publisher.extension-id'] as const;
 
 - Export a single `detect{Feature}(context: FeatureContext): boolean | Promise<boolean>`.
 - Use `fileExists` from `'utils'` (barrel import, never `'utils/fs.utils'` or raw `existsSync`).
-- Keep detection lightweight — check for ONE reliable indicator (a config file or a key dependency), not exhaustive state.
+- Keep detection lightweight — prefer preview-driven detect (`return !hasPreviewChanges(await previewX(context))`) when the
+  feature owns multiple files or merged config surfaces. Use single-indicator detect only for very small features.
 - Must be side-effect-free. No writes, no installs, no network calls.
 
 ## `{folder-name}.feature.ts`
@@ -164,6 +165,9 @@ export async function apply{Feature}Extensions(targetDir: string): Promise<strin
 
 - `fileExists(path)` — `'utils'` barrel, wraps `existsSync`. Use everywhere instead of raw `existsSync`.
 - `createDefaultTemplateVars()` — `'../feature.utils'`. Use when copying template files.
+- `inferPackageTypeId(packageJson)` / `isPackageType(packageJson, typeId)` / `isFrontendPackageType(typeId)` —
+  `'lib/package-type.utils'`. Use these helpers instead of ad hoc keyword, `bin`, or dependency checks when feature
+  behavior varies by package type.
 - `addExtensionRecommendations`, `addLanguageFormatterSettings`, `readSettingsJson`, `writeSettingsJson` — `'utils'`. Only call from `*.vscode.ts`.
 - `isDependencyDeclared`, `installDevDependency`, `removeDependency` — `'utils'`. Call from `*.apply.ts`.
 - `spinner`, `successMessage`, `successUpdatedMessage`, `successRemovedMessage`, `errorMessage`, `infoMessage` — `'utils'`. For **live** user feedback during apply (and in migrate/command code that mirrors the same UX). Use the right helper so `genx features` / `genx migrate` output stays consistent:
@@ -188,3 +192,10 @@ export async function apply{Feature}Extensions(targetDir: string): Promise<strin
 - Co-locate test files as `{folder-name}.test.ts` within the feature folder.
 - Prioritise testing detect (should return correct boolean) and apply (should be idempotent, should populate `applied` array correctly).
 - Use Vitest conventions — `describe`, `it`, `expect`.
+
+## Baseline Features
+
+- `oxc-config` and `markdown` are baseline create-time features in genx. They remain features, but `genx create`
+  installs them automatically and does not present them as optional prompt choices.
+- When adding future baseline features, keep the create-flow rule explicit in prompt orchestration rather than
+  burying it inside package-type defaults or feature detect/apply logic.

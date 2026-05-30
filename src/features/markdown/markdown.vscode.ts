@@ -1,7 +1,8 @@
 /**
  * Markdown VSCode configuration utilities.
  *
- * Handles VSCode settings (markdownlint config, preview styles) and extension recommendations.
+ * Handles VSCode settings (preview styles + legacy inline markdownlint cleanup) and extension
+ * recommendations.
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -12,10 +13,10 @@ import {
   ensureMarkdownlintConfigAndStylesAtEnd,
   ensureVSCodeDir,
   fileExists,
-  insertRootPropertyBefore,
   jsonLikeTextsEquivalent,
   parseJsoncObject,
   readExtensionsJson,
+  removeRootPropertyJsonc,
   setRootPropertyJsonc,
 } from 'utils';
 
@@ -30,8 +31,11 @@ import {
 const EXTENSIONS_JSON_PATH = ['.vscode', 'extensions.json'] as const;
 
 /**
- * Proposed `.vscode/settings.json` text for the markdown feature (no disk writes). Migrates the legacy
- * `.vscode/markdown-github-light.css` path to the md-lint package path.
+ * Proposed `.vscode/settings.json` text for the markdown feature (no disk writes).
+ *
+ * DEPRECATED migration path:
+ * - remove legacy inline `markdownlint.config`
+ * - migrate the old `.vscode/markdown-github-light.css` path to the md-lint package path
  */
 export async function computeProposedMarkdownSettingsText(targetDir: string): Promise<{
   path: string;
@@ -47,17 +51,8 @@ export async function computeProposedMarkdownSettingsText(targetDir: string): Pr
   let t = current || `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
   const root = (): Record<string, unknown> => parseJsoncObject(t);
 
-  if (!root()[MARKDOWNLINT_CONFIG_KEY]) {
-    if (root()[MARKDOWN_STYLES_KEY]) {
-      t = insertRootPropertyBefore(
-        t,
-        MARKDOWNLINT_CONFIG_KEY,
-        MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY],
-        MARKDOWN_STYLES_KEY,
-      );
-    } else {
-      t = setRootPropertyJsonc(t, MARKDOWNLINT_CONFIG_KEY, MARKDOWN_VSCODE_SETTINGS[MARKDOWNLINT_CONFIG_KEY]);
-    }
+  if (root()[MARKDOWNLINT_CONFIG_KEY] !== undefined) {
+    t = removeRootPropertyJsonc(t, MARKDOWNLINT_CONFIG_KEY);
   }
 
   const currentStyles = parseJsoncObject(t)[MARKDOWN_STYLES_KEY] as string[] | undefined;
@@ -112,8 +107,8 @@ export async function applyMarkdownExtensions(targetDir: string): Promise<string
 }
 
 /**
- * Add markdown settings to VSCode settings.json. Only adds markdownlint.config and markdown.styles (no
- * [markdown] / oxc.oxc-vscode).
+ * Add markdown settings to VSCode settings.json. Only adds markdown.styles and removes legacy inline
+ * markdownlint config (no [markdown] / oxc.oxc-vscode).
  */
 export async function applyMarkdownVSCodeSettings(targetDir: string): Promise<boolean> {
   await ensureVSCodeDir(targetDir);
