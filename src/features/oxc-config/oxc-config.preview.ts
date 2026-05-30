@@ -116,7 +116,7 @@ async function computeCanonicalSettingsFileContent(
 
   const filePath = resolve(targetDir, VSCODE_DIR, VSCODE_SETTINGS_JSON);
   const existingRaw = fileExists(filePath) ? await readFile(filePath, 'utf8') : '';
-  const existing = existingRaw ? (parseJsoncObject(existingRaw)) : null;
+  const existing = existingRaw ? parseJsoncObject(existingRaw) : null;
 
   const packageTypeId = inferPackageTypeId(packageJson);
   const languages = [

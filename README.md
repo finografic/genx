@@ -315,9 +315,10 @@ Markdown linting via `@finografic/md-lint`.
 
 - Installs `@finografic/md-lint`
 - Splits a combined `*.{json,…,md}` lint-staged glob into data-only + `*.md` with `md-lint --fix`
-- Adds `markdownlint.config` to `.vscode/settings.json` (JSONC-aware merge — does not strip existing `//` comments in that block)
+- Ensures `.markdownlint.jsonc` extends `node_modules/@finografic/md-lint/.markdownlint.jsonc`
+- Removes deprecated inline `markdownlint.config` from `.vscode/settings.json`
 - Adds VSCode extension recommendation
-- Copies `markdown-github-light.css`, `markdown-custom-dark.css`, for preview styling
+- Migrates old preview-style paths and removes deprecated copied CSS assets from `.vscode/`
 
 ### oxc-config
 
