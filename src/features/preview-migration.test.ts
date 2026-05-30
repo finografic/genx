@@ -96,16 +96,30 @@ describe('preview migration — drift vs canonical', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('css: minimal package shows preview drift and detect false', async () => {
+  it('css: react package without CSS config shows preview drift and detect false', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-css-'));
     await writeFile(
       join(root, 'package.json'),
-      `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
+      `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:react'] }, null, 2)}\n`,
     );
 
     const preview = await previewCss({ targetDir: root });
     expect(hasPreviewChanges(preview)).toBe(true);
     expect(await detectCss({ targetDir: root })).toBe(false);
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('css: cli package is treated as not applicable and shows no drift', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-css-cli-'));
+    await writeFile(
+      join(root, 'package.json'),
+      `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:cli'] }, null, 2)}\n`,
+    );
+
+    const preview = await previewCss({ targetDir: root });
+    expect(hasPreviewChanges(preview)).toBe(false);
+    expect(await detectCss({ targetDir: root })).toBe(true);
 
     await rm(root, { recursive: true, force: true });
   });

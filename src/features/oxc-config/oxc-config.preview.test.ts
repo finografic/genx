@@ -1,6 +1,7 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { FeaturePreviewChangeWrite } from '../../lib/feature-preview/feature-preview.types.js';
 
@@ -34,6 +35,18 @@ async function convergePreviewWrites(targetDir: string, maxIterations = 8): Prom
     }
   }
 }
+
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
+
+describe('oxc-config.template', () => {
+  it('getOxfmtConfigCanonicalFileContent matches _templates/oxfmt.config.ts', async () => {
+    const template = await readFile(join(repoRoot, '_templates/oxfmt.config.ts'), 'utf8');
+    expect(getOxfmtConfigCanonicalFileContent()).toBe(template.endsWith('\n') ? template : `${template}\n`);
+    expect(getOxfmtConfigCanonicalFileContent()).toMatch(
+      /^import type \{ OxfmtConfig, OxfmtOverrideConfig \} from '@finografic\/oxc-config\/oxfmt';/m,
+    );
+  });
+});
 
 describe('oxfmt.preview — package.json drift', () => {
   it('reports package.json changes when `update:oxc-config` is missing (legacy detect would still see format scripts)', async () => {
@@ -134,6 +147,102 @@ describe('oxfmt.preview — Prettier config removal', () => {
     expect(prettierChange!.kind).toBe('delete');
     expect(prettierChange!.path).toBe(resolve(dir, '.prettierrc'));
     expect(prettierChange!.summary).toBe('remove Prettier config (.prettierrc)');
+  });
+});
+
+describe('oxfmt.preview — VS Code settings', () => {
+  it('preserves template codeActionsOnSave block (organizeImports never)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-settings-'));
+    const base: PackageJson = {
+      name: '@finografic/settings-pkg',
+      version: '0.0.0',
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await mkdir(resolve(dir, '.vscode'), { recursive: true });
+    await writeFile(
+      resolve(dir, '.vscode/settings.json'),
+      `${JSON.stringify(
+        {
+          'editor.codeActionsOnSave': {
+            'source.fixAll.oxc': 'explicit',
+            'source.organizeImports': 'never',
+            'source.sortImports': 'explicit',
+            'source.addMissingImports': 'explicit',
+          },
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const settingsChange = getChangedPreviewChanges(preview.changes).find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('.vscode/settings.json'),
+    );
+    expect(settingsChange).toBeDefined();
+    expect(settingsChange!.proposedContent).toContain('"source.organizeImports": "never"');
+    expect(settingsChange!.proposedContent).toContain('"source.sortImports": "explicit"');
+    expect(settingsChange!.proposedContent).not.toContain('"source.organizeImports": "explicit"');
+  });
+
+  it('skips settings.json when cli package already matches oxc canonical layout', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-settings-cli-'));
+    const base = {
+      name: '@finografic/cli-pkg',
+      version: '0.0.0',
+      keywords: ['genx:type:cli'],
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), `${JSON.stringify(base, null, 2)}\n`, 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await mkdir(resolve(dir, '.vscode'), { recursive: true });
+    const settings = `${JSON.stringify(
+      {
+        'npm.packageManager': 'pnpm',
+        'editor.formatOnSave': true,
+        'editor.formatOnSaveMode': 'file',
+        'editor.defaultFormatter': 'oxc.oxc-vscode',
+        'editor.codeActionsOnSave': {
+          'source.fixAll.oxc': 'explicit',
+          'source.organizeImports': 'never',
+          'source.sortImports': 'explicit',
+          'source.addMissingImports': 'explicit',
+        },
+        'eslint.enable': false,
+        'prettier.enable': false,
+        'oxc.typeAware': true,
+        'oxc.lint.run': 'onSave',
+        'typescript.tsdk': 'node_modules/typescript/lib',
+        'typescript.preferences.preferTypeOnlyAutoImports': true,
+        '[javascript]': { 'editor.defaultFormatter': 'oxc.oxc-vscode' },
+        '[typescript]': { 'editor.defaultFormatter': 'oxc.oxc-vscode' },
+        '[json]': { 'editor.defaultFormatter': 'oxc.oxc-vscode' },
+        '[jsonc]': { 'editor.defaultFormatter': 'oxc.oxc-vscode' },
+        '[yaml]': { 'editor.defaultFormatter': 'oxc.oxc-vscode' },
+        '[toml]': { 'editor.defaultFormatter': 'oxc.oxc-vscode' },
+        '[markdown]': {
+          'editor.defaultFormatter': 'oxc.oxc-vscode',
+          'editor.formatOnSave': true,
+        },
+        'markdown.styles': ['node_modules/@finografic/md-lint/styles/markdown-github-light.css'],
+      },
+      null,
+      2,
+    )}\n`;
+    await writeFile(resolve(dir, '.vscode/settings.json'), settings, 'utf8');
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const settingsChange = getChangedPreviewChanges(preview.changes).find((c) =>
+      c.path.endsWith('.vscode/settings.json'),
+    );
+    expect(settingsChange).toBeUndefined();
   });
 });
 

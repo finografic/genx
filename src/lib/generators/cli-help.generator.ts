@@ -1,3 +1,5 @@
+import { isPackageType } from 'lib/package-type.utils';
+
 /**
  * Generates the content of a `src/{binName}.help.ts` file for CLI packages.
  * The output follows the standard @finografic CLI help format.
@@ -67,7 +69,5 @@ export function getBinName(packageJson: Record<string, unknown>, fallback: strin
  * Returns true if the package has the `genx:type:cli` keyword.
  */
 export function isCliPackage(packageJson: Record<string, unknown>): boolean {
-  const { keywords } = packageJson;
-  if (!Array.isArray(keywords)) return false;
-  return keywords.some((k) => k === 'genx:type:cli');
+  return isPackageType(packageJson, 'cli');
 }

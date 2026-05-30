@@ -15,7 +15,11 @@ export default defineConfig({
   ...base,
   ...sorting,
   overrides: [
-    { files: ['*.json', '*.jsonc'], excludeFiles: [], options: { ...json } },
+    {
+      files: ['*.json', '*.jsonc'],
+      excludeFiles: [],
+      options: { ...json },
+    },
     {
       files: ['*.md', '*.mdx'],
       excludeFiles: [...AGENT_DOC_MARKDOWN_PATHS],

@@ -21,6 +21,10 @@ export async function applyOxcConfig(context: FeatureContext): Promise<FeatureAp
     return result;
   }
 
+  if (preview.needsInstall !== true) {
+    return result;
+  }
+
   const packageJsonPath = resolve(context.targetDir, PACKAGE_JSON);
   const packageJsonWasWritten = result.appliedTargetPaths?.includes(packageJsonPath) === true;
 

@@ -126,4 +126,22 @@ describe('oxfmt.apply — preview-driven apply', () => {
     expect(execaMock).not.toHaveBeenCalled();
     expect(result.applied).toEqual(['oxlint.config.ts']);
   });
+
+  it('does not run pnpm install when package.json was written but preview says dependencies did not change', async () => {
+    const targetDir = '/tmp/target';
+    const packageJsonPath = resolve(targetDir, PACKAGE_JSON);
+    const preview = {
+      changes: [],
+      applied: [],
+    };
+    previewOxcConfigMock.mockResolvedValue(preview);
+    applyPreviewChangesMock.mockResolvedValue({
+      applied: ['package.json (scripts only)'],
+      appliedTargetPaths: [packageJsonPath],
+    });
+
+    const result = await applyOxcConfig({ targetDir });
+    expect(execaMock).not.toHaveBeenCalled();
+    expect(result.applied).toEqual(['package.json (scripts only)']);
+  });
 });

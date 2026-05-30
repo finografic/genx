@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { fileExists, jsonLikeTextsEquivalent, parseJsoncObject, readExtensionsJson } from 'utils';
 import type {
   FeaturePreviewChange,
@@ -9,8 +10,9 @@ import type {
 } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
+import { inferPackageTypeId, isFrontendPackageType } from 'lib/package-type.utils';
 import { findPackageRoot } from 'utils/package-root.utils';
-import { VSCODE_MARKDOWN_TAIL_KEYS } from 'utils/vscode-jsonc.utils.js';
+import { ensureMarkdownlintConfigAndStylesAtEnd } from 'utils/vscode-jsonc.utils.js';
 
 import {
   PACKAGE_JSON,
@@ -25,7 +27,8 @@ import {
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import {
-  CANONICAL_VSCODE_LANGUAGES,
+  OXC_VSCODE_BASE_LANGUAGES,
+  OXC_VSCODE_FRONTEND_LANGUAGES,
   OXFMT_CI_STEP,
   OXFMT_FORMATTER_ID,
   OXFMT_VSCODE_EXTENSIONS,
@@ -102,40 +105,77 @@ async function computeCanonicalExtensionsFileContent(targetDir: string): Promise
   return `${JSON.stringify(next, null, 2)}\n`;
 }
 
-async function computeCanonicalSettingsFileContent(targetDir: string): Promise<string> {
+async function computeCanonicalSettingsFileContent(
+  targetDir: string,
+  packageJson: PackageJson,
+): Promise<string> {
+  const fromDir = fileURLToPath(new URL('.', import.meta.url));
+  const pkgRoot = findPackageRoot(fromDir);
+  const templatePath = resolve(pkgRoot, '_templates/.vscode/settings.json');
+  const templateSettings = parseJsoncObject(await readFile(templatePath, 'utf8'));
+
   const filePath = resolve(targetDir, VSCODE_DIR, VSCODE_SETTINGS_JSON);
+  const existingRaw = fileExists(filePath) ? await readFile(filePath, 'utf8') : '';
+  const existing = existingRaw ? (parseJsoncObject(existingRaw)) : null;
 
-  // Canonical top block
-  const settings: Record<string, unknown> = {
-    'npm.packageManager': 'pnpm',
-    'editor.formatOnSave': true,
-    'editor.formatOnSaveMode': 'file',
-    'editor.defaultFormatter': OXFMT_FORMATTER_ID,
-    'editor.codeActionsOnSave': { 'source.fixAll.oxc': 'explicit', 'source.organizeImports': 'explicit' },
-    'prettier.enable': false,
-    'oxc.typeAware': true,
-    'oxc.lint.run': 'onSave',
-    'typescript.tsdk': 'node_modules/typescript/lib',
-    'typescript.preferences.preferTypeOnlyAutoImports': true,
-  };
+  const packageTypeId = inferPackageTypeId(packageJson);
+  const languages = [
+    ...OXC_VSCODE_BASE_LANGUAGES,
+    ...(isFrontendPackageType(packageTypeId) ? OXC_VSCODE_FRONTEND_LANGUAGES : []),
+  ];
 
-  // Canonical language blocks — all unconditional; markdown gets extra formatOnSave
-  for (const lang of CANONICAL_VSCODE_LANGUAGES) {
-    const block: Record<string, unknown> = { 'editor.defaultFormatter': OXFMT_FORMATTER_ID };
-    if (lang === 'markdown') block['editor.formatOnSave'] = true;
-    settings[`[${lang}]`] = block;
-  }
+  const settings: Record<string, unknown> = existing ? { ...existing } : { ...templateSettings };
 
-  // Preserve tail keys (markdownlint.config, markdown.styles) from the existing file
-  if (fileExists(filePath)) {
-    const existing = parseJsoncObject(await readFile(filePath, 'utf8'));
-    for (const tailKey of VSCODE_MARKDOWN_TAIL_KEYS) {
-      if (tailKey in existing) settings[tailKey] = existing[tailKey];
+  for (const key of OXC_SETTINGS_ROOT_KEYS) {
+    if (!(key in templateSettings)) {
+      continue;
+    }
+    if (!(key in settings) || !isDeepStrictEqual(settings[key], templateSettings[key])) {
+      settings[key] = templateSettings[key];
     }
   }
 
-  return `${JSON.stringify(settings, null, 2)}\n`;
+  for (const lang of languages) {
+    const blockKey = `[${lang}]`;
+    if (blockKey in settings) {
+      continue;
+    }
+    settings[blockKey] =
+      lang === 'markdown'
+        ? { 'editor.defaultFormatter': OXFMT_FORMATTER_ID, 'editor.formatOnSave': true }
+        : { 'editor.defaultFormatter': OXFMT_FORMATTER_ID };
+  }
+
+  const proposed = `${JSON.stringify(settings, null, 2)}\n`;
+  if (existingRaw && jsonLikeTextsEquivalent(existingRaw, proposed)) {
+    return existingRaw;
+  }
+
+  let text = proposed;
+  const tail = ensureMarkdownlintConfigAndStylesAtEnd(text);
+  if (tail.changed) {
+    text = tail.text;
+  }
+  if (existingRaw && jsonLikeTextsEquivalent(existingRaw, text)) {
+    return existingRaw;
+  }
+  return text;
 }
+
+/** Root keys synced from `_templates/.vscode/settings.json` when missing or drifted. */
+const OXC_SETTINGS_ROOT_KEYS = [
+  'npm.packageManager',
+  'editor.formatOnSave',
+  'editor.formatOnSaveMode',
+  'editor.defaultFormatter',
+  'editor.codeActionsOnSave',
+  'eslint.enable',
+  'prettier.enable',
+  'oxc.typeAware',
+  'oxc.lint.run',
+  'typescript.tsdk',
+  'typescript.preferences.preferTypeOnlyAutoImports',
+] as const;
 
 const OXFMT_CONFIG_FILENAME = 'oxfmt.config.ts';
 const OXLINT_CONFIG_FILENAME = 'oxlint.config.ts';
@@ -241,7 +281,7 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
   if (fileExists(settingsPath)) {
     currentSettings = await readFile(settingsPath, 'utf8');
   }
-  const proposedSettings = await computeCanonicalSettingsFileContent(targetDir);
+  const proposedSettings = await computeCanonicalSettingsFileContent(targetDir, currentPkg);
   if (!jsonLikeTextsEquivalent(proposedSettings, currentSettings)) {
     changes.push(
       createWritePreviewChange(

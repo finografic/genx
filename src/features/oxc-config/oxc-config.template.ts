@@ -1,36 +1,17 @@
-export const OXFMT_CONFIG_BODY = `import {
-  AGENT_DOC_MARKDOWN_PATHS,
-  agentMarkdown,
-  base,
-  ignorePatterns,
-  json,
-  markdown,
-  sorting,
-} from '@finografic/oxc-config/oxfmt';
-import { defineConfig } from 'oxfmt';
-import type { OxfmtConfig, OxfmtOverrideConfig } from '@finografic/oxc-config/oxfmt';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export default defineConfig({
-  ignorePatterns: [...ignorePatterns],
-  ...base,
-  ...sorting,
-  overrides: [
-    { files: ['*.json', '*.jsonc'], excludeFiles: [], options: { ...json } },
-    {
-      files: ['*.md', '*.mdx'],
-      excludeFiles: [...AGENT_DOC_MARKDOWN_PATHS],
-      options: { ...markdown },
-    },
-    {
-      files: [...AGENT_DOC_MARKDOWN_PATHS],
-      excludeFiles: [],
-      options: { ...agentMarkdown },
-    },
-  ] satisfies OxfmtOverrideConfig[],
-} satisfies OxfmtConfig);
-`;
+import { findPackageRoot } from 'utils/package-root.utils';
 
-/** Canonical `oxfmt.config.ts` body — used by preview and detection. */
+let cachedOxfmtConfigContent: string | undefined;
+
+/** Canonical `oxfmt.config.ts` from `_templates/oxfmt.config.ts` (single source of truth). */
 export function getOxfmtConfigCanonicalFileContent(): string {
-  return `${OXFMT_CONFIG_BODY}\n`;
+  if (cachedOxfmtConfigContent === undefined) {
+    const fromDir = fileURLToPath(new URL('.', import.meta.url));
+    const pkgRoot = findPackageRoot(fromDir);
+    cachedOxfmtConfigContent = readFileSync(join(pkgRoot, '_templates/oxfmt.config.ts'), 'utf8');
+  }
+  return cachedOxfmtConfigContent.endsWith('\n') ? cachedOxfmtConfigContent : `${cachedOxfmtConfigContent}\n`;
 }

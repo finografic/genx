@@ -91,18 +91,28 @@ export const OXFMT_CI_STEP = `
         run: pnpm format:check
 `;
 
-/** Canonical ordered list of languages that get oxc.oxc-vscode as their default formatter. */
-export const CANONICAL_VSCODE_LANGUAGES = [
+/** Base languages for all package types (matches `_templates/.vscode/settings.json` + toml). */
+export const OXC_VSCODE_BASE_LANGUAGES = [
   'javascript',
   'typescript',
-  'javascriptreact',
-  'typescriptreact',
   'json',
   'jsonc',
   'yaml',
   'toml',
+  'markdown',
+] as const;
+
+/** Extra formatter languages for front-end (React) packages only. */
+export const OXC_VSCODE_FRONTEND_LANGUAGES = [
+  'javascriptreact',
+  'typescriptreact',
   'css',
   'scss',
   'html',
-  'markdown',
+] as const;
+
+/** @deprecated Prefer {@link OXC_VSCODE_BASE_LANGUAGES} + type-aware frontend list. */
+export const CANONICAL_VSCODE_LANGUAGES = [
+  ...OXC_VSCODE_BASE_LANGUAGES,
+  ...OXC_VSCODE_FRONTEND_LANGUAGES,
 ] as const;

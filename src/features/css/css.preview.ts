@@ -4,6 +4,10 @@ import { fileExists, jsonLikeTextsEquivalent } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
+import { inferPackageTypeId, isFrontendPackageType } from 'lib/package-type.utils';
+
+import type { PackageJson } from 'types/package-json.types';
+
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { OXFMT_CONFIG_FILENAME } from './css.constants';
 import { ensureCssImportInOxfmtConfig, insertCssOverrideInOxfmtConfig } from './css.oxfmt';
@@ -14,6 +18,18 @@ import { proposeCssCombinedSettingsText, proposeCssExtensionsJsonText } from './
  */
 export async function previewCss(context: FeatureContext): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
+  const packageJsonPath = resolve(targetDir, 'package.json');
+  if (fileExists(packageJsonPath)) {
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as PackageJson;
+    if (!isFrontendPackageType(inferPackageTypeId(packageJson))) {
+      return {
+        changes: [],
+        applied: ['css feature not applicable for this package type'],
+        noopMessage: 'CSS formatting feature is only applicable to frontend package types.',
+      };
+    }
+  }
+
   const changes: FeaturePreviewResult['changes'] = [];
   const applied: string[] = [];
 

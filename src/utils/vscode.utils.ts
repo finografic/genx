@@ -22,13 +22,19 @@ const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
   recommendations: [],
 };
 
-/** Base template for .vscode/settings.json */
+/** Base template for .vscode/settings.json — core oxc block aligned with `_templates/.vscode/settings.json`. */
 export const BASE_SETTINGS_JSON: VSCodeSettingsJson = {
   'npm.packageManager': 'pnpm',
   'editor.formatOnSave': true,
   'editor.formatOnSaveMode': 'file',
   'editor.defaultFormatter': 'oxc.oxc-vscode',
-  'editor.codeActionsOnSave': { 'source.fixAll.oxc': 'explicit', 'source.organizeImports': 'explicit' },
+  'editor.codeActionsOnSave': {
+    'source.fixAll.oxc': 'explicit',
+    'source.organizeImports': 'never',
+    'source.sortImports': 'explicit',
+    'source.addMissingImports': 'explicit',
+  },
+  'eslint.enable': false,
   'prettier.enable': false,
   'oxc.typeAware': true,
   'oxc.lint.run': 'onSave',
