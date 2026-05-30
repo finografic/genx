@@ -11,6 +11,7 @@
     "source.addMissingImports": "explicit"
   },
 
+  "eslint.enable": false,
   "prettier.enable": false,
 
   "oxc.typeAware": true,

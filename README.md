@@ -456,4 +456,4 @@ Or run the built binary directly: `node dist/index.mjs create`
 
 ## License
 
-MIT © [finografic](https://github.com/finografic)
+MIT © [Justin Rankin](https://github.com/finografic)
