@@ -52,8 +52,8 @@ importers:
         specifier: ^21.0.2
         version: 21.0.2
       '@finografic/md-lint':
-        specifier: ^0.12.0
-        version: 0.12.0
+        specifier: ^0.13.3
+        version: 0.13.3
       '@finografic/oxc-config':
         specifier: ^2.6.4
         version: 2.6.4(oxfmt@0.52.0)(oxlint@1.67.0(oxlint-tsgolint@0.23.0))
@@ -141,11 +141,15 @@ packages:
     resolution: {integrity: sha512-fT1qHVGAag4IEkrupZ6lRRbNCs1vS9P01KB/sG8zKgvUztbYtFBtQpjSITNwooDZ83tpsPzP0mRNs1/KVszCRA==}
     engines: {node: '>= 20.12.0'}
 
+  '@clack/core@1.4.0':
+    resolution: {integrity: sha512-7Wctjq6f7c1CPz8sPpkwUnz8yRgVANkpNupb81q432FjcJg4l+Sw7XANdNSdWfAKq0IHI0JTcUeK5dxs/HrGPw==}
+    engines: {node: '>= 20.12.0'}
+
   '@clack/prompts@1.1.0':
     resolution: {integrity: sha512-pkqbPGtohJAvm4Dphs2M8xE29ggupihHdy1x84HNojZuMtFsHiUlRvqD24tM2+XmI+61LlfNceM3Wr7U5QES5g==}
 
-  '@clack/prompts@1.4.0':
-    resolution: {integrity: sha512-S0My7XPGIgpRWMDG8uRqalbgT+a6FmCUdOW+HaIOVVpUPHOb7RrpvjTjiODadKp06fsrVDJZlIzc6yCTp4AnxA==}
+  '@clack/prompts@1.5.0':
+    resolution: {integrity: sha512-wKh+wTjmrUoUdkZg8KpJO5X+p9PWV+KE9mePseq9UYWkukgTKsGS47RRL2HstwVcvDQH+PenrPJWII8+MfiiyA==}
     engines: {node: '>= 20.12.0'}
 
   '@commitlint/cli@21.0.2':
@@ -408,8 +412,8 @@ packages:
     engines: {node: '>=24.3.0'}
     hasBin: true
 
-  '@finografic/md-lint@0.12.0':
-    resolution: {integrity: sha512-1LBxuazVVa2aH8oqDGoIYHZtU1ZjyllsopiRhwyb0IHaU5NR/DEIXomL+vqQmWeCp7S7d52MXXwo1rxmP843ww==, tarball: https://npm.pkg.github.com/download/@finografic/md-lint/0.12.0/d7132558b270e0c9ec57bd01afb09a383018017f}
+  '@finografic/md-lint@0.13.3':
+    resolution: {integrity: sha512-YmVHqbXjzrMKFXU0MsnnNFaSo9nn4xhnjntzFepQlMt2HSYTYgqsSLV/CZWl+jNeIzP3BhyUdxgVdi0eUC39Qg==, tarball: https://npm.pkg.github.com/download/@finografic/md-lint/0.13.3/d3cd1bb8765c60f1623d277254459a20d27defd1}
     hasBin: true
 
   '@finografic/oxc-config@2.6.4':
@@ -2372,14 +2376,19 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
+  '@clack/core@1.4.0':
+    dependencies:
+      fast-wrap-ansi: 0.2.2
+      sisteransi: 1.0.5
+
   '@clack/prompts@1.1.0':
     dependencies:
       '@clack/core': 1.1.0
       sisteransi: 1.0.5
 
-  '@clack/prompts@1.4.0':
+  '@clack/prompts@1.5.0':
     dependencies:
-      '@clack/core': 1.3.1
+      '@clack/core': 1.4.0
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
@@ -2596,8 +2605,8 @@ snapshots:
 
   '@finografic/cli-kit@1.4.0':
     dependencies:
-      '@clack/core': 1.3.1
-      '@clack/prompts': 1.4.0
+      '@clack/core': 1.4.0
+      '@clack/prompts': 1.5.0
       diff: 8.0.4
       jsonc-parser: 3.3.1
       picocolors: 1.1.1
@@ -2617,7 +2626,7 @@ snapshots:
       '@finografic/core': 0.13.0
       strip-ansi: 7.2.0
 
-  '@finografic/md-lint@0.12.0':
+  '@finografic/md-lint@0.13.3':
     dependencies:
       globby: 16.2.0
       ignore: 7.0.5
