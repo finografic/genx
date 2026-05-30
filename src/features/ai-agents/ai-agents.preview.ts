@@ -6,27 +6,13 @@ import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-pre
 import type { FeatureContext } from '../feature.types';
 import type { Dirent } from 'node:fs';
 
-import {
-  ensureBlankLineAfterThematicBreakBeforeHeading,
-  findSectionIndex,
-  hasSection,
-  parseSections,
-  reorderSections,
-  serializeSections,
-  setSection,
-} from 'lib/markdown-sections';
+import { parseSections } from 'lib/markdown-sections';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
-import { normalizeHeadingKey } from '../ai-instructions/ai-instructions.agents.utils.js';
-import {
-  AI_AGENTS_ALL_CANONICAL_HEADINGS,
-  AI_AGENTS_ENFORCED_HEADINGS,
-  AI_AGENTS_LEGACY_SECTION_HEADING,
-  AI_AGENTS_SEEDED_HEADINGS,
-  AI_AGENTS_SKILLS_DIR,
-} from './ai-agents.constants';
+import { mergeAgentsMdFromTemplate, proposeAgentsMdForNewFile } from './ai-agents.agents.utils.js';
+import { AI_AGENTS_SKILLS_DIR } from './ai-agents.constants';
 
 async function collectSkillTreeWrites(
   templateSkillDir: string,
@@ -81,54 +67,14 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
       createWritePreviewChange(
         agentsPath,
         '',
-        ensureBlankLineAfterThematicBreakBeforeHeading(templateContent),
+        proposeAgentsMdForNewFile(templateContent, templateParsed),
         'AGENTS.md',
       ),
     );
   } else {
     const currentContent = await readFile(agentsPath, 'utf8');
-    let parsed = parseSections(currentContent);
-    let changed = false;
-
-    const legacyKey = normalizeHeadingKey(`## ${AI_AGENTS_LEGACY_SECTION_HEADING}`);
-    const withoutLegacy = parsed.sections.filter((s) => normalizeHeadingKey(s.heading) !== legacyKey);
-    if (withoutLegacy.length !== parsed.sections.length) {
-      parsed = { ...parsed, sections: withoutLegacy };
-      changed = true;
-    }
-
-    for (const heading of AI_AGENTS_SEEDED_HEADINGS) {
-      if (!hasSection(parsed, heading)) {
-        const templateSection = templateParsed.sections.find((s) => s.heading === `## ${heading}`);
-        if (templateSection) {
-          parsed = setSection(parsed, heading, templateSection.body);
-          changed = true;
-        }
-      }
-    }
-
-    for (const heading of AI_AGENTS_ENFORCED_HEADINGS) {
-      const templateSection = templateParsed.sections.find((s) => s.heading === `## ${heading}`);
-      if (!templateSection) continue;
-
-      const idx = findSectionIndex(parsed, heading);
-      if (idx === -1) {
-        parsed = setSection(parsed, heading, templateSection.body);
-        changed = true;
-      } else if (parsed.sections[idx]?.body !== templateSection.body) {
-        parsed = setSection(parsed, heading, templateSection.body);
-        changed = true;
-      }
-    }
-
-    const reordered = reorderSections(parsed, [...AI_AGENTS_ALL_CANONICAL_HEADINGS]);
-    if (reordered.sections.some((s, i) => s.heading !== parsed.sections[i]?.heading)) {
-      parsed = reordered;
-      changed = true;
-    }
-
-    if (changed) {
-      const proposed = ensureBlankLineAfterThematicBreakBeforeHeading(serializeSections(parsed));
+    const proposed = mergeAgentsMdFromTemplate(currentContent, { templateParsed });
+    if (proposed !== null) {
       changes.push(createWritePreviewChange(agentsPath, currentContent, proposed, 'AGENTS.md'));
     } else {
       applied.push('AGENTS.md');

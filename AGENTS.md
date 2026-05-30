@@ -1,13 +1,35 @@
 # AGENTS.md — AI Assistant Guide
 
+## Project Memory Model
+
+- `docs/todo/ROADMAP.md` = curated milestone plan + completed milestone history.
+- `docs/todo/NEXT_STEPS.md` = near-term working list, manual testing, and small follow-ups.
+- `.agents/handoff.md` = current project state snapshot.
+- `.agents/memory.md` = chronological working memory / session log.
+
+Promotion rule:
+
+- session detail, partial work, and temporary context belong in `.agents/memory.md`
+- stable current truth belongs in `.agents/handoff.md`
+- project priorities and completed milestone-scale work belong in `ROADMAP.md`
+- small actionable follow-ups and manual verification belong in `NEXT_STEPS.md`
+
+Do not duplicate the same item across all four files unless it truly belongs in each role.
+
+Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMORY_MODEL.md)
+
+---
+
 ## Roadmap and Planning Docs
 
 **`docs/todo/ROADMAP.md` is the primary high-level plan for this project.**
-**`docs/todo/NEXT_STEPS.md` is the near-term working list** — small tasks, fixes, and manual testing checklists too small for ROADMAP.
+**`docs/todo/NEXT_STEPS.md` is the near-term working list** — small tasks, fixes, and manual
+testing checklists too small for ROADMAP.
 
-- Before proposing or generating new features, check the roadmap for existing items.
-- When conceiving a new feature or initiative, add it to the appropriate priority tier.
-- Detailed planning docs live alongside in `docs/todo/` as `TODO_*.md` (active) or `DONE_*.md` (complete).
+- Before proposing or generating new features, check `ROADMAP.md` for existing priorities.
+- When conceiving a new feature or initiative, add it to the appropriate roadmap tier.
+- Use `NEXT_STEPS.md` for concrete follow-ups, manual validation, and small tasks that do not need full roadmap treatment.
+- Detailed feature planning docs live in `docs/todo/` as `TODO_*.md` (active) or `DONE_*.md` (complete).
 - **TODO/DONE doc conventions:** `.github/instructions/documentation/todo-done-docs.instructions.md`
   — rules for naming, status headers, checkboxes, and graduating `TODO_` → `DONE_`.
 
@@ -158,7 +180,7 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 - For Clack `text` validators, normalize once with `const trimmed = value?.trim() ?? ''`, require non-empty `trimmed`, then run regex tests on `trimmed` (covers undefined and satisfies narrowing)
 - Prefer `:` segment separators in `package.json` `scripts` keys and in docs (e.g. `lint:fix`, `dev:feature`); align with `_templates/package.json` rather than dot-separated names
 - VS Code settings writers should place `editor.formatOnSaveMode`, `editor.defaultFormatter` (`oxc.oxc-vscode`), and `oxc.typeAware` before `prettier.enable`, add a `[markdown]` formatter block before `markdownlint.config`, and preserve trailing `//` comments on markdownlint rule lines when editing JSONC
-- For feature/migrate apply output, use `successMessage` for net-new work, `successUpdatedMessage` for in-place edits (prefer “Updated …”), `successRemovedMessage` for removals — see `.github/instructions/project/feature-patterns.instructions.md` and `prompts.utils`
+- For AGENTS.md structure and planning sections: prefer front matter (INITIAL CONTEXT, Project Memory Model, Roadmap) → Rules spine → middle extras → Learned last; use **Roadmap and Planning Docs** Version B workflow bullets (not Version A) so planning guidance complements Project Memory Model without redefining file roles
 - For migrate/feature flows that confirm file changes, prefer one user decision per changed file (not per hunk); avoid implicit auto-accept on small diffs unless that behavior is explicitly opt-in
 - Keep shared utilities for feature preview / diff-as-detection that are not canonical `src/core/` grouped in a dedicated app-level folder so they stay maintainable and can be extracted to a package later if needed
 - For Vitest tests, satisfy `jest/no-conditional-expect`: do not wrap follow-up `expect` calls in `if` after optional chaining; assert the value is defined and use a type predicate on `.find()` (or equivalent narrowing) before asserting on fields
@@ -180,8 +202,8 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 - Toolchain versions (node, pnpm) are sourced from `@finografic/deps-policy` `toolchain` export via `src/config/policy.ts` (XDG snapshot fallback); `genx create` writes `.nvmrc`, `engines.node`, and `packageManager` dynamically after template copy; the old `src/config/node.policy.ts` hardcoded source is deleted
 - `.husky/post-commit` runs `pnpm docs:usage`, then `pnpm exec oxfmt --no-error-on-unmatched-pattern README.md`, before the docs auto-commit so CI `format:check` matches generated README output
 - Project-specific JSDoc block tags (e.g. `@finografic`) are allowed in oxlint via `jsdoc/check-tag-names` with `definedTags: ['finografic']` — use the tag name without `@` in `definedTags`
-- `ai-instructions` AGENTS sync runs `rewriteLegacyAgentDocPaths` on legacy `.github/instructions/NN-*.instructions.md` and `project/NN-` path strings before/after `mergeAgentsFromTemplate`; `normalizeHeadingKey` yields lowercase keys (e.g. `rules - global`) and spine map lookups must use those keys, not display titles like `Rules — Global`, or merge output breaks
-- `ai-memory` preview: when `.agents/handoff.md` is missing but legacy `.claude/handoff.md` exists, the preview proposes merging the legacy body into `.agents/handoff.md` (under an “Imported from” section) and deleting `.claude/handoff.md`; tracked handoff lives under `.agents/` (`.gitignore` uses `.agents/*` + `!.agents/handoff.md`)
+- `ai-agents` and `ai-instructions` must share AGENTS.md section reorder/strip logic (`reorderAgentsMdFullTextBlocks`, strip legacy Agent Memory Files / Claude handoff, dedupe Markdown Tables) — divergent reorder paths fight and scramble section order on migrate/apply; `ai-instructions` also runs `rewriteLegacyAgentDocPaths` and spine lookups must use `normalizeHeadingKey` lowercase keys (e.g. `rules - global`), not display titles
+- `ai-memory` replaces `ai-claude`; preview migrates legacy `.claude/handoff.md` into `.agents/handoff.md` when missing; memory files live under `.agents/` (`.gitignore`: `.agents/*` + `!.agents/handoff.md`)
 - Multi-repo execution uses `genx managed <command>` (subcommands: `migrate`, `deps`, `features`); the shared target loop lives in `src/lib/managed/managed-loop.runner.ts` (`runManagedLoop`); `--managed` flag is kept as a deprecated compatibility alias with a warning
 - The **css** feature no longer handles Stylelint — all Stylelint detection, constants, removal logic, and VSCode settings stripping were removed; it now only handles `oxfmt.config.ts` CSS/SCSS overrides
 - The **oxc-config** feature no longer handles dprint cleanup — `oxc-config.dprint-cleanup.ts`, `oxc-config.workflows.ts`, and their tests were deleted; the feature no longer strips dprint from target projects

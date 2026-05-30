@@ -1,33 +1,26 @@
 import { ensureBlankLineAfterThematicBreakBeforeHeading } from 'lib/markdown-sections';
 
 /**
- * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the only canonical layout for
- * the spine (**Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git
- * Policy**). Target-only `##` sections (e.g. Skills, Learned) and the **Rules — Project-Specific** body come
- * from the package being migrated; shared blocks are taken from the template file. Do not mirror ordering
- * from a consumer repo’s hand-edited `AGENTS.md` when changing this module — match
- * **`_templates/AGENTS.md.template`**.
+ * AGENTS.md sync: **reverse apply** — **`_templates/AGENTS.md.template`** is the canonical source for shared
+ * section bodies; target-only `##` sections (e.g. **INITIAL CONTEXT**, Skills, Learned) keep their content.
+ * Final section order matches **ai-agents** ({@link reorderAgentsMdFullTextBlocks}): front matter → Rules
+ * spine → other extras → Learned last. Legacy sections (Agent Memory Files, Claude handoff) are dropped.
  */
+
+import {
+  dedupeMarkdownTablesSections,
+  reorderAgentsMdFullTextBlocks,
+  stripRemovedAgentsSections,
+} from '../ai-agents/ai-agents.agents.utils.js';
+import { AI_AGENTS_REMOVED_SECTION_HEADING_KEYS } from '../ai-agents/ai-agents.constants.js';
 
 /** Sections taken verbatim from the template (canonical shared lists). Keys via {@link normalizeHeadingKey}. */
-const TEMPLATE_SYNC_KEYS = new Set(['rules - global', 'rules - markdown tables', 'git policy']);
-
-/**
- * Canonical order for shared “Rules / Git” spine (Project-Specific first). Keys via
- * {@link normalizeHeadingKey}.
- */
-const SPINE_KEYS = [
-  'rules - project-specific',
+const TEMPLATE_SYNC_KEYS = new Set([
   'rules - global',
   'rules - markdown tables',
   'git policy',
-] as const;
-
-const SPINE_KEY_SET = new Set<string>(SPINE_KEYS);
-
-function isLearnedSectionKey(key: string): boolean {
-  return key.startsWith('learned ');
-}
+  'project memory model',
+]);
 
 export interface ParsedAgents {
   preamble: string;
@@ -78,10 +71,8 @@ export function parseH2Sections(content: string): ParsedAgents {
 }
 
 /**
- * Reverse merge: template file is the **base**; target contributes extras and Project-Specific. After merge,
- * sections are **reordered** to match **`_templates/AGENTS.md.template`**: **Rules — Project-Specific**
- * first, then **Rules — Global** → **Markdown Tables** → **Git Policy**, then other extras in merge order,
- * then **Learned** last.
+ * Reverse merge: template supplies shared bodies; target contributes extras and Project-Specific body.
+ * Sections are reordered via the same rules as **ai-agents** (see {@link reorderMergedAgentSections}).
  *
  * Returns `null` if the result equals `target` (already aligned).
  */
@@ -97,6 +88,9 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 
   for (const s of tgtSec) {
     const key = normalizeHeadingKey(s.headingLine);
+    if ((AI_AGENTS_REMOVED_SECTION_HEADING_KEYS as readonly string[]).includes(key)) {
+      continue;
+    }
     seen.add(key);
 
     if (!templateKeys.has(key)) {
@@ -119,6 +113,9 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 
   for (const ts of tmplSec) {
     const k = normalizeHeadingKey(ts.headingLine);
+    if ((AI_AGENTS_REMOVED_SECTION_HEADING_KEYS as readonly string[]).includes(k)) {
+      continue;
+    }
     if (!seen.has(k)) {
       out.push(ts.fullText);
     }
@@ -137,61 +134,20 @@ export function mergeAgentsFromTemplate(target: string, templateContent: string)
 }
 
 /**
- * After collecting sections, enforce the same vertical order as **`_templates/AGENTS.md.template`**:
- *
- * 1. **Rules — Project-Specific** (first `##` after preamble; fixes PS appended at end when missing from target)
- * 2. **Rules — Global**, **Rules — Markdown Tables**, **Git Policy** (bodies from template where applicable)
- * 3. Other non-spine sections — preserve relative order from `merged`
- * 4. **Learned** sections last — preserve relative order
+ * Same section order as {@link reorderAgentsMdSections} in ai-agents (front matter → spine → extras →
+ * Learned).
  */
 function reorderMergedAgentSections(merged: string[]): string[] {
-  const keyOf = (full: string): string => normalizeHeadingKey(full.split(/\r?\n/, 1)[0] ?? '');
-
-  const spineParts = new Map<string, string>();
-  for (const block of merged) {
-    const key = keyOf(block);
-    if (SPINE_KEY_SET.has(key)) {
-      spineParts.set(key, block);
+  const sections = merged.map((fullText) => {
+    const newlineIdx = fullText.indexOf('\n');
+    if (newlineIdx === -1) {
+      return { heading: fullText.trimEnd(), body: '' };
     }
-  }
-
-  const middleExtras: string[] = [];
-  for (const block of merged) {
-    const key = keyOf(block);
-    if (SPINE_KEY_SET.has(key) || isLearnedSectionKey(key)) {
-      continue;
-    }
-    middleExtras.push(block);
-  }
-
-  const learned: string[] = [];
-  for (const block of merged) {
-    if (isLearnedSectionKey(keyOf(block))) {
-      learned.push(block);
-    }
-  }
-
-  const ps = spineParts.get('rules - project-specific');
-  const gen = spineParts.get('rules - global');
-  const md = spineParts.get('rules - markdown tables');
-  const git = spineParts.get('git policy');
-
-  const result: string[] = [];
-  if (ps !== undefined) {
-    result.push(ps);
-  }
-  if (gen !== undefined) {
-    result.push(gen);
-  }
-  if (md !== undefined) {
-    result.push(md);
-  }
-  if (git !== undefined) {
-    result.push(git);
-  }
-  result.push(...middleExtras);
-  result.push(...learned);
-  return result;
+    return { heading: fullText.slice(0, newlineIdx), body: fullText.slice(newlineIdx + 1) };
+  });
+  const stripped = stripRemovedAgentsSections(sections);
+  const deduped = dedupeMarkdownTablesSections(stripped);
+  return reorderAgentsMdFullTextBlocks(deduped.map(({ heading, body }) => `${heading}\n${body}`));
 }
 
 function ensureTrailingNewline(s: string): string {

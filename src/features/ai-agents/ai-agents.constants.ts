@@ -24,10 +24,53 @@ export const AI_AGENTS_ENFORCED_HEADINGS = [
   'Project Memory Model',
 ] as const;
 
-export const AI_AGENTS_ALL_CANONICAL_HEADINGS = [
-  ...AI_AGENTS_SEEDED_HEADINGS,
-  ...AI_AGENTS_ENFORCED_HEADINGS,
+/** Legacy H2 sections removed on sync (superseded by Project Memory Model). */
+export const AI_AGENTS_REMOVED_SECTION_HEADINGS = [
+  'Claude Code — Session Memory and Handoff',
+  'Agent Memory Files',
 ] as const;
 
-/** Legacy section removed when syncing AGENTS.md to the project memory model. */
-export const AI_AGENTS_LEGACY_SECTION_HEADING = 'Claude Code — Session Memory and Handoff';
+/** Normalized keys for {@link AI_AGENTS_REMOVED_SECTION_HEADINGS} (via normalizeHeadingKey). */
+export const AI_AGENTS_REMOVED_SECTION_HEADING_KEYS = [
+  'claude code - session memory and handoff',
+  'agent memory files',
+] as const;
+
+/**
+ * Front matter blocks read before the Rules spine (project-specific sections preserved; not
+ * overwritten when present).
+ */
+export const AI_AGENTS_FRONT_MATTER_HEADINGS = [
+  'New here and require INITIAL CONTEXT ?',
+  'Project Memory Model',
+  'Roadmap and Planning Docs',
+] as const;
+
+export const AI_AGENTS_FRONT_MATTER_HEADING_KEYS = [
+  'new here and require initial context ?',
+  'project memory model',
+  'roadmap and planning docs',
+] as const;
+
+/** Shared Rules / Git spine (after front matter). */
+export const AI_AGENTS_SPINE_HEADINGS = [
+  'Rules — Project-Specific',
+  'Rules — Global',
+  'Rules — Markdown Tables',
+  'Git Policy',
+] as const;
+
+export const AI_AGENTS_SPINE_HEADING_KEYS = [
+  'rules - project-specific',
+  'rules - global',
+  'rules - markdown tables',
+  'git policy',
+] as const;
+
+export const AI_AGENTS_ALL_CANONICAL_HEADINGS = [
+  ...AI_AGENTS_FRONT_MATTER_HEADINGS,
+  ...AI_AGENTS_SPINE_HEADINGS,
+] as const;
+
+/** @deprecated Use {@link AI_AGENTS_REMOVED_SECTION_HEADINGS} */
+export const AI_AGENTS_LEGACY_SECTION_HEADING = AI_AGENTS_REMOVED_SECTION_HEADINGS[0];
