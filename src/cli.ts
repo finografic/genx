@@ -4,6 +4,8 @@ import { createRequire } from 'node:module';
 import process from 'node:process';
 import { renderHelp } from '@finografic/cli-kit/render-help';
 
+import { FeaturePreviewCancelledError } from './lib/feature-preview/index.js';
+
 import { cliHelp } from './cli.help.js';
 import { auditPackage } from './commands/audit/audit.cli.js';
 import { createPackage } from './commands/create/create.cli.js';
@@ -108,6 +110,9 @@ async function main(): Promise<void> {
 /* ────────────────────────────────────────────────────────── */
 
 main().catch((error) => {
+  if (error instanceof FeaturePreviewCancelledError) {
+    process.exit(0);
+  }
   console.error(error);
   process.exit(1);
 });

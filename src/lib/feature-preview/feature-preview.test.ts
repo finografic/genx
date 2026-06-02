@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { confirmFileWrite, createDiffConfirmState, renderFileDiff } from '@finografic/cli-kit/file-diff';
+import { createDiffConfirmState, renderFileDiff } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MockedFunction } from 'vitest';
@@ -9,6 +9,7 @@ import type { MockedFunction } from 'vitest';
 import {
   applyPreviewChanges,
   createDeletePreviewChange,
+  FeaturePreviewCancelledError,
   createWritePreviewChange,
   getChangedPreviewChanges,
   hasPreviewChanges,
@@ -16,7 +17,6 @@ import {
 } from './feature-preview.utils.js';
 
 vi.mock('@finografic/cli-kit/file-diff', () => ({
-  confirmFileWrite: vi.fn(),
   createDiffConfirmState: vi.fn(() => ({ yesAll: false })),
   renderFileDiff: vi.fn(),
 }));
@@ -24,10 +24,10 @@ vi.mock('@finografic/cli-kit/file-diff', () => ({
 vi.mock('@clack/prompts', () => ({
   log: { message: vi.fn() },
   select: vi.fn(),
+  cancel: vi.fn(),
   isCancel: vi.fn(() => false),
 }));
 
-const confirmFileWriteMock = vi.mocked(confirmFileWrite);
 const createDiffConfirmStateMock = vi.mocked(createDiffConfirmState);
 const renderFileDiffMock = vi.mocked(renderFileDiff);
 const logMessage = (): MockedFunction<typeof clack.log.message> => vi.mocked(clack.log.message);
@@ -118,7 +118,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result).toEqual({ applied: [], noopMessage: 'Custom noop' });
-    expect(confirmFileWriteMock).not.toHaveBeenCalled();
+    expect(renderFileDiffMock).not.toHaveBeenCalled();
   });
 
   it('returns default noop when nothing changed and no custom noopMessage', async () => {
@@ -133,7 +133,7 @@ describe('feature-preview — applyPreviewChanges', () => {
   it('writes an approved file and records the path', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'out.txt');
-    confirmFileWriteMock.mockResolvedValue('write');
+    selectMock().mockResolvedValue('write');
 
     const result = await applyPreviewChanges({
       changes: [createWritePreviewChange(filePath, '', 'hello')],
@@ -143,7 +143,8 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(result.applied).toEqual([filePath]);
     expect(result.appliedTargetPaths).toEqual([filePath]);
     expect(await readFile(filePath, 'utf8')).toBe('hello');
-    expect(confirmFileWriteMock).toHaveBeenCalledOnce();
+    expect(renderFileDiffMock).toHaveBeenCalledWith(filePath, '', 'hello');
+    expect(selectMock()).toHaveBeenCalledOnce();
 
     await rm(root, { recursive: true, force: true });
   });
@@ -151,7 +152,7 @@ describe('feature-preview — applyPreviewChanges', () => {
   it('uses summary in applied when provided for writes', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'out.txt');
-    confirmFileWriteMock.mockResolvedValue('write');
+    selectMock().mockResolvedValue('write');
 
     const result = await applyPreviewChanges({
       changes: [createWritePreviewChange(filePath, '', 'hello', 'add out.txt')],
@@ -169,7 +170,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'keep.txt');
     await writeFile(filePath, 'old', 'utf8');
-    confirmFileWriteMock.mockResolvedValue('skip');
+    selectMock().mockResolvedValue('skip');
 
     const result = await applyPreviewChanges({
       changes: [createWritePreviewChange(filePath, 'old', 'new')],
@@ -177,6 +178,25 @@ describe('feature-preview — applyPreviewChanges', () => {
     });
 
     expect(result).toEqual({ applied: [], noopMessage: 'All changes were skipped.' });
+    expect(await readFile(filePath, 'utf8')).toBe('old');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('aborts the entire apply run when a write confirmation is cancelled', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'keep.txt');
+    await writeFile(filePath, 'old', 'utf8');
+    selectMock().mockResolvedValueOnce('skip');
+    isCancelMock().mockReturnValueOnce(true);
+
+    await expect(
+      applyPreviewChanges({
+        changes: [createWritePreviewChange(filePath, 'old', 'new')],
+        applied: [],
+      }),
+    ).rejects.toBeInstanceOf(FeaturePreviewCancelledError);
+
     expect(await readFile(filePath, 'utf8')).toBe('old');
 
     await rm(root, { recursive: true, force: true });
@@ -195,7 +215,6 @@ describe('feature-preview — applyPreviewChanges', () => {
 
     expect(result.applied).toEqual([filePath]);
     expect(result.appliedTargetPaths).toEqual([filePath]);
-    expect(confirmFileWriteMock).not.toHaveBeenCalled();
     expect(renderFileDiffMock).toHaveBeenCalledWith(filePath, 'bye', '');
     expect(selectMock()).toHaveBeenCalledOnce();
     expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
@@ -217,7 +236,6 @@ describe('feature-preview — applyPreviewChanges', () => {
       applied: [],
     });
 
-    expect(confirmFileWriteMock).not.toHaveBeenCalled();
     expect(logMessage()).toHaveBeenCalled();
     const previewText = logMessage().mock.calls[0]?.[0] as string;
     expect(previewText).toContain('empty.txt');
@@ -245,7 +263,6 @@ describe('feature-preview — applyPreviewChanges', () => {
       applied: [],
     });
 
-    expect(confirmFileWriteMock).not.toHaveBeenCalled();
     expect(selectMock()).not.toHaveBeenCalled();
     expect(logMessage()).toHaveBeenCalledOnce();
     expect(result.applied).toEqual([filePath]);
@@ -274,13 +291,32 @@ describe('feature-preview — applyPreviewChanges', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('honours write-all from confirmFileWrite', async () => {
+  it('aborts the entire apply run when a delete confirmation is cancelled', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'remove.txt');
+    await writeFile(filePath, 'bye', 'utf8');
+    selectMock().mockResolvedValueOnce('skip');
+    isCancelMock().mockReturnValueOnce(true);
+
+    await expect(
+      applyPreviewChanges({
+        changes: [createDeletePreviewChange(filePath, 'bye', true)],
+        applied: [],
+      }),
+    ).rejects.toBeInstanceOf(FeaturePreviewCancelledError);
+
+    expect(await readFile(filePath, 'utf8')).toBe('bye');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('honours write-all from the shared apply prompt', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const a = join(root, 'a.txt');
     const b = join(root, 'b.txt');
     await writeFile(a, 'a0', 'utf8');
     await writeFile(b, 'b0', 'utf8');
-    confirmFileWriteMock.mockResolvedValueOnce('write-all').mockResolvedValue('write');
+    selectMock().mockResolvedValueOnce('write-all');
 
     const result = await applyPreviewChanges({
       changes: [createWritePreviewChange(a, 'a0', 'a1'), createWritePreviewChange(b, 'b0', 'b1')],
@@ -291,6 +327,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(result.appliedTargetPaths).toEqual([a, b]);
     expect(await readFile(a, 'utf8')).toBe('a1');
     expect(await readFile(b, 'utf8')).toBe('b1');
+    expect(selectMock()).toHaveBeenCalledOnce();
 
     await rm(root, { recursive: true, force: true });
   });

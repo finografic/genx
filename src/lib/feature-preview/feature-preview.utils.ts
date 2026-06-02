@@ -1,7 +1,7 @@
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, extname } from 'node:path';
 import type { DiffAction, DiffConfirmState } from '@finografic/cli-kit/file-diff';
-import { confirmFileWrite, createDiffConfirmState, renderFileDiff } from '@finografic/cli-kit/file-diff';
+import { createDiffConfirmState, renderFileDiff } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
 import pc from 'picocolors';
 import type { FeatureApplyResult } from '../../features/feature.types.js';
@@ -14,8 +14,51 @@ import type {
 
 import { jsonLikeTextsEquivalent } from '../../utils/jsonc.utils.js';
 
+export class FeaturePreviewCancelledError extends Error {
+  constructor() {
+    super('Operation cancelled');
+    this.name = 'FeaturePreviewCancelledError';
+  }
+}
+
 function useSemanticJsonComparison(filePath: string): boolean {
   return extname(filePath).toLowerCase() === '.json';
+}
+
+function throwPreviewCancel(): never {
+  clack.cancel('Operation cancelled');
+  throw new FeaturePreviewCancelledError();
+}
+
+async function confirmFileWriteOrDelete(
+  filePath: string,
+  currentContent: string,
+  proposedContent: string,
+  state?: DiffConfirmState,
+): Promise<DiffAction> {
+  if (currentContent === proposedContent) return 'skip';
+
+  renderFileDiff(filePath, currentContent, proposedContent);
+
+  if (state?.yesAll) return 'write';
+
+  const choice = await clack.select({
+    message: `Apply changes to ${pc.cyan(filePath)}?`,
+    options: [
+      { value: 'write', label: 'Yes, write this file' },
+      { value: 'skip', label: 'No, skip this file' },
+      { value: 'write-all', label: 'Yes to all remaining files' },
+    ],
+  });
+
+  if (clack.isCancel(choice)) throwPreviewCancel();
+
+  if (choice === 'write-all' && state) {
+    state.yesAll = true;
+  }
+
+  if (choice === 'write' || choice === 'skip' || choice === 'write-all') return choice;
+  return 'skip';
 }
 
 /**
@@ -37,7 +80,7 @@ async function confirmEmptyFileDelete(filePath: string, state?: DiffConfirmState
     ],
   });
 
-  if (clack.isCancel(choice)) return 'skip';
+  if (clack.isCancel(choice)) throwPreviewCancel();
 
   if (choice === 'write-all' && state) {
     state.yesAll = true;
@@ -65,7 +108,7 @@ async function confirmFileDelete(
     ],
   });
 
-  if (clack.isCancel(choice)) return 'skip';
+  if (clack.isCancel(choice)) throwPreviewCancel();
 
   if (choice === 'write-all' && state) {
     state.yesAll = true;
@@ -173,7 +216,12 @@ export async function applyPreviewChanges(
   for (const change of changed) {
     if (change.kind === 'write') {
       const currentOnDisk = await readUtf8(change.path);
-      const action = await confirmFileWrite(change.path, currentOnDisk, change.proposedContent, state);
+      const action = await confirmFileWriteOrDelete(
+        change.path,
+        currentOnDisk,
+        change.proposedContent,
+        state,
+      );
       if (action === 'skip') continue;
       await mkdir(dirname(change.path), { recursive: true });
       await writeFile(change.path, change.proposedContent, 'utf8');
