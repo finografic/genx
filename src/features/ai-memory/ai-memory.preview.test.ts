@@ -25,6 +25,7 @@ describe('ai-memory preview-driven detect', () => {
         (c) => c.kind === 'write' && c.path.endsWith('docs/process/PROJECT_MEMORY_MODEL.md'),
       ),
     ).toBe(true);
+    expect(preview.changes.some((c) => c.path.includes('.github/skills/'))).toBe(false);
     expect(await detectAiMemory({ targetDir: root })).toBe(false);
 
     await rm(root, { recursive: true, force: true });

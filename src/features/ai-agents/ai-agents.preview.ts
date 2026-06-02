@@ -76,13 +76,22 @@ async function collectSkillTreeDeletes(
   return out;
 }
 
+export interface PreviewAiAgentsOptions {
+  /** Sync only AGENTS.md when another feature depends on the agent document structure. */
+  skipSkills?: boolean;
+}
+
 /**
  * Preview ai-agents: `AGENTS.md` sync + scaffold `.github/skills/*` when missing.
  */
-export async function previewAiAgents(context: FeatureContext): Promise<FeaturePreviewResult> {
+export async function previewAiAgents(
+  context: FeatureContext,
+  options?: PreviewAiAgentsOptions,
+): Promise<FeaturePreviewResult> {
   const { targetDir } = context;
   const changes: FeaturePreviewResult['changes'] = [];
   const applied: string[] = [];
+  const { skipSkills = false } = options ?? {};
 
   const fromDir = fileURLToPath(new URL('.', import.meta.url));
   const templateDir = getTemplatesDir(fromDir);
@@ -115,6 +124,12 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
     } else {
       applied.push('AGENTS.md');
     }
+  }
+
+  if (skipSkills) {
+    const noopMessage =
+      changes.length === 0 ? 'AGENTS.md already matches canonical configuration.' : undefined;
+    return { changes, applied, noopMessage };
   }
 
   const skillsTemplateDir = resolve(templateDir, AI_AGENTS_SKILLS_DIR);

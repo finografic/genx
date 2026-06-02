@@ -22,7 +22,7 @@ export async function previewAiMemory(context: FeatureContext): Promise<FeatureP
     applied.push(...sub.applied);
   }
 
-  const agentsSub = await previewAiAgents(context);
+  const agentsSub = await previewAiAgents(context, { skipSkills: true });
   changes.push(...agentsSub.changes);
   applied.push(...agentsSub.applied);
 

@@ -27,7 +27,8 @@ Creates and repairs the cross-agent planning and memory structure used by @finog
 
 ## Dependencies
 
-- **`ai-agents`** — inserts/enforces the `## Project Memory Model` block in `AGENTS.md`
+- **`ai-agents`** — inserts/enforces the `## Project Memory Model` block in `AGENTS.md` without
+  installing skills; skill scaffolding remains owned by the separately selectable `ai-agents` feature
 - **`ai-instructions`** — auto-installed when `.github/instructions/` is missing (same as former `ai-claude`)
 
 ## Shared utilities
