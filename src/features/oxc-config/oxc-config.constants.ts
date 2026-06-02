@@ -84,6 +84,7 @@ export const OXFMT_LINT_STAGED_CODE_PATTERN = '*.{ts,tsx,js,jsx,mjs,cjs}';
 /** Lint-staged: `*.md` runs oxfmt then oxlint (data glob excludes `md`). */
 export const OXFMT_LINT_STAGED_MD_PATTERN = '*.md';
 export const OXFMT_LINT_STAGED_DATA_PATTERN = '*.{json,jsonc,yml,yaml,toml}';
+export const LEGACY_LINT_STAGED_COMMAND_PATTERNS = [/^\s*eslint\b/, /^\s*dprint\b/] as const;
 
 /** CI workflow format check step (appended to ci.yml) */
 export const OXFMT_CI_STEP = `

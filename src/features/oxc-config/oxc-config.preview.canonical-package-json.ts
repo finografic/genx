@@ -31,6 +31,7 @@ import {
   OXLINT_TSGOLINT_PACKAGE,
   PRETTIER_PACKAGE_PATTERNS,
   PRETTIER_PACKAGES,
+  LEGACY_LINT_STAGED_COMMAND_PATTERNS,
 } from './oxc-config.constants.js';
 
 function patternToRegex(pattern: string): RegExp {
@@ -190,6 +191,18 @@ function coerceLintStagedStringValuesToArrays(lintStaged: Record<string, string[
     if (typeof v === 'string') {
       lintStaged[k] = [v];
     }
+  }
+}
+
+function isLegacyLintStagedCommand(command: string): boolean {
+  return LEGACY_LINT_STAGED_COMMAND_PATTERNS.some((pattern) => pattern.test(command));
+}
+
+function removeLegacyLintStagedCommands(lintStaged: Record<string, string[] | string>): void {
+  for (const key of Object.keys(lintStaged)) {
+    const commands = lintStaged[key];
+    if (!Array.isArray(commands)) continue;
+    lintStaged[key] = commands.filter((command) => !isLegacyLintStagedCommand(command));
   }
 }
 
@@ -501,6 +514,7 @@ function addOxfmtToLintStagedPure(packageJson: PackageJson): PackageJson {
   const before = JSON.stringify(lintStaged);
 
   coerceLintStagedStringValuesToArrays(lintStaged);
+  removeLegacyLintStagedCommands(lintStaged);
   mergeDataGlobAliasesIntoCanonical(lintStaged);
 
   const codePattern = OXFMT_LINT_STAGED_CODE_PATTERN;

@@ -120,6 +120,43 @@ describe('oxfmt.preview — package.json drift', () => {
     expect(pkgChange!.proposedContent).toContain('"oxfmt":');
   });
 
+  it('removes legacy eslint and dprint commands from existing lint-staged config', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-lint-staged-legacy-'));
+    const pkg: PackageJson = {
+      'name': '@finografic/lint-staged-legacy-pkg',
+      'version': '0.0.0',
+      'devDependencies': {
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+      'lint-staged': {
+        '*.{ts,tsx,js,jsx,mjs,cjs}': [
+          'oxfmt --no-error-on-unmatched-pattern',
+          'oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern',
+          'eslint --fix',
+          'dprint fmt --allow-no-files',
+        ],
+      },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const changed = getChangedPreviewChanges(preview.changes);
+    const pkgChange = changed.find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('package.json'),
+    );
+    expect(pkgChange).toBeDefined();
+    expect(pkgChange!.proposedContent).not.toContain('eslint --fix');
+    expect(pkgChange!.proposedContent).not.toContain('dprint fmt --allow-no-files');
+    expect(pkgChange!.proposedContent).toContain('"oxfmt --no-error-on-unmatched-pattern"');
+    expect(pkgChange!.proposedContent).toContain(
+      '"oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern"',
+    );
+  });
+
   it('reports package.json changes when `update:oxc-config` is missing (legacy detect would still see format scripts)', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-drift-'));
     const pkg: PackageJson = {
