@@ -5,19 +5,12 @@ export const LEGACY_CLAUDE_AGENTS_SECTION_HEADING = 'Claude Code — Session Mem
 export const PROJECT_MEMORY_MODEL_AGENTS_SECTION_HEADING = 'Project Memory Model';
 
 /** Exact body (without `##` heading) synced from `_templates/AGENTS.md.template`. */
-export const PROJECT_MEMORY_MODEL_AGENTS_SECTION_BODY = `- \`docs/todo/ROADMAP.md\` = curated milestone plan + completed milestone history.
-- \`docs/todo/NEXT_STEPS.md\` = near-term working list, manual testing, and small follow-ups.
-- \`.agents/handoff.md\` = current project state snapshot.
-- \`.agents/memory.md\` = chronological working memory / session log.
+export const PROJECT_MEMORY_MODEL_AGENTS_SECTION_BODY = `- \`docs/todo/ROADMAP.md\` = milestone plan and completed history.
+- \`docs/todo/NEXT_STEPS.md\` = near-term tasks and manual checks.
+- \`.agents/handoff.md\` = stable current project state.
+- \`.agents/memory.md\` = chronological session log.
 
-Promotion rule:
-
-- session detail, partial work, and temporary context belong in \`.agents/memory.md\`
-- stable current truth belongs in \`.agents/handoff.md\`
-- project priorities and completed milestone-scale work belong in \`ROADMAP.md\`
-- small actionable follow-ups and manual verification belong in \`NEXT_STEPS.md\`
-
-Do not duplicate the same item across all four files unless it truly belongs in each role.
+Promote durable findings from memory → handoff, priorities → roadmap, and concrete follow-ups → next steps.
 
 Reference: [\`docs/process/PROJECT_MEMORY_MODEL.md\`](./docs/process/PROJECT_MEMORY_MODEL.md)`;
 

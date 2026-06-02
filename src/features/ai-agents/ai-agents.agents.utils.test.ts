@@ -139,7 +139,7 @@ ps
     const proposed = mergeAgentsMdFromTemplate(stale, { templateParsed });
     expect(proposed).not.toBeNull();
     expect(proposed).not.toContain('ROADMAP intro line to remove');
-    expect(proposed).toContain('check `ROADMAP.md` for existing priorities');
+    expect(proposed).toContain('Check `ROADMAP.md` before proposing new initiatives.');
 
     const keys = sectionKeys(proposed!);
     expect(keys.indexOf('roadmap and planning docs')).toBe(keys.indexOf('project memory model') + 1);
