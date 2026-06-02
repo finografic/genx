@@ -23,7 +23,13 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## P0 — Active
 
-_Nothing active right now — pick from P1._
+### Internalize public `genx features` command
+
+Make `genx audit` the canonical public single-project feature-management command. Preserve internal
+feature infrastructure and keep `genx managed features` until a separate managed-audit UX is
+designed.
+
+Detail: [`docs/todo/TODO_INTERNALIZE_FEATURES_COMMAND.md`](./TODO_INTERNALIZE_FEATURES_COMMAND.md)
 
 ---
 
