@@ -295,6 +295,7 @@ CSS/SCSS formatting via oxfmt with CSS-aware overrides.
 
 - Configures oxfmt (oxc) as the default formatter for `css` and `scss`
 - Patches `oxfmt.config.ts`: adds `css` import and `{ files: ['*.css', '*.scss'], options: { ...css } }` when missing (standard genx layout)
+- Renders CSS/SCSS formatter blocks through the shared grouped `.vscode/settings.json` model
 
 ### git-hooks
 
@@ -319,6 +320,7 @@ Markdown linting via `@finografic/md-lint`.
 - Removes deprecated inline `markdownlint.config` from `.vscode/settings.json`
 - Adds VSCode extension recommendation
 - Migrates old preview-style paths and removes deprecated copied CSS assets from `.vscode/`
+- Renders `.vscode/settings.json` through the shared grouped settings model
 
 ### oxc-config
 
@@ -335,7 +337,8 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
 - Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode` in `.vscode/extensions.json`
-- Writes canonical `.vscode/settings.json` (oxc formatter, all language blocks, oxc/typescript preferences)
+- Writes canonical grouped `.vscode/settings.json` (oxc formatter, ordered language blocks, oxc/typescript preferences)
+- Removes associated legacy `eslint` / `dprint` dependencies and root config files
 
 ### React + Vite
 
