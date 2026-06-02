@@ -22,6 +22,23 @@ function isCoreOxcConfigAuditPath(path: string): boolean {
   return OXC_CONFIG_CORE_FILENAMES.has(basename(path));
 }
 
+function normalizeGeneratedOxlintConfig(raw: string): string {
+  const lines = raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const importLines = lines.filter((line) => line.startsWith('import ')).toSorted();
+  const otherLines = lines.filter((line) => !line.startsWith('import '));
+  return [...importLines, ...otherLines].join('\n');
+}
+
+function isCosmeticGeneratedOxlintConfigDrift(path: string, current: string, proposed: string): boolean {
+  return (
+    basename(path) === 'oxlint.config.ts' &&
+    normalizeGeneratedOxlintConfig(current) === normalizeGeneratedOxlintConfig(proposed)
+  );
+}
+
 /**
  * Detect if oxc-config is already fully configured in the target directory. Uses `previewOxcConfig`
  * (package.json, config, VS Code, Prettier cleanup surfaces) — returns true only
@@ -38,9 +55,20 @@ export async function auditOxcConfig(context: FeatureContext): Promise<AuditResu
   const hasPkg = await isDependencyDeclared(context.targetDir, OXC_CONFIG_PACKAGE);
   if (!hasPkg) return { status: 'missing' };
 
-  const hasCoreDrift = getChangedPreviewChanges(preview.changes).some((change) =>
-    isCoreOxcConfigAuditPath(change.path),
-  );
+  const hasCoreDrift = getChangedPreviewChanges(preview.changes).some((change) => {
+    if (!isCoreOxcConfigAuditPath(change.path)) {
+      return false;
+    }
+
+    if (
+      change.kind === 'write' &&
+      isCosmeticGeneratedOxlintConfigDrift(change.path, change.currentContent, change.proposedContent)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
   return hasCoreDrift ? { status: 'partial', detail: 'config out of date' } : { status: 'installed' };
 }

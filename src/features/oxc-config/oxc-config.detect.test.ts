@@ -170,6 +170,42 @@ describe('auditOxcConfig', () => {
     await expect(auditOxcConfig({ targetDir: dir })).resolves.toEqual({ status: 'installed' });
   });
 
+  it('returns installed when oxlint.config.ts drift is only cosmetic import ordering', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-audit-installed-oxlint-cosmetic-'));
+    const base: PackageJson = {
+      name: '@finografic/audit-oxlint-cosmetic-pkg',
+      version: '0.0.0',
+      keywords: ['genx:type:cli'],
+      devDependencies: {
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await writeFile(
+      resolve(dir, 'oxlint.config.ts'),
+      `import { oxlintCliConfig, testOverrides, configOverrides } from '@finografic/oxc-config/oxlint';
+import { defineConfig } from 'oxlint';
+import type { OxlintConfig } from 'oxlint';
+
+export default defineConfig({
+  ...oxlintCliConfig,
+  overrides: [testOverrides, configOverrides],
+} satisfies OxlintConfig);
+`,
+      'utf8',
+    );
+
+    await expect(auditOxcConfig({ targetDir: dir })).resolves.toEqual({ status: 'installed' });
+  });
+
   it('returns partial when core package.json drift exists', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-audit-partial-core-'));
     const pkg: PackageJson = {
