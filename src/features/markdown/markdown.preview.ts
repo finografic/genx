@@ -108,21 +108,24 @@ function withMarkdownDevDependency(packageJson: PackageJson): PackageJson {
 
 function withMarkdownScripts(packageJson: PackageJson): PackageJson {
   const scripts = packageJson.scripts ?? {};
-  if (scripts[MD_LINT_SCRIPT] !== undefined && scripts[MD_LINT_FIX_SCRIPT] !== undefined) {
-    return packageJson;
-  }
-  const entries = Object.entries(scripts);
-  const lintFixIdx = entries.findIndex(([k]) => k === 'lint:fix');
-  const insertAt = lintFixIdx >= 0 ? lintFixIdx + 1 : entries.length;
-  const next = [...entries];
-  if (scripts[MD_LINT_SCRIPT] === undefined) {
-    next.splice(insertAt, 0, [MD_LINT_SCRIPT, 'md-lint']);
-  }
-  if (scripts[MD_LINT_FIX_SCRIPT] === undefined) {
-    const mdLintIdx = next.findIndex(([k]) => k === MD_LINT_SCRIPT);
-    next.splice(mdLintIdx >= 0 ? mdLintIdx + 1 : insertAt + 1, 0, [MD_LINT_FIX_SCRIPT, 'md-lint --fix']);
-  }
-  return { ...packageJson, scripts: Object.fromEntries(next) };
+  const entries = Object.entries(scripts).filter(
+    ([key]) => key !== MD_LINT_SCRIPT && key !== MD_LINT_FIX_SCRIPT,
+  );
+  const lintCiIdx = entries.findIndex(([key]) => key === 'lint:ci');
+  const lintFixIdx = entries.findIndex(([key]) => key === 'lint:fix');
+  const insertAt = lintCiIdx >= 0 ? lintCiIdx + 1 : lintFixIdx >= 0 ? lintFixIdx + 1 : entries.length;
+
+  entries.splice(
+    insertAt,
+    0,
+    [MD_LINT_SCRIPT, scripts[MD_LINT_SCRIPT] ?? 'md-lint'],
+    [MD_LINT_FIX_SCRIPT, scripts[MD_LINT_FIX_SCRIPT] ?? 'md-lint --fix'],
+  );
+
+  const nextScripts = Object.fromEntries(entries);
+  return JSON.stringify(nextScripts) === JSON.stringify(scripts)
+    ? packageJson
+    : { ...packageJson, scripts: nextScripts };
 }
 
 /**

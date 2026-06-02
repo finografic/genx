@@ -20,6 +20,76 @@ function formatPackageJsonString(packageJson: PackageJson): string {
 }
 
 describe('markdown.preview', () => {
+  it('places markdown scripts after lint:ci when present', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'markdown-preview-scripts-ci-'));
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString({
+        name: '@finografic/md-preview',
+        version: '0.0.0',
+        scripts: {
+          'lint': 'oxlint',
+          'lint:fix': 'oxlint --fix',
+          'lint:md': 'md-lint',
+          'lint:md:fix': 'md-lint --fix',
+          'lint:ci': 'oxlint --quiet',
+          'format:check': 'oxfmt --check',
+        },
+      }),
+      'utf8',
+    );
+
+    const preview = await previewMarkdown({ targetDir: dir });
+    const packageChange = getChangedPreviewChanges(preview.changes).find(
+      (change): change is FeaturePreviewChangeWrite =>
+        change.kind === 'write' && change.path.endsWith(PACKAGE_JSON),
+    );
+    expect(packageChange).toBeDefined();
+
+    const proposed = JSON.parse(packageChange!.proposedContent) as PackageJson;
+    expect(Object.keys(proposed.scripts ?? {})).toEqual([
+      'lint',
+      'lint:fix',
+      'lint:ci',
+      'lint:md',
+      'lint:md:fix',
+      'format:check',
+    ]);
+  });
+
+  it('places markdown scripts after lint:fix when lint:ci is absent', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'markdown-preview-scripts-fix-'));
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString({
+        name: '@finografic/md-preview',
+        version: '0.0.0',
+        scripts: {
+          'lint': 'oxlint',
+          'lint:fix': 'oxlint --fix',
+          'format:check': 'oxfmt --check',
+        },
+      }),
+      'utf8',
+    );
+
+    const preview = await previewMarkdown({ targetDir: dir });
+    const packageChange = getChangedPreviewChanges(preview.changes).find(
+      (change): change is FeaturePreviewChangeWrite =>
+        change.kind === 'write' && change.path.endsWith(PACKAGE_JSON),
+    );
+    expect(packageChange).toBeDefined();
+
+    const proposed = JSON.parse(packageChange!.proposedContent) as PackageJson;
+    expect(Object.keys(proposed.scripts ?? {})).toEqual([
+      'lint',
+      'lint:fix',
+      'lint:md',
+      'lint:md:fix',
+      'format:check',
+    ]);
+  });
+
   it('removes deprecated inline markdownlint.config from .vscode/settings.json', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'markdown-preview-settings-'));
     await writeFile(
