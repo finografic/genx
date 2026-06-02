@@ -275,7 +275,9 @@ Scaffolds and syncs the agent interface layer of a `@finografic` project.
 - Merges existing `AGENTS.md`: enforces template bodies, strips legacy memory sections, dedupes duplicate Markdown Tables headings, and reorders sections (front matter → Rules spine → extras → Learned)
 - Keeps three enforced sections in sync with the template: **Rules — Global**,
 - Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
-- Copies agent skill procedures into `.github/skills/` (scaffold-cli-help,
+- Copies portable agent skill procedures into `.github/skills/`
+- Adds `scaffold-cli-help` and `scaffold-core-module` only for CLI package types
+- Removes the genx-only `scaffold-feature` skill from generated targets
 
 ### ai-instructions
 
