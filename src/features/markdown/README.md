@@ -10,6 +10,7 @@ Markdown linting via `@finografic/md-lint`.
 - Removes deprecated inline `markdownlint.config` from `.vscode/settings.json`
 - Adds VSCode extension recommendation
 - Migrates old preview-style paths and removes deprecated copied CSS assets from `.vscode/`
+- Renders `.vscode/settings.json` through the shared grouped settings model
 
 ## Files
 

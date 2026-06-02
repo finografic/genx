@@ -4,11 +4,13 @@
 
 import {
   addLanguageFormatterSettings,
-  ensureMarkdownlintConfigAndStylesAtEnd,
+  collectVSCodeLanguageOrder,
   parseJsoncObject,
+  renderGroupedVSCodeSettingsJson,
+  VSCODE_BASE_LANGUAGE_ORDER,
 } from 'utils';
 
-import { setLanguageFormatterBlock } from 'utils/vscode-jsonc.utils';
+import { insertLanguagesBefore, languageBlockKey } from 'utils/vscode-settings.groups.js';
 
 import type { VSCodeExtensionsJson } from 'types/vscode.types';
 
@@ -31,22 +33,38 @@ export async function applyCssOxfmtSettings(targetDir: string): Promise<string[]
  */
 export function proposeCssOxfmtFormatterText(text: string): { text: string; addedLanguages: string[] } {
   const addedLanguages: string[] = [];
-  let t = text;
+  const settings = parseJsoncObject(text);
 
   for (const lang of CSS_OXFMT_LANGUAGES) {
-    const r = setLanguageFormatterBlock(t, lang, 'oxc.oxc-vscode');
-    if (r.changed) {
-      t = r.text;
+    const blockKey = languageBlockKey(lang);
+    const existingBlock = settings[blockKey];
+    const baseBlock: Record<string, unknown> =
+      existingBlock && typeof existingBlock === 'object' && !Array.isArray(existingBlock)
+        ? { ...existingBlock }
+        : {};
+
+    if (
+      !existingBlock ||
+      typeof existingBlock !== 'object' ||
+      Array.isArray(existingBlock) ||
+      baseBlock['editor.defaultFormatter'] !== 'oxc.oxc-vscode'
+    ) {
       addedLanguages.push(lang);
     }
+
+    settings[blockKey] = {
+      ...baseBlock,
+      'editor.defaultFormatter': 'oxc.oxc-vscode',
+    };
   }
 
-  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) {
-    t = tail.text;
-  }
+  const existingOrder = collectVSCodeLanguageOrder(settings);
+  const languageOrder =
+    existingOrder.length > 0
+      ? insertLanguagesBefore(existingOrder, [...CSS_OXFMT_LANGUAGES], 'markdown')
+      : insertLanguagesBefore([...VSCODE_BASE_LANGUAGE_ORDER], [...CSS_OXFMT_LANGUAGES], 'markdown');
 
-  return { text: t, addedLanguages };
+  return { text: renderGroupedVSCodeSettingsJson(settings, { languageOrder }), addedLanguages };
 }
 
 /** Set oxfmt formatter blocks for CSS/SCSS. */

@@ -49,6 +49,42 @@ describe('oxc-config.template', () => {
 });
 
 describe('oxfmt.preview — package.json drift', () => {
+  it('removes associated legacy eslint and dprint dependencies from package.json', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-legacy-deps-'));
+    const pkg: PackageJson = {
+      name: '@finografic/legacy-cleanup-pkg',
+      version: '0.0.0',
+      devDependencies: {
+        '@eslint/js': '^9.39.2',
+        '@finografic/dprint-config': '^0.12.4',
+        '@finografic/oxc-config': '0.0.0',
+        '@stylistic/eslint-plugin': '^5.6.1',
+        'dprint': '^0.51.1',
+        'eslint': '^9.39.2',
+        'eslint-plugin-markdownlint': '^0.9.0',
+        'globals': '^17.3.0',
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+      },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const changed = getChangedPreviewChanges(preview.changes);
+    const pkgChange = changed.find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('package.json'),
+    );
+    expect(pkgChange).toBeDefined();
+    expect(pkgChange!.proposedContent).not.toContain('"eslint":');
+    expect(pkgChange!.proposedContent).not.toContain('"@eslint/js":');
+    expect(pkgChange!.proposedContent).not.toContain('"dprint":');
+    expect(pkgChange!.proposedContent).not.toContain('"@finografic/dprint-config":');
+    expect(pkgChange!.proposedContent).toContain('"@finografic/oxc-config":');
+    expect(pkgChange!.proposedContent).toContain('"oxfmt":');
+  });
+
   it('reports package.json changes when `update:oxc-config` is missing (legacy detect would still see format scripts)', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-drift-'));
     const pkg: PackageJson = {
@@ -148,6 +184,42 @@ describe('oxfmt.preview — Prettier config removal', () => {
     expect(prettierChange!.path).toBe(resolve(dir, '.prettierrc'));
     expect(prettierChange!.summary).toBe('remove Prettier config (.prettierrc)');
   });
+
+  it('proposes delete for associated legacy root config files', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-legacy-files-'));
+    const base: PackageJson = {
+      name: '@finografic/legacy-root-remove',
+      version: '0.0.0',
+      devDependencies: {
+        '@finografic/oxc-config': '0.0.0',
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+      },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await writeFile(resolve(dir, 'eslint.config.ts'), 'export default [];\n', 'utf8');
+    await writeFile(resolve(dir, 'dprint.jsonc'), '{}\n', 'utf8');
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const deleteChanges = getChangedPreviewChanges(preview.changes).filter((c) => c.kind === 'delete');
+
+    expect(deleteChanges.some((c) => c.path === resolve(dir, 'eslint.config.ts'))).toBe(true);
+    expect(deleteChanges.some((c) => c.path === resolve(dir, 'dprint.jsonc'))).toBe(true);
+
+    const eslintDelete = deleteChanges.find((c) => c.path === resolve(dir, 'eslint.config.ts'));
+    expect(eslintDelete).toBeDefined();
+    expect(eslintDelete!.summary).toBe('remove legacy config (eslint.config.ts)');
+
+    const dprintDelete = deleteChanges.find((c) => c.path === resolve(dir, 'dprint.jsonc'));
+    expect(dprintDelete).toBeDefined();
+    expect(dprintDelete!.summary).toBe('remove legacy config (dprint.jsonc)');
+  });
 });
 
 describe('oxfmt.preview — VS Code settings', () => {
@@ -190,6 +262,64 @@ describe('oxfmt.preview — VS Code settings', () => {
     expect(settingsChange!.proposedContent).toContain('"source.organizeImports": "never"');
     expect(settingsChange!.proposedContent).toContain('"source.sortImports": "explicit"');
     expect(settingsChange!.proposedContent).not.toContain('"source.organizeImports": "explicit"');
+  });
+
+  it('removes legacy dprint and redundant eslint settings and reorders canonical groups', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-settings-legacy-'));
+    const base: PackageJson = {
+      name: '@finografic/settings-legacy-pkg',
+      version: '0.0.0',
+      devDependencies: {
+        '@finografic/oxc-config': '0.0.0',
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+      },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await mkdir(resolve(dir, '.vscode'), { recursive: true });
+    await writeFile(
+      resolve(dir, '.vscode/settings.json'),
+      `{
+  "npm.packageManager": "pnpm",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.enable": true,
+  "eslint.useFlatConfig": true,
+  "eslint.format.enable": true,
+  "prettier.enable": false,
+  "dprint.experimentalLsp": true,
+  "dprint.verbose": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "dprint.dprint"
+  },
+  "markdown.styles": ["node_modules/@finografic/md-lint/styles/markdown-github-light.css"]
+}
+`,
+      'utf8',
+    );
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const settingsChange = getChangedPreviewChanges(preview.changes).find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('.vscode/settings.json'),
+    );
+    expect(settingsChange).toBeDefined();
+    expect(settingsChange!.proposedContent).not.toContain('dprint.experimentalLsp');
+    expect(settingsChange!.proposedContent).not.toContain('dprint.verbose');
+    expect(settingsChange!.proposedContent).not.toContain('eslint.useFlatConfig');
+    expect(settingsChange!.proposedContent).not.toContain('eslint.format.enable');
+    expect(settingsChange!.proposedContent).toContain('"eslint.enable": false');
+    expect(settingsChange!.proposedContent).toContain('"editor.formatOnSaveMode": "file"');
+    expect(settingsChange!.proposedContent.indexOf('"editor.formatOnSaveMode"')).toBeLessThan(
+      settingsChange!.proposedContent.indexOf('"eslint.enable"'),
+    );
   });
 
   it('skips settings.json when cli package already matches oxc canonical layout', async () => {

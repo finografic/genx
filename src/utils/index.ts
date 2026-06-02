@@ -8,4 +8,6 @@ export * from './template.utils.js';
 export * from './template-source.utils.js';
 export * from './validation.utils.js';
 export * from './vscode-jsonc.utils.js';
+export * from './vscode-settings.groups.js';
+export * from './vscode-settings.render.js';
 export * from './vscode.utils.js';

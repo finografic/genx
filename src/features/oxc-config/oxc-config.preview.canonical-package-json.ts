@@ -1,5 +1,7 @@
 import { sortedRecord } from '@finografic/cli-kit/package-manager';
 
+import { removeAssociatedLegacyPackageJsonDependencies } from 'lib/legacy-removal.utils.js';
+
 import {
   PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION,
   PACKAGE_JSON_SCRIPTS_SECTION_DIVIDER,
@@ -70,7 +72,7 @@ function collectPrettierPackageNames(packageJson: PackageJson): string[] {
   return matches;
 }
 
-function stripListedDependencies(packageJson: PackageJson, names: string[]): PackageJson {
+function stripListedDependencies(packageJson: PackageJson, names: readonly string[]): PackageJson {
   if (names.length === 0) return packageJson;
   const next = JSON.parse(JSON.stringify(packageJson)) as PackageJson;
   const deps = { ...next.dependencies };
@@ -79,8 +81,16 @@ function stripListedDependencies(packageJson: PackageJson, names: string[]): Pac
     delete deps[n];
     delete devDeps[n];
   }
-  next.dependencies = deps;
-  next.devDependencies = devDeps;
+  if (Object.keys(deps).length === 0) {
+    delete next.dependencies;
+  } else {
+    next.dependencies = deps;
+  }
+  if (Object.keys(devDeps).length === 0) {
+    delete next.devDependencies;
+  } else {
+    next.devDependencies = devDeps;
+  }
   return next;
 }
 
@@ -518,6 +528,7 @@ export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJs
 
   const prettierNames = collectPrettierPackageNames(pkg);
   pkg = stripListedDependencies(pkg, prettierNames);
+  pkg = removeAssociatedLegacyPackageJsonDependencies(pkg, 'oxc-config');
   pkg = removeLegacyOxfmtConfigPackage(pkg);
   pkg = ensureOxcToolchainDevDependencies(pkg);
   pkg = applyOxfmtPackageJsonLayoutTransforms(pkg);

@@ -10,14 +10,15 @@ import { resolve } from 'node:path';
 import {
   addExtensionRecommendations,
   BASE_SETTINGS_JSON,
-  ensureMarkdownlintConfigAndStylesAtEnd,
+  collectVSCodeLanguageOrder,
   ensureVSCodeDir,
   fileExists,
+  insertLanguagesBefore,
   jsonLikeTextsEquivalent,
   parseJsoncObject,
   readExtensionsJson,
-  removeRootPropertyJsonc,
-  setRootPropertyJsonc,
+  renderGroupedVSCodeSettingsJson,
+  VSCODE_BASE_LANGUAGE_ORDER,
 } from 'utils';
 
 import {
@@ -48,29 +49,29 @@ export async function computeProposedMarkdownSettingsText(targetDir: string): Pr
     current = await readFile(filePath, 'utf8');
   }
 
-  let t = current || `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
-  const root = (): Record<string, unknown> => parseJsoncObject(t);
+  const settings = current ? parseJsoncObject(current) : { ...BASE_SETTINGS_JSON };
+  delete settings[MARKDOWNLINT_CONFIG_KEY];
 
-  if (root()[MARKDOWNLINT_CONFIG_KEY] !== undefined) {
-    t = removeRootPropertyJsonc(t, MARKDOWNLINT_CONFIG_KEY);
-  }
-
-  const currentStyles = parseJsoncObject(t)[MARKDOWN_STYLES_KEY] as string[] | undefined;
+  const currentStyles = settings[MARKDOWN_STYLES_KEY] as string[] | undefined;
   const newPath = MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY][0];
 
   if (!currentStyles) {
-    t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]]);
+    settings[MARKDOWN_STYLES_KEY] = [...MARKDOWN_VSCODE_SETTINGS[MARKDOWN_STYLES_KEY]];
   } else if (currentStyles.includes(MARKDOWN_STYLES_LEGACY_PATH)) {
-    const migrated = currentStyles.map((s) => (s === MARKDOWN_STYLES_LEGACY_PATH ? newPath : s));
-    t = setRootPropertyJsonc(t, MARKDOWN_STYLES_KEY, migrated);
+    settings[MARKDOWN_STYLES_KEY] = currentStyles.map((stylePath) =>
+      stylePath === MARKDOWN_STYLES_LEGACY_PATH ? newPath : stylePath,
+    );
   }
 
-  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) {
-    t = tail.text;
-  }
+  const existingOrder = collectVSCodeLanguageOrder(settings);
+  const languageOrder =
+    existingOrder.length > 0
+      ? insertLanguagesBefore(existingOrder, ['markdown'], 'markdown')
+      : [...VSCODE_BASE_LANGUAGE_ORDER];
 
-  return { path: filePath, current, proposed: t };
+  const proposed = renderGroupedVSCodeSettingsJson(settings, { languageOrder });
+
+  return { path: filePath, current, proposed };
 }
 
 /**

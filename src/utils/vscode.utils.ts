@@ -12,10 +12,12 @@ import type { VSCodeExtensionsJson, VSCodeSettingsJson } from 'types/vscode.type
 import { fileExists } from './fs.utils';
 import { parseJsoncObject } from './jsonc.utils';
 import {
-  ensureMarkdownlintConfigAndStylesAtEnd,
-  setLanguageFormatterBlock,
-  setRootPropertyJsonc,
-} from './vscode-jsonc.utils';
+  collectVSCodeLanguageOrder,
+  insertLanguagesBefore,
+  languageBlockKey,
+  VSCODE_BASE_LANGUAGE_ORDER,
+} from './vscode-settings.groups.js';
+import { renderGroupedVSCodeSettingsJson } from './vscode-settings.render.js';
 
 /** Base template for .vscode/extensions.json */
 const BASE_EXTENSIONS_JSON: VSCodeExtensionsJson = {
@@ -123,7 +125,10 @@ export async function readSettingsJson(targetDir: string): Promise<VSCodeSetting
 export async function writeSettingsJson(targetDir: string, content: VSCodeSettingsJson): Promise<void> {
   await ensureVSCodeDir(targetDir);
   const filePath = resolve(targetDir, '.vscode', 'settings.json');
-  const formatted = `${JSON.stringify(content, null, 2)}\n`;
+  const languageOrder = collectVSCodeLanguageOrder(content);
+  const formatted = renderGroupedVSCodeSettingsJson(content, {
+    languageOrder: languageOrder.length > 0 ? languageOrder : [...VSCODE_BASE_LANGUAGE_ORDER],
+  });
   await writeFile(filePath, formatted, 'utf8');
 }
 
@@ -145,40 +150,55 @@ export async function addLanguageFormatterSettings(
 
   let text: string;
   if (!fileExists(filePath)) {
-    text = `${JSON.stringify({ ...BASE_SETTINGS_JSON }, null, 2)}\n`;
+    text = renderGroupedVSCodeSettingsJson(
+      { ...BASE_SETTINGS_JSON },
+      { languageOrder: [...VSCODE_BASE_LANGUAGE_ORDER] },
+    );
   } else {
     text = await readFile(filePath, 'utf8');
   }
 
   const addedLanguages: string[] = [];
-  let t = text;
-  let anyChange = false;
-
-  const root0 = parseJsoncObject(t);
-  let disabledPrettier = false;
-  if (root0['prettier.enable'] !== false) {
-    t = setRootPropertyJsonc(t, 'prettier.enable', false);
-    disabledPrettier = true;
-    anyChange = true;
-  }
+  const settings = parseJsoncObject(text) as VSCodeSettingsJson;
+  const disabledPrettier = settings['prettier.enable'] !== false;
+  settings['prettier.enable'] = false;
 
   for (const lang of languages) {
-    const r = setLanguageFormatterBlock(t, lang, formatterId);
-    if (r.changed) {
-      t = r.text;
-      anyChange = true;
+    const blockKey = languageBlockKey(lang);
+    const existingBlock = settings[blockKey];
+    const baseBlock =
+      existingBlock && typeof existingBlock === 'object' && !Array.isArray(existingBlock)
+        ? { ...existingBlock }
+        : {};
+
+    if (
+      !existingBlock ||
+      typeof existingBlock !== 'object' ||
+      Array.isArray(existingBlock) ||
+      existingBlock['editor.defaultFormatter'] !== formatterId
+    ) {
       addedLanguages.push(lang);
     }
+
+    settings[blockKey] = {
+      ...baseBlock,
+      'editor.defaultFormatter': formatterId,
+    };
   }
 
-  const tail = ensureMarkdownlintConfigAndStylesAtEnd(t);
-  if (tail.changed) {
-    t = tail.text;
-    anyChange = true;
-  }
+  const languageOrder = insertLanguagesBefore(
+    collectVSCodeLanguageOrder(settings).length > 0
+      ? collectVSCodeLanguageOrder(settings)
+      : [...VSCODE_BASE_LANGUAGE_ORDER],
+    languages,
+    'markdown',
+  );
+
+  const nextText = renderGroupedVSCodeSettingsJson(settings, { languageOrder });
+  const anyChange = nextText !== text;
 
   if (anyChange) {
-    await writeFile(filePath, t, 'utf8');
+    await writeFile(filePath, nextText, 'utf8');
   }
 
   return { addedLanguages, disabledPrettier };

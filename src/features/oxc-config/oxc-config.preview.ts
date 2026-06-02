@@ -12,7 +12,7 @@ import type { FeatureContext } from '../feature.types';
 
 import { inferPackageTypeId, isFrontendPackageType } from 'lib/package-type.utils';
 import { findPackageRoot } from 'utils/package-root.utils';
-import { ensureMarkdownlintConfigAndStylesAtEnd } from 'utils/vscode-jsonc.utils.js';
+import { renderGroupedVSCodeSettingsJson } from 'utils/vscode-settings.render.js';
 
 import {
   PACKAGE_JSON,
@@ -26,6 +26,7 @@ import {
   createDeletePreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
+import { getAssociatedLegacyRootFiles } from '../../lib/legacy-removal.utils.js';
 import {
   OXC_VSCODE_BASE_LANGUAGES,
   OXC_VSCODE_FRONTEND_LANGUAGES,
@@ -137,29 +138,34 @@ async function computeCanonicalSettingsFileContent(
 
   for (const lang of languages) {
     const blockKey = `[${lang}]`;
-    if (blockKey in settings) {
-      continue;
-    }
+    const existingBlock = settings[blockKey];
+    const baseBlock =
+      existingBlock && typeof existingBlock === 'object' && !Array.isArray(existingBlock)
+        ? { ...existingBlock }
+        : {};
+
     settings[blockKey] =
       lang === 'markdown'
-        ? { 'editor.defaultFormatter': OXFMT_FORMATTER_ID, 'editor.formatOnSave': true }
-        : { 'editor.defaultFormatter': OXFMT_FORMATTER_ID };
+        ? {
+            ...baseBlock,
+            'editor.defaultFormatter': OXFMT_FORMATTER_ID,
+            'editor.formatOnSave': true,
+          }
+        : {
+            ...baseBlock,
+            'editor.defaultFormatter': OXFMT_FORMATTER_ID,
+          };
   }
 
-  const proposed = `${JSON.stringify(settings, null, 2)}\n`;
+  const proposed = renderGroupedVSCodeSettingsJson(settings, {
+    languageOrder: languages,
+    pruneExactKeys: ['eslint.format.enable', 'eslint.useFlatConfig'],
+    prunePrefixes: ['dprint.'],
+  });
   if (existingRaw && jsonLikeTextsEquivalent(existingRaw, proposed)) {
     return existingRaw;
   }
-
-  let text = proposed;
-  const tail = ensureMarkdownlintConfigAndStylesAtEnd(text);
-  if (tail.changed) {
-    text = tail.text;
-  }
-  if (existingRaw && jsonLikeTextsEquivalent(existingRaw, text)) {
-    return existingRaw;
-  }
-  return text;
+  return proposed;
 }
 
 /** Root keys synced from `_templates/.vscode/settings.json` when missing or drifted. */
@@ -242,6 +248,13 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     if (!fileExists(abs)) continue;
     const body = await readFile(abs, 'utf8');
     changes.push(createDeletePreviewChange(abs, body, true, `remove Prettier config (${file})`));
+  }
+
+  for (const file of getAssociatedLegacyRootFiles('oxc-config')) {
+    const abs = resolve(targetDir, file);
+    if (!fileExists(abs)) continue;
+    const body = await readFile(abs, 'utf8');
+    changes.push(createDeletePreviewChange(abs, body, true, `remove legacy config (${file})`));
   }
 
   const ciAbs = resolve(targetDir, CI_WORKFLOW_REL);

@@ -37,6 +37,11 @@ and strips library-oriented package.json fields (`main`, `types`, `module`, `fil
 **`src/lib/markdown-sections/`:** H2-delimited section parser/mutator for structured markdown files.
 **`src/lib/feature-preview/`:** Preview/change-set infrastructure for diff-as-detection — features
 compute owned file changes first, then share that result for both `detect()` and `apply()`.
+**`src/lib/legacy-removal.utils.ts`:** Central registry for legacy feature cleanup currently used by
+`oxc-config` to remove associated `eslint` / `dprint` dependencies and root config files.
+**`src/utils/vscode-settings.*`:** Shared grouped VS Code settings model + renderer. Canonical
+`.vscode/settings.json` ordering is now defined by explicit groups and rendered with blank lines
+between groups instead of relying on JSONC patch order.
 
 **Deps command:** `src/commands/deps/deps.cli.ts` — syncs devDependencies against `@finografic/deps-policy`.
 Renders a grouped category table (build/testing/linting/formatting/hooks/ecosystem) matching the
@@ -117,6 +122,14 @@ run via `pnpm dev:feature`) and `feature-template/` (the `.ts.template` source f
 
 Build: clean. Features use preview-driven detect/apply across `oxfmt`, `markdown`, `git-hooks`,
 `vitest`, `ai-agents`, `ai-memory`, `ai-instructions`, `css`, and `react-vite`.
+
+`genx audit` now starts with no features selected by default and keeps feature status/detail
+metadata visible even when an option is unchecked.
+
+VS Code settings generation now uses the shared grouped renderer for `oxc-config`, `markdown`,
+`css`, and `src/utils/vscode.utils.ts`. Legacy `dprint.*`, `eslint.useFlatConfig`, and
+`eslint.format.enable` pruning in `.vscode/settings.json` currently lives in the `oxc-config`
+settings path.
 
 `react` package type shipped (2026-05-27): `genx create --type react` scaffolds a Vite + TS +
 React app with Panda CSS, `@finografic/design-system`, path aliases. Template overlay system

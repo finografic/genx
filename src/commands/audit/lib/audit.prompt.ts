@@ -10,9 +10,13 @@ function statusHint(entry: FeatureAuditEntry): string {
   return entry.detail ? `${badge} — ${entry.detail}` : badge;
 }
 
+function optionLabel(entry: FeatureAuditEntry): string {
+  return `${entry.feature.label} ${pc.gray(`(${statusHint(entry)})`)}`;
+}
+
 /**
- * Multi-select prompt for the audit command. Receives pre-sorted entries (partials first, then missing). All
- * entries are pre-selected; the user deselects what they want to skip.
+ * Multi-select prompt for the audit command. Receives pre-sorted entries (partials first, then missing). No
+ * entries are pre-selected; the user explicitly selects what they want to apply.
  */
 export async function promptAuditSuggest(
   flow: FlowContext,
@@ -20,16 +24,12 @@ export async function promptAuditSuggest(
 ): Promise<FeatureId[] | null> {
   const options = entries.map((entry) => ({
     value: entry.feature.id,
-    label: entry.feature.label,
-    hint: statusHint(entry),
+    label: optionLabel(entry),
   }));
 
-  const initialValues = entries.map((e) => e.feature.id);
-
   const selected = await promptMultiSelect(flow, {
-    message: 'Features to apply (deselect to skip):',
+    message: 'Features to apply (select to apply):',
     options,
-    initialValues,
     required: true,
   });
 

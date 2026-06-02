@@ -6,6 +6,7 @@ CSS/SCSS formatting via oxfmt with CSS-aware overrides.
 
 - Configures oxfmt (oxc) as the default formatter for `css` and `scss`
 - Patches `oxfmt.config.ts`: adds `css` import and `{ files: ['*.css', '*.scss'], options: { ...css } }` when missing (standard genx layout)
+- Renders CSS/SCSS formatter blocks through the shared grouped `.vscode/settings.json` model
 
 ## Files
 

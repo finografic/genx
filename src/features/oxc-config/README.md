@@ -15,7 +15,8 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
 - Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode` in `.vscode/extensions.json`
-- Writes canonical `.vscode/settings.json` (oxc formatter, all language blocks, oxc/typescript preferences)
+- Writes canonical grouped `.vscode/settings.json` (oxc formatter, ordered language blocks, oxc/typescript preferences)
+- Removes associated legacy `eslint` / `dprint` dependencies and root config files
 
 When dependency fields in `package.json` change, genx follows up with `pnpm install` automatically.
 
@@ -30,3 +31,8 @@ When dependency fields in `package.json` change, genx follows up with `pnpm inst
 | `oxc-config.preview.ts`                        | Canonical file changes for all owned surfaces |
 | `oxc-config.preview.canonical-package-json.ts` | Compute canonical `package.json`              |
 | `oxc-config.template.ts`                       | Generate `oxfmt.config.ts` content            |
+
+## Notes
+
+- VS Code settings ordering now goes through the shared grouped renderer in `src/utils/vscode-settings.*`.
+- Legacy `eslint` / `dprint` cleanup is centralized in `src/lib/legacy-removal.utils.ts`.
