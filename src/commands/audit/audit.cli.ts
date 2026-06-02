@@ -47,7 +47,7 @@ export async function auditPackage(argv: string[], options: { targetDir: string 
 
     const actionable = sortAuditEntries(entries);
 
-    if (actionable.length === 0) {
+    if (partialCount + missingCount === 0) {
       outro('All features are up to date');
       return;
     }

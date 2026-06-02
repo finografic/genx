@@ -33,13 +33,14 @@ export async function auditFeatures(context: FeatureContext): Promise<FeatureAud
 }
 
 /**
- * Filter and sort audit entries for the suggest prompt: drops `installed`, puts `partial` before `missing`,
- * preserves registry order within each group.
+ * Sort audit entries for the suggest prompt: puts actionable `partial` / `missing` entries first, followed by
+ * visible-but-disabled `installed` entries. Preserves registry order within each group.
  */
 export function sortAuditEntries(entries: FeatureAuditEntry[]): FeatureAuditEntry[] {
   const partial = entries.filter((e) => e.status === 'partial');
   const missing = entries.filter((e) => e.status === 'missing');
-  return [...partial, ...missing];
+  const installed = entries.filter((e) => e.status === 'installed');
+  return [...partial, ...missing, ...installed];
 }
 
 /**

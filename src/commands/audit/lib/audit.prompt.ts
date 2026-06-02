@@ -6,7 +6,13 @@ import type { FeatureId } from 'features/feature.types';
 import { pc } from 'utils/picocolors';
 
 function statusHint(entry: FeatureAuditEntry): string {
-  const badge = entry.status === 'partial' ? pc.yellow('partial') : pc.red('missing');
+  const badge =
+    entry.status === 'installed'
+      ? pc.green('ok')
+      : entry.status === 'partial'
+        ? pc.yellow('partial')
+        : pc.red('missing');
+  if (entry.status === 'installed') return `${badge} — config up to date`;
   return entry.detail ? `${badge} — ${entry.detail}` : badge;
 }
 
@@ -15,8 +21,8 @@ function optionLabel(entry: FeatureAuditEntry): string {
 }
 
 /**
- * Multi-select prompt for the audit command. Receives pre-sorted entries (partials first, then missing). No
- * entries are pre-selected; the user explicitly selects what they want to apply.
+ * Multi-select prompt for the audit command. Receives pre-sorted entries (partials, missing, then installed).
+ * No entries are pre-selected; installed entries remain visible but cannot be applied.
  */
 export async function promptAuditSuggest(
   flow: FlowContext,
@@ -25,6 +31,7 @@ export async function promptAuditSuggest(
   const options = entries.map((entry) => ({
     value: entry.feature.id,
     label: optionLabel(entry),
+    disabled: entry.status === 'installed',
   }));
 
   const selected = await promptMultiSelect(flow, {
