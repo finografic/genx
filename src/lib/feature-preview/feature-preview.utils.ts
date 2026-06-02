@@ -1,7 +1,7 @@
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, extname } from 'node:path';
 import type { DiffAction, DiffConfirmState } from '@finografic/cli-kit/file-diff';
-import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
+import { confirmFileWrite, createDiffConfirmState, renderFileDiff } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
 import pc from 'picocolors';
 import type { FeatureApplyResult } from '../../features/feature.types.js';
@@ -29,9 +29,37 @@ async function confirmEmptyFileDelete(filePath: string, state?: DiffConfirmState
   if (state?.yesAll) return 'write';
 
   const choice = await clack.select({
-    message: `Apply changes to ${pc.cyan(filePath)}?`,
+    message: `Delete file ${pc.cyan(filePath)}?`,
     options: [
-      { value: 'write', label: 'Yes, write this file' },
+      { value: 'write', label: `Yes, ${pc.yellow('delete')} this file` },
+      { value: 'skip', label: 'No, skip this file' },
+      { value: 'write-all', label: 'Yes to all remaining files' },
+    ],
+  });
+
+  if (clack.isCancel(choice)) return 'skip';
+
+  if (choice === 'write-all' && state) {
+    state.yesAll = true;
+  }
+
+  if (choice === 'write' || choice === 'skip' || choice === 'write-all') return choice;
+  return 'skip';
+}
+
+async function confirmFileDelete(
+  filePath: string,
+  currentContent: string,
+  state?: DiffConfirmState,
+): Promise<DiffAction> {
+  renderFileDiff(filePath, currentContent, '');
+
+  if (state?.yesAll) return 'write';
+
+  const choice = await clack.select({
+    message: `Delete file ${pc.cyan(filePath)}?`,
+    options: [
+      { value: 'write', label: `Yes, ${pc.yellow('delete')} this file` },
       { value: 'skip', label: 'No, skip this file' },
       { value: 'write-all', label: 'Yes to all remaining files' },
     ],
@@ -159,7 +187,7 @@ export async function applyPreviewChanges(
       const action =
         currentOnDisk === ''
           ? await confirmEmptyFileDelete(change.path, state)
-          : await confirmFileWrite(change.path, currentOnDisk, '', state);
+          : await confirmFileDelete(change.path, currentOnDisk, state);
       if (action === 'skip') continue;
       try {
         await unlink(change.path);

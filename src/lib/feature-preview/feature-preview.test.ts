@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { confirmFileWrite, createDiffConfirmState } from '@finografic/cli-kit/file-diff';
+import { confirmFileWrite, createDiffConfirmState, renderFileDiff } from '@finografic/cli-kit/file-diff';
 import * as clack from '@clack/prompts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MockedFunction } from 'vitest';
@@ -18,6 +18,7 @@ import {
 vi.mock('@finografic/cli-kit/file-diff', () => ({
   confirmFileWrite: vi.fn(),
   createDiffConfirmState: vi.fn(() => ({ yesAll: false })),
+  renderFileDiff: vi.fn(),
 }));
 
 vi.mock('@clack/prompts', () => ({
@@ -28,6 +29,7 @@ vi.mock('@clack/prompts', () => ({
 
 const confirmFileWriteMock = vi.mocked(confirmFileWrite);
 const createDiffConfirmStateMock = vi.mocked(createDiffConfirmState);
+const renderFileDiffMock = vi.mocked(renderFileDiff);
 const logMessage = (): MockedFunction<typeof clack.log.message> => vi.mocked(clack.log.message);
 const selectMock = (): MockedFunction<typeof clack.select> => vi.mocked(clack.select);
 const isCancelMock = (): MockedFunction<typeof clack.isCancel> => vi.mocked(clack.isCancel);
@@ -184,7 +186,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'remove.txt');
     await writeFile(filePath, 'bye', 'utf8');
-    confirmFileWriteMock.mockResolvedValue('write');
+    selectMock().mockResolvedValue('write');
 
     const result = await applyPreviewChanges({
       changes: [createDeletePreviewChange(filePath, 'bye', true)],
@@ -193,6 +195,12 @@ describe('feature-preview — applyPreviewChanges', () => {
 
     expect(result.applied).toEqual([filePath]);
     expect(result.appliedTargetPaths).toEqual([filePath]);
+    expect(confirmFileWriteMock).not.toHaveBeenCalled();
+    expect(renderFileDiffMock).toHaveBeenCalledWith(filePath, 'bye', '');
+    expect(selectMock()).toHaveBeenCalledOnce();
+    expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
+      message: expect.stringContaining(`Delete file ${filePath}`),
+    });
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });
@@ -216,6 +224,9 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(previewText).toMatch(/empty file/i);
     expect(previewText).toMatch(/deleted/i);
     expect(selectMock()).toHaveBeenCalledOnce();
+    expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
+      message: expect.stringContaining(`Delete file ${filePath}`),
+    });
     expect(result.applied).toEqual(['remove empty config']);
     expect(result.appliedTargetPaths).toEqual([filePath]);
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
@@ -248,7 +259,7 @@ describe('feature-preview — applyPreviewChanges', () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
     const filePath = join(root, 'prettier.config.js');
     await writeFile(filePath, 'module.exports = {}', 'utf8');
-    confirmFileWriteMock.mockResolvedValue('write');
+    selectMock().mockResolvedValue('write');
 
     const result = await applyPreviewChanges({
       changes: [createDeletePreviewChange(filePath, 'module.exports = {}', true, 'remove prettier config')],
@@ -257,6 +268,7 @@ describe('feature-preview — applyPreviewChanges', () => {
 
     expect(result.applied).toEqual(['remove prettier config']);
     expect(result.appliedTargetPaths).toEqual([filePath]);
+    expect(renderFileDiffMock).toHaveBeenCalledWith(filePath, 'module.exports = {}', '');
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
     await rm(root, { recursive: true, force: true });
