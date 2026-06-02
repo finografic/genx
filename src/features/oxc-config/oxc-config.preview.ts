@@ -28,6 +28,7 @@ import {
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import { getAssociatedLegacyRootFiles } from '../../lib/legacy-removal.utils.js';
 import {
+  LEGACY_VSCODE_EXTENSIONS_TO_REMOVE,
   OXC_VSCODE_BASE_LANGUAGES,
   OXC_VSCODE_FRONTEND_LANGUAGES,
   OXFMT_CI_STEP,
@@ -85,6 +86,8 @@ function proposeCiYmlContent(current: string): string {
   let s = current;
   // Replace bare `pnpm lint` with `pnpm lint:ci` (not followed by : or a word char)
   s = s.replace(/run: pnpm lint(?![:\w])/g, 'run: pnpm lint:ci');
+  s = s.replace(/\n\s*-\s+name:\s+[^\n]*[dD]print[^\n]*\n\s*run:\s*[^\n]*\bdprint\b[^\n]*\n?/g, '\n');
+  s = s.replace(/^\s*run:\s*[^\n]*\bdprint\b[^\n]*$/gm, '        run: pnpm format:check');
   // Append format:check step if not already present
   if (!s.includes('format:check')) {
     s = `${s.trimEnd()}${OXFMT_CI_STEP}`;
@@ -94,7 +97,10 @@ function proposeCiYmlContent(current: string): string {
 
 async function computeCanonicalExtensionsFileContent(targetDir: string): Promise<string> {
   const content = await readExtensionsJson(targetDir);
-  const recommendations = [...(content.recommendations ?? [])];
+  const legacyRecommendationsToRemove = new Set<string>(LEGACY_VSCODE_EXTENSIONS_TO_REMOVE);
+  const recommendations = [...(content.recommendations ?? [])].filter(
+    (recommendation) => !legacyRecommendationsToRemove.has(recommendation),
+  );
   for (const ext of OXFMT_VSCODE_EXTENSIONS) {
     if (!recommendations.includes(ext)) {
       recommendations.push(ext);
@@ -208,7 +214,7 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
         packageJsonPath,
         currentPkgRaw,
         proposedPkgRaw,
-        'package.json (oxfmt, Prettier cleanup, scripts, lint-staged)',
+        'package.json (oxfmt, Prettier/legacy cleanup, scripts, lint-staged)',
       ),
     );
   } else {

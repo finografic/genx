@@ -18,6 +18,7 @@ export const OXLINT_TSGOLINT_PACKAGE = 'oxlint-tsgolint';
 
 /** VSCode extension for oxfmt via Oxc */
 export const OXFMT_VSCODE_EXTENSIONS = ['oxc.oxc-vscode'] as const;
+export const LEGACY_VSCODE_EXTENSIONS_TO_REMOVE = ['dbaeumer.vscode-eslint', 'dprint.dprint'] as const;
 
 export const OXFMT_FORMATTER_ID = 'oxc.oxc-vscode';
 

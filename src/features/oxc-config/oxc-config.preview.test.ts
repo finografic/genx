@@ -157,6 +157,44 @@ describe('oxfmt.preview — CI workflow drift', () => {
     expect(wfChange!.proposedContent).toContain('pnpm format:check');
     expect(wfChange!.proposedContent).toContain('pnpm lint:ci');
   });
+
+  it('removes legacy dprint format-check steps from ci.yml', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-wf-dprint-'));
+    const base: PackageJson = {
+      name: '@finografic/wf-dprint-pkg',
+      version: '0.0.0',
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await mkdir(resolve(dir, '.github/workflows'), { recursive: true });
+    const wfPath = resolve(dir, '.github/workflows/ci.yml');
+    await writeFile(
+      wfPath,
+      `jobs:
+  x:
+    steps:
+      - run: pnpm lint
+      - name: Format check
+        run: pnpm dprint check
+`,
+      'utf8',
+    );
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const changed = getChangedPreviewChanges(preview.changes);
+    const wfChange = changed.find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('ci.yml'),
+    );
+    expect(wfChange).toBeDefined();
+    expect(wfChange!.proposedContent).toContain('pnpm lint:ci');
+    expect(wfChange!.proposedContent).toContain('pnpm format:check');
+    expect(wfChange!.proposedContent).not.toContain('pnpm dprint check');
+  });
 });
 
 describe('oxfmt.preview — Prettier config removal', () => {
@@ -373,6 +411,48 @@ describe('oxfmt.preview — VS Code settings', () => {
       c.path.endsWith('.vscode/settings.json'),
     );
     expect(settingsChange).toBeUndefined();
+  });
+});
+
+describe('oxfmt.preview — VS Code extensions', () => {
+  it('removes legacy eslint and dprint recommendations while keeping markdownlint', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-extensions-legacy-'));
+    const base: PackageJson = {
+      name: '@finografic/extensions-pkg',
+      version: '0.0.0',
+      devDependencies: { 'oxfmt': '0.0.0', '@finografic/oxc-config': '0.0.0' },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await mkdir(resolve(dir, '.vscode'), { recursive: true });
+    await writeFile(
+      resolve(dir, '.vscode/extensions.json'),
+      `{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "dprint.dprint",
+    "davidanson.vscode-markdownlint"
+  ],
+  "unwantedRecommendations": []
+}
+`,
+      'utf8',
+    );
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const extensionsChange = getChangedPreviewChanges(preview.changes).find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('.vscode/extensions.json'),
+    );
+    expect(extensionsChange).toBeDefined();
+    expect(extensionsChange!.proposedContent).toContain('"davidanson.vscode-markdownlint"');
+    expect(extensionsChange!.proposedContent).toContain('"oxc.oxc-vscode"');
+    expect(extensionsChange!.proposedContent).not.toContain('"dbaeumer.vscode-eslint"');
+    expect(extensionsChange!.proposedContent).not.toContain('"dprint.dprint"');
+    expect(extensionsChange!.proposedContent).not.toContain('"unwantedRecommendations"');
   });
 });
 

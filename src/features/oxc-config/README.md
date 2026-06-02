@@ -15,8 +15,10 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
 - Adds format check to `release:check` / CI when missing
 - Recommends `oxc.oxc-vscode` in `.vscode/extensions.json`
+- Removes legacy `dbaeumer.vscode-eslint` / `dprint.dprint` recommendations from `.vscode/extensions.json`
 - Writes canonical grouped `.vscode/settings.json` (oxc formatter, ordered language blocks, oxc/typescript preferences)
 - Removes associated legacy `eslint` / `dprint` dependencies and root config files
+- Removes legacy `dprint` format-check steps from `.github/workflows/ci.yml`
 
 When dependency fields in `package.json` change, genx follows up with `pnpm install` automatically.
 
