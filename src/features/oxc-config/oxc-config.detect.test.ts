@@ -7,9 +7,12 @@ import { PACKAGE_JSON } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';
 
 import { getChangedPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
-import { detectOxcConfig } from './oxc-config.detect.js';
+import { auditOxcConfig, detectOxcConfig } from './oxc-config.detect.js';
 import { computeCanonicalOxfmtPackageJson, previewOxcConfig } from './oxc-config.preview.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
+import {
+  getOxfmtConfigCanonicalFileContent,
+  getOxlintConfigCanonicalFileContent,
+} from './oxc-config.template.js';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -72,5 +75,129 @@ describe('detectOxcConfig', () => {
     await convergePreviewWrites(dir);
 
     await expect(detectOxcConfig({ targetDir: dir })).resolves.toBe(true);
+  });
+});
+
+describe('auditOxcConfig', () => {
+  it('returns installed when only supplemental workflow drift exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-audit-installed-ci-'));
+    const base: PackageJson = {
+      name: '@finografic/audit-ci-pkg',
+      version: '0.0.0',
+      devDependencies: {
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await writeFile(resolve(dir, 'oxlint.config.ts'), getOxlintConfigCanonicalFileContent(base), 'utf8');
+    await mkdir(resolve(dir, '.github/workflows'), { recursive: true });
+    await writeFile(
+      resolve(dir, '.github/workflows/ci.yml'),
+      `jobs:\n  x:\n    steps:\n      - run: pnpm lint\n`,
+      'utf8',
+    );
+
+    await expect(auditOxcConfig({ targetDir: dir })).resolves.toEqual({ status: 'installed' });
+  });
+
+  it('returns installed when only VS Code settings drift exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-audit-installed-vscode-'));
+    const base: PackageJson = {
+      name: '@finografic/audit-vscode-pkg',
+      version: '0.0.0',
+      keywords: ['genx:type:cli'],
+      devDependencies: {
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+    };
+    await writeFile(
+      resolve(dir, PACKAGE_JSON),
+      formatPackageJsonString(computeCanonicalOxfmtPackageJson(base)),
+      'utf8',
+    );
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+    await writeFile(resolve(dir, 'oxlint.config.ts'), getOxlintConfigCanonicalFileContent(base), 'utf8');
+    await mkdir(resolve(dir, '.vscode'), { recursive: true });
+    await writeFile(
+      resolve(dir, '.vscode/settings.json'),
+      `{
+  "npm.packageManager": "pnpm",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports": "never",
+    "source.sortImports": "explicit",
+    "source.addMissingImports": "explicit"
+  },
+  "eslint.enable": false,
+  "prettier.enable": false,
+  "oxc.typeAware": true,
+  "oxc.lint.run": "onSave",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[json]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[toml]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.formatOnSave": true
+  },
+  "markdownlint.config": {
+    "default": true
+  },
+  "markdown.styles": [".vscode/markdown-github-light.css"]
+}
+`,
+      'utf8',
+    );
+
+    await expect(auditOxcConfig({ targetDir: dir })).resolves.toEqual({ status: 'installed' });
+  });
+
+  it('returns partial when core package.json drift exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-audit-partial-core-'));
+    const pkg: PackageJson = {
+      name: '@finografic/audit-core-pkg',
+      version: '0.0.0',
+      devDependencies: {
+        'oxfmt': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    await expect(auditOxcConfig({ targetDir: dir })).resolves.toEqual({
+      status: 'partial',
+      detail: 'config out of date',
+    });
+  });
+
+  it('returns missing when the primary package is not installed', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-audit-missing-'));
+    const pkg: PackageJson = {
+      name: '@finografic/audit-missing-pkg',
+      version: '0.0.0',
+      devDependencies: {},
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+
+    await expect(auditOxcConfig({ targetDir: dir })).resolves.toEqual({ status: 'missing' });
   });
 });
