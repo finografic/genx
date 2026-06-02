@@ -145,6 +145,12 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(await readFile(filePath, 'utf8')).toBe('hello');
     expect(renderFileDiffMock).toHaveBeenCalledWith(filePath, '', 'hello');
     expect(selectMock()).toHaveBeenCalledOnce();
+    expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
+      message: expect.stringContaining(`Create new file ${filePath}`),
+      options: expect.arrayContaining([
+        expect.objectContaining({ value: 'write', label: 'Yes, create this file' }),
+      ]),
+    });
 
     await rm(root, { recursive: true, force: true });
   });
@@ -162,6 +168,27 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(result.applied).toEqual(['add out.txt']);
     expect(result.appliedTargetPaths).toEqual([filePath]);
     expect(await readFile(filePath, 'utf8')).toBe('hello');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('uses alter wording for existing file writes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-fp-'));
+    const filePath = join(root, 'existing.txt');
+    await writeFile(filePath, 'old', 'utf8');
+    selectMock().mockResolvedValue('write');
+
+    await applyPreviewChanges({
+      changes: [createWritePreviewChange(filePath, 'old', 'new')],
+      applied: [],
+    });
+
+    expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
+      message: expect.stringContaining(`Apply changes to ${filePath}`),
+      options: expect.arrayContaining([
+        expect.objectContaining({ value: 'write', label: 'Yes, alter this file' }),
+      ]),
+    });
 
     await rm(root, { recursive: true, force: true });
   });
@@ -219,6 +246,9 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(selectMock()).toHaveBeenCalledOnce();
     expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
       message: expect.stringContaining(`Delete file ${filePath}`),
+      options: expect.arrayContaining([
+        expect.objectContaining({ value: 'write', label: 'Yes, delete this file' }),
+      ]),
     });
     await expect(readFile(filePath, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
 
@@ -244,6 +274,9 @@ describe('feature-preview — applyPreviewChanges', () => {
     expect(selectMock()).toHaveBeenCalledOnce();
     expect(selectMock().mock.calls[0]?.[0]).toMatchObject({
       message: expect.stringContaining(`Delete file ${filePath}`),
+      options: expect.arrayContaining([
+        expect.objectContaining({ value: 'write', label: 'Yes, delete this file' }),
+      ]),
     });
     expect(result.applied).toEqual(['remove empty config']);
     expect(result.appliedTargetPaths).toEqual([filePath]);

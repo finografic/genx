@@ -34,6 +34,7 @@ async function confirmFileWriteOrDelete(
   filePath: string,
   currentContent: string,
   proposedContent: string,
+  exists: boolean,
   state?: DiffConfirmState,
 ): Promise<DiffAction> {
   if (currentContent === proposedContent) return 'skip';
@@ -42,10 +43,16 @@ async function confirmFileWriteOrDelete(
 
   if (state?.yesAll) return 'write';
 
+  const isCreate = !exists;
+  const actionWord = isCreate ? pc.green('create') : pc.yellow('alter');
+  const message = isCreate
+    ? `Create new file ${pc.cyan(filePath)}?`
+    : `Apply changes to ${pc.cyan(filePath)}?`;
+
   const choice = await clack.select({
-    message: `Apply changes to ${pc.cyan(filePath)}?`,
+    message,
     options: [
-      { value: 'write', label: 'Yes, write this file' },
+      { value: 'write', label: `Yes, ${actionWord} this file` },
       { value: 'skip', label: 'No, skip this file' },
       { value: 'write-all', label: 'Yes to all remaining files' },
     ],
@@ -74,7 +81,7 @@ async function confirmEmptyFileDelete(filePath: string, state?: DiffConfirmState
   const choice = await clack.select({
     message: `Delete file ${pc.cyan(filePath)}?`,
     options: [
-      { value: 'write', label: `Yes, ${pc.yellow('delete')} this file` },
+      { value: 'write', label: `Yes, ${pc.red('delete')} this file` },
       { value: 'skip', label: 'No, skip this file' },
       { value: 'write-all', label: 'Yes to all remaining files' },
     ],
@@ -102,7 +109,7 @@ async function confirmFileDelete(
   const choice = await clack.select({
     message: `Delete file ${pc.cyan(filePath)}?`,
     options: [
-      { value: 'write', label: `Yes, ${pc.yellow('delete')} this file` },
+      { value: 'write', label: `Yes, ${pc.red('delete')} this file` },
       { value: 'skip', label: 'No, skip this file' },
       { value: 'write-all', label: 'Yes to all remaining files' },
     ],
@@ -215,11 +222,13 @@ export async function applyPreviewChanges(
 
   for (const change of changed) {
     if (change.kind === 'write') {
+      const existsOnDisk = await pathExists(change.path);
       const currentOnDisk = await readUtf8(change.path);
       const action = await confirmFileWriteOrDelete(
         change.path,
         currentOnDisk,
         change.proposedContent,
+        existsOnDisk,
         state,
       );
       if (action === 'skip') continue;
