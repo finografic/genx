@@ -273,7 +273,7 @@ Scaffolds and syncs the agent interface layer of a `@finografic` project.
 
 - Creates `AGENTS.md` from the canonical template if absent
 - Merges existing `AGENTS.md`: enforces template bodies, strips legacy memory sections, dedupes duplicate Markdown Tables headings, and reorders sections (front matter → Rules spine → extras → Learned)
-- Keeps three enforced sections in sync with the template: **Rules — Global**,
+- Keeps enforced shared sections in sync with the template: **Project Memory Model**, **Roadmap and Planning Docs**, **Rules — Global**, **Rules — Markdown Tables**, and **Git Policy**
 - Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
 - Copies portable agent skill procedures into `.github/skills/`
 - Adds `scaffold-cli-help` and `scaffold-core-module` only for CLI package types
@@ -290,6 +290,16 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 ### ai-memory
 
 Project memory model for agentic coding workflows.
+
+- `docs/process/PROJECT_MEMORY_MODEL.md`
+- `docs/todo/ROADMAP.md`
+- `docs/todo/NEXT_STEPS.md`
+- `.agents/handoff.md`
+- `.agents/memory.md`
+- `AGENTS.md` Project Memory Model block (via `ai-agents` dependency)
+- `.gitignore` rules for tracked handoff + ignored memory
+- minimal `CLAUDE.md` pointer to `AGENTS.md`
+- migration from legacy `.claude/memory.md` and `.claude/handoff.md`, followed by legacy-file deletion
 
 ### css
 
@@ -347,10 +357,10 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 
 ### React + Vite
 
-Ensures a Vite + React + TypeScript app surface is fully configured with Panda CSS,
+Ensures a Vite + React + TypeScript app surface is fully configured with Panda CSS, `@finografic/design-system`, and path aliases.
 
-- Ensures `react`, `react-dom`, `@finografic/design-system`, and `@finografic/icons` are
-- Ensures `vite`, `@vitejs/plugin-react`, `@pandacss/dev`, `concurrently`, and React type
+- Ensures `react`, `react-dom`, `@finografic/design-system`, and `@finografic/icons` are in `dependencies`
+- Ensures `vite`, `@vitejs/plugin-react`, `@pandacss/dev`, `concurrently`, and React type packages are in `devDependencies`
 - Creates `vite.config.ts` with React plugin and path aliases when missing
 - Creates `panda.config.ts` with design-system preset when missing
 - Creates `postcss.config.mjs` with Panda CSS plugin when missing
@@ -377,14 +387,20 @@ Every scaffolded package includes:
 - `oxfmt.config.ts` — oxfmt formatting config
 - `.gitignore`, `LICENSE`, `README.md`
 
-Optional features (selected during `create` or added via `features`):
+Baseline features installed during `create`:
 
 - **oxc-config** — migrate older repos to oxfmt + oxlint + `@finografic/oxc-config`
+- **markdown** — markdown linting via `@finografic/md-lint`
+
+Optional features (selected during `create` or added via `features` / `audit`):
+
 - **vitest** — unit testing
 - **git-hooks** — pre-commit linting + conventional commits
+- **ai-agents** — `AGENTS.md` sync + portable skills
 - **ai-instructions** — shared AI rules (Copilot, Cursor, Claude)
-- **markdown** — markdown linting via `@finografic/md-lint`
+- **ai-memory** — roadmap, handoff, and session memory model
 - **css** — CSS/SCSS formatting via oxfmt
+- **react-vite** — Vite + React + TypeScript + Panda CSS app surface
 
 ---
 
@@ -402,7 +418,6 @@ my-package/
 ├── .gitignore
 ├── LICENSE
 ├── README.md
-├── oxfmt.config.ts          (optional migration feature)
 └── .github/                 (optional)
     ├── copilot-instructions.md
     └── instructions/

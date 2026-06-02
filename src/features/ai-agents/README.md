@@ -6,8 +6,7 @@ Scaffolds and syncs the agent interface layer of a `@finografic` project.
 
 - Creates `AGENTS.md` from the canonical template if absent
 - Merges existing `AGENTS.md`: enforces template bodies, strips legacy memory sections, dedupes duplicate Markdown Tables headings, and reorders sections (front matter → Rules spine → extras → Learned)
-- Keeps three enforced sections in sync with the template: **Rules — Global**,
-  **Rules — Markdown Tables**, **Git Policy**
+- Keeps enforced shared sections in sync with the template: **Project Memory Model**, **Roadmap and Planning Docs**, **Rules — Global**, **Rules — Markdown Tables**, and **Git Policy**
 - Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
 - Copies portable agent skill procedures into `.github/skills/`
 - Adds `scaffold-cli-help` and `scaffold-core-module` only for CLI package types

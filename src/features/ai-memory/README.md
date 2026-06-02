@@ -2,6 +2,8 @@
 
 Project memory model for agentic coding workflows.
 
+## What it does
+
 Creates and repairs the cross-agent planning and memory structure used by @finografic projects:
 
 - `docs/process/PROJECT_MEMORY_MODEL.md`

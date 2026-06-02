@@ -1,14 +1,11 @@
 # React + Vite
 
-Ensures a Vite + React + TypeScript app surface is fully configured with Panda CSS,
-`@finografic/design-system`, and path aliases.
+Ensures a Vite + React + TypeScript app surface is fully configured with Panda CSS, `@finografic/design-system`, and path aliases.
 
 ## What it does
 
-- Ensures `react`, `react-dom`, `@finografic/design-system`, and `@finografic/icons` are
-  in `dependencies`
-- Ensures `vite`, `@vitejs/plugin-react`, `@pandacss/dev`, `concurrently`, and React type
-  packages are in `devDependencies`
+- Ensures `react`, `react-dom`, `@finografic/design-system`, and `@finografic/icons` are in `dependencies`
+- Ensures `vite`, `@vitejs/plugin-react`, `@pandacss/dev`, `concurrently`, and React type packages are in `devDependencies`
 - Creates `vite.config.ts` with React plugin and path aliases when missing
 - Creates `panda.config.ts` with design-system preset when missing
 - Creates `postcss.config.mjs` with Panda CSS plugin when missing

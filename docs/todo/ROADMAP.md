@@ -81,6 +81,13 @@ to move into `@finografic/cli-kit` or should stay local to genx.
 
 Detail: [`docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`](./TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md)
 
+### `maintain-project-memory` skill
+
+Add a procedural skill for reviewing, repairing, and deduplicating roadmap, next-steps, handoff,
+and session-memory docs.
+
+Detail: [`docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md`](./TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md)
+
 ### cli-kit Phase 2 — features inject cli-kit into generated projects
 
 Audit `create` command + `_templates/package.json` — add `@finografic/cli-kit` as a generated dep.
@@ -116,6 +123,8 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 
 | Date       | Item                                                                                                             |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                   |
+| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                  |
 | 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                 |
 | 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                         |
 | 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                      |
