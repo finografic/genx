@@ -9,8 +9,9 @@ Scaffolds and syncs the agent interface layer of a `@finografic` project.
 - Keeps three enforced sections in sync with the template: **Rules — Global**,
   **Rules — Markdown Tables**, **Git Policy**
 - Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
-- Copies agent skill procedures into `.github/skills/` (scaffold-cli-help,
-  scaffold-feature, scaffold-core-module) if not already present
+- Copies portable agent skill procedures into `.github/skills/`
+- Adds `scaffold-cli-help` and `scaffold-core-module` only for CLI package types
+- Removes the genx-only `scaffold-feature` skill from generated targets
 
 ## Files
 

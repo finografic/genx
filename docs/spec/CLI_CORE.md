@@ -395,9 +395,7 @@ Then:
 
 ## Relationship to genx Skills
 
-`core/` modules are candidates for genx skill automation. A skill can scaffold a new `core/` consumer (e.g. a new `cli.help.ts` using the `HelpConfig` pattern) or scaffold the module itself into a new project.
-
-The existing **`scaffold-feature`** skill (`.github/skills/scaffold-feature/SKILL.md` in this repo) demonstrates the pattern: a skill references an instruction file, then applies it procedurally. Skills stay **procedural**; they link here for the full spec rather than duplicating it.
+`core/` modules are candidates for genx skill automation. A skill can scaffold a new `core/` consumer (e.g. a new `cli.help.ts` using the `HelpConfig` pattern) or scaffold the module itself into a new project. Skills stay **procedural**; they link here for the full spec rather than duplicating it.
 
 Skills tied to `core/` in this repository:
 

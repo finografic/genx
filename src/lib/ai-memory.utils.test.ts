@@ -5,6 +5,7 @@ import {
   isMigratableClaudeMemoryContent,
   isMinimalClaudeMdContent,
   mergeClaudeMemoryIntoAgentsMemory,
+  stripLegacyClaudeImportHeadings,
 } from './ai-memory.utils.js';
 
 describe('ai-memory.utils', () => {
@@ -26,5 +27,13 @@ describe('ai-memory.utils', () => {
     const once = mergeClaudeMemoryIntoAgentsMemory('# Session Memory\n', '# Legacy\n\nNote\n');
     const twice = mergeClaudeMemoryIntoAgentsMemory(once, '# Legacy\n\nNote\n');
     expect(twice).toBe(once);
+  });
+
+  it('strips legacy imported-from headings but keeps migrated content', () => {
+    expect(
+      stripLegacyClaudeImportHeadings(
+        '# Session Memory\n\n## Imported from `.claude/memory.md`\n\nLegacy note\n',
+      ),
+    ).toBe('# Session Memory\n\nLegacy note\n');
   });
 });

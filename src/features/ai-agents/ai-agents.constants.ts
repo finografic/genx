@@ -8,6 +8,12 @@ export const AI_AGENTS_FILES = ['AGENTS.md', '.github/skills/'] as const;
 /** Directory where agent skill procedures are scaffolded. */
 export const AI_AGENTS_SKILLS_DIR = '.github/skills';
 
+/** Skills only useful in CLI-shaped target packages. */
+export const AI_AGENTS_CLI_ONLY_SKILL_DIRS = ['scaffold-cli-help', 'scaffold-core-module'] as const;
+
+/** Legacy target skills that belong to genx itself and should be removed from generated projects. */
+export const AI_AGENTS_REMOVED_SKILL_DIRS = ['scaffold-feature'] as const;
+
 /**
  * Canonical H2 section headings defined in `_templates/AGENTS.md.template`.
  * Applied to every target project — split into two tiers:

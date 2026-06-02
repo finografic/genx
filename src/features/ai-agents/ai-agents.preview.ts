@@ -7,12 +7,22 @@ import type { FeatureContext } from '../feature.types';
 import type { Dirent } from 'node:fs';
 
 import { parseSections } from 'lib/markdown-sections';
+import { isPackageType } from 'lib/package-type.utils';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 
-import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
+import type { PackageJson } from 'types/package-json.types';
+
+import {
+  createDeletePreviewChange,
+  createWritePreviewChange,
+} from '../../lib/feature-preview/feature-preview.utils.js';
 import { mergeAgentsMdFromTemplate, proposeAgentsMdForNewFile } from './ai-agents.agents.utils.js';
-import { AI_AGENTS_SKILLS_DIR } from './ai-agents.constants';
+import {
+  AI_AGENTS_CLI_ONLY_SKILL_DIRS,
+  AI_AGENTS_REMOVED_SKILL_DIRS,
+  AI_AGENTS_SKILLS_DIR,
+} from './ai-agents.constants';
 
 async function collectSkillTreeWrites(
   templateSkillDir: string,
@@ -37,6 +47,32 @@ async function collectSkillTreeWrites(
   }
 
   await walk(templateSkillDir, destSkillDir);
+  return out;
+}
+
+async function collectSkillTreeDeletes(
+  skillDir: string,
+  targetDir: string,
+): Promise<Array<{ dest: string; body: string; label: string }>> {
+  if (!fileExists(skillDir)) return [];
+
+  const out: Array<{ dest: string; body: string; label: string }> = [];
+
+  async function walk(currentDir: string): Promise<void> {
+    const entries = await readdir(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const destPath = join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(destPath);
+      } else if (entry.isFile()) {
+        const body = await readFile(destPath, 'utf8');
+        const rel = relative(targetDir, destPath);
+        out.push({ dest: destPath, body, label: rel });
+      }
+    }
+  }
+
+  await walk(skillDir);
   return out;
 }
 
@@ -83,6 +119,14 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
 
   const skillsTemplateDir = resolve(templateDir, AI_AGENTS_SKILLS_DIR);
   const skillsTargetDir = resolve(targetDir, AI_AGENTS_SKILLS_DIR);
+  const packageJson = JSON.parse(await readFile(resolve(targetDir, 'package.json'), 'utf8')) as PackageJson;
+  const isCliPackage = isPackageType(packageJson, 'cli');
+  const cliOnlySkillDirs = new Set<string>(AI_AGENTS_CLI_ONLY_SKILL_DIRS);
+  const removedSkillDirs = new Set<string>(AI_AGENTS_REMOVED_SKILL_DIRS);
+  const skillDirsToRemove = [
+    ...AI_AGENTS_REMOVED_SKILL_DIRS,
+    ...(!isCliPackage ? AI_AGENTS_CLI_ONLY_SKILL_DIRS : []),
+  ];
 
   let skillEntries: Dirent[];
   try {
@@ -93,6 +137,9 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
 
   for (const entry of skillEntries) {
     if (!entry.isDirectory()) continue;
+    if (removedSkillDirs.has(entry.name) || (!isCliPackage && cliOnlySkillDirs.has(entry.name))) {
+      continue;
+    }
 
     const skillDest = resolve(skillsTargetDir, entry.name);
     if (fileExists(skillDest)) {
@@ -104,6 +151,13 @@ export async function previewAiAgents(context: FeatureContext): Promise<FeatureP
     const files = await collectSkillTreeWrites(skillSrc, skillDest, targetDir);
     for (const { dest, body, label } of files) {
       changes.push(createWritePreviewChange(dest, '', body, label));
+    }
+  }
+
+  for (const skillDir of skillDirsToRemove) {
+    const files = await collectSkillTreeDeletes(resolve(skillsTargetDir, skillDir), targetDir);
+    for (const { dest, body, label } of files) {
+      changes.push(createDeletePreviewChange(dest, body, true, `${label} (not applicable)`));
     }
   }
 

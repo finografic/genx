@@ -12,7 +12,7 @@ Creates and repairs the cross-agent planning and memory structure used by @finog
 - `AGENTS.md` Project Memory Model block (via `ai-agents` dependency)
 - `.gitignore` rules for tracked handoff + ignored memory
 - minimal `CLAUDE.md` pointer to `AGENTS.md`
-- migration from legacy `.claude/memory.md` and `.claude/handoff.md`
+- migration from legacy `.claude/memory.md` and `.claude/handoff.md`, followed by legacy-file deletion
 
 ## Files
 
@@ -32,6 +32,6 @@ Creates and repairs the cross-agent planning and memory structure used by @finog
 
 ## Shared utilities
 
-- `src/lib/ai-memory.utils.ts` — migration helpers, pointer content, CLAUDE.md shim detection
+- `src/lib/ai-memory.utils.ts` — migration helpers and CLAUDE.md shim detection
 - `src/lib/gitignore-index-sync.utils.ts` — `git rm --cached` for gitignored but indexed paths
 - `src/lib/agents-gitignore.utils.ts` — canonical `# Agents` block merge from `_templates/.gitignore`

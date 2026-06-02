@@ -30,7 +30,7 @@ describe('ai-memory preview-driven detect', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('migrates legacy .claude/memory.md into .agents/memory.md and replaces pointer', async () => {
+  it('migrates legacy .claude/memory.md into .agents/memory.md and deletes the legacy file', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-memory-'));
     await writeFile(
       join(root, 'package.json'),
@@ -55,13 +55,11 @@ describe('ai-memory preview-driven detect', () => {
         c.kind === 'write' && c.path.endsWith('.agents/memory.md'),
     );
     expect(memoryWrite).toBeDefined();
-    expect(memoryWrite!.proposedContent).toContain('Imported from `.claude/memory.md`');
     expect(memoryWrite!.proposedContent).toContain('Legacy note');
-    expect(
-      preview.changes.some(
-        (c) => c.kind === 'write' && c.path.endsWith('.claude/memory.md') && c.summary?.includes('pointer'),
-      ),
-    ).toBe(true);
+    expect(memoryWrite!.proposedContent).not.toContain('Imported from `.claude/memory.md`');
+    expect(preview.changes.some((c) => c.kind === 'delete' && c.path.endsWith('.claude/memory.md'))).toBe(
+      true,
+    );
 
     await rm(root, { recursive: true, force: true });
   });
@@ -91,7 +89,8 @@ describe('ai-memory preview-driven detect', () => {
         c.kind === 'write' && c.path.endsWith('.agents/handoff.md'),
     );
     expect(handoffWrite).toBeDefined();
-    expect(handoffWrite!.proposedContent).toContain('Imported from `.claude/handoff.md`');
+    expect(handoffWrite!.proposedContent).not.toContain('Imported from `.claude/handoff.md`');
+    expect(handoffWrite!.proposedContent).toContain('Old state');
     expect(preview.changes.some((c) => c.kind === 'delete' && c.path.endsWith('.claude/handoff.md'))).toBe(
       true,
     );

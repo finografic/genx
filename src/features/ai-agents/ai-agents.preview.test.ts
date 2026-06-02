@@ -50,4 +50,64 @@ describe('ai-agents preview-driven detect', () => {
 
     await rm(root, { recursive: true, force: true });
   });
+
+  it('only installs maintain-agents for non-cli packages', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-agents-library-'));
+    await writeFile(
+      join(root, 'package.json'),
+      `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:library'] }, null, 2)}\n`,
+    );
+
+    const preview = await previewAiAgents({ targetDir: root });
+    const changedPaths = preview.changes.map((change) => change.path);
+
+    expect(changedPaths.some((path) => path.includes('.github/skills/maintain-agents/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-cli-help/'))).toBe(false);
+    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-core-module/'))).toBe(false);
+    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-feature/'))).toBe(false);
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('installs cli-only skills for cli packages', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-agents-cli-'));
+    await writeFile(
+      join(root, 'package.json'),
+      `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:cli'] }, null, 2)}\n`,
+    );
+
+    const preview = await previewAiAgents({ targetDir: root });
+    const changedPaths = preview.changes.map((change) => change.path);
+
+    expect(changedPaths.some((path) => path.includes('.github/skills/maintain-agents/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-cli-help/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-core-module/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-feature/'))).toBe(false);
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('removes genx-only and non-applicable skills from generated targets', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-agents-cleanup-'));
+    await writeFile(
+      join(root, 'package.json'),
+      `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:library'] }, null, 2)}\n`,
+    );
+    await mkdir(join(root, '.github/skills/scaffold-feature'), { recursive: true });
+    await mkdir(join(root, '.github/skills/scaffold-cli-help'), { recursive: true });
+    await writeFile(join(root, '.github/skills/scaffold-feature/SKILL.md'), 'genx only\n');
+    await writeFile(join(root, '.github/skills/scaffold-cli-help/SKILL.md'), 'cli only\n');
+
+    const preview = await previewAiAgents({ targetDir: root });
+    const deletes = preview.changes.filter((change) => change.kind === 'delete');
+
+    expect(deletes.some((change) => change.path.endsWith('.github/skills/scaffold-feature/SKILL.md'))).toBe(
+      true,
+    );
+    expect(deletes.some((change) => change.path.endsWith('.github/skills/scaffold-cli-help/SKILL.md'))).toBe(
+      true,
+    );
+
+    await rm(root, { recursive: true, force: true });
+  });
 });

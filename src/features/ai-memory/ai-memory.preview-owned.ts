@@ -15,12 +15,11 @@ import {
   collectLegacyAiFolderMigrationChanges,
 } from '../../lib/agents-legacy-ai-folder.utils.js';
 import {
-  CLAUDE_MEMORY_POINTER_MARKDOWN,
-  isClaudeMemoryPointerContent,
   isMigratableClaudeMemoryContent,
   isMinimalClaudeMdContent,
   mergeClaudeHandoffIntoAgentsHandoff,
   mergeClaudeMemoryIntoAgentsMemory,
+  stripLegacyClaudeImportHeadings,
   updateHandoffMaintenanceNote,
 } from '../../lib/ai-memory.utils.js';
 import {
@@ -113,10 +112,10 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
     changes.push(createWritePreviewChange(agentsHandoffPath, '', body, '.agents/handoff.md'));
   } else if (fileExists(agentsHandoffPath)) {
     const current = await readFile(agentsHandoffPath, 'utf8');
-    let proposed = current;
+    let proposed = stripLegacyClaudeImportHeadings(current);
 
-    if (legacyHandoffContent.trim().length > 0 && !current.includes('Imported from `.claude/handoff.md`')) {
-      proposed = mergeClaudeHandoffIntoAgentsHandoff(current, legacyHandoffContent);
+    if (legacyHandoffContent.trim().length > 0) {
+      proposed = mergeClaudeHandoffIntoAgentsHandoff(proposed, legacyHandoffContent);
     }
 
     const maintenance = updateHandoffMaintenanceNote(proposed);
@@ -157,8 +156,9 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
     changes.push(createWritePreviewChange(agentsMemoryPath, '', body, '.agents/memory.md'));
   } else {
     const current = await readFile(agentsMemoryPath, 'utf8');
+    const withoutLegacyHeading = stripLegacyClaudeImportHeadings(current);
     if (isMigratableClaudeMemoryContent(legacyMemoryContent)) {
-      const proposed = mergeClaudeMemoryIntoAgentsMemory(current, legacyMemoryContent);
+      const proposed = mergeClaudeMemoryIntoAgentsMemory(withoutLegacyHeading, legacyMemoryContent);
       if (proposed !== current) {
         changes.push(
           createWritePreviewChange(
@@ -171,6 +171,15 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
       } else {
         applied.push('.agents/memory.md');
       }
+    } else if (withoutLegacyHeading !== current) {
+      changes.push(
+        createWritePreviewChange(
+          agentsMemoryPath,
+          current,
+          normalizeNewline(withoutLegacyHeading),
+          '.agents/memory.md (remove legacy import heading)',
+        ),
+      );
     } else {
       applied.push('.agents/memory.md');
     }
@@ -189,24 +198,15 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
     }
   }
 
-  const shouldWriteClaudeMemoryPointer =
-    fileExists(legacyMemoryPath) &&
-    isMigratableClaudeMemoryContent(legacyMemoryContent) &&
-    !isClaudeMemoryPointerContent(legacyMemoryContent);
-
-  const claudeDirExists = fileExists(resolve(targetDir, '.claude'));
-  const optionalPointer = !fileExists(legacyMemoryPath) && claudeDirExists;
-
-  if (shouldWriteClaudeMemoryPointer) {
-    const pointer = normalizeNewline(CLAUDE_MEMORY_POINTER_MARKDOWN);
+  if (fileExists(legacyMemoryPath)) {
     changes.push(
-      createWritePreviewChange(legacyMemoryPath, legacyMemoryContent, pointer, '.claude/memory.md (pointer)'),
+      createDeletePreviewChange(
+        legacyMemoryPath,
+        legacyMemoryContent,
+        true,
+        '.claude/memory.md (migrated to .agents/memory.md)',
+      ),
     );
-  } else if (!fileExists(legacyMemoryPath) && optionalPointer) {
-    const pointer = normalizeNewline(CLAUDE_MEMORY_POINTER_MARKDOWN);
-    changes.push(createWritePreviewChange(legacyMemoryPath, '', pointer, '.claude/memory.md (pointer)'));
-  } else if (fileExists(legacyMemoryPath) && isClaudeMemoryPointerContent(legacyMemoryContent)) {
-    applied.push('.claude/memory.md');
   }
 
   const gitignorePath = resolve(targetDir, '.gitignore');

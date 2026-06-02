@@ -21,42 +21,18 @@ Do not duplicate the same item across all four files unless it truly belongs in 
 
 Reference: [\`docs/process/PROJECT_MEMORY_MODEL.md\`](./docs/process/PROJECT_MEMORY_MODEL.md)`;
 
-/** Transitional pointer written to legacy `.claude/memory.md` after migration. */
-export const CLAUDE_MEMORY_POINTER_MARKDOWN = `# Moved
-
-The canonical session log for this repo now lives at:
-
-- \`.agents/memory.md\`
-
-Use that file for current-session checklists and recent working memory.
-\`.agents/handoff.md\` remains the current project-state snapshot.
-
-This compatibility pointer is deprecated and should be removed after:
-
-- \`2026-07-31\`
-`;
-
-const POINTER_MARKERS = ['# Moved', 'canonical session log', '.agents/memory.md'] as const;
-
-/** True when content is the transitional pointer (or substantially equivalent). */
-export function isClaudeMemoryPointerContent(content: string): boolean {
-  const trimmed = content.trim();
-  if (trimmed.length === 0) {
-    return false;
-  }
-  return POINTER_MARKERS.every((marker) => trimmed.includes(marker));
-}
-
 /** True when legacy `.claude/memory.md` has substantive session content worth migrating. */
 export function isMigratableClaudeMemoryContent(content: string): boolean {
   const trimmed = content.trim();
-  if (trimmed.length === 0) {
-    return false;
-  }
-  if (isClaudeMemoryPointerContent(trimmed)) {
-    return false;
-  }
-  return true;
+  return trimmed.length > 0 && !isClaudeMemoryPointerContent(trimmed);
+}
+
+const POINTER_MARKERS = ['# Moved', 'canonical session log', '.agents/memory.md'] as const;
+
+/** True when content is the deprecated transitional pointer and should be deleted without import. */
+export function isClaudeMemoryPointerContent(content: string): boolean {
+  const trimmed = content.trim();
+  return trimmed.length > 0 && POINTER_MARKERS.every((marker) => trimmed.includes(marker));
 }
 
 /** True when `CLAUDE.md` is the minimal shim (`@AGENTS.md` or equivalent link). */
@@ -65,28 +41,32 @@ export function isMinimalClaudeMdContent(content: string): boolean {
   return trimmed === '@AGENTS.md' || trimmed === 'See [AGENTS.md](./AGENTS.md).';
 }
 
-/** Append legacy Claude memory under a clearly marked section when not already present. */
+/** Append legacy Claude memory when its content is not already present. */
 export function mergeClaudeMemoryIntoAgentsMemory(agentsMemory: string, claudeMemory: string): string {
   const base = agentsMemory.endsWith('\n') ? agentsMemory : `${agentsMemory}\n`;
-  const marker = '## Imported from `.claude/memory.md`';
-  if (base.includes(marker)) {
+  const body = claudeMemory.trim();
+  if (body.length === 0 || base.includes(body)) {
     return agentsMemory;
   }
-  const body = claudeMemory.trim();
-  return `${base}\n${marker}\n\n${body}\n`;
+  return `${base}\n${body}\n`;
 }
 
 /** Create or merge legacy Claude handoff into `.agents/handoff.md`. */
 export function mergeClaudeHandoffIntoAgentsHandoff(agentsHandoff: string, claudeHandoff: string): string {
-  const marker = '## Imported from `.claude/handoff.md`';
-  if (agentsHandoff.includes(marker)) {
+  const body = claudeHandoff.trim();
+  if (body.length === 0 || agentsHandoff.includes(body)) {
     return agentsHandoff;
   }
   if (agentsHandoff.trim().length === 0) {
-    return `${claudeHandoff.trim()}\n`;
+    return `${body}\n`;
   }
   const base = agentsHandoff.endsWith('\n') ? agentsHandoff : `${agentsHandoff}\n`;
-  return `${base}\n${marker}\n\n${claudeHandoff.trim()}\n`;
+  return `${base}\n${body}\n`;
+}
+
+/** Remove legacy import headings while preserving the migrated content beneath them. */
+export function stripLegacyClaudeImportHeadings(content: string): string {
+  return content.replace(/^## Imported from `\.claude\/(?:memory|handoff)\.md`\n\n?/gm, '');
 }
 
 /** Update handoff maintenance note from legacy Claude paths to the four-file memory model. */

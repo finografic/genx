@@ -7,19 +7,13 @@ tools: [file-read, file-edit, terminal]
 
 # Scaffold / maintain a `src/core/` module
 
-This skill applies the **portable infrastructure layer** pattern: code in `src/core/` is treated like a shared library, kept in sync across `@finografic` CLI repos by convention.
+Use this skill for portable `src/core/` infrastructure only. For root CLI help configuration, use
+`scaffold-cli-help`.
 
-## Read first (repo — canonical for this repository)
+## Read first
 
 - `.github/instructions/project/core-module-patterns.instructions.md` — folder layout, rules, imports, picocolors, header comment, current module table.
-
-## Deeper spec (canonical — in this repo)
-
 - **`docs/spec/CLI_CORE.md`** — full **CLI Core Module Spec**: what `core/` is, TypeScript rules, consuming from app code, **Adding a New `core/` Module** checklist, and **Current Modules** (`core/flow/`, `core/render-help/`).
-
-**Optional context:** A monorepo may use a temporary bulk-task folder (e.g. `___REFACTORING___`) for staging reports during large migrations. That folder is **not** canonical. If `REPORT_CLI_NORMALIZATION.md` (or similar) exists there, it can add historical “why we moved” notes — use it when present; do not treat it as the source of truth for the spec.
-
-Use `docs/spec/CLI_CORE.md` when **designing a new module** or **documenting exports**; keep this skill as the **procedure**, not a duplicate of the spec.
 
 ## Prerequisites
 
@@ -69,10 +63,6 @@ Use `docs/spec/CLI_CORE.md` when **designing a new module** or **documenting exp
 
 - Assume changes may need **identical patches** in `genx`, `gli`, and any other consumer.
 - Do not pull app-layer code into `core/` to “fix” a single repo.
-
-## Related skills
-
-- **scaffold-cli-help** — consumer of `core/render-help`; use when only changing `cli.help.ts` and not adding a new core package.
 
 ## Checklist (copy from `docs/spec/CLI_CORE.md`)
 
