@@ -37,7 +37,10 @@ import {
   PRETTIER_CONFIG_FILES,
 } from './oxc-config.constants.js';
 import { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
+import {
+  getOxfmtConfigCanonicalFileContent,
+  getOxlintConfigCanonicalFileContent,
+} from './oxc-config.template.js';
 
 export { computeCanonicalOxfmtPackageJson } from './oxc-config.preview.canonical-package-json.js';
 
@@ -237,14 +240,20 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
 
   // oxlint.config.ts — copy from _templates/ if missing
   const oxlintConfigPath = resolve(targetDir, OXLINT_CONFIG_FILENAME);
-  if (!fileExists(oxlintConfigPath)) {
-    const fromDir = fileURLToPath(new URL('.', import.meta.url));
-    const pkgRoot = findPackageRoot(fromDir);
-    const templatePath = resolve(pkgRoot, '_templates', OXLINT_CONFIG_FILENAME);
-    if (fileExists(templatePath)) {
-      const templateContent = await readFile(templatePath, 'utf8');
-      changes.push(createWritePreviewChange(oxlintConfigPath, '', templateContent, OXLINT_CONFIG_FILENAME));
-    }
+  const canonicalOxlintConfig = getOxlintConfigCanonicalFileContent(currentPkg);
+  let currentOxlintConfig = '';
+  if (fileExists(oxlintConfigPath)) {
+    currentOxlintConfig = await readFile(oxlintConfigPath, 'utf8');
+  }
+  if (currentOxlintConfig !== canonicalOxlintConfig) {
+    changes.push(
+      createWritePreviewChange(
+        oxlintConfigPath,
+        currentOxlintConfig,
+        canonicalOxlintConfig,
+        OXLINT_CONFIG_FILENAME,
+      ),
+    );
   } else {
     applied.push(OXLINT_CONFIG_FILENAME);
   }

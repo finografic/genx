@@ -14,7 +14,10 @@ import {
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import { OXFMT_UPDATE_SCRIPT } from './oxc-config.constants.js';
 import { computeCanonicalOxfmtPackageJson, previewOxcConfig } from './oxc-config.preview.js';
-import { getOxfmtConfigCanonicalFileContent } from './oxc-config.template.js';
+import {
+  getOxfmtConfigCanonicalFileContent,
+  getOxlintConfigCanonicalFileContent,
+} from './oxc-config.template.js';
 
 function formatPackageJsonString(packageJson: PackageJson): string {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
@@ -49,6 +52,38 @@ describe('oxc-config.template', () => {
 });
 
 describe('oxfmt.preview — package.json drift', () => {
+  it('rewrites legacy dprint formatting scripts to oxfmt commands', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-formatting-legacy-'));
+    const pkg: PackageJson = {
+      name: '@finografic/formatting-legacy-pkg',
+      version: '0.0.0',
+      devDependencies: {
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+      scripts: {
+        '·········· FORMATTING': '................................................',
+        'format:check': 'dprint check',
+        'format:fix': 'dprint fmt --diff',
+      },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const changed = getChangedPreviewChanges(preview.changes);
+    const pkgChange = changed.find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('package.json'),
+    );
+    expect(pkgChange).toBeDefined();
+    expect(pkgChange!.proposedContent).toContain('"format:check": "oxfmt --check"');
+    expect(pkgChange!.proposedContent).toContain('"format:fix": "oxfmt"');
+    expect(pkgChange!.proposedContent).not.toContain('dprint check');
+    expect(pkgChange!.proposedContent).not.toContain('dprint fmt --diff');
+  });
+
   it('removes associated legacy eslint and dprint dependencies from package.json', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-legacy-deps-'));
     const pkg: PackageJson = {
@@ -411,6 +446,34 @@ describe('oxfmt.preview — VS Code settings', () => {
       c.path.endsWith('.vscode/settings.json'),
     );
     expect(settingsChange).toBeUndefined();
+  });
+});
+
+describe('oxfmt.preview — oxlint config', () => {
+  it('writes a client preset oxlint config for react packages', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oxfmt-preview-oxlint-react-'));
+    const pkg: PackageJson = {
+      name: '@finografic/react-pkg',
+      version: '0.0.0',
+      keywords: ['genx:type:react'],
+      devDependencies: {
+        'oxfmt': '0.0.0',
+        'oxlint': '0.0.0',
+        'oxlint-tsgolint': '0.0.0',
+        '@finografic/oxc-config': '0.0.0',
+      },
+    };
+    await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
+    await writeFile(resolve(dir, 'oxfmt.config.ts'), getOxfmtConfigCanonicalFileContent(), 'utf8');
+
+    const preview = await previewOxcConfig({ targetDir: dir });
+    const oxlintChange = getChangedPreviewChanges(preview.changes).find(
+      (c): c is FeaturePreviewChangeWrite => c.kind === 'write' && c.path.endsWith('oxlint.config.ts'),
+    );
+    expect(oxlintChange).toBeDefined();
+    expect(oxlintChange!.proposedContent).toBe(getOxlintConfigCanonicalFileContent(pkg));
+    expect(oxlintChange!.proposedContent).toContain('oxlintClientConfig');
+    expect(oxlintChange!.proposedContent).toContain('overrides: [testOverrides, configOverrides]');
   });
 });
 

@@ -330,8 +330,42 @@ function ensureLintingScriptsPure(packageJson: PackageJson): PackageJson {
   return { ...packageJson, scripts: next };
 }
 
+function ensureFormattingScriptsPure(packageJson: PackageJson): PackageJson {
+  const scripts = { ...packageJson.scripts };
+  const keys = Object.keys(scripts);
+  let changed = false;
+
+  for (const [key, value] of Object.entries(FORMATTING_SCRIPTS)) {
+    if (scripts[key] !== value) {
+      scripts[key] = value;
+      changed = true;
+    }
+  }
+
+  if (!changed) return packageJson;
+
+  const formattingKeys = Object.keys(FORMATTING_SCRIPTS);
+  const withoutFormatting = keys.filter((key) => !formattingKeys.includes(key));
+  const titleIdx = withoutFormatting.indexOf(FORMATTING_SECTION_TITLE);
+
+  const insertAfter = titleIdx !== -1 ? titleIdx : withoutFormatting.length - 1;
+  const newKeys = [
+    ...withoutFormatting.slice(0, insertAfter + 1),
+    ...formattingKeys,
+    ...withoutFormatting.slice(insertAfter + 1),
+  ];
+
+  const next: Record<string, string> = {};
+  for (const key of newKeys) {
+    next[key] =
+      key in FORMATTING_SCRIPTS ? FORMATTING_SCRIPTS[key as keyof typeof FORMATTING_SCRIPTS] : scripts[key];
+  }
+
+  return { ...packageJson, scripts: next };
+}
+
 function hasFormattingScripts(scripts: Record<string, string>): boolean {
-  return 'format' in scripts || 'format:check' in scripts;
+  return 'format:check' in scripts || 'format:fix' in scripts;
 }
 
 function hasFormattingSectionTitle(scripts: Record<string, string>): boolean {
@@ -510,6 +544,7 @@ function applyOxfmtPackageJsonLayoutTransforms(packageJson: PackageJson): Packag
 
   pkg = removeLegacyUpdateScriptsPure(pkg);
   pkg = ensureLintingScriptsPure(pkg);
+  pkg = ensureFormattingScriptsPure(pkg);
   pkg = addFormattingScriptsPure(pkg);
   pkg = ensureFormattingScriptsPlacementPure(pkg);
   pkg = addUpdateScriptPure(pkg);

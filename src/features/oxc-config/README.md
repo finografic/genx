@@ -7,9 +7,10 @@ Migrate an existing package to `@finografic/oxc-config` + `oxfmt` + `oxlint` (fo
 - Installs `oxfmt`, `oxlint`, `oxlint-tsgolint`, and `@finografic/oxc-config`
 - Removes legacy `@finografic/oxfmt-config` if present
 - Creates `oxfmt.config.ts` (base preset; CSS overrides come from the **css** feature)
+- Writes a minimal `oxlint.config.ts` using the inferred package-type preset from `@finografic/oxc-config/oxlint`
 - Ensures `lint` / `lint:fix` / `lint:ci` scripts use oxlint
 - Creates or updates `update:oxc-config` in the **PACKAGES** scripts section
-- Adds `format:check` / `format:fix` scripts
+- Ensures `format:check` / `format:fix` scripts use oxfmt
 - Removes legacy update scripts (`update:eslint-config`, `update:oxfmt-config`)
 - Replaces Prettier if present (uninstall + remove configs)
 - Normalizes `lint-staged`: code → `oxfmt` then `oxlint --fix`; `*.md` → `oxfmt` then `oxlint --fix`; data files → `oxfmt` only
