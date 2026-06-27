@@ -117,6 +117,8 @@ genx migrate --yes
 
 Sync package dependencies to @finografic/deps-policy
 
+<img alt="genx deps demo" src="./docs/genx-deps.gif" width="988" />
+
 ```bash
 genx deps [path] [options]
 ```

@@ -79,25 +79,28 @@ function parseFeatureReadme(dir: string): FeatureInfo {
 
 // ── CommandHelpConfig → Markdown ─────────────────────────────────────
 
-function sectionContentToTableRows(content: string): string[][] {
-  const rows: string[][] = [];
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const match = trimmed.match(/^(\S+)\s{2,}(.+)$/);
-    if (!match) return [];
-    rows.push([`\`${match[1]}\``, match[2]]);
-  }
-  return rows;
+/** Optional README-only demo media (not shown in terminal `--help`). */
+type ReadmeCommandHelpConfig = CommandHelpConfig & {
+  readmeDemo?: { alt: string; src: string; width?: number };
+};
+
+function formatReadmeDemo(demo: NonNullable<ReadmeCommandHelpConfig['readmeDemo']>): string {
+  const width = demo.width !== undefined ? ` width="${demo.width}"` : '';
+  return `<img alt="${demo.alt}" src="${demo.src}"${width} />`;
 }
 
-function commandHelpToMarkdown(config: CommandHelpConfig): string {
+function commandHelpToMarkdown(config: ReadmeCommandHelpConfig): string {
   const lines: string[] = [];
 
   lines.push(`### \`${config.command}\``);
   lines.push('');
   lines.push(config.description);
   lines.push('');
+
+  if (config.readmeDemo) {
+    lines.push(formatReadmeDemo(config.readmeDemo));
+    lines.push('');
+  }
 
   lines.push('```bash');
   lines.push(config.usage);
@@ -164,9 +167,21 @@ function commandHelpToMarkdown(config: CommandHelpConfig): string {
   return lines.join('\n');
 }
 
+function sectionContentToTableRows(content: string): string[][] {
+  const rows: string[][] = [];
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const match = trimmed.match(/^(\S+)\s{2,}(.+)$/);
+    if (!match) return [];
+    rows.push([`\`${match[1]}\``, match[2]]);
+  }
+  return rows;
+}
+
 // ── Usage section ────────────────────────────────────────────────────
 
-const COMMAND_CONFIGS: ReadonlyArray<{ name: string; help: CommandHelpConfig }> = [
+const COMMAND_CONFIGS: ReadonlyArray<{ name: string; help: ReadmeCommandHelpConfig }> = [
   { name: 'create', help: createHelp },
   { name: 'migrate', help: migrateHelp },
   { name: 'deps', help: depsHelp },

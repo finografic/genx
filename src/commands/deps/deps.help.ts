@@ -1,8 +1,17 @@
 import type { CommandHelpConfig } from '@finografic/cli-kit/render-help';
 
-export const help: CommandHelpConfig = {
+type ReadmeCommandHelpConfig = CommandHelpConfig & {
+  readmeDemo?: { alt: string; src: string; width?: number };
+};
+
+export const help: ReadmeCommandHelpConfig = {
   command: 'genx deps',
   description: 'Sync package dependencies to @finografic/deps-policy',
+  readmeDemo: {
+    alt: 'genx deps demo',
+    src: './docs/genx-deps.gif',
+    width: 988,
+  },
   usage: 'genx deps [path] [options]',
   options: [
     { flag: '-y, --yes', description: 'Apply all planned changes without prompting' },
