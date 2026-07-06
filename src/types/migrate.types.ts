@@ -9,6 +9,7 @@ export const MIGRATE_ONLY_SECTIONS = [
   'node',
   'renames',
   'merges',
+  'gitignore',
 ] as const;
 
 export type MigrateOnlySection = (typeof MIGRATE_ONLY_SECTIONS)[number];

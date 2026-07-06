@@ -11,7 +11,7 @@ export const help: CommandHelpConfig = {
     { command: 'genx upgrade --yes', description: 'Apply changes without per-file confirms' },
   ],
   howItWorks: [
-    'Select upgrade operations (package.json, config, agent docs, etc.)',
+    'Select upgrade operations (package.json, gitignore, config, agent docs, etc.)',
     'Optionally select features to apply alongside the upgrade',
     'Shows a diff preview for each changed file before writing',
     'Applies selected changes to the target directory',

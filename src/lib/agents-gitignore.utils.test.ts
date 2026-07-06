@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getCanonicalAgentsGitignoreLines,
+  getCanonicalGitignoreBody,
   proposeAgentsGitignoreMerge,
+  proposeGitignoreMerge,
   rewriteDotAiPathsToAgents,
 } from './agents-gitignore.utils.js';
 
@@ -11,43 +13,66 @@ describe('agents-gitignore.utils', () => {
     expect(rewriteDotAiPathsToAgents('See `.ai/handoff.md`')).toBe('See `.agents/handoff.md`');
   });
 
-  it('proposeAgentsGitignoreMerge inserts canonical # Agents block after # Environment files when missing', () => {
+  it('proposeGitignoreMerge replaces outdated sections with canonical content', () => {
     const before = `# Environment files
 .env
 
-# IDE
-.idea/
-`;
-    const after = proposeAgentsGitignoreMerge(before);
-    expect(after).not.toBe(before);
-    expect(after.includes('# Agents')).toBe(true);
-    const trimmed = after.split('\n').map((l) => l.trim());
-    const patterns = getCanonicalAgentsGitignoreLines().filter((l) => !l.startsWith('#'));
-    expect(patterns.every((line) => trimmed.includes(line))).toBe(true);
-    expect(after.indexOf('# Environment files')).toBeLessThan(after.indexOf('# Agents'));
-    expect(after.indexOf('# Agents')).toBeLessThan(after.indexOf('# IDE'));
-  });
-
-  it('proposeAgentsGitignoreMerge replaces an existing # Agents section in place', () => {
-    const canonical = getCanonicalAgentsGitignoreLines().join('\n');
-    const junkAgents = `# Agents
+# Agents
 .old-pattern/
-`;
-    const before = `# Environment files
-.env
 
-${junkAgents}
 # IDE
 .idea/
 `;
-    const after = proposeAgentsGitignoreMerge(before);
+    const after = proposeGitignoreMerge(before);
+    expect(after).not.toBe(before);
+    expect(after).toContain('# Agents');
     expect(after).not.toContain('.old-pattern/');
-    expect(after).toContain(canonical.split('\n')[1] ?? '');
+    expect(after.startsWith(getCanonicalGitignoreBody())).toBe(true);
+    const patterns = getCanonicalAgentsGitignoreLines().filter((l) => !l.startsWith('#'));
+    expect(patterns.every((line) => after.includes(line))).toBe(true);
   });
 
-  it('proposeAgentsGitignoreMerge is idempotent once canonical', () => {
-    const complete = `${getCanonicalAgentsGitignoreLines().join('\n')}\n`;
-    const once = proposeAgentsGitignoreMerge(complete);
-    expect(proposeAgentsGitignoreMerge(once)).toBe(once);
+  it('proposeGitignoreMerge preserves project-specific extras at the bottom', () => {
+    const before = `${getCanonicalGitignoreBody()}
+# Project-specific
+my-local-artifacts/
+`;
+    const after = proposeGitignoreMerge(before);
+    expect(after.endsWith('my-local-artifacts/\n')).toBe(true);
+    expect(after.includes('# Project-specific')).toBe(true);
+  });
+
+  it('proposeGitignoreMerge appends unknown sections as project-specific extras', () => {
+    const before = `# Environment files
+.env
+
+# Custom tooling
+vendor-cache/
+`;
+    const after = proposeGitignoreMerge(before);
+    expect(after).toContain('# Project-specific');
+    expect(after).toContain('# Custom tooling');
+    expect(after).toContain('vendor-cache/');
+    expect(after.indexOf('# Project-specific')).toBeLessThan(after.indexOf('# Custom tooling'));
+  });
+
+  it('proposeGitignoreMerge omits duplicate patterns already in canonical', () => {
+    const before = `${getCanonicalGitignoreBody()}
+# Project-specific
+coverage/
+`;
+    const after = proposeGitignoreMerge(before);
+    expect(after).not.toContain('# Project-specific');
+  });
+
+  it('proposeGitignoreMerge is idempotent once canonical', () => {
+    const complete = `${getCanonicalGitignoreBody()}\n`;
+    const once = proposeGitignoreMerge(complete);
+    expect(proposeGitignoreMerge(once)).toBe(once);
+  });
+
+  it('proposeAgentsGitignoreMerge delegates to proposeGitignoreMerge', () => {
+    const before = '# Agents\n.old/\n';
+    expect(proposeAgentsGitignoreMerge(before)).toBe(proposeGitignoreMerge(before));
   });
 });

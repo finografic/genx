@@ -5,10 +5,7 @@ import { ROADMAP_AND_PLANNING_DOCS_PATCH_LINES } from 'features/ai-agents/ai-age
 
 import { findPackageRoot } from 'utils/package-root.utils';
 
-import {
-  proposeAgentsGitignoreMerge,
-  rewriteDotAiPathsToAgents,
-} from '../../../lib/agents-gitignore.utils.js';
+import { proposeGitignoreMerge, rewriteDotAiPathsToAgents } from '../../../lib/agents-gitignore.utils.js';
 
 // ── subfolder map ─────────────────────────────────────────────────────────────
 
@@ -100,16 +97,16 @@ function replaceAiRefsInFile(filePath: string, result: AgentDocsMigrationResult)
 
 function ensureAgentsGitignore(targetDir: string, result: AgentDocsMigrationResult): void {
   const gitignorePath = path.join(targetDir, '.gitignore');
-  if (!fs.existsSync(gitignorePath)) return;
-
-  const raw = fs.readFileSync(gitignorePath, 'utf8');
-  const proposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(raw));
+  const raw = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
+  const proposed = proposeGitignoreMerge(rewriteDotAiPathsToAgents(raw));
   if (proposed === raw) {
-    result.skipped.push('.gitignore: agents/claude entries already present');
+    if (fs.existsSync(gitignorePath)) {
+      result.skipped.push('.gitignore: already matches canonical template');
+    }
     return;
   }
   fs.writeFileSync(gitignorePath, proposed, 'utf8');
-  result.applied.push('.gitignore: canonical # Agents block (agents, Claude, Codex, worktrees)');
+  result.applied.push('.gitignore: canonical template merge');
 }
 
 function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): void {
@@ -731,12 +728,10 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
 
   // Check gitignore regardless — full block may be missing even without .ai/
   const gitignorePath = path.join(targetDir, '.gitignore');
-  if (fs.existsSync(gitignorePath)) {
-    const raw = fs.readFileSync(gitignorePath, 'utf8');
-    const proposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(raw));
-    if (proposed !== raw) {
-      result.applied.push('.gitignore: canonical # Agents block (agents, Claude, Codex, worktrees)');
-    }
+  const gitignoreRaw = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
+  const gitignoreProposed = proposeGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreRaw));
+  if (gitignoreProposed !== gitignoreRaw) {
+    result.applied.push('.gitignore: canonical template merge');
   }
 
   // Step 2 plan — skip if already canonical after Step 1

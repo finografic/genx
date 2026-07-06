@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { confirmFileWrite } from '@finografic/cli-kit/file-diff';
 import { infoMessage, successMessage, successUpdatedMessage } from 'utils';
 import type { MigrateTargetContext } from './migrate-target-context.js';
@@ -147,6 +147,20 @@ export async function applyMigrateTarget(params: {
   if (shouldRunSection(only, 'merges') && mergeChanges.length > 0) {
     await applyMerges(context.targetDir, mergeChanges, templateDir, context.vars);
     successMessage(`Merged ${mergeChanges.length} file(s)`);
+  }
+
+  const {gitignoreUpgrade} = context.state;
+  if (shouldRunSection(only, 'gitignore') && gitignoreUpgrade?.changed) {
+    const action = await confirmFileWrite(
+      gitignoreUpgrade.gitignorePath,
+      gitignoreUpgrade.current,
+      gitignoreUpgrade.proposed,
+      context.diffState,
+    );
+    if (action !== 'skip') {
+      await writeFile(gitignoreUpgrade.gitignorePath, gitignoreUpgrade.proposed, 'utf8');
+      successUpdatedMessage('Updated .gitignore (canonical template + project-specific extras)');
+    }
   }
 
   await syncFromTemplate(context.targetDir, templateDir, context.vars, only, updatedPackageJson);

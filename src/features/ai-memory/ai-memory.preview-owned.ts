@@ -9,7 +9,7 @@ import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
 
-import { proposeAgentsGitignoreMerge, rewriteDotAiPathsToAgents } from '../../lib/agents-gitignore.utils.js';
+import { proposeGitignoreMerge, rewriteDotAiPathsToAgents } from '../../lib/agents-gitignore.utils.js';
 import {
   collectDotAiMarkdownReferenceUpdates,
   collectLegacyAiFolderMigrationChanges,
@@ -214,18 +214,18 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
   if (fileExists(gitignorePath)) {
     gitignoreCurrent = await readFile(gitignorePath, 'utf8');
   }
-  const gitignoreProposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreCurrent));
+  const gitignoreProposed = proposeGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreCurrent));
   if (gitignoreProposed !== gitignoreCurrent) {
     changes.push(
       createWritePreviewChange(
         gitignorePath,
         gitignoreCurrent,
         normalizeNewline(gitignoreProposed),
-        '.gitignore (# Agents)',
+        '.gitignore (canonical)',
       ),
     );
   } else {
-    applied.push('.gitignore (agents)');
+    applied.push('.gitignore');
   }
 
   return { changes, applied };

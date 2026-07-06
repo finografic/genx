@@ -6,7 +6,9 @@ import { findPackageRoot } from 'utils/package-root.utils';
 
 import { findGitignoreCommentSectionRange } from './gitignore-section.utils.js';
 
-let cachedAgentsSectionLines: readonly string[] | null = null;
+const PROJECT_SPECIFIC_HEADER = '# Project-specific';
+
+let cachedCanonicalLines: readonly string[] | null = null;
 
 function templatesDotGitignorePath(): string {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -14,25 +16,138 @@ function templatesDotGitignorePath(): string {
   return join(pkgRoot, '_templates', '.gitignore');
 }
 
-/** Lines of the `# Agents` block copied from `_templates/.gitignore` (single source of truth). */
-function loadAgentsSectionLinesFromTemplate(): readonly string[] {
-  if (cachedAgentsSectionLines) return cachedAgentsSectionLines;
+function normalizeNewlines(content: string): string {
+  return content.replace(/\r\n/g, '\n');
+}
+
+function loadCanonicalGitignoreLines(): readonly string[] {
+  if (cachedCanonicalLines) return cachedCanonicalLines;
   const raw = readFileSync(templatesDotGitignorePath(), 'utf8');
-  const lines = raw.replace(/\r\n/g, '\n').split('\n');
+  cachedCanonicalLines = Object.freeze(normalizeNewlines(raw).split('\n'));
+  return cachedCanonicalLines;
+}
+
+function isPatternLine(line: string): boolean {
+  const trimmed = line.trim();
+  return trimmed.length > 0 && !trimmed.startsWith('#');
+}
+
+function parseSectionHeader(line: string): string | null {
+  const trimmed = line.trim();
+  const match = trimmed.match(/^#\s+([A-Za-z].*)$/);
+  return match ? match[1].trim().toLowerCase() : null;
+}
+
+function getCanonicalSectionTitles(lines: readonly string[]): ReadonlySet<string> {
+  const titles = new Set<string>();
+  for (const line of lines) {
+    const title = parseSectionHeader(line);
+    if (title) titles.add(title);
+  }
+  return titles;
+}
+
+function getCanonicalPatternSet(lines: readonly string[]): ReadonlySet<string> {
+  return new Set(lines.filter(isPatternLine).map((line) => line.trim()));
+}
+
+function trimTrailingBlankLines(lines: string[]): string[] {
+  const out = [...lines];
+  while (out.length > 0 && out[out.length - 1]?.trim() === '') {
+    out.pop();
+  }
+  return out;
+}
+
+function skipSection(lines: readonly string[], startIndex: number): number {
+  let index = startIndex + 1;
+  while (index < lines.length) {
+    if (parseSectionHeader(lines[index] ?? '') !== null) break;
+    index++;
+  }
+  return index;
+}
+
+/**
+ * Collect target-only sections and pattern lines not present in `_templates/.gitignore`.
+ * Canonical sections in the target are dropped (replaced by the template). Extras are appended after the
+ * canonical body under `# Project-specific`.
+ */
+function extractTargetExtras(targetLines: string[], canonicalLines: readonly string[]): string[] {
+  const canonicalSections = getCanonicalSectionTitles(canonicalLines);
+  const canonicalPatterns = getCanonicalPatternSet(canonicalLines);
+  const extras: string[] = [];
+  let index = 0;
+
+  while (index < targetLines.length) {
+    const line = targetLines[index] ?? '';
+    const sectionTitle = parseSectionHeader(line);
+
+    if (sectionTitle === PROJECT_SPECIFIC_HEADER.slice(2).trim().toLowerCase()) {
+      index++;
+      while (index < targetLines.length) {
+        const extraLine = targetLines[index] ?? '';
+        if (parseSectionHeader(extraLine) !== null) break;
+        if (isPatternLine(extraLine) && !canonicalPatterns.has(extraLine.trim())) {
+          extras.push(extraLine);
+        }
+        index++;
+      }
+      continue;
+    }
+
+    if (sectionTitle) {
+      if (canonicalSections.has(sectionTitle)) {
+        index = skipSection(targetLines, index);
+        continue;
+      }
+
+      const sectionLines: string[] = [line];
+      index++;
+      while (index < targetLines.length) {
+        const nextLine = targetLines[index] ?? '';
+        if (parseSectionHeader(nextLine) !== null) break;
+        if (isPatternLine(nextLine) && !canonicalPatterns.has(nextLine.trim())) {
+          sectionLines.push(nextLine);
+        } else if (!isPatternLine(nextLine)) {
+          sectionLines.push(nextLine);
+        }
+        index++;
+      }
+
+      const trimmedSection = trimTrailingBlankLines(sectionLines);
+      if (trimmedSection.some(isPatternLine)) {
+        if (extras.length > 0) extras.push('');
+        extras.push(...trimmedSection);
+      }
+      continue;
+    }
+
+    if (isPatternLine(line) && !canonicalPatterns.has(line.trim())) {
+      extras.push(line);
+    }
+    index++;
+  }
+
+  return trimTrailingBlankLines(extras);
+}
+
+/** Full canonical `.gitignore` from `_templates/.gitignore` (trimmed, no trailing newline). */
+export function getCanonicalGitignoreBody(): string {
+  return trimTrailingBlankLines([...loadCanonicalGitignoreLines()]).join('\n');
+}
+
+/**
+ * Canonical `# Agents` block lines (from `_templates/.gitignore`). Exposed for tests and callers that need
+ * the list.
+ */
+export function getCanonicalAgentsGitignoreLines(): readonly string[] {
+  const lines = loadCanonicalGitignoreLines();
   const range = findGitignoreCommentSectionRange(lines, 'Agents');
   if (!range) {
     throw new Error(`# Agents section missing in ${templatesDotGitignorePath()}`);
   }
-  cachedAgentsSectionLines = Object.freeze(lines.slice(range.start, range.end));
-  return cachedAgentsSectionLines;
-}
-
-/**
- * Canonical `# Agents` … block lines (from `_templates/.gitignore`). Exposed for tests and callers that need
- * the list.
- */
-export function getCanonicalAgentsGitignoreLines(): readonly string[] {
-  return loadAgentsSectionLinesFromTemplate();
+  return Object.freeze(lines.slice(range.start, range.end));
 }
 
 /** Rewrite legacy `.ai/` paths to `.agents/` (folder rename). */
@@ -41,71 +156,27 @@ export function rewriteDotAiPathsToAgents(content: string): string {
 }
 
 /**
- * Replace the existing `# Agents` section in place with the block from `_templates/.gitignore`, or insert
- * that block after `# Environment files` (or before `# IDE`, or at EOF) when `# Agents` is absent.
+ * Merge a target `.gitignore` with `_templates/.gitignore`: canonical sections and patterns replace outdated
+ * content; project-specific extras are preserved at the bottom under `# Project-specific`.
  */
-export function proposeAgentsGitignoreMerge(content: string): string {
-  const unified = rewriteDotAiPathsToAgents(content).replace(/\r\n/g, '\n');
-  let lines = unified.split('\n');
-  const canonical = [...loadAgentsSectionLinesFromTemplate()];
-  const canonicalPatterns = new Set(
-    canonical.map((l) => l.trim()).filter((l) => l.length > 0 && !l.startsWith('#')),
-  );
+export function proposeGitignoreMerge(content: string): string {
+  const unified = normalizeNewlines(rewriteDotAiPathsToAgents(content));
+  const canonicalLines = loadCanonicalGitignoreLines();
+  const canonicalBody = getCanonicalGitignoreBody();
+  const extras = extractTargetExtras(unified.split('\n'), canonicalLines);
 
-  const agentsRange = findGitignoreCommentSectionRange(lines, 'Agents');
-  let nextLines: string[];
-
-  if (agentsRange) {
-    nextLines = [...lines.slice(0, agentsRange.start), ...canonical, ...lines.slice(agentsRange.end)];
-  } else {
-    lines = stripTrailingCanonicalGitignoreLines(lines, canonicalPatterns);
-    const insertAt = findAgentsInsertionIndex(lines);
-    const padBefore = insertAt > 0 && lines[insertAt - 1]?.trim() !== '' ? [''] : [];
-    const padAfter = insertAt < lines.length && lines[insertAt]?.trim() !== '' ? [''] : [];
-    nextLines = [
-      ...lines.slice(0, insertAt),
-      ...padBefore,
-      ...canonical,
-      ...padAfter,
-      ...lines.slice(insertAt),
-    ];
+  let result = canonicalBody;
+  if (extras.length > 0) {
+    result += `\n\n${PROJECT_SPECIFIC_HEADER}\n${extras.join('\n')}`;
   }
+  result += '\n';
 
-  const result = nextLines.join('\n');
-  const normalizedResult = result.endsWith('\n') ? result : `${result}\n`;
   const inputNorm = unified.endsWith('\n') ? unified : `${unified}\n`;
-
-  if (normalizedResult === inputNorm) {
-    return content;
-  }
-  return normalizedResult;
+  if (result === inputNorm) return content;
+  return result;
 }
 
-function findAgentsInsertionIndex(lines: string[]): number {
-  const env = findGitignoreCommentSectionRange(lines, 'Environment files');
-  if (env) return env.end;
-  const ide = findGitignoreCommentSectionRange(lines, 'IDE');
-  if (ide) return ide.start;
-  return lines.length;
-}
-
-/** Remove stray `.agents/`-style lines pasted at EOF without a `# Agents` header (before inserting canonical). */
-function stripTrailingCanonicalGitignoreLines(
-  lines: string[],
-  canonicalPatterns: ReadonlySet<string>,
-): string[] {
-  const out = [...lines];
-  while (out.length > 0) {
-    const last = out[out.length - 1]?.trim() ?? '';
-    if (last === '') {
-      out.pop();
-      continue;
-    }
-    if (canonicalPatterns.has(last)) {
-      out.pop();
-      continue;
-    }
-    break;
-  }
-  return out;
+/** @deprecated Use `proposeGitignoreMerge` — kept for existing imports. */
+export function proposeAgentsGitignoreMerge(content: string): string {
+  return proposeGitignoreMerge(content);
 }

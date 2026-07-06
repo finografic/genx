@@ -17,6 +17,7 @@ import { renameRules } from 'config/rename.rules';
 import type { MigrateOnlySection } from 'types/migrate.types';
 import type { PackageJson } from 'types/package-json.types';
 
+import { planGitignoreUpgrade } from './gitignore-upgrade.utils.js';
 import { planMerges } from './merge.utils.js';
 import { shouldRunSection } from './migrate-metadata.utils.js';
 import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from './node.utils.js';
@@ -29,6 +30,7 @@ export interface MigrationPlanState {
   existingFiles: Set<string> | null;
   renameChanges: ReturnType<typeof planRenames>;
   mergeChanges: ReturnType<typeof planMerges>;
+  gitignoreUpgrade: Awaited<ReturnType<typeof planGitignoreUpgrade>> | null;
   shouldCopyLicense: boolean;
   templateDir: string;
 }
@@ -127,6 +129,16 @@ export async function planMigration(
     }
   }
 
+  let gitignoreUpgrade: Awaited<ReturnType<typeof planGitignoreUpgrade>> | null = null;
+  if (shouldRunSection(only, 'gitignore')) {
+    gitignoreUpgrade = await planGitignoreUpgrade(targetDir);
+    if (gitignoreUpgrade.changed) {
+      plan.push(`${pc.cyan('gitignore')}: merge canonical template (preserve # Project-specific extras)`);
+    } else {
+      plan.push('.gitignore already aligned');
+    }
+  }
+
   // template sync plan
   if (debug) {
     infoMessage(`importMetaDir: ${fromDir}`);
@@ -190,6 +202,7 @@ export async function planMigration(
       existingFiles,
       renameChanges,
       mergeChanges,
+      gitignoreUpgrade,
       shouldCopyLicense,
       templateDir,
     },

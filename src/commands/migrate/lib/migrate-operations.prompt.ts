@@ -17,6 +17,11 @@ const MIGRATE_OPERATION_OPTIONS: Array<{
   { value: 'hooks', label: 'hooks', hint: 'husky and commitlint files' },
   { value: 'workflows', label: 'workflows', hint: 'GitHub CI and release workflows' },
   { value: 'docs', label: 'docs', hint: 'docs and .env.example sync' },
+  {
+    value: 'gitignore',
+    label: 'gitignore',
+    hint: 'canonical .gitignore from template; keep # Project-specific extras',
+  },
 ];
 
 const DEFAULT_MIGRATE_OPERATIONS = MIGRATE_OPERATION_OPTIONS.map((option) => option.value);

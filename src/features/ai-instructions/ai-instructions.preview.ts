@@ -11,7 +11,7 @@ import { applyTemplate } from 'utils/template.utils';
 
 import type { TemplateVars } from 'types/template.types';
 
-import { proposeAgentsGitignoreMerge, rewriteDotAiPathsToAgents } from '../../lib/agents-gitignore.utils.js';
+import { proposeGitignoreMerge, rewriteDotAiPathsToAgents } from '../../lib/agents-gitignore.utils.js';
 import {
   collectDotAiMarkdownReferenceUpdates,
   collectLegacyAiFolderMigrationChanges,
@@ -246,19 +246,12 @@ export async function previewAiInstructions(
     if (fileExists(gitignorePath)) {
       gitignoreCurrent = await readFile(gitignorePath, 'utf8');
     }
-    const gitignoreProposed = proposeAgentsGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreCurrent));
+    const gitignoreProposed = proposeGitignoreMerge(rewriteDotAiPathsToAgents(gitignoreCurrent));
     if (gitignoreProposed !== gitignoreCurrent) {
       const out = gitignoreProposed.endsWith('\n') ? gitignoreProposed : `${gitignoreProposed}\n`;
-      changes.push(
-        createWritePreviewChange(
-          gitignorePath,
-          gitignoreCurrent,
-          out,
-          '.gitignore (# Agents, Claude, Codex, worktrees)',
-        ),
-      );
+      changes.push(createWritePreviewChange(gitignorePath, gitignoreCurrent, out, '.gitignore (canonical)'));
     } else {
-      applied.push('.gitignore (agents)');
+      applied.push('.gitignore');
     }
   }
 
