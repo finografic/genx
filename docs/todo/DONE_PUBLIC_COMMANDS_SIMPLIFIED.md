@@ -10,6 +10,7 @@
 - The public `genx features` command is removed.
 - `genx managed upgrade` replaces the managed package-convention sync workflow.
 - `genx managed features` is removed.
+- `genx managed audit` is the batch feature health and repair workflow.
 - Feature application remains internal and reusable.
 
 ## Public Model
@@ -22,6 +23,7 @@
 | `genx audit`           | Scan feature state and apply missing or partial features |
 | `genx managed upgrade` | Run upgrade across configured managed targets            |
 | `genx managed deps`    | Run deps across configured managed targets               |
+| `genx managed audit`   | Audit all managed targets, then repair selected targets  |
 
 ## Implementation Notes
 
@@ -37,5 +39,4 @@
 ## Follow-Up
 
 - Keep legacy internal filenames and types until a dedicated internal rename pass is worth the churn.
-- If batch feature repair is needed later, design `genx managed audit` explicitly instead of reviving a
-  public features command.
+- Batch feature repair belongs in `genx managed audit`, not a public features command.

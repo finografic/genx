@@ -50,6 +50,10 @@ export const cliHelp: HelpConfig = {
         label: 'Run deps across managed targets',
         description: 'genx managed deps',
       },
+      {
+        label: 'Audit features across managed targets',
+        description: 'genx managed audit',
+      },
     ],
   },
 

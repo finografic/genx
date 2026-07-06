@@ -7,6 +7,7 @@ export const help: CommandHelpConfig = {
   subcommands: [
     { name: 'upgrade', description: 'Upgrade managed targets to current conventions' },
     { name: 'deps', description: 'Sync deps across managed targets' },
+    { name: 'audit', description: 'Audit and repair feature state across managed targets' },
   ],
   options: [
     { flag: '-y, --yes', description: 'Skip per-target and per-file confirms' },
@@ -16,10 +17,11 @@ export const help: CommandHelpConfig = {
     { command: 'genx managed upgrade', description: 'Upgrade all managed targets' },
     { command: 'genx managed deps', description: 'Sync deps for all managed targets' },
     { command: 'genx managed deps --yes', description: 'Sync deps non-interactively' },
+    { command: 'genx managed audit', description: 'Audit and repair feature state' },
   ],
   howItWorks: [
     'Reads managed targets from ~/.config/finografic/genx.config.jsonc',
-    'Iterates each target, prompting to apply or skip (unless --yes)',
-    'Runs the selected command (upgrade or deps) on each target',
+    'Runs the selected command (upgrade, deps, or audit) on each target',
+    'Managed audit scans all targets first, then repairs selected targets',
   ],
 };

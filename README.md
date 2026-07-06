@@ -163,10 +163,11 @@ Run a command across all managed targets
 genx managed <command> [options]
 ```
 
-| Subcommand | Description                                    |
-| ---------- | ---------------------------------------------- |
-| `upgrade`  | Upgrade managed targets to current conventions |
-| `deps`     | Sync deps across managed targets               |
+| Subcommand | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| `upgrade`  | Upgrade managed targets to current conventions        |
+| `deps`     | Sync deps across managed targets                      |
+| `audit`    | Audit and repair feature state across managed targets |
 
 | Flag                | Description                           |
 | ------------------- | ------------------------------------- |
@@ -184,13 +185,16 @@ genx managed deps
 
 # Sync deps non-interactively
 genx managed deps --yes
+
+# Audit and repair feature state
+genx managed audit
 ```
 
 **How it works:**
 
 1. Reads managed targets from ~/.config/finografic/genx.config.jsonc
-2. Iterates each target, prompting to apply or skip (unless --yes)
-3. Runs the selected command (upgrade or deps) on each target
+2. Runs the selected command (upgrade, deps, or audit) on each target
+3. Managed audit scans all targets first, then repairs selected targets
 
 ### `genx audit`
 
@@ -395,15 +399,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                      |
-| --------------- | -------------------------------------------------- | -------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`       |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                         |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy` |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `-y`, `--allow-downgrade` |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                         |
-| `help`          | Show this help message                             | -                                            |
-| `--help` / `-h` | Show help (works with commands too)                | -                                            |
+| Command         | Description                                        | Options                                               |
+| --------------- | -------------------------------------------------- | ----------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                  |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`          |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--allow-downgrade` |
+| `audit`         | Scan features and apply what is missing or partial | `-y`                                                  |
+| `help`          | Show this help message                             | -                                                     |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                     |
 
 See `genx <command> --help` for detailed usage.
 
