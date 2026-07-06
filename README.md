@@ -27,8 +27,8 @@ pnpm dlx @finografic/genx <command> [options]
 | `create`  | Scaffold a new @finografic package                 |
 | `upgrade` | Upgrade an existing package to current conventions |
 | `deps`    | Sync dependencies to @finografic/deps-policy       |
-| `managed` | Run a command across all managed targets           |
 | `audit`   | Scan features and apply what is missing or partial |
+| `managed` | Run a command across all managed targets           |
 | `help`    | Show this help message                             |
 
 ### `genx create`
@@ -155,6 +155,38 @@ genx deps --update-policy
 4. Prompts to select packages (or applies all with --yes)
 5. Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)
 
+### `genx audit`
+
+Scan features and apply what is missing or partial
+
+```bash
+genx audit [path] [options]
+```
+
+| Flag        | Description                                       |
+| ----------- | ------------------------------------------------- |
+| `-y, --yes` | Apply selected features without per-file confirms |
+
+**Examples:**
+
+```bash
+# Audit current directory
+genx audit
+
+# Audit a specific directory
+genx audit ../my-package
+
+# Apply without per-file confirms
+genx audit -y
+```
+
+**How it works:**
+
+1. Scans all known features against the target package
+2. Reports installed, partial, and missing features
+3. Prompts to select partial/missing features to apply
+4. Applies selected features with diff preview
+
 ### `genx managed`
 
 Run a command across all managed targets
@@ -195,38 +227,6 @@ genx managed audit
 1. Reads managed targets from ~/.config/finografic/genx.config.jsonc
 2. Runs the selected command (upgrade, deps, or audit) on each target
 3. Managed audit scans all targets first, then repairs selected targets
-
-### `genx audit`
-
-Scan features and apply what is missing or partial
-
-```bash
-genx audit [path] [options]
-```
-
-| Flag        | Description                                       |
-| ----------- | ------------------------------------------------- |
-| `-y, --yes` | Apply selected features without per-file confirms |
-
-**Examples:**
-
-```bash
-# Audit current directory
-genx audit
-
-# Audit a specific directory
-genx audit ../my-package
-
-# Apply without per-file confirms
-genx audit -y
-```
-
-**How it works:**
-
-1. Scans all known features against the target package
-2. Reports installed, partial, and missing features
-3. Prompts to select partial/missing features to apply
-4. Applies selected features with diff preview
 
 <!-- GENERATED:USAGE:END -->
 
@@ -404,8 +404,8 @@ my-package/
 | `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                |
 | `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                  |
 | `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`          |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--allow-downgrade` |
 | `audit`         | Scan features and apply what is missing or partial | `-y`                                                  |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--allow-downgrade` |
 | `help`          | Show this help message                             | -                                                     |
 | `--help` / `-h` | Show help (works with commands too)                | -                                                     |
 

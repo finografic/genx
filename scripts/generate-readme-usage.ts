@@ -184,8 +184,8 @@ const COMMAND_CONFIGS: ReadonlyArray<{ name: string; help: ReadmeCommandHelpConf
   { name: 'create', help: createHelp },
   { name: 'upgrade', help: upgradeHelp },
   { name: 'deps', help: depsHelp },
-  { name: 'managed', help: managedHelp },
   { name: 'audit', help: auditHelp },
+  { name: 'managed', help: managedHelp },
 ];
 
 const COMMAND_HELP_BY_NAME = new Map(COMMAND_CONFIGS.map((c) => [c.name, c.help]));

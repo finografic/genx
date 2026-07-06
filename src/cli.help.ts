@@ -14,8 +14,8 @@ export const cliHelp: HelpConfig = {
       { label: 'create', description: 'Scaffold a new @finografic package' },
       { label: 'upgrade', description: 'Upgrade an existing package to current conventions' },
       { label: 'deps', description: 'Sync dependencies to @finografic/deps-policy' },
-      { label: 'managed', description: 'Run a command across all managed targets' },
       { label: 'audit', description: 'Scan features and apply what is missing or partial' },
+      { label: 'managed', description: 'Run a command across all managed targets' },
       { label: 'help', description: 'Show this help message' },
     ],
     options: {
@@ -43,16 +43,16 @@ export const cliHelp: HelpConfig = {
         description: 'genx audit',
       },
       {
+        label: 'Audit features across managed targets',
+        description: 'genx managed audit',
+      },
+      {
         label: 'Run upgrade across managed targets',
         description: 'genx managed upgrade',
       },
       {
         label: 'Run deps across managed targets',
         description: 'genx managed deps',
-      },
-      {
-        label: 'Audit features across managed targets',
-        description: 'genx managed audit',
       },
     ],
   },
