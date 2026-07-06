@@ -59,7 +59,7 @@ export function printHelp(): void {
 export function getBinName(packageJson: Record<string, unknown>, fallback: string): string {
   const { bin } = packageJson;
   if (typeof bin === 'object' && bin !== null && !Array.isArray(bin)) {
-    const keys = Object.keys(bin as Record<string, string>);
+    const keys = Object.keys(bin);
     if (keys.length > 0 && keys[0]) return keys[0];
   }
   return fallback;

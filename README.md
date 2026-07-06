@@ -107,7 +107,7 @@ genx upgrade --yes
 
 **How it works:**
 
-1. Select upgrade operations (package.json, config, agent docs, etc.)
+1. Select upgrade operations (package.json, gitignore, config, agent docs, etc.)
 2. Optionally select features to apply alongside the upgrade
 3. Shows a diff preview for each changed file before writing
 4. Applies selected changes to the target directory

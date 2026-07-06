@@ -63,7 +63,7 @@ export async function readExtensionsJson(targetDir: string): Promise<VSCodeExten
   }
 
   const raw = await readFile(filePath, 'utf8');
-  return parseJsoncObject(raw) as VSCodeExtensionsJson;
+  return parseJsoncObject(raw);
 }
 
 /**

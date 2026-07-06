@@ -149,7 +149,7 @@ export async function applyMigrateTarget(params: {
     successMessage(`Merged ${mergeChanges.length} file(s)`);
   }
 
-  const {gitignoreUpgrade} = context.state;
+  const { gitignoreUpgrade } = context.state;
   if (shouldRunSection(only, 'gitignore') && gitignoreUpgrade?.changed) {
     const action = await confirmFileWrite(
       gitignoreUpgrade.gitignorePath,
