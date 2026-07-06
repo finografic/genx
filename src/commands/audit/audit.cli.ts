@@ -5,11 +5,11 @@ import { errorMessage, getPathArg, infoMessage, intro, outro, resolveTargetDir }
 
 import { auditFeatures, filterAuditEntriesForSelfPackage, sortAuditEntries } from './lib/audit.js';
 import { promptAuditSuggest } from './lib/audit.prompt.js';
+import { applyFeaturesToTarget, logFeatureResults } from 'lib/features/apply-features.runner';
 import { readPackageJson } from 'lib/migrate/package-json.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 
-import { applyFeaturesToTarget } from '../features/features.cli.js';
 import { help } from './audit.help.js';
 
 export async function auditPackage(argv: string[], options: { targetDir: string }): Promise<void> {
@@ -59,7 +59,11 @@ export async function auditPackage(argv: string[], options: { targetDir: string 
       return;
     }
 
-    await applyFeaturesToTarget(targetDir, selectedFeatureIds, { yesAll: flow.yesMode });
+    const results = await applyFeaturesToTarget(targetDir, selectedFeatureIds, {
+      commandName: 'audit',
+      yesAll: flow.yesMode,
+    });
+    logFeatureResults(results);
     outro('Audit complete');
   });
 }

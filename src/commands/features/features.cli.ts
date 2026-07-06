@@ -1,6 +1,5 @@
 import { createFlowContext } from '@finografic/cli-kit/flow';
 import { withHelp } from '@finografic/cli-kit/render-help';
-import { getFeature } from 'features/feature-registry';
 import {
   GENX_CONFIG_PATH,
   errorMessage,
@@ -11,11 +10,10 @@ import {
   outro,
   readManagedTargets,
   resolveTargetDir,
-  successMessage,
   warnMessage,
 } from 'utils';
-import type { FeatureId } from 'features/feature.types';
 
+import { applyFeaturesToTarget, logFeatureResults } from 'lib/features/apply-features.runner';
 import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
@@ -94,7 +92,10 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
           }
         }
 
-        await applyFeaturesToTarget(target.path, selectedFeatureIds);
+        const results = await applyFeaturesToTarget(target.path, selectedFeatureIds, {
+          commandName: 'managed features',
+        });
+        logFeatureResults(results);
         appliedCount += 1;
       }
 
@@ -118,62 +119,8 @@ export async function addFeatures(argv: string[], options: { targetDir: string }
     }
 
     // 3. Apply selected features
-    await applyFeaturesToTarget(targetDir, selectedFeatureIds);
+    const results = await applyFeaturesToTarget(targetDir, selectedFeatureIds, { commandName: 'features' });
+    logFeatureResults(results);
     outro('Feature run complete');
   });
-}
-
-export async function applyFeaturesToTarget(
-  targetDir: string,
-  selectedFeatureIds: FeatureId[],
-  options?: { yesAll?: boolean },
-): Promise<void> {
-  const validation = validateExistingPackage(targetDir);
-  if (!validation.ok) {
-    errorMessage(validation.reason || 'Not a valid package directory');
-    process.exit(1);
-  }
-
-  const appliedFeatures: FeatureId[] = [];
-  const noopMessages: string[] = [];
-
-  for (const featureId of selectedFeatureIds) {
-    const feature = getFeature(featureId);
-    if (!feature) {
-      errorMessage(`Unknown feature: ${featureId}`);
-      continue;
-    }
-
-    if (feature.detect) {
-      const detected = await feature.detect({ targetDir });
-      if (detected) {
-        noopMessages.push(`${feature.label} already installed. No changes made.`);
-        continue;
-      }
-    }
-
-    const result = await feature.apply({ targetDir, yesAll: options?.yesAll });
-    if (result.error) {
-      process.exit(1);
-    }
-
-    if (result.applied.length > 0) {
-      appliedFeatures.push(featureId);
-    } else {
-      noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
-    }
-  }
-
-  // 4. Done
-  if (appliedFeatures.length > 0) {
-    successMessage(`Applied features: ${appliedFeatures.join(', ')}`);
-    for (const msg of noopMessages) {
-      console.log(pc.dim(msg));
-    }
-  } else {
-    infoMessage('No changes made');
-    for (const msg of noopMessages) {
-      console.log(pc.dim(msg));
-    }
-  }
 }

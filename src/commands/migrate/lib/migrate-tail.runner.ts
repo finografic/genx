@@ -2,11 +2,11 @@ import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { execa } from 'execa';
-import { getFeature } from 'features/feature-registry';
 import { errorMessage, infoMessage, spinner, successMessage } from 'utils';
 import type { MigrateTargetContext } from './migrate-target-context.js';
 import type { FeatureId } from 'features/feature.types';
 
+import { applyFeaturesToTarget } from 'lib/features/apply-features.runner';
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
 import { writePackageJson } from 'lib/migrate/package-json.utils';
 
@@ -17,39 +17,7 @@ export async function applySelectedFeatures(
   targetDir: string,
   selectedFeatureIds: FeatureId[],
 ): Promise<{ appliedFeatures: FeatureId[]; noopMessages: string[] }> {
-  const appliedFeatures: FeatureId[] = [];
-  const noopMessages: string[] = [];
-
-  for (const featureId of selectedFeatureIds) {
-    const feature = getFeature(featureId);
-    if (!feature) {
-      errorMessage(`Unknown feature: ${featureId}`);
-      continue;
-    }
-
-    if (feature.detect) {
-      const detected = await feature.detect({ targetDir });
-      if (detected) {
-        noopMessages.push(`${feature.label} already installed. No changes made.`);
-        continue;
-      }
-    }
-
-    const result = await feature.apply({ targetDir });
-    if (result.error) {
-      errorMessage(result.error.message);
-      process.exit(1);
-      return { appliedFeatures, noopMessages };
-    }
-
-    if (result.applied.length > 0) {
-      appliedFeatures.push(featureId);
-    } else {
-      noopMessages.push(result.noopMessage ?? `${feature.label} already installed. No changes made.`);
-    }
-  }
-
-  return { appliedFeatures, noopMessages };
+  return applyFeaturesToTarget(targetDir, selectedFeatureIds, { commitEachFeature: false });
 }
 
 export function logFeatureResults(results: { appliedFeatures: FeatureId[]; noopMessages: string[] }): void {

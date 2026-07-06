@@ -10,9 +10,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { applyFeaturesToTarget } from '../src/commands/features/features.cli.js';
 import { detectAiMemory } from '../src/features/ai-memory/ai-memory.detect.js';
 import { previewAiMemory } from '../src/features/ai-memory/ai-memory.preview.js';
+import { applyFeaturesToTarget } from '../src/lib/features/apply-features.runner.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fixtureSrc = join(repoRoot, 'test/fixtures/minimal-package');
@@ -29,7 +29,7 @@ async function main(): Promise<void> {
 
     console.log(`fixture: ${root}`);
 
-    await applyFeaturesToTarget(root, ['aiMemory'], { yesAll: true });
+    await applyFeaturesToTarget(root, ['aiMemory'], { commitEachFeature: false, yesAll: true });
 
     await assertExists(root, 'docs/process/PROJECT_MEMORY_MODEL.md');
     await assertExists(root, 'docs/todo/ROADMAP.md');
@@ -56,7 +56,7 @@ async function main(): Promise<void> {
       throw new Error(`detectAiMemory returned false after first apply. Remaining: ${remaining}`);
     }
 
-    await applyFeaturesToTarget(root, ['aiMemory'], { yesAll: true });
+    await applyFeaturesToTarget(root, ['aiMemory'], { commitEachFeature: false, yesAll: true });
     const stillInstalled = await detectAiMemory({ targetDir: root });
     if (!stillInstalled) {
       throw new Error('detectAiMemory returned false after second apply (expected idempotent)');
