@@ -25,7 +25,7 @@ export async function confirmNodeVersionUpgrade(params: {
   nvmrc: string;
 }): Promise<boolean | null> {
   const ok = await clack.confirm({
-    message: `Detected Node v${params.from} → migrate runtime to ${pc.cyan(params.nvmrc)}?`,
+    message: `Detected Node v${params.from} → upgrade runtime to ${pc.cyan(params.nvmrc)}?`,
     initialValue: true,
   });
 

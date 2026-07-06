@@ -10,7 +10,7 @@ interface MigrateArgs {
 export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
   const args = argv.slice();
 
-  if (args[0] === 'migrate') args.shift();
+  if (args[0] === 'upgrade') args.shift();
 
   let targetDir = cwd;
 

@@ -9,10 +9,10 @@ import { isDevelopment } from 'utils/env.utils';
 import type { MigrateOnlySection } from 'types/migrate.types';
 
 import { promptMigrateOperations } from '../migrate/lib/migrate-operations.prompt.js';
-import { migrateSingleTarget } from '../migrate/migrate.cli.js';
+import { upgradeSingleTarget } from '../migrate/migrate.cli.js';
 
-export async function runManagedMigrateFlow(argv: string[]): Promise<void> {
-  intro('Managed migrate across @finografic packages');
+export async function runManagedUpgradeFlow(argv: string[]): Promise<void> {
+  intro('Managed upgrade across @finografic packages');
 
   const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
   if (debug) {
@@ -26,15 +26,15 @@ export async function runManagedMigrateFlow(argv: string[]): Promise<void> {
   const selectedFeatureIds: FeatureId[] = await promptFeatures(flow);
 
   if (selectedOperations.size === 0 && selectedFeatureIds.length === 0) {
-    infoMessage('No migrate operations or features selected.');
+    infoMessage('No upgrade operations or features selected.');
     return;
   }
 
   await runManagedLoop({
     yesMode: flow.yesMode,
-    actionLabel: 'Migrate',
+    actionLabel: 'Upgrade',
     runTarget: async (target) => {
-      await migrateSingleTarget({
+      await upgradeSingleTarget({
         targetDir: target.path,
         selectedOperations,
         debug,

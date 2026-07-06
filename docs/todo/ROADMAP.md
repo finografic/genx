@@ -23,13 +23,7 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## P0 — Active
 
-### Internalize public `genx features` command
-
-Make `genx audit` the canonical public single-project feature-management command. Preserve internal
-feature infrastructure and keep `genx managed features` until a separate managed-audit UX is
-designed.
-
-Detail: [`docs/todo/TODO_INTERNALIZE_FEATURES_COMMAND.md`](./TODO_INTERNALIZE_FEATURES_COMMAND.md)
+No items.
 
 ---
 
@@ -108,9 +102,9 @@ before `genx managed deps` runs.
 
 Detail: [`docs/todo/TODO_DEPS_UPDATE_POLICY.md`](./TODO_DEPS_UPDATE_POLICY.md)
 
-### Migrate command — cli-kit extraction review (Phase 4)
+### Upgrade command — cli-kit extraction review (Phase 4)
 
-Review managed-target config/path handling, per-target apply/skip/cancel loop, and migrate-mode
+Review managed-target config/path handling, per-target apply/skip/cancel loop, and upgrade-mode
 branching for reuse potential in `@finografic/cli-kit`.
 
 Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md) (Phase 4)
@@ -120,8 +114,8 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 ## Non-starters (excluded)
 
 - **Auto-publish on version bump** — too much automation risk; manual release gates are intentional.
-- **Removing `--only` from `migrate`** — `deps` command coexists as a fast path; `--only` retains
-  value for other granular migrate operations.
+- **Removing granular upgrade operation selection** — `deps` command coexists as a fast path;
+  operation selection retains value for other upgrade sections.
 
 ---
 
@@ -129,6 +123,7 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 
 | Date       | Item                                                                                                             |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)        |
 | 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                   |
 | 2026-06-02 | Audit feature hardening and manual feature-install verification                                                  |
 | 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                 |

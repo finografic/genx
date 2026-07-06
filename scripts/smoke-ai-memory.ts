@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Non-interactive smoke test for `ai-memory` via the same apply path as `genx features`.
+ * Non-interactive smoke test for `ai-memory` via the shared feature apply runner.
  *
  * Usage:
  * pnpm build && pnpm smoke:ai-memory

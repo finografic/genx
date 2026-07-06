@@ -22,7 +22,7 @@ Replace genx's inline `src/core/` copies with `@finografic/cli-kit` subpath impo
 
 - [ ] Audit `create` command + `_templates/package.json` — add `@finografic/cli-kit` as a generated dep
 - [ ] Update `_templates/` skeleton `src/` imports to use `cli-kit/*` subpaths (if any still reference `core/`)
-- [ ] Audit `migrate` features — any that write `src/core/flow/` or `src/core/render-help/` into targets should instead inject `@finografic/cli-kit` dep and rewrite imports
+- [ ] Audit upgrade features — any that write `src/core/flow/` or `src/core/render-help/` into targets should instead inject `@finografic/cli-kit` dep and rewrite imports
 - [ ] Update `migrate-to-cli-kit` skill if the procedure changes as a result
 - [ ] `pnpm typecheck` — zero errors
 - [ ] Commit `feat: features inject @finografic/cli-kit instead of src/core/ copies`

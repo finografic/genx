@@ -6,7 +6,7 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 June 2, 2026
+📅 July 6, 2026
 
 ## Project
 
@@ -15,8 +15,8 @@ ecosystem. Current version: **v5.36.0**.
 
 ## Architecture
 
-**CLI:** `src/cli.ts` routes to co-located command folders under `src/commands/`: `create`,
-`migrate`, `deps`, `features`, `managed`, and `audit`.
+**CLI:** `src/cli.ts` exposes `create`, `upgrade`, `deps`, `managed`, and `audit`. Feature
+application is internal infrastructure, not a public command.
 
 **Templates:** `_templates/` is the only canonical source for generated target content.
 Package-type overlays live under `_templates/package-types/`.
@@ -53,8 +53,9 @@ Manual audit installation passes are complete for:
 - `css`
 - `vitest`
 
-`genx audit` starts with no features selected, keeps metadata visible for unchecked rows, and shows
-installed rows as disabled green `ok — config up to date` entries.
+`genx audit` starts with no features selected, keeps metadata visible for unchecked rows, shows
+installed rows as disabled green `ok — config up to date` entries, and commits each applied feature
+separately.
 
 ## Key Decisions
 
@@ -65,6 +66,8 @@ installed rows as disabled green `ok — config up to date` entries.
 5. Portable skills belong to `ai-agents`, not `ai-memory`.
 6. `.agents/handoff.md` is tracked stable state; `.agents/memory.md` is the gitignored session log.
 7. Legacy `.claude/memory.md` and `.claude/handoff.md` are migrated, then deleted.
+8. `upgrade` is the public package-convention sync command; `audit` is the public feature repair
+   command.
 
 ## Open Work
 

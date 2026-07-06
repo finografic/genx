@@ -18,9 +18,9 @@ import type { MigrateOnlySection } from 'types/migrate.types';
 
 import { help } from './migrate.help.js';
 
-export async function migratePackage(argv: string[], context: { cwd: string }): Promise<void> {
+export async function upgradePackage(argv: string[], context: { cwd: string }): Promise<void> {
   return withHelp(argv, help, async () => {
-    intro('Migrate existing @finografic package');
+    intro('Upgrade existing @finografic package');
 
     const debug = isDevelopment() || process.env.FINOGRAFIC_DEBUG === '1';
     if (debug) {
@@ -33,7 +33,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
     const { targetDir } = parseMigrateArgs(argv, context.cwd);
 
     if (managed) {
-      warnMessage('--managed is deprecated. Use: genx managed migrate');
+      warnMessage('--managed is deprecated. Use: genx managed upgrade');
     }
 
     if (managed && targetDir !== context.cwd) {
@@ -58,7 +58,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
 
     const selectedFeatureIds = await promptFeatures(flow);
     if (selectedOperations.size === 0 && selectedFeatureIds.length === 0) {
-      infoMessage('No migrate operations or features selected.');
+      infoMessage('No upgrade operations or features selected.');
       return;
     }
 
@@ -67,7 +67,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
         yesMode: flow.yesMode,
         actionLabel: 'Migrate',
         runTarget: async (target) => {
-          await migrateSingleTarget({
+          await upgradeSingleTarget({
             targetDir: target.path,
             selectedOperations,
             debug,
@@ -78,7 +78,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
       return;
     }
 
-    await migrateSingleTarget({
+    await upgradeSingleTarget({
       targetDir,
       selectedOperations,
       debug,
@@ -87,7 +87,7 @@ export async function migratePackage(argv: string[], context: { cwd: string }): 
   });
 }
 
-export async function migrateSingleTarget(params: {
+export async function upgradeSingleTarget(params: {
   targetDir: string;
   selectedOperations: Set<MigrateOnlySection>;
   debug: boolean;

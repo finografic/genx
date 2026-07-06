@@ -22,15 +22,14 @@ Run directly using `pnpm dlx`:
 pnpm dlx @finografic/genx <command> [options]
 ```
 
-| Command    | Description                                        |
-| ---------- | -------------------------------------------------- |
-| `create`   | Scaffold a new @finografic package                 |
-| `migrate`  | Sync conventions to an existing package            |
-| `deps`     | Sync dependencies to @finografic/deps-policy       |
-| `features` | Add optional features to an existing package       |
-| `managed`  | Run a command across all managed targets           |
-| `audit`    | Scan features and apply what is missing or partial |
-| `help`     | Show this help message                             |
+| Command   | Description                                        |
+| --------- | -------------------------------------------------- |
+| `create`  | Scaffold a new @finografic package                 |
+| `upgrade` | Upgrade an existing package to current conventions |
+| `deps`    | Sync dependencies to @finografic/deps-policy       |
+| `managed` | Run a command across all managed targets           |
+| `audit`   | Scan features and apply what is missing or partial |
+| `help`    | Show this help message                             |
 
 ### `genx create`
 
@@ -81,12 +80,12 @@ genx create --type react
 3. Applies selected features (oxc-config, git-hooks, etc.)
 4. Runs pnpm install and initializes a git repository
 
-### `genx migrate`
+### `genx upgrade`
 
-Sync conventions to an existing @finografic package
+Upgrade an existing @finografic package to current conventions
 
 ```bash
-genx migrate [path] [options]
+genx upgrade [path] [options]
 ```
 
 | Flag        | Description                        |
@@ -96,20 +95,20 @@ genx migrate [path] [options]
 **Examples:**
 
 ```bash
-# Migrate current directory interactively
-genx migrate
+# Upgrade current directory interactively
+genx upgrade
 
-# Migrate a specific directory
-genx migrate ../my-package
+# Upgrade a specific directory
+genx upgrade ../my-package
 
 # Apply changes without per-file confirms
-genx migrate --yes
+genx upgrade --yes
 ```
 
 **How it works:**
 
-1. Select migrate operations (package.json, config, agent docs, etc.)
-2. Optionally select features to apply alongside migration
+1. Select upgrade operations (package.json, config, agent docs, etc.)
+2. Optionally select features to apply alongside the upgrade
 3. Shows a diff preview for each changed file before writing
 4. Applies selected changes to the target directory
 
@@ -156,38 +155,6 @@ genx deps --update-policy
 4. Prompts to select packages (or applies all with --yes)
 5. Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)
 
-### `genx features`
-
-Add optional features to an existing @finografic package
-
-```bash
-genx features [path] [options]
-```
-
-| Flag        | Description                        |
-| ----------- | ---------------------------------- |
-| `-y, --yes` | Skip per-file confirmation prompts |
-
-**Examples:**
-
-```bash
-# Add features to current directory
-genx features
-
-# Add features to a specific directory
-genx features ../my-package
-
-# Apply without per-file confirms
-genx features --yes
-```
-
-**How it works:**
-
-1. Prompts to select from available features (oxc-config, css, git-hooks, etc.)
-2. Detects already-installed features and skips them
-3. Shows a diff preview for each changed file before writing
-4. Runs pnpm install when dependencies change
-
 ### `genx managed`
 
 Run a command across all managed targets
@@ -196,11 +163,10 @@ Run a command across all managed targets
 genx managed <command> [options]
 ```
 
-| Subcommand | Description                         |
-| ---------- | ----------------------------------- |
-| `migrate`  | Run migrate across managed targets  |
-| `deps`     | Sync deps across managed targets    |
-| `features` | Add features across managed targets |
+| Subcommand | Description                                    |
+| ---------- | ---------------------------------------------- |
+| `upgrade`  | Upgrade managed targets to current conventions |
+| `deps`     | Sync deps across managed targets               |
 
 | Flag                | Description                           |
 | ------------------- | ------------------------------------- |
@@ -210,24 +176,21 @@ genx managed <command> [options]
 **Examples:**
 
 ```bash
-# Migrate all managed targets
-genx managed migrate
+# Upgrade all managed targets
+genx managed upgrade
 
 # Sync deps for all managed targets
 genx managed deps
 
 # Sync deps non-interactively
 genx managed deps --yes
-
-# Add features to all managed targets
-genx managed features
 ```
 
 **How it works:**
 
 1. Reads managed targets from ~/.config/finografic/genx.config.jsonc
 2. Iterates each target, prompting to apply or skip (unless --yes)
-3. Runs the selected command (migrate, deps, features) on each target
+3. Runs the selected command (upgrade or deps) on each target
 
 ### `genx audit`
 
@@ -395,7 +358,7 @@ Baseline features installed during `create`:
 - **oxc-config** — migrate older repos to oxfmt + oxlint + `@finografic/oxc-config`
 - **markdown** — markdown linting via `@finografic/md-lint`
 
-Optional features (selected during `create` or added via `features` / `audit`):
+Optional features (selected during `create`, selected during `upgrade`, or repaired via `audit`):
 
 - **vitest** — unit testing
 - **git-hooks** — pre-commit linting + conventional commits
@@ -432,16 +395,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                                  |
-| --------------- | -------------------------------------------------- | -------------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                   |
-| `migrate`       | Sync conventions to an existing package            | `-y`                                                     |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`             |
-| `features`      | Add optional features to an existing package       | `-y`                                                     |
-| `managed`       | Run a command across all managed targets           | `migrate`, `deps`, `features`, `-y`, `--allow-downgrade` |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                                     |
-| `help`          | Show this help message                             | -                                                        |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                        |
+| Command         | Description                                        | Options                                      |
+| --------------- | -------------------------------------------------- | -------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`       |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                         |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy` |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `-y`, `--allow-downgrade` |
+| `audit`         | Scan features and apply what is missing or partial | `-y`                                         |
+| `help`          | Show this help message                             | -                                            |
+| `--help` / `-h` | Show help (works with commands too)                | -                                            |
 
 See `genx <command> --help` for detailed usage.
 
@@ -465,7 +427,7 @@ Link globally (recommended — rebuilds take effect immediately):
 ```bash
 pnpm link
 genx create
-genx migrate --help
+genx upgrade --help
 
 # When done:
 pnpm unlink

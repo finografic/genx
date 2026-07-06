@@ -12,9 +12,8 @@ export const cliHelp: HelpConfig = {
     title: 'Commands',
     list: [
       { label: 'create', description: 'Scaffold a new @finografic package' },
-      { label: 'migrate', description: 'Sync conventions to an existing package' },
+      { label: 'upgrade', description: 'Upgrade an existing package to current conventions' },
       { label: 'deps', description: 'Sync dependencies to @finografic/deps-policy' },
-      { label: 'features', description: 'Add optional features to an existing package' },
       { label: 'managed', description: 'Run a command across all managed targets' },
       { label: 'audit', description: 'Scan features and apply what is missing or partial' },
       { label: 'help', description: 'Show this help message' },
@@ -30,26 +29,22 @@ export const cliHelp: HelpConfig = {
     title: 'Examples',
     list: [
       { label: 'Create a new package', description: 'genx create' },
-      { label: 'Migrate current directory', description: 'genx migrate' },
+      { label: 'Upgrade current directory', description: 'genx upgrade' },
       {
-        label: 'Migrate a specific directory',
-        description: 'genx migrate ../my-package',
+        label: 'Upgrade a specific directory',
+        description: 'genx upgrade ../my-package',
       },
       {
         label: 'Sync deps (interactive package selection)',
         description: 'genx deps',
       },
       {
-        label: 'Add features to current directory',
-        description: 'genx features',
-      },
-      {
         label: 'Audit features and apply missing ones',
         description: 'genx audit',
       },
       {
-        label: 'Run migrate across managed targets',
-        description: 'genx managed migrate',
+        label: 'Run upgrade across managed targets',
+        description: 'genx managed upgrade',
       },
       {
         label: 'Run deps across managed targets',

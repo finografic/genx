@@ -1,18 +1,18 @@
 import type { CommandHelpConfig } from '@finografic/cli-kit/render-help';
 
 export const help: CommandHelpConfig = {
-  command: 'genx migrate',
-  description: 'Sync conventions to an existing @finografic package',
-  usage: 'genx migrate [path] [options]',
+  command: 'genx upgrade',
+  description: 'Upgrade an existing @finografic package to current conventions',
+  usage: 'genx upgrade [path] [options]',
   options: [{ flag: '-y, --yes', description: 'Skip per-file confirmation prompts' }],
   examples: [
-    { command: 'genx migrate', description: 'Migrate current directory interactively' },
-    { command: 'genx migrate ../my-package', description: 'Migrate a specific directory' },
-    { command: 'genx migrate --yes', description: 'Apply changes without per-file confirms' },
+    { command: 'genx upgrade', description: 'Upgrade current directory interactively' },
+    { command: 'genx upgrade ../my-package', description: 'Upgrade a specific directory' },
+    { command: 'genx upgrade --yes', description: 'Apply changes without per-file confirms' },
   ],
   howItWorks: [
-    'Select migrate operations (package.json, config, agent docs, etc.)',
-    'Optionally select features to apply alongside migration',
+    'Select upgrade operations (package.json, config, agent docs, etc.)',
+    'Optionally select features to apply alongside the upgrade',
     'Shows a diff preview for each changed file before writing',
     'Applies selected changes to the target directory',
   ],

@@ -175,5 +175,5 @@ export async function applyMigrateTarget(params: {
 
   hasDependencyChanges = await ensureCliHelpFile({ context, only, hasDependencyChanges });
   await installDependenciesIfNeeded(context.targetDir, hasDependencyChanges);
-  successMessage('Migration complete');
+  successMessage('Upgrade complete');
 }

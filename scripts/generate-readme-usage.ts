@@ -6,9 +6,8 @@ import { cliHelp as rootHelp } from '../src/cli.help';
 import { help as auditHelp } from '../src/commands/audit/audit.help';
 import { help as createHelp } from '../src/commands/create/create.help';
 import { help as depsHelp } from '../src/commands/deps/deps.help';
-import { help as featuresHelp } from '../src/commands/features/features.help';
 import { help as managedHelp } from '../src/commands/managed/managed.help';
-import { help as migrateHelp } from '../src/commands/migrate/migrate.help';
+import { help as upgradeHelp } from '../src/commands/migrate/migrate.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -183,9 +182,8 @@ function sectionContentToTableRows(content: string): string[][] {
 
 const COMMAND_CONFIGS: ReadonlyArray<{ name: string; help: ReadmeCommandHelpConfig }> = [
   { name: 'create', help: createHelp },
-  { name: 'migrate', help: migrateHelp },
+  { name: 'upgrade', help: upgradeHelp },
   { name: 'deps', help: depsHelp },
-  { name: 'features', help: featuresHelp },
   { name: 'managed', help: managedHelp },
   { name: 'audit', help: auditHelp },
 ];

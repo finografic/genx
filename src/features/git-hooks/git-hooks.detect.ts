@@ -17,7 +17,7 @@ export async function isGitHooksFullyConfigured(targetDir: string): Promise<bool
 }
 
 /**
- * Used by `genx features` / migrate: when `true`, the feature is skipped (nothing to do).
+ * Used by feature apply flows: when `true`, the feature is skipped (nothing to do).
  */
 export async function detectGitHooks(context: FeatureContext): Promise<boolean> {
   return isGitHooksFullyConfigured(context.targetDir);

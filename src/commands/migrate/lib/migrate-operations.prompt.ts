@@ -23,7 +23,7 @@ const DEFAULT_MIGRATE_OPERATIONS = MIGRATE_OPERATION_OPTIONS.map((option) => opt
 
 export async function promptMigrateOperations(flow: FlowContext): Promise<MigrateOnlySection[]> {
   return promptMultiSelect(flow, {
-    message: 'Select migrate operations:',
+    message: 'Select upgrade operations:',
     options: MIGRATE_OPERATION_OPTIONS,
     initialValues: DEFAULT_MIGRATE_OPERATIONS,
   });
