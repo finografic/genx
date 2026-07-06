@@ -25,6 +25,7 @@ build/
 **/.cursor/**
 !**/.cursor/.gitkeep
 !.cursor/rules/
+!.cursor/rules/**
 !.vscode/settings.json
 .idea/
 *.swp

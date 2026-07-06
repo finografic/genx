@@ -23,6 +23,7 @@ import {
 import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
 import {
   AI_INSTRUCTIONS_AGENTS_MD,
+  AI_INSTRUCTIONS_CURSOR_RULES_DIR,
   AI_INSTRUCTIONS_FILES,
   AI_INSTRUCTIONS_SKIP_SUBDIR,
 } from './ai-instructions.constants';
@@ -65,6 +66,32 @@ async function collectInstructionTemplateFiles(
   return out.toSorted((a, b) => a.rel.localeCompare(b.rel));
 }
 
+/** Template files under `.cursor/rules/`. */
+async function collectCursorRuleTemplateFiles(
+  cursorRulesTemplateRoot: string,
+): Promise<Array<{ rel: string; abs: string }>> {
+  const out: Array<{ rel: string; abs: string }> = [];
+
+  async function walk(dir: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name === '.DS_Store') continue;
+      const abs = join(dir, entry.name);
+      const rel = relative(cursorRulesTemplateRoot, abs);
+      if (entry.isDirectory()) {
+        await walk(abs);
+      } else {
+        out.push({ rel, abs });
+      }
+    }
+  }
+
+  if (fileExists(cursorRulesTemplateRoot)) {
+    await walk(cursorRulesTemplateRoot);
+  }
+  return out.toSorted((a, b) => a.rel.localeCompare(b.rel));
+}
+
 export interface PreviewAiInstructionsOptions {
   /**
    * When true (e.g. `previewAiClaude` already applied `.ai` → `.agents`, path refs, and `.gitignore`), skip
@@ -74,8 +101,8 @@ export interface PreviewAiInstructionsOptions {
 }
 
 /**
- * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `AGENTS.md`, ESLint
- * ignores.
+ * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `.cursor/rules/*.mdc`,
+ * `AGENTS.md`, ESLint ignores.
  */
 export async function previewAiInstructions(
   context: FeatureContext,
@@ -143,6 +170,26 @@ export async function previewAiInstructions(
       changes.push(createWritePreviewChange(destPath, current, proposed, join(instructionsDirRel, rel)));
     } else {
       applied.push(join(instructionsDirRel, rel));
+    }
+  }
+
+  const cursorRulesTemplateRoot = resolve(templateDir, AI_INSTRUCTIONS_CURSOR_RULES_DIR);
+  const cursorRuleFiles = await collectCursorRuleTemplateFiles(cursorRulesTemplateRoot);
+  const cursorRulesDestRoot = resolve(targetDir, AI_INSTRUCTIONS_CURSOR_RULES_DIR);
+
+  for (const { rel, abs: srcAbs } of cursorRuleFiles) {
+    const destPath = join(cursorRulesDestRoot, rel);
+    const proposed = await readFile(srcAbs, 'utf8');
+    let current = '';
+    if (fileExists(destPath)) {
+      current = await readFile(destPath, 'utf8');
+    }
+    if (proposed !== current) {
+      changes.push(
+        createWritePreviewChange(destPath, current, proposed, join(AI_INSTRUCTIONS_CURSOR_RULES_DIR, rel)),
+      );
+    } else {
+      applied.push(join(AI_INSTRUCTIONS_CURSOR_RULES_DIR, rel));
     }
   }
 
@@ -217,7 +264,7 @@ export async function previewAiInstructions(
 
   const noopMessage =
     changes.length === 0
-      ? 'AI instructions already match canonical templates (Copilot, instruction files, AGENTS.md, ESLint).'
+      ? 'AI instructions already match canonical templates (Copilot, instruction files, Cursor rules, AGENTS.md, ESLint).'
       : undefined;
 
   return { changes, applied, noopMessage };

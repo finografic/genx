@@ -6,6 +6,9 @@
 
 export const AI_INSTRUCTIONS_FILES = ['.github/copilot-instructions.md', '.github/instructions'] as const;
 
+/** Cursor always-on agent rules (`.mdc` files). */
+export const AI_INSTRUCTIONS_CURSOR_RULES_DIR = '.cursor/rules' as const;
+
 /**
  * Target package `AGENTS.md` path; merge reads `_templates/AGENTS.md.template` (canonical spine, not any
  * repo’s hand-edited copy).

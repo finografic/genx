@@ -21,7 +21,8 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
-  existsSync(join(repoRoot, '_templates/.github/instructions'));
+  existsSync(join(repoRoot, '_templates/.github/instructions')) &&
+  existsSync(join(repoRoot, '_templates/.cursor/rules'));
 
 /**
  * Copy `_templates` Copilot + instruction files (excluding `project/`) + `AGENTS.md` for aligned-detect
@@ -44,6 +45,14 @@ async function seedCanonicalAiInstructions(root: string): Promise<void> {
     join(root, 'AGENTS.md'),
     await readFile(join(repoRoot, '_templates/AGENTS.md.template'), 'utf8'),
   );
+  const cursorRulesRoot = join(repoRoot, '_templates/.cursor/rules');
+  const cursorRuleFiles = await fg('**/*', { cwd: cursorRulesRoot, onlyFiles: true });
+  for (const rel of cursorRuleFiles) {
+    const src = join(cursorRulesRoot, rel);
+    const dest = join(root, '.cursor/rules', rel);
+    await mkdir(dirname(dest), { recursive: true });
+    await writeFile(dest, await readFile(src, 'utf8'));
+  }
   await writeFile(join(root, '.gitignore'), await readFile(join(repoRoot, '_templates/.gitignore'), 'utf8'));
 }
 
@@ -176,6 +185,29 @@ describe('preview migration — drift vs canonical', () => {
       expect(
         preview.changes.some(
           (c) => c.kind === 'write' && c.path.includes('agent-facing-markdown.instructions.md'),
+        ),
+      ).toBe(true);
+
+      await rm(root, { recursive: true, force: true });
+    },
+  );
+
+  it.skipIf(!aiInstructionsTemplatesPresent)(
+    'ai-instructions: missing Cursor rule files vs template show drift',
+    async () => {
+      const root = await mkdtemp(join(tmpdir(), 'genx-aii-cursor-'));
+      await writeFile(
+        join(root, 'package.json'),
+        `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
+      );
+      await seedCanonicalAiInstructions(root);
+      await rm(join(root, '.cursor/rules/git-operations.mdc'));
+
+      const preview = await previewAiInstructions({ targetDir: root });
+      expect(hasPreviewChanges(preview)).toBe(true);
+      expect(
+        preview.changes.some(
+          (c) => c.kind === 'write' && c.path.includes('.cursor/rules/git-operations.mdc'),
         ),
       ).toBe(true);
 

@@ -37,6 +37,7 @@ export const AI_AGENTS_ENFORCED_HEADINGS = [
   'Rules — Global',
   'Rules — Markdown Tables',
   'Git Policy',
+  'Cursor',
 ] as const;
 
 /**

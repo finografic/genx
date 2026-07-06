@@ -21,6 +21,7 @@ const TEMPLATE_SYNC_KEYS = new Set([
   'rules - global',
   'rules - markdown tables',
   'git policy',
+  'cursor',
 ]);
 
 export interface ParsedAgents {
