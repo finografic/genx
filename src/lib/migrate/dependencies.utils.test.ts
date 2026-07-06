@@ -51,6 +51,34 @@ describe('planDependencyChanges', () => {
     ]);
   });
 
+  it('plans missing non-optional dependencies by default', () => {
+    const pkg: PackageJson = {
+      name: '@finografic/test',
+      version: '0.0.0',
+      devDependencies: {},
+    };
+    const changes = planDependencyChanges(pkg, [rule('typescript', '^6.0.0')]);
+    expect(changes).toEqual([
+      expect.objectContaining({
+        name: 'typescript',
+        to: '^6.0.0',
+        operation: 'add',
+      }),
+    ]);
+  });
+
+  it('omits missing dependencies when includeMissing is false', () => {
+    const pkg: PackageJson = {
+      name: '@finografic/test',
+      version: '0.0.0',
+      devDependencies: {},
+    };
+    const changes = planDependencyChanges(pkg, [rule('typescript', '^6.0.0')], {
+      includeMissing: false,
+    });
+    expect(changes).toEqual([]);
+  });
+
   it('omits downgrades by default when policy is older than the current spec', () => {
     const pkg: PackageJson = {
       name: '@finografic/test',

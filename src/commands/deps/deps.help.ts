@@ -28,7 +28,7 @@ export const help: ReadmeCommandHelpConfig = {
   howItWorks: [
     'Reads policy versions from @finografic/deps-policy',
     'Compares against local package.json dependencies',
-    'Shows a table of planned upgrades, adds, and downgrades',
+    'Shows a table of planned upgrades and downgrades for installed dependencies',
     'Prompts to select packages (or applies all with --yes)',
     'Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)',
   ],

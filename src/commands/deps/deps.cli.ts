@@ -27,6 +27,8 @@ import {
   warnMessage,
 } from 'utils';
 
+import type { GitCommitTracker } from 'lib/git/target-git-commit.utils';
+import { commitTrackedGitChanges, createGitCommitTracker } from 'lib/git/target-git-commit.utils';
 import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
 import type { DependencyChange } from 'lib/migrate/dependencies.utils';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
@@ -110,6 +112,30 @@ function logWrittenDependencyVersions(changes: DependencyChange[]): void {
   const sorted = [...changes].toSorted((a, b) => a.name.localeCompare(b.name));
   const body = sorted.map((c) => pc.gray(`${pc.green('+')} ${pc.white(c.name)} ${pc.gray(c.to)}`)).join('\n');
   logMessage(body);
+}
+
+async function commitDepsChanges(
+  tracker: GitCommitTracker | null,
+  changedTargetPaths: readonly string[],
+): Promise<void> {
+  if (changedTargetPaths.length === 0) {
+    return;
+  }
+
+  try {
+    const commitResult = await commitTrackedGitChanges({
+      explicitTargetPaths: changedTargetPaths,
+      message: 'chore(deps): genx deps synced dependency policy',
+      tracker,
+    });
+
+    if (commitResult.committed) {
+      successMessage(`Committed deps sync: ${commitResult.hash}`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnMessage(`Dependencies synced, but Git commit failed: ${message}`);
+  }
 }
 
 export async function syncDeps(argv: string[], context: { cwd: string }): Promise<void> {
@@ -218,9 +244,12 @@ export async function syncDepsForTarget(
 
   const packageJsonPath = resolve(targetDir, 'package.json');
   const packageJson = await readPackageJson(packageJsonPath);
+  const commitTracker = await createGitCommitTracker(targetDir);
+  const changedTargetPaths = new Set<string>();
 
   const allChanges = planDependencyChanges(packageJson, dependencyRules, {
     allowDowngrade: options.allowDowngrade,
+    includeMissing: false,
   });
 
   const header = pc.cyan(targetDir.replace(homedir(), ''));
@@ -235,7 +264,6 @@ export async function syncDepsForTarget(
 
   const ruleByName = new Map(dependencyRules.map((r) => [r.name, r]));
   const updateChanges = allChanges.filter((c) => c.operation !== 'add');
-  const addChanges = allChanges.filter((c) => c.operation === 'add');
 
   const columns = getDepsColumns();
 
@@ -246,18 +274,11 @@ export async function syncDepsForTarget(
     console.log();
   }
 
-  // ─── Show add table ─────────────────────────────────────────────
-  if (addChanges.length > 0) {
-    const addEntries = addChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
-    printDepsTable(addEntries, columns);
-    console.log();
-  }
-
   // ─── Select packages (interactive) or apply all (--yes / -y) ─────────
   const selectedChanges: DependencyChange[] = [];
 
   if (options.yesMode) {
-    selectedChanges.push(...updateChanges, ...addChanges);
+    selectedChanges.push(...updateChanges);
   } else {
     if (updateChanges.length > 0) {
       const updateEntries = updateChanges.map((c) =>
@@ -267,16 +288,9 @@ export async function syncDepsForTarget(
       const selectedNames = new Set(selectedEntries.map((e) => e.name));
       selectedChanges.push(...updateChanges.filter((c) => selectedNames.has(c.name)));
     }
-
-    if (addChanges.length > 0) {
-      const addEntries = addChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
-      const selectedEntries = await selectEntries(addEntries, columns, 'Select packages to add');
-      const selectedNames = new Set(selectedEntries.map((e) => e.name));
-      selectedChanges.push(...addChanges.filter((c) => selectedNames.has(c.name)));
-    }
   }
 
-  if (selectedChanges.length === 0) {
+  if (selectedChanges.length === 0 && toolchainChanges.length === 0) {
     infoMessage(pc.white('No changes selected.'));
     return;
   }
@@ -285,6 +299,7 @@ export async function syncDepsForTarget(
 
   if (selectedChanges.length > 0) {
     await writePackageJson(packageJsonPath, updatedPackageJson);
+    changedTargetPaths.add(packageJsonPath);
 
     const installSpin = spinner();
     const updatingLabel =
@@ -296,6 +311,7 @@ export async function syncDepsForTarget(
     try {
       await execa('pnpm', ['install'], { cwd: targetDir });
       installSpin.stop(pc.green('Dependencies installed'));
+      changedTargetPaths.add(resolve(targetDir, 'pnpm-lock.yaml'));
       logWrittenDependencyVersions(selectedChanges);
     } catch {
       installSpin.stop('Failed to install dependencies');
@@ -312,8 +328,13 @@ export async function syncDepsForTarget(
 
     updatedPackageJson = await applyToolchainChanges(targetDir, updatedPackageJson, toolchainChanges);
     await writePackageJson(packageJsonPath, updatedPackageJson);
+    changedTargetPaths.add(packageJsonPath);
+    if (toolchainChanges.some((change) => change.target === '.nvmrc')) {
+      changedTargetPaths.add(resolve(targetDir, '.nvmrc'));
+    }
     successMessage('Toolchain versions updated');
   }
 
+  await commitDepsChanges(commitTracker, [...changedTargetPaths]);
   successMessage('Done\n');
 }

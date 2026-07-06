@@ -16,6 +16,8 @@ export interface DependencyChange {
 export interface PlanDependencyChangesOptions {
   /** When false (default), omit changes that would move to an older policy floor than the current spec. */
   allowDowngrade?: boolean;
+  /** When false, do not add missing non-optional dependencies. Useful for deps-only policy sync. */
+  includeMissing?: boolean;
 }
 
 function isProtocolSpec(spec: string): boolean {
@@ -98,6 +100,7 @@ export function planDependencyChanges(
   options: PlanDependencyChangesOptions = {},
 ): DependencyChange[] {
   const allowDowngrade = options.allowDowngrade === true;
+  const includeMissing = options.includeMissing !== false;
   const changes: DependencyChange[] = [];
 
   for (const rule of rules) {
@@ -107,7 +110,7 @@ export function planDependencyChanges(
     const targetVersion = rule.version;
 
     if (!current) {
-      if (rule.optional) continue;
+      if (!includeMissing || rule.optional) continue;
       changes.push({
         name: rule.name,
         to: targetVersion,

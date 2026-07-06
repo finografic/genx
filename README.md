@@ -151,7 +151,7 @@ genx deps --update-policy
 
 1. Reads policy versions from @finografic/deps-policy
 2. Compares against local package.json dependencies
-3. Shows a table of planned upgrades, adds, and downgrades
+3. Shows a table of planned upgrades and downgrades for installed dependencies
 4. Prompts to select packages (or applies all with --yes)
 5. Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)
 
