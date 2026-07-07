@@ -6,12 +6,12 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 July 6, 2026
+📅 July 7, 2026
 
 ## Project
 
 `@finografic/genx` is an opinionated generator and codemod toolkit for the `@finografic`
-ecosystem. Current version: **v5.36.0**.
+ecosystem. Current version: **v5.40.0**.
 
 ## Architecture
 
@@ -26,6 +26,11 @@ in `src/lib/package-type.utils.ts`; explicit `genx:type:*` keywords win over heu
 
 **Features:** Self-contained modules live under `src/features/`. Preview-driven change sets power
 both detection and apply flows. Audit reports `installed`, `partial`, and `missing` states.
+
+**Dependencies:** `genx deps` aligns installed target dependencies and toolchain files to the
+current deps-policy snapshot. `genx deps --update-policy` refreshes only the local policy snapshot.
+`genx managed deps` uses the current snapshot by default; `genx managed deps --update-policy`
+refreshes the snapshot once, then syncs all managed targets against that same snapshot.
 
 **VS Code settings:** `src/utils/vscode-settings.*` defines explicit setting groups and renders
 stable JSONC ordering with blank lines between groups.
@@ -68,6 +73,8 @@ separately.
 7. Legacy `.claude/memory.md` and `.claude/handoff.md` are migrated, then deleted.
 8. `upgrade` is the public package-convention sync command; `audit` is the public feature repair
    command.
+9. Managed deps must not move deps-policy implicitly; policy refresh is explicit via
+   `--update-policy`.
 
 ## Open Work
 

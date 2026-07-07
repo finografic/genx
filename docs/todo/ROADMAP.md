@@ -95,13 +95,6 @@ Update `_templates/` skeleton imports to use `cli-kit/*` subpaths.
 
 Detail: [`docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`](./TODO_MIGRATE_TO_CLI_KIT.md)
 
-### `genx deps --update-policy` and managed policy pre-update
-
-Add `--update-policy` flag for interactive-only policy update, and silent policy pre-update
-before `genx managed deps` runs.
-
-Detail: [`docs/todo/TODO_DEPS_UPDATE_POLICY.md`](./TODO_DEPS_UPDATE_POLICY.md)
-
 ### Upgrade command — cli-kit extraction review (Phase 4)
 
 Review managed-target config/path handling, per-target apply/skip/cancel loop, and upgrade-mode
@@ -121,26 +114,27 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 
 ## Done
 
-| Date       | Item                                                                                                             |
-| ---------- | ---------------------------------------------------------------------------------------------------------------- |
-| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)        |
-| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                   |
-| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                  |
-| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                 |
-| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                         |
-| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                      |
-| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)   |
-| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)         |
-| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                       |
-| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)        |
-| 2026-05-26 | Migrate command refactor (Phases 1-3) — [`DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md) |
-| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                             |
-| 2026-04-07 | #3 Husky template completion                                                                                     |
-| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                  |
-| 2026-04-07 | jsdiff per-file diff display                                                                                     |
-| 2026-04-07 | Structured markdown section management                                                                           |
-| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                |
-| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                      |
+| Date       | Item                                                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| 2026-07-07 | Deps policy refresh and managed deps snapshot flow — [`DONE_DEPS_UPDATE_POLICY.md`](./DONE_DEPS_UPDATE_POLICY.md) |
+| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)         |
+| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                    |
+| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                   |
+| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                  |
+| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                          |
+| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                       |
+| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)    |
+| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)          |
+| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                        |
+| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)         |
+| 2026-05-26 | Migrate command refactor (Phases 1-3) — [`DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md)  |
+| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                              |
+| 2026-04-07 | #3 Husky template completion                                                                                      |
+| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                   |
+| 2026-04-07 | jsdiff per-file diff display                                                                                      |
+| 2026-04-07 | Structured markdown section management                                                                            |
+| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                 |
+| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                       |
 
 | Date       | Deleted file (obsolete)                                                   |
 | ---------- | ------------------------------------------------------------------------- |
