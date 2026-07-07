@@ -1,6 +1,6 @@
 ---
 name: template-canonical-merge
-description: Enforce that canonical content for create/migrate/features comes only from `_templates/`, never from the genx repo root or ad hoc copies. Use when merging target files with templates (e.g. AGENTS.md), fixing section order, or adding similar “reverse apply + reorder” logic.
+description: Enforce that canonical content for create/upgrade/features comes only from `_templates/`, never from the genx repo root or ad hoc copies. Use when merging target files with templates (e.g. AGENTS.md), fixing section order, or adding similar “reverse apply + reorder” logic.
 trigger: User mentions `_templates` as source of truth, template merge, AGENTS.md order, reverse apply, or “nothing outside _templates for templating”
 tools: [file-read, file-edit, terminal]
 ---
@@ -9,7 +9,7 @@ tools: [file-read, file-edit, terminal]
 
 ## Non-negotiable invariant
 
-**No part of anything outside `_templates/` is used as the specification for what gets templated** into consumer packages (create, migrate, `ai-instructions`, etc.). The **genx repo root** — including root `AGENTS.md`, root `.github/instructions/`, or hand-edited examples — is **not** the canonical layout for generated or merged output. Always read the **file under `_templates/`** (e.g. `_templates/AGENTS.md.template` — outputs **`AGENTS.md`** in packages).
+**No part of anything outside `_templates/` is used as the specification for what gets templated** into consumer packages (create, upgrade, `ai-instructions`, etc.). The **genx repo root** — including root `AGENTS.md`, root `.github/instructions/`, or hand-edited examples — is **not** the canonical layout for generated or merged output. Always read the **file under `_templates/`** (e.g. `_templates/AGENTS.md.template` — outputs **`AGENTS.md`** in packages).
 
 If code loads a “template” path, it must resolve under **`getTemplatesDir()` / `_templates/`**, not the repository root (except where the running package _is_ the target being written, and even then shared blocks come from `_templates`).
 

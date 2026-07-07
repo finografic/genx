@@ -1,4 +1,4 @@
-// NOTE: Shared constants used across create/migrate/features flows.
+// NOTE: Shared constants used across create/upgrade/feature flows.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Filenames

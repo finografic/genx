@@ -8,7 +8,7 @@ import { isAgentDocsAlreadyMigrated, migrateAgentDocs } from './agent-docs-migra
 export async function runAgentDocsMigration(targetDir: string, yesMode: boolean): Promise<void> {
   if (!yesMode) {
     const confirmed = await clack.confirm({
-      message: `Migrate AI agent docs for ${pc.cyan(targetDir)}?`,
+      message: `Upgrade AI agent docs for ${pc.cyan(targetDir)}?`,
       initialValue: true,
     });
 

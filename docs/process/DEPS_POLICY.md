@@ -33,10 +33,10 @@ Commit: `deps: pin deps-policy to <version>`
 
 | File                                      | What it reads                                     |
 | ----------------------------------------- | ------------------------------------------------- |
-| `src/config/dependencies.rules.ts`        | `policy.base.devDependencies` — all migrate rules |
+| `src/config/dependencies.rules.ts`        | `policy.base.devDependencies` — all upgrade rules |
 | `src/features/vitest/vitest.constants.ts` | `policy.base.devDependencies['vitest']`           |
 | `src/commands/create.cli.ts`              | `policy.cli.dependencies['picocolors']`           |
-| `src/commands/migrate.cli.ts`             | `policy.cli.dependencies['picocolors']`           |
+| `src/commands/upgrade/upgrade.cli.ts`     | `policy.cli.dependencies['picocolors']`           |
 
 ---
 
@@ -50,7 +50,7 @@ Commit: `deps: pin deps-policy to <version>`
 
 ---
 
-## Ongoing: adding a new package to the migrate rules
+## Ongoing: adding a new package to the upgrade rules
 
 1. Add the package to `deps-policy/src/policy/base.ts` with its version.
 2. Release `deps-policy`, update the reference here (step above).
@@ -60,7 +60,7 @@ Commit: `deps: pin deps-policy to <version>`
 { name: 'new-package', version: dev['new-package'], section: 'devDependencies' },
 ```
 
-1. Commit: `feat(deps): add new-package to migrate rules`
+1. Commit: `feat(deps): add new-package to upgrade rules`
 
 ---
 

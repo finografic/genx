@@ -13,7 +13,7 @@ genx picks up the new versions immediately on the next invocation.
 
 ## Background
 
-`@finografic/deps-policy` now ships a `snapshot` command that writes a JSON file:
+`@finografic/deps-policy` now ships a `snapshot` that writes a JSON file:
 
 ```
 ~/.config/finografic/deps-policy.config.json
@@ -122,7 +122,7 @@ Replace every `import { ... } from '@finografic/deps-policy'` with an import fro
 | `src/features/markdown/markdown.constants.ts`                          | `import { policy }`              | → `import { policy } from 'config/policy.js'`              |
 | `src/features/oxc-config/oxc-config.preview.canonical-package-json.ts` | `import { formatting, linting }` | → `import { formatting, linting } from 'config/policy.js'` |
 | `src/commands/create.cli.ts`                                           | `import { policy }`              | → `import { policy } from 'config/policy.js'`              |
-| `src/commands/migrate.cli.ts`                                          | `import { policy }`              | → `import { policy } from 'config/policy.js'`              |
+| `src/commands/upgrade/upgrade.cli.ts`                                  | `import { policy }`              | → `import { policy } from 'config/policy.js'`              |
 
 No other changes needed in those files — the `policy`, `formatting`, and `linting` shapes are
 identical to what the installed package exports.

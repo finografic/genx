@@ -16,7 +16,7 @@ Before proceeding, read `12-design-specs.instructions.md` for the rules governin
 - After a session that produced design documents, plans, or specs in ad-hoc locations
 - When directories like `docs/superpowers/`, `docs/planning/`, `.cursor/plans/`, or `.claude/drafts/` exist
 - When the user asks to organize, triage, or clean up planning docs
-- During `genx migrate` if ad-hoc doc directories are detected
+- During `genx upgrade` if ad-hoc doc directories are detected
 
 ## Preferred: use the triage script
 

@@ -170,7 +170,7 @@ export async function apply{Feature}Extensions(targetDir: string): Promise<strin
   behavior varies by package type.
 - `addExtensionRecommendations`, `addLanguageFormatterSettings`, `readSettingsJson`, `writeSettingsJson` — `'utils'`. Only call from `*.vscode.ts`.
 - `isDependencyDeclared`, `installDevDependency`, `removeDependency` — `'utils'`. Call from `*.apply.ts`.
-- `spinner`, `successMessage`, `successUpdatedMessage`, `successRemovedMessage`, `errorMessage`, `infoMessage` — `'utils'`. For **live** user feedback during apply (and in migrate/command code that mirrors the same UX). Use the right helper so `genx features` / `genx migrate` output stays consistent:
+- `spinner`, `successMessage`, `successUpdatedMessage`, `successRemovedMessage`, `errorMessage`, `infoMessage` — `'utils'`. For **live** user feedback during apply (and in upgrade/command code that mirrors the same UX). Use the right helper so feature and `genx upgrade` output stays consistent:
 
   | Helper                  | When to use                                                                   | Typical wording                                                         |
   | ----------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------- |

@@ -1,5 +1,5 @@
 /**
- * Shared configuration used by both create and migrate commands. This ensures consistency between scaffolding
+ * Shared configuration used by both create and upgrade commands. This ensures consistency between scaffolding
  * new packages and updating existing ones.
  */
 

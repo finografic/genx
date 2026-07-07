@@ -11,7 +11,7 @@ import { auditPackage } from './commands/audit/audit.cli.js';
 import { createPackage } from './commands/create/create.cli.js';
 import { syncDeps } from './commands/deps/deps.cli.js';
 import { runManaged } from './commands/managed/managed.cli.js';
-import { upgradePackage } from './commands/migrate/migrate.cli.js';
+import { upgradePackage } from './commands/upgrade/upgrade.cli.js';
 import { runSelfUpdateCheck, runSelfUpdateForced } from './core/self-update/index.js';
 
 const require = createRequire(import.meta.url);

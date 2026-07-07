@@ -30,10 +30,10 @@ import {
 import type { GitCommitTracker } from 'lib/git/target-git-commit.utils';
 import { commitTrackedGitChanges, createGitCommitTracker } from 'lib/git/target-git-commit.utils';
 import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
-import type { DependencyChange } from 'lib/migrate/dependencies.utils';
-import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
-import { readPackageJson, writePackageJson } from 'lib/migrate/package-json.utils';
-import { applyToolchainChanges, planToolchainChanges } from 'lib/migrate/toolchain.utils';
+import type { DependencyChange } from 'lib/package-policy/dependencies.utils';
+import { applyDependencyChanges, planDependencyChanges } from 'lib/package-policy/dependencies.utils';
+import { readPackageJson, writePackageJson } from 'lib/package-policy/package-json.utils';
+import { applyToolchainChanges, planToolchainChanges } from 'lib/package-policy/toolchain.utils';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { runPolicyUpdate } from 'utils/policy-update.utils';

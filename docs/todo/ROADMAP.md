@@ -100,7 +100,7 @@ Detail: [`docs/todo/TODO_MIGRATE_TO_CLI_KIT.md`](./TODO_MIGRATE_TO_CLI_KIT.md)
 Review managed-target config/path handling, per-target apply/skip/cancel loop, and upgrade-mode
 branching for reuse potential in `@finografic/cli-kit`.
 
-Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md) (Phase 4)
+Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_REFACTOR.md) (Phase 4)
 
 ---
 
@@ -127,7 +127,7 @@ Detail: [`docs/todo/DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_RE
 | 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)          |
 | 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                        |
 | 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)         |
-| 2026-05-26 | Migrate command refactor (Phases 1-3) — [`DONE_MIGRATE_COMMAND_REFACTOR.md`](./DONE_MIGRATE_COMMAND_REFACTOR.md)  |
+| 2026-05-26 | Upgrade command refactor (Phases 1-3) — [`DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_REFACTOR.md)  |
 | 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                              |
 | 2026-04-07 | #3 Husky template completion                                                                                      |
 | 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                   |

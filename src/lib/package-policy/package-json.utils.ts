@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-import { migrateConfig } from 'config/migrate.config';
+import { upgradeConfig } from 'config/upgrade.config';
 import type { PackageJson } from 'types/package-json.types';
 
 function ensureKeyword(keywords: string[], keyword: string): { keywords: string[]; changed: boolean } {
@@ -52,7 +52,7 @@ export function patchPackageJson(
 
   // scripts
   const scripts = { ...packageJson.scripts };
-  for (const [key, value] of Object.entries(migrateConfig.packageJson.ensureScripts)) {
+  for (const [key, value] of Object.entries(upgradeConfig.packageJson.ensureScripts)) {
     if (scripts[key] !== value) {
       scripts[key] = value;
       changes.push(`scripts.${key}`);
@@ -62,10 +62,10 @@ export function patchPackageJson(
 
   // lint-staged
   const lintStaged = { ...packageJson['lint-staged'] };
-  for (const [pattern, commands] of Object.entries(migrateConfig.packageJson.ensureLintStaged)) {
+  for (const [pattern, s] of Object.entries(upgradeConfig.packageJson.ensureLintStaged)) {
     const current = lintStaged[pattern];
-    if (!Array.isArray(current) || current.join('\n') !== commands.join('\n')) {
-      lintStaged[pattern] = commands;
+    if (!Array.isArray(current) || current.join('\n') !== s.join('\n')) {
+      lintStaged[pattern] = s;
       changes.push(`lint-staged.${pattern}`);
     }
   }
@@ -76,12 +76,12 @@ export function patchPackageJson(
   const keywords = Array.isArray(keywordRaw) ? keywordRaw.filter((k) => typeof k === 'string') : [];
   let changedKeywords = false;
 
-  const { includeFinograficKeyword } = migrateConfig.packageJson.ensureKeywords;
+  const { includeFinograficKeyword } = upgradeConfig.packageJson.ensureKeywords;
   const finograficKeywordResult = ensureKeyword(keywords, includeFinograficKeyword);
   changedKeywords = changedKeywords || finograficKeywordResult.changed;
 
   let updated = finograficKeywordResult.keywords;
-  if (migrateConfig.packageJson.ensureKeywords.includePackageName) {
+  if (upgradeConfig.packageJson.ensureKeywords.includePackageName) {
     const packageNameKeywordResult = ensureKeyword(updated, packageNameWithoutScope);
     updated = packageNameKeywordResult.keywords;
     changedKeywords = changedKeywords || packageNameKeywordResult.changed;
@@ -108,7 +108,7 @@ export async function writePackageJson(path: string, packageJson: PackageJson): 
 
 /**
  * Read package.json, strip inlined `commitlint` if present, and write back when changed.
- * Used when migrate runs hooks without the package-json operation selected.
+ * Used when upgrade runs hooks without the package-json operation selected.
  */
 export async function stripCommitlintFromPackageJsonFile(packageJsonPath: string): Promise<boolean> {
   const packageJson = await readPackageJson(packageJsonPath);

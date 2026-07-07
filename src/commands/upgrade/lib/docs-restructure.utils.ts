@@ -3,10 +3,10 @@ import { rename } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ensureDir, fileExists, infoMessage } from 'utils';
 
-import type { MigrateOnlySection } from 'types/migrate.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-import { shouldRunSection } from './migrate-metadata.utils.js';
-import { confirmReleasesRename } from './migrate.prompt.js';
+import { shouldRunSection } from './upgrade-metadata.utils.js';
+import { confirmReleasesRename } from './upgrade.prompt.js';
 
 /**
  * Restructure docs/ folder by moving GitHub-related docs to docs/process/.
@@ -14,7 +14,7 @@ import { confirmReleasesRename } from './migrate.prompt.js';
  */
 export async function restructureDocs(
   targetDir: string,
-  only: Set<MigrateOnlySection> | null,
+  only: Set<UpgradeOnlySection> | null,
 ): Promise<void> {
   if (!shouldRunSection(only, 'docs')) {
     return;

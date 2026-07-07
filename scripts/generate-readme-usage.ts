@@ -7,7 +7,7 @@ import { help as auditHelp } from '../src/commands/audit/audit.help';
 import { help as createHelp } from '../src/commands/create/create.help';
 import { help as depsHelp } from '../src/commands/deps/deps.help';
 import { help as managedHelp } from '../src/commands/managed/managed.help';
-import { help as upgradeHelp } from '../src/commands/migrate/migrate.help';
+import { help as upgradeHelp } from '../src/commands/upgrade/upgrade.help';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 

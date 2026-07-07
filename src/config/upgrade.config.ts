@@ -1,8 +1,8 @@
-import type { MigrateConfig } from 'types/migrate.types';
+import type { UpgradeConfig } from 'types/upgrade.types';
 
 import { sharedConfig } from './shared.config';
 
-export const migrateConfig: MigrateConfig = {
+export const upgradeConfig: UpgradeConfig = {
   defaultScope: sharedConfig.defaultScope,
 
   syncFromTemplate: [

@@ -5,18 +5,18 @@ import type { FeatureId } from 'features/feature.types';
 
 import { runAgentDocsMigration } from './lib/agent-docs.runner.js';
 import { restructureDocs } from './lib/docs-restructure.utils.js';
-import { applyMigrateTarget } from './lib/migrate-apply.runner.js';
-import { parseMigrateArgs } from './lib/migrate-metadata.utils.js';
-import { promptMigrateMode } from './lib/migrate-mode.prompt.js';
-import { promptMigrateOperations } from './lib/migrate-operations.prompt.js';
-import { createMigrateTargetContext } from './lib/migrate-target-context.js';
+import { applyUpgradeTarget } from './lib/upgrade-apply.runner.js';
+import { parseUpgradeArgs } from './lib/upgrade-metadata.utils.js';
+import { promptUpgradeMode } from './lib/upgrade-mode.prompt.js';
+import { promptUpgradeOperations } from './lib/upgrade-operations.prompt.js';
+import { createUpgradeTargetContext } from './lib/upgrade-target-context.js';
 import { runManagedLoop } from 'lib/managed/managed-loop.runner';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
 
-import type { MigrateOnlySection } from 'types/migrate.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-import { help } from './migrate.help.js';
+import { help } from './upgrade.help.js';
 
 export async function upgradePackage(argv: string[], context: { cwd: string }): Promise<void> {
   return withHelp(argv, help, async () => {
@@ -30,7 +30,7 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
 
     const flow = createFlowContext(argv, { y: { type: 'boolean' } });
     const managed = hasManagedFlag(argv);
-    const { targetDir } = parseMigrateArgs(argv, context.cwd);
+    const { targetDir } = parseUpgradeArgs(argv, context.cwd);
 
     if (managed) {
       warnMessage('--managed is deprecated. Use: genx managed upgrade');
@@ -42,9 +42,9 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
       return;
     }
 
-    const selectedOperations = new Set<MigrateOnlySection>(await promptMigrateOperations(flow));
+    const selectedOperations = new Set<UpgradeOnlySection>(await promptUpgradeOperations(flow));
     if (selectedOperations.size === 0 && !managed) {
-      const mode = await promptMigrateMode();
+      const mode = await promptUpgradeMode();
       if (!mode) {
         process.exit(0);
         return;
@@ -65,7 +65,7 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
     if (managed) {
       await runManagedLoop({
         yesMode: flow.yesMode,
-        actionLabel: 'Migrate',
+        actionLabel: 'Upgrade',
         runTarget: async (target) => {
           await upgradeSingleTarget({
             targetDir: target.path,
@@ -89,11 +89,11 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
 
 export async function upgradeSingleTarget(params: {
   targetDir: string;
-  selectedOperations: Set<MigrateOnlySection>;
+  selectedOperations: Set<UpgradeOnlySection>;
   debug: boolean;
   selectedFeatureIds: FeatureId[];
 }): Promise<void> {
-  const context = await createMigrateTargetContext({
+  const context = await createUpgradeTargetContext({
     targetDir: params.targetDir,
     only: params.selectedOperations,
     debug: params.debug,
@@ -104,7 +104,7 @@ export async function upgradeSingleTarget(params: {
   }
 
   await restructureDocs(context.targetDir, params.selectedOperations);
-  await applyMigrateTarget({
+  await applyUpgradeTarget({
     context,
     only: params.selectedOperations,
     selectedFeatureIds: params.selectedFeatureIds,

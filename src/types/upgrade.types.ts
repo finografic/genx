@@ -1,4 +1,4 @@
-export const MIGRATE_ONLY_SECTIONS = [
+export const UPGRADE_ONLY_SECTIONS = [
   'package-json',
   'hooks',
   'nvmrc',
@@ -12,9 +12,9 @@ export const MIGRATE_ONLY_SECTIONS = [
   'gitignore',
 ] as const;
 
-export type MigrateOnlySection = (typeof MIGRATE_ONLY_SECTIONS)[number];
+export type UpgradeOnlySection = (typeof UPGRADE_ONLY_SECTIONS)[number];
 
-export interface MigrateConfig {
+export interface UpgradeConfig {
   /** Default scope expected for existing @finografic packages */
   defaultScope: string;
 
@@ -29,8 +29,8 @@ export interface MigrateConfig {
     templatePath: string;
     /** Path relative to target repo root */
     targetPath: string;
-    /** Which migrate operation controls this item */
-    section: MigrateOnlySection;
+    /** Which upgrade operation controls this item */
+    section: UpgradeOnlySection;
   }>;
 
   /**

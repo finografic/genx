@@ -14,7 +14,7 @@ import type { FeatureId } from 'features/feature.types';
 
 import { applyFeaturesToTarget, logFeatureResults } from 'lib/features/apply-features.runner';
 import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
-import { readPackageJson } from 'lib/migrate/package-json.utils';
+import { readPackageJson } from 'lib/package-policy/package-json.utils';
 import { pc } from 'utils/picocolors';
 import { validateExistingPackage } from 'utils/validation.utils';
 

@@ -128,7 +128,7 @@ Recommended split:
   - copies React/Vite overlay template files during create
 - `react-vite` feature:
   - owns reusable React/Vite frontend surfaces for existing repos
-  - can later support `features`, `migrate`, and `audit`
+  - can later support `upgrade` and `audit`
   - owns preview/detect/apply tests like other modern features
 
 Do not create a separate `design-system` feature yet.
@@ -300,7 +300,7 @@ Minimum acceptance test:
 ### Phase 8 - Documentation
 
 - [x] Update `README.md` generated usage help so `react` appears in package types
-- [x] Add `genx create --type react` example to command help
+- [x] Add `genx create --type react` example to help
 - [x] Add or update any feature README docs affected by React-specific config handling
 - [x] Update `docs/todo/ROADMAP.md` detail link if the doc name changes
 

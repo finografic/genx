@@ -5,25 +5,25 @@ import { getFeature } from 'features/feature-registry';
 import { errorMessage, fileExists, findPackageRoot, getTemplatesDir, infoMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
-import { planDependencyChanges } from 'lib/migrate/dependencies.utils';
-import { patchPackageJson } from 'lib/migrate/package-json.utils';
+import { planDependencyChanges } from 'lib/package-policy/dependencies.utils';
+import { patchPackageJson } from 'lib/package-policy/package-json.utils';
 import { pc } from 'utils/picocolors';
 
 import { dependencyRules } from 'config/dependencies.rules';
 import { mergeConfig } from 'config/merge.rules';
-import { migrateConfig } from 'config/migrate.config';
 import { policy, toolchain } from 'config/policy';
 import { renameRules } from 'config/rename.rules';
-import type { MigrateOnlySection } from 'types/migrate.types';
+import { upgradeConfig } from 'config/upgrade.config';
 import type { PackageJson } from 'types/package-json.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
 import { planGitignoreUpgrade } from './gitignore-upgrade.utils.js';
 import { planMerges } from './merge.utils.js';
-import { shouldRunSection } from './migrate-metadata.utils.js';
 import { detectCurrentNodeState, planNodeRuntimeChanges, planNodeTypesChange } from './node.utils.js';
 import { getExistingFiles, planRenames } from './rename.utils.js';
+import { shouldRunSection } from './upgrade-metadata.utils.js';
 
-export interface MigrationPlanState {
+export interface UpgradePlanState {
   currentNodeState: Awaited<ReturnType<typeof detectCurrentNodeState>> | null;
   nodeRuntimeChanges: ReturnType<typeof planNodeRuntimeChanges>;
   nodeTypesChange: ReturnType<typeof planNodeTypesChange>;
@@ -35,22 +35,22 @@ export interface MigrationPlanState {
   templateDir: string;
 }
 
-export interface MigrationPlanResult {
+export interface UpgradePlanResult {
   plan: string[];
-  state: MigrationPlanState;
+  state: UpgradePlanState;
 }
 
 /**
- * Plan all migration changes without applying them.
+ * Plan all upgrade changes without applying them.
  */
-export async function planMigration(
+export async function planUpgrade(
   targetDir: string,
   packageJson: PackageJson,
   parsed: { scope: string; name: string },
   selectedFeatureIds: FeatureId[],
-  only: Set<MigrateOnlySection> | null,
+  only: Set<UpgradeOnlySection> | null,
   debug: boolean,
-): Promise<MigrationPlanResult> {
+): Promise<UpgradePlanResult> {
   const plan: string[] = [];
 
   // package.json patch plan
@@ -158,7 +158,7 @@ export async function planMigration(
     );
     throw new Error('Template directory not found');
   }
-  for (const item of migrateConfig.syncFromTemplate) {
+  for (const item of upgradeConfig.syncFromTemplate) {
     if (!shouldRunSection(only, item.section)) continue;
     plan.push(`${pc.cyan('sync')} ${item.targetPath} (from template ${item.templatePath})`);
   }

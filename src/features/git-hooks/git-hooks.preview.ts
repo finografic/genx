@@ -9,7 +9,7 @@ import type { FeatureContext } from '../feature.types';
 import {
   reorderGitHookTailKeys,
   stripInlinedCommitlintFromPackageJson,
-} from 'lib/migrate/package-json.utils';
+} from 'lib/package-policy/package-json.utils';
 
 import { COMMITLINT_CONFIG, PACKAGE_JSON, PKG_SIMPLE_GIT_HOOKS } from 'config/constants.config';
 import type { PackageJson } from 'types/package-json.types';

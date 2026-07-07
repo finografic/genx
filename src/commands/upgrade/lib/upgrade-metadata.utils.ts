@@ -1,13 +1,13 @@
 import { resolve } from 'node:path';
 
-import { migrateConfig } from 'config/migrate.config';
-import type { MigrateOnlySection } from 'types/migrate.types';
+import { upgradeConfig } from 'config/upgrade.config';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-interface MigrateArgs {
+interface UpgradeArgs {
   targetDir: string;
 }
 
-export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
+export function parseUpgradeArgs(argv: string[], cwd: string): UpgradeArgs {
   const args = argv.slice();
 
   if (args[0] === 'upgrade') args.shift();
@@ -23,7 +23,7 @@ export function parseMigrateArgs(argv: string[], cwd: string): MigrateArgs {
   return { targetDir };
 }
 
-export function shouldRunSection(only: Set<MigrateOnlySection> | null, section: MigrateOnlySection): boolean {
+export function shouldRunSection(only: Set<UpgradeOnlySection> | null, section: UpgradeOnlySection): boolean {
   if (!only) return true;
   return only.has(section);
 }
@@ -34,5 +34,5 @@ export function getScopeAndName(pkgName: string | undefined): { scope: string; n
     const [scope, name] = pkgName.split('/');
     return { scope, name };
   }
-  return { scope: migrateConfig.defaultScope, name: pkgName };
+  return { scope: upgradeConfig.defaultScope, name: pkgName };
 }

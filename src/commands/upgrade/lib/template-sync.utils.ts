@@ -4,11 +4,11 @@ import { copyDir, copyTemplate, ensureDir } from 'utils';
 
 import { isCliPackage } from 'lib/generators/cli-help.generator';
 
-import { migrateConfig } from 'config/migrate.config';
-import type { MigrateOnlySection } from 'types/migrate.types';
+import { upgradeConfig } from 'config/upgrade.config';
 import type { TemplateVars } from 'types/template.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-import { shouldRunSection } from './migrate-metadata.utils.js';
+import { shouldRunSection } from './upgrade-metadata.utils.js';
 
 /**
  * Sync files from template to target directory.
@@ -19,10 +19,10 @@ export async function syncFromTemplate(
   targetDir: string,
   templateDir: string,
   vars: TemplateVars,
-  only: Set<MigrateOnlySection> | null,
+  only: Set<UpgradeOnlySection> | null,
   packageJson: Record<string, unknown>,
 ): Promise<void> {
-  const syncTasks = migrateConfig.syncFromTemplate.filter((item) => shouldRunSection(only, item.section));
+  const syncTasks = upgradeConfig.syncFromTemplate.filter((item) => shouldRunSection(only, item.section));
 
   if (syncTasks.length === 0) {
     return;

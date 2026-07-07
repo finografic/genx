@@ -3,35 +3,35 @@ import { createDiffConfirmState } from '@finografic/cli-kit/file-diff';
 import { errorMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
-import { readPackageJson } from 'lib/migrate/package-json.utils';
+import { readPackageJson } from 'lib/package-policy/package-json.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 
-import { migrateConfig } from 'config/migrate.config';
-import type { MigrateOnlySection } from 'types/migrate.types';
+import { upgradeConfig } from 'config/upgrade.config';
 import type { PackageJson } from 'types/package-json.types';
 import type { TemplateVars } from 'types/template.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-import { getScopeAndName } from './migrate-metadata.utils.js';
-import { confirmMigrateTarget } from './migrate.prompt.js';
-import { planMigration } from './plan.utils.js';
+import { planUpgrade } from './plan.utils.js';
+import { getScopeAndName } from './upgrade-metadata.utils.js';
+import { confirmUpgradeTarget } from './upgrade.prompt.js';
 
-export interface MigrateTargetContext {
+export interface UpgradeTargetContext {
   targetDir: string;
   packageJsonPath: string;
   packageJson: PackageJson;
   parsed: { scope: string; name: string };
   vars: TemplateVars;
   plan: string[];
-  state: Awaited<ReturnType<typeof planMigration>>['state'];
+  state: Awaited<ReturnType<typeof planUpgrade>>['state'];
   diffState: ReturnType<typeof createDiffConfirmState>;
 }
 
-export async function createMigrateTargetContext(params: {
+export async function createUpgradeTargetContext(params: {
   targetDir: string;
-  only: Set<MigrateOnlySection> | null;
+  only: Set<UpgradeOnlySection> | null;
   debug: boolean;
   selectedFeatureIds: FeatureId[];
-}): Promise<MigrateTargetContext | null> {
+}): Promise<UpgradeTargetContext | null> {
   const validation = validateExistingPackage(params.targetDir);
   if (!validation.ok) {
     errorMessage(validation.reason || 'Not a valid package directory');
@@ -48,10 +48,10 @@ export async function createMigrateTargetContext(params: {
     return null;
   }
 
-  const ok = await confirmMigrateTarget({
+  const ok = await confirmUpgradeTarget({
     scope: parsed.scope,
     name: parsed.name,
-    expectedScope: migrateConfig.defaultScope,
+    expectedScope: upgradeConfig.defaultScope,
   });
   if (!ok) {
     process.exit(0);
@@ -68,7 +68,7 @@ export async function createMigrateTargetContext(params: {
     AUTHOR_EMAIL: '',
   };
 
-  const { plan, state } = await planMigration(
+  const { plan, state } = await planUpgrade(
     params.targetDir,
     packageJson,
     parsed,

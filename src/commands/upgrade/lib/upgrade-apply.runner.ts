@@ -1,37 +1,37 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { confirmFileWrite } from '@finografic/cli-kit/file-diff';
 import { infoMessage, successMessage, successUpdatedMessage } from 'utils';
-import type { MigrateTargetContext } from './migrate-target-context.js';
+import type { UpgradeTargetContext } from './upgrade-target-context.js';
 import type { FeatureId } from 'features/feature.types';
 
-import { applyDependencyChanges, planDependencyChanges } from 'lib/migrate/dependencies.utils';
+import { applyDependencyChanges, planDependencyChanges } from 'lib/package-policy/dependencies.utils';
 import {
   patchPackageJson,
   readPackageJson,
   stripCommitlintFromPackageJsonFile,
   writePackageJson,
-} from 'lib/migrate/package-json.utils';
+} from 'lib/package-policy/package-json.utils';
 
 import { dependencyRules } from 'config/dependencies.rules';
 import { toolchain } from 'config/policy';
-import type { MigrateOnlySection } from 'types/migrate.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
 import { applyMerges } from './merge.utils.js';
-import { shouldRunSection } from './migrate-metadata.utils.js';
+import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from './node.utils.js';
+import { applyRenames } from './rename.utils.js';
+import { copyLicenseIfMissing, syncFromTemplate } from './template-sync.utils.js';
+import { shouldRunSection } from './upgrade-metadata.utils.js';
 import {
   applySelectedFeatures,
   ensureCliHelpFile,
   installDependenciesIfNeeded,
   logFeatureResults,
-} from './migrate-tail.runner.js';
-import { confirmMerges, confirmNodeVersionUpgrade } from './migrate.prompt.js';
-import { applyNodeRuntimeChanges, applyNodeTypesChange, detectNodeMajor } from './node.utils.js';
-import { applyRenames } from './rename.utils.js';
-import { copyLicenseIfMissing, syncFromTemplate } from './template-sync.utils.js';
+} from './upgrade-tail.runner.js';
+import { confirmMerges, confirmNodeVersionUpgrade } from './upgrade.prompt.js';
 
-export async function applyMigrateTarget(params: {
-  context: MigrateTargetContext;
-  only: Set<MigrateOnlySection> | null;
+export async function applyUpgradeTarget(params: {
+  context: UpgradeTargetContext;
+  only: Set<UpgradeOnlySection> | null;
   selectedFeatureIds: FeatureId[];
 }): Promise<void> {
   const { context, only, selectedFeatureIds } = params;

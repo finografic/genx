@@ -3,7 +3,7 @@ import { renderCommandHelp, withHelp } from '@finografic/cli-kit/render-help';
 import { runManagedAuditFlow } from './managed.audit.js';
 import { runManagedDepsFlow } from './managed.deps.js';
 import { help } from './managed.help.js';
-import { runManagedUpgradeFlow } from './managed.migrate.js';
+import { runManagedUpgradeFlow } from './managed.upgrade.js';
 
 export async function runManaged(argv: string[], _context: { cwd: string }): Promise<void> {
   return withHelp(argv, help, async () => {

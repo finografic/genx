@@ -1,8 +1,8 @@
-# DONE — Convert `--managed` into a `managed` command
+# DONE — Convert `--managed` into a `managed`
 
 > **Status:** Done (2026-05-26). `genx managed <command>` implemented; `--managed` flag kept as deprecated alias.
 
-Replace the cross-cutting `--managed` flag with a clearer command-level entrypoint for multi-repo runs.
+Replace the cross-cutting `--managed` flag with a clearer-level entrypoint for multi-repo runs.
 
 ---
 
@@ -10,34 +10,34 @@ Replace the cross-cutting `--managed` flag with a clearer command-level entrypoi
 
 Move from:
 
-- `genx migrate --managed`
+- `genx upgrade --managed`
 - `genx deps --managed`
 - `genx features --managed`
 
-to a command-oriented model such as:
+to a-oriented model such as:
 
-- `genx managed migrate`
+- `genx managed upgrade`
 - `genx managed deps`
 - `genx managed features`
 
-This makes multi-repo execution a first-class command instead of a flag bolted onto multiple commands.
+This makes multi-repo execution a first-class instead of a flag bolted onto multiples.
 
 ---
 
-## Phase 1 — Define command shape
+## Phase 1 — Define shape
 
-- [x] Confirm the command name: `managed`
+- [x] Confirm the name: `managed`
 - [x] Confirm initial supported subcommands:
-  - `migrate`
+  - `upgrade`
   - `deps`
   - `features`
-- [x] Decide whether unsupported commands should error or show help
+- [x] Decide whether unsupporteds should error or show help
 
 ---
 
 ## Phase 2 — Move orchestration ownership
 
-- [x] Make the `managed` command own:
+- [x] Make the `managed` own:
   - reading configured managed targets
   - iterating targets
   - per-target apply / skip / cancel prompts
@@ -48,10 +48,10 @@ This makes multi-repo execution a first-class command instead of a flag bolted o
 
 ## Phase 3 — Reuse single-target runners
 
-- [x] Route `managed migrate` through migrate’s single-target runner
+- [x] Route `managed upgrade` through upgrade’s single-target runner
 - [x] Route `managed deps` through deps’ single-target runner
 - [x] Route `managed features` through features’ single-target runner
-- [x] Avoid duplicating business logic in the new command
+- [x] Avoid duplicating business logic in the new
 
 ---
 
@@ -60,21 +60,21 @@ This makes multi-repo execution a first-class command instead of a flag bolted o
 - [x] Keep `--managed` temporarily as a compatibility alias
 - [x] Print a migration hint when the flag is used
 - [x] Update help text and examples to prefer `genx managed <command>`
-- [x] Remove the flag later once the new command is established
+- [x] Remove the flag later once the new is established
 
 ---
 
 ## Phase 5 — Docs and CLI help
 
 - [x] Add `managed` to root CLI help
-- [x] Add a dedicated `managed` command help file
+- [x] Add a dedicated `managed` help file
 - [x] Update README generated usage/examples
-- [x] Remove `--managed` references from command help when the transition is complete
+- [x] Remove `--managed` references from help when the transition is complete
 
 ---
 
 ## Recommendation
 
 - Yes: this is a worthwhile cleanup
-- `managed` as a command is clearer than a cross-cutting flag
+- `managed` as a is clearer than a cross-cutting flag
 - Implement it by reusing existing single-target runners rather than inventing a second execution path

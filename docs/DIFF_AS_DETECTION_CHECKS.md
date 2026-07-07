@@ -7,7 +7,7 @@ Very small manual checks for the new preview-driven feature flow.
 Pick a repo that is already aligned, then run:
 
 ```bash
-pnpm dev:cli migrate . --write
+pnpm dev:cli upgrade . --write
 ```
 
 Expected result:
@@ -32,4 +32,4 @@ Expected result:
 
 - You should see a per-file diff prompt.
 - Accepting the file should restore the canonical content.
-- Running the same command again should become a no-op.
+- Running the same again should become a no-op.

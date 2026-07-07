@@ -6,10 +6,10 @@ import { runManagedLoop } from 'lib/managed/managed-loop.runner';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
 
-import type { MigrateOnlySection } from 'types/migrate.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-import { promptMigrateOperations } from '../migrate/lib/migrate-operations.prompt.js';
-import { upgradeSingleTarget } from '../migrate/migrate.cli.js';
+import { promptUpgradeOperations } from '../upgrade/lib/upgrade-operations.prompt.js';
+import { upgradeSingleTarget } from '../upgrade/upgrade.cli.js';
 
 export async function runManagedUpgradeFlow(argv: string[]): Promise<void> {
   intro('Managed upgrade across @finografic packages');
@@ -22,7 +22,7 @@ export async function runManagedUpgradeFlow(argv: string[]): Promise<void> {
 
   const flow = createFlowContext(argv, { y: { type: 'boolean' } });
 
-  const selectedOperations = new Set<MigrateOnlySection>(await promptMigrateOperations(flow));
+  const selectedOperations = new Set<UpgradeOnlySection>(await promptUpgradeOperations(flow));
   const selectedFeatureIds: FeatureId[] = await promptFeatures(flow);
 
   if (selectedOperations.size === 0 && selectedFeatureIds.length === 0) {

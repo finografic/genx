@@ -4,7 +4,7 @@ import type { DependencyRule } from 'types/dependencies.types';
 const dev = policy.base.devDependencies ?? {};
 
 /**
- * Dependency version rules for template migrations. Versions are sourced from @finografic/deps-policy — edit
+ * Dependency version rules for template upgrades. Versions are sourced from @finografic/deps-policy — edit
  * versions there, not here.
  *
  * Entries without a version install @latest. Entries with optional: true are only aligned if already present

@@ -1,10 +1,10 @@
 import { promptMultiSelect } from '@finografic/cli-kit/flow';
 import type { FlowContext } from '@finografic/cli-kit/flow';
 
-import type { MigrateOnlySection } from 'types/migrate.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-const MIGRATE_OPERATION_OPTIONS: Array<{
-  value: MigrateOnlySection;
+const UPGRADE_OPERATION_OPTIONS: Array<{
+  value: UpgradeOnlySection;
   label: string;
   hint?: string;
 }> = [
@@ -24,12 +24,12 @@ const MIGRATE_OPERATION_OPTIONS: Array<{
   },
 ];
 
-const DEFAULT_MIGRATE_OPERATIONS = MIGRATE_OPERATION_OPTIONS.map((option) => option.value);
+const DEFAULT_UPGRADE_OPERATIONS = UPGRADE_OPERATION_OPTIONS.map((option) => option.value);
 
-export async function promptMigrateOperations(flow: FlowContext): Promise<MigrateOnlySection[]> {
+export async function promptUpgradeOperations(flow: FlowContext): Promise<UpgradeOnlySection[]> {
   return promptMultiSelect(flow, {
     message: 'Select upgrade operations:',
-    options: MIGRATE_OPERATION_OPTIONS,
-    initialValues: DEFAULT_MIGRATE_OPERATIONS,
+    options: UPGRADE_OPERATION_OPTIONS,
+    initialValues: DEFAULT_UPGRADE_OPERATIONS,
   });
 }

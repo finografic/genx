@@ -2,15 +2,15 @@ import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { errorMessage, infoMessage, runPnpmInstall, spinner, successMessage } from 'utils';
-import type { MigrateTargetContext } from './migrate-target-context.js';
+import type { UpgradeTargetContext } from './upgrade-target-context.js';
 import type { FeatureId } from 'features/feature.types';
 
 import { applyFeaturesToTarget } from 'lib/features/apply-features.runner';
 import { generateCliHelpContent, getBinName, isCliPackage } from 'lib/generators/cli-help.generator';
-import { writePackageJson } from 'lib/migrate/package-json.utils';
+import { writePackageJson } from 'lib/package-policy/package-json.utils';
 
 import { policy } from 'config/policy.js';
-import type { MigrateOnlySection } from 'types/migrate.types';
+import type { UpgradeOnlySection } from 'types/upgrade.types';
 
 export async function applySelectedFeatures(
   targetDir: string,
@@ -36,8 +36,8 @@ export function logFeatureResults(results: { appliedFeatures: FeatureId[]; noopM
 }
 
 export async function ensureCliHelpFile(params: {
-  context: MigrateTargetContext;
-  only: Set<MigrateOnlySection> | null;
+  context: UpgradeTargetContext;
+  only: Set<UpgradeOnlySection> | null;
   hasDependencyChanges: boolean;
 }): Promise<boolean> {
   if ((params.only && params.only.size === 0) || !isCliPackage(params.context.packageJson)) {
