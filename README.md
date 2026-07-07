@@ -204,7 +204,7 @@ genx managed <command> [options]
 | Flag                | Description                                                             |
 | ------------------- | ----------------------------------------------------------------------- |
 | `-y, --yes`         | Skip per-target and per-file confirms; audit still prompts for features |
-| `--features=<keys>` | Comma-separated feature keys to apply (managed audit only)              |
+| `--features=KEYS`   | Comma-separated feature keys to apply (managed audit only)              |
 | `--allow-downgrade` | Include downgrades (deps only)                                          |
 | `--update-policy`   | Refresh deps-policy before syncing (deps only)                          |
 
@@ -242,7 +242,8 @@ genx managed audit -y
 2. Runs the selected command (upgrade, deps, or audit) on each target
 3. Managed deps uses the current policy snapshot unless --update-policy is passed
 4. Managed audit scans all targets first, then prompts for feature selection per target
-5. Managed audit --features skips feature selection and applies only matching partial/missing features
+5. Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features
+6. Feature keys match src/features/\* folder names, e.g. ai-memory, git-hooks, react-vite
 
 <!-- GENERATED:USAGE:END -->
 
@@ -415,15 +416,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                                                                       |
-| --------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                        |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                                                          |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                  |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                          |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--features=<keys>`, `--allow-downgrade`, `--update-policy` |
-| `help`          | Show this help message                             | -                                                                                             |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                                                             |
+| Command         | Description                                        | Options                                                                                     |
+| --------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                      |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                                                        |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                |
+| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                        |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--features=KEYS`, `--allow-downgrade`, `--update-policy` |
+| `help`          | Show this help message                             | -                                                                                           |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                                                           |
 
 See `genx <command> --help` for detailed usage.
 

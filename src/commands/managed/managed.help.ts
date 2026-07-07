@@ -15,7 +15,7 @@ export const help: CommandHelpConfig = {
       description: 'Skip per-target and per-file confirms; audit still prompts for features',
     },
     {
-      flag: '--features=<keys>',
+      flag: '--features=KEYS',
       description: 'Comma-separated feature keys to apply (managed audit only)',
     },
     { flag: '--allow-downgrade', description: 'Include downgrades (deps only)' },
@@ -45,6 +45,7 @@ export const help: CommandHelpConfig = {
     'Runs the selected command (upgrade, deps, or audit) on each target',
     'Managed deps uses the current policy snapshot unless --update-policy is passed',
     'Managed audit scans all targets first, then prompts for feature selection per target',
-    'Managed audit --features skips feature selection and applies only matching partial/missing features',
+    'Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features',
+    'Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite',
   ],
 };
