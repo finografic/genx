@@ -99,7 +99,7 @@ describe('ai-memory preview-driven detect', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('does not overwrite existing roadmap or next steps content', async () => {
+  it('merges legacy next steps into an existing roadmap and deletes the legacy file', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-memory-'));
     await writeFile(
       join(root, 'package.json'),
@@ -125,8 +125,16 @@ describe('ai-memory preview-driven detect', () => {
     await writeFile(join(root, 'CLAUDE.md'), '@AGENTS.md\n');
 
     const preview = await previewAiMemory({ targetDir: root });
-    expect(preview.changes.some((c) => c.path.endsWith('docs/todo/ROADMAP.md'))).toBe(false);
-    expect(preview.changes.some((c) => c.path.endsWith('docs/todo/NEXT_STEPS.md'))).toBe(false);
+    const roadmapWrite = preview.changes.find(
+      (c): c is Extract<(typeof preview.changes)[number], { kind: 'write' }> =>
+        c.kind === 'write' && c.path.endsWith('docs/todo/ROADMAP.md'),
+    );
+    expect(roadmapWrite).toBeDefined();
+    expect(roadmapWrite!.proposedContent).toContain('Keep me');
+    expect(roadmapWrite!.proposedContent).toContain('Keep me too');
+    expect(
+      preview.changes.some((c) => c.kind === 'delete' && c.path.endsWith('docs/todo/NEXT_STEPS.md')),
+    ).toBe(true);
 
     await rm(root, { recursive: true, force: true });
   });

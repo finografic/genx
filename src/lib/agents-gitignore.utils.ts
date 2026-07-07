@@ -35,7 +35,16 @@ function isPatternLine(line: string): boolean {
 function parseSectionHeader(line: string): string | null {
   const trimmed = line.trim();
   const match = trimmed.match(/^#\s+([A-Za-z].*)$/);
-  return match ? match[1].trim().toLowerCase() : null;
+  return match ? normalizeSectionTitle(match[1]) : null;
+}
+
+function normalizeSectionTitle(title: string): string {
+  const normalized = title.trim().toLowerCase();
+  if (normalized === 'os') return 'os files';
+  if (normalized === 'environment and secrets') return 'environment files';
+  if (normalized === 'runtime data and caches') return 'runtime data';
+  if (normalized === 'testing + coverage') return 'testing';
+  return normalized;
 }
 
 function getCanonicalSectionTitles(lines: readonly string[]): ReadonlySet<string> {

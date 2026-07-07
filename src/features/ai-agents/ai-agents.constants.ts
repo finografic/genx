@@ -48,7 +48,7 @@ export const ROADMAP_AND_PLANNING_DOCS_PATCH_LINES = [
   '## Roadmap and Planning Docs',
   '',
   '- Check `ROADMAP.md` before proposing new initiatives.',
-  '- Use `NEXT_STEPS.md` for small follow-ups and manual validation.',
+  '- Use `ROADMAP.md#next` for small follow-ups and manual validation.',
   '- Keep detailed plans in `docs/todo/TODO_*.md`; graduate completed plans to `DONE_*.md`.',
   '- Follow `.github/instructions/documentation/todo-done-docs.instructions.md`.',
   '',

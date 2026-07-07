@@ -17,6 +17,7 @@ import {
 import {
   isMigratableClaudeMemoryContent,
   isMinimalClaudeMdContent,
+  mergeNextStepsIntoRoadmap,
   mergeClaudeHandoffIntoAgentsHandoff,
   mergeClaudeMemoryIntoAgentsMemory,
   stripLegacyClaudeImportHeadings,
@@ -68,11 +69,7 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
   const baseVars = createDefaultTemplateVars();
   const handoffVars = { ...baseVars, ...(await readPackageVars(targetDir)) };
 
-  const createOnlyPaths = [
-    'docs/process/PROJECT_MEMORY_MODEL.md',
-    'docs/todo/ROADMAP.md',
-    'docs/todo/NEXT_STEPS.md',
-  ] as const;
+  const createOnlyPaths = ['docs/process/PROJECT_MEMORY_MODEL.md'] as const;
 
   for (const rel of createOnlyPaths) {
     const dest = resolve(targetDir, rel);
@@ -84,9 +81,11 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
     changes.push(createWritePreviewChange(dest, '', body, rel));
   }
 
-  const [legacyMemoryRel, legacyHandoffRel] = AI_MEMORY_LEGACY_PATHS;
+  const [legacyMemoryRel, legacyHandoffRel, legacyNextStepsRel] = AI_MEMORY_LEGACY_PATHS;
   const legacyMemoryPath = resolve(targetDir, legacyMemoryRel);
   const legacyHandoffPath = resolve(targetDir, legacyHandoffRel);
+  const legacyNextStepsPath = resolve(targetDir, legacyNextStepsRel);
+  const roadmapPath = resolve(targetDir, 'docs/todo/ROADMAP.md');
   const agentsHandoffPath = resolve(targetDir, '.agents/handoff.md');
   const agentsMemoryPath = resolve(targetDir, '.agents/memory.md');
 
@@ -98,6 +97,36 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
   let legacyHandoffContent = '';
   if (fileExists(legacyHandoffPath)) {
     legacyHandoffContent = await readFile(legacyHandoffPath, 'utf8');
+  }
+
+  let legacyNextStepsContent = '';
+  if (fileExists(legacyNextStepsPath)) {
+    legacyNextStepsContent = await readFile(legacyNextStepsPath, 'utf8');
+  }
+
+  const roadmapCurrent = fileExists(roadmapPath) ? await readFile(roadmapPath, 'utf8') : '';
+  const roadmapBase =
+    roadmapCurrent.length > 0
+      ? roadmapCurrent
+      : await templateBody(templateDir, 'docs/todo/ROADMAP.md', baseVars);
+  const roadmapProposed = normalizeNewline(mergeNextStepsIntoRoadmap(roadmapBase, legacyNextStepsContent));
+  if (roadmapProposed !== roadmapCurrent) {
+    changes.push(
+      createWritePreviewChange(roadmapPath, roadmapCurrent, roadmapProposed, 'docs/todo/ROADMAP.md'),
+    );
+  } else {
+    applied.push('docs/todo/ROADMAP.md');
+  }
+
+  if (fileExists(legacyNextStepsPath)) {
+    changes.push(
+      createDeletePreviewChange(
+        legacyNextStepsPath,
+        legacyNextStepsContent,
+        true,
+        'docs/todo/NEXT_STEPS.md (merged into ROADMAP.md)',
+      ),
+    );
   }
 
   const handoffWrittenByLegacyMigration = legacyAiChanges.some(
@@ -143,7 +172,7 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
         legacyHandoffPath,
         legacyHandoffContent,
         true,
-        '.claude/handoff.md (migrated to .agents/handoff.md)',
+        '.claude/handoff.md (legacy source; .agents/handoff.md remains)',
       ),
     );
   }
@@ -204,7 +233,7 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
         legacyMemoryPath,
         legacyMemoryContent,
         true,
-        '.claude/memory.md (migrated to .agents/memory.md)',
+        '.claude/memory.md (legacy source; .agents/memory.md remains)',
       ),
     );
   }

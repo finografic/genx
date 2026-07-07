@@ -201,11 +201,12 @@ genx managed <command> [options]
 | `deps`     | Sync deps across managed targets                      |
 | `audit`    | Audit and repair feature state across managed targets |
 
-| Flag                | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `-y, --yes`         | Skip per-target and per-file confirms          |
-| `--allow-downgrade` | Include downgrades (deps only)                 |
-| `--update-policy`   | Refresh deps-policy before syncing (deps only) |
+| Flag                | Description                                                             |
+| ------------------- | ----------------------------------------------------------------------- |
+| `-y, --yes`         | Skip per-target and per-file confirms; audit still prompts for features |
+| `--features=<keys>` | Comma-separated feature keys to apply (managed audit only)              |
+| `--allow-downgrade` | Include downgrades (deps only)                                          |
+| `--update-policy`   | Refresh deps-policy before syncing (deps only)                          |
 
 **Examples:**
 
@@ -222,8 +223,17 @@ genx managed deps --update-policy
 # Sync deps non-interactively
 genx managed deps --yes
 
-# Audit and repair feature state
+# Audit each target and choose features per project
 genx managed audit
+
+# Apply AI Memory repairs where needed
+genx managed audit --features=ai-memory
+
+# Apply selected feature repairs where needed
+genx managed audit --features=ai-memory,vitest
+
+# Audit each target; skip apply/file confirms
+genx managed audit -y
 ```
 
 **How it works:**
@@ -231,7 +241,8 @@ genx managed audit
 1. Reads managed targets from ~/.config/finografic/genx.config.jsonc
 2. Runs the selected command (upgrade, deps, or audit) on each target
 3. Managed deps uses the current policy snapshot unless --update-policy is passed
-4. Managed audit scans all targets first, then repairs selected targets
+4. Managed audit scans all targets first, then prompts for feature selection per target
+5. Managed audit --features skips feature selection and applies only matching partial/missing features
 
 <!-- GENERATED:USAGE:END -->
 
@@ -267,14 +278,14 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 Project memory model for agentic coding workflows.
 
 - `docs/process/PROJECT_MEMORY_MODEL.md`
-- `docs/todo/ROADMAP.md`
-- `docs/todo/NEXT_STEPS.md`
+- `docs/todo/ROADMAP.md` with a `## Next` section
 - `.agents/handoff.md`
 - `.agents/memory.md`
 - `AGENTS.md` Project Memory Model block (via `ai-agents` dependency)
 - `.gitignore` rules for tracked handoff + ignored memory
 - minimal `CLAUDE.md` pointer to `AGENTS.md`
 - migration from legacy `.claude/memory.md` and `.claude/handoff.md`, followed by legacy-file deletion
+- migration from legacy `docs/todo/NEXT_STEPS.md` into `ROADMAP.md#next`, followed by legacy-file deletion
 
 ### css
 
@@ -404,15 +415,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                                                  |
-| --------------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                   |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                                     |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                             |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                     |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--allow-downgrade`, `--update-policy` |
-| `help`          | Show this help message                             | -                                                                        |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                                        |
+| Command         | Description                                        | Options                                                                                       |
+| --------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                        |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                                                          |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                  |
+| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                          |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--features=<keys>`, `--allow-downgrade`, `--update-policy` |
+| `help`          | Show this help message                             | -                                                                                             |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                                                             |
 
 See `genx <command> --help` for detailed usage.
 

@@ -4,7 +4,7 @@ import { applyAiMemory } from './ai-memory.apply';
 import { auditAiMemory, detectAiMemory } from './ai-memory.detect';
 
 /**
- * AI Memory feature definition. Project memory model: roadmap, next steps, handoff, session memory,
+ * AI Memory feature definition. Project memory model: roadmap, handoff, session memory,
  * and cross-agent compatibility shims.
  */
 export const aiMemoryFeature: Feature = {

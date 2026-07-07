@@ -40,7 +40,7 @@ stable JSONC ordering with blank lines between groups.
 VS Code and CI surfaces.
 
 **Agent docs:** `ai-agents` owns `AGENTS.md` and portable skill scaffolding. `ai-instructions`
-owns shared Copilot, Cursor, and Claude-facing instructions. `ai-memory` owns roadmap, next steps,
+owns shared Copilot, Cursor, and Claude-facing instructions. `ai-memory` owns roadmap, handoff,
 handoff, session memory, `.gitignore`, and the minimal `CLAUDE.md` shim. When selected alone,
 `ai-memory` syncs the required AGENTS memory-model block without installing skills.
 
@@ -87,6 +87,6 @@ separately.
 ## References
 
 - Roadmap: `docs/todo/ROADMAP.md`
-- Near-term work: `docs/todo/NEXT_STEPS.md`
+- Near-term work: `docs/todo/ROADMAP.md#next`
 - Memory model: `docs/process/PROJECT_MEMORY_MODEL.md`
 - Future memory skill: `docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md`

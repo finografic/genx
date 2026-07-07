@@ -21,6 +21,12 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ---
 
+## Next
+
+No active follow-ups.
+
+---
+
 ## P0 — Active
 
 No items.
@@ -83,8 +89,8 @@ Detail: [`docs/todo/TODO_CLI_KIT_MANAGED_LOOP_REVIEW.md`](./TODO_CLI_KIT_MANAGED
 
 ### `maintain-project-memory` skill
 
-Add a procedural skill for reviewing, repairing, and deduplicating roadmap, next-steps, handoff,
-and session-memory docs.
+Add a procedural skill for reviewing, repairing, and deduplicating roadmap, handoff, and
+session-memory docs.
 
 Detail: [`docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md`](./TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md)
 

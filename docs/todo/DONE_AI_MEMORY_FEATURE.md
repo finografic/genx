@@ -9,8 +9,7 @@
 It creates and repairs:
 
 - `docs/process/PROJECT_MEMORY_MODEL.md`
-- `docs/todo/ROADMAP.md`
-- `docs/todo/NEXT_STEPS.md`
+- `docs/todo/ROADMAP.md` with a `## Next` section
 - `.agents/handoff.md`
 - `.agents/memory.md`
 - `.gitignore` agent-memory rules
@@ -21,6 +20,7 @@ It creates and repairs:
 
 - Legacy `.claude/memory.md` content moves into `.agents/memory.md`, then the old file is deleted.
 - Legacy `.claude/handoff.md` content moves into `.agents/handoff.md`, then the old file is deleted.
+- Legacy `docs/todo/NEXT_STEPS.md` content moves into `ROADMAP.md#next`, then the old file is deleted.
 - Imported-content headings are stripped from the canonical files.
 - `.agents/handoff.md` remains tracked while `.agents/memory.md` remains gitignored.
 
@@ -36,6 +36,6 @@ It creates and repairs:
 - [x] Feature appears in generated README documentation.
 - [x] Fresh install creates the expected memory-model files.
 - [x] Legacy Claude memory and handoff files migrate and are deleted.
-- [x] Existing roadmap and next-steps content is preserved.
+- [x] Existing roadmap and legacy next-steps content is preserved.
 - [x] Selecting AI Memory does not scaffold AI Agents skills.
 - [x] Manual `genx audit` feature-install smoke pass completed.

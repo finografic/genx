@@ -7,14 +7,14 @@ Project memory model for agentic coding workflows.
 Creates and repairs the cross-agent planning and memory structure used by @finografic projects:
 
 - `docs/process/PROJECT_MEMORY_MODEL.md`
-- `docs/todo/ROADMAP.md`
-- `docs/todo/NEXT_STEPS.md`
+- `docs/todo/ROADMAP.md` with a `## Next` section
 - `.agents/handoff.md`
 - `.agents/memory.md`
 - `AGENTS.md` Project Memory Model block (via `ai-agents` dependency)
 - `.gitignore` rules for tracked handoff + ignored memory
 - minimal `CLAUDE.md` pointer to `AGENTS.md`
 - migration from legacy `.claude/memory.md` and `.claude/handoff.md`, followed by legacy-file deletion
+- migration from legacy `docs/todo/NEXT_STEPS.md` into `ROADMAP.md#next`, followed by legacy-file deletion
 
 ## Files
 

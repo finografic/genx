@@ -65,6 +65,22 @@ coverage/
     expect(after).not.toContain('# Project-specific');
   });
 
+  it('proposeGitignoreMerge treats legacy section title aliases as canonical', () => {
+    const before = `${getCanonicalGitignoreBody()}
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+`;
+    const after = proposeGitignoreMerge(before);
+    expect(after).toContain('# OS files');
+    expect(after).not.toContain('# Project-specific');
+    expect(after).not.toContain('# OS\n');
+  });
+
   it('proposeGitignoreMerge is idempotent once canonical', () => {
     const complete = `${getCanonicalGitignoreBody()}\n`;
     const once = proposeGitignoreMerge(complete);
