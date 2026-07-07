@@ -155,12 +155,12 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
     const allowDowngrade = argv.includes('--allow-downgrade');
     const pathArg = getPathArg(argv);
 
-    if (updatePolicy && (managed || pathArg)) {
-      errorMessage('--update-policy cannot be combined with --managed or a path argument');
+    if (updatePolicy && pathArg) {
+      errorMessage('--update-policy cannot be combined with a path argument');
       process.exit(1);
     }
 
-    if (updatePolicy) {
+    if (updatePolicy && !managed) {
       const found = await runPolicyUpdate(false);
       if (!found) {
         errorMessage(
@@ -178,8 +178,16 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
 
     if (managed) {
       warnMessage('--managed is deprecated. Use: genx managed deps');
-      // Silently update deps-policy first so the freshest versions are used for all targets.
-      await runPolicyUpdate(true);
+      if (updatePolicy) {
+        const found = await runPolicyUpdate(true);
+        if (!found) {
+          errorMessage(
+            `depsPolicyPath not set in config.\nAdd it to ${pc.cyan(GENX_CONFIG_PATH)} to use --update-policy.`,
+          );
+          process.exit(1);
+          return;
+        }
+      }
       let managedTargets: ManagedTarget[];
       try {
         managedTargets = await readManagedTargets();

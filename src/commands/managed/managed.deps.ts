@@ -1,6 +1,8 @@
-import { intro, isYesMode } from 'utils';
+import process from 'node:process';
+import { errorMessage, GENX_CONFIG_PATH, intro, isYesMode } from 'utils';
 
 import { runManagedLoop } from 'lib/managed/managed-loop.runner';
+import { pc } from 'utils/picocolors';
 import { runPolicyUpdate } from 'utils/policy-update.utils';
 
 import { syncDepsForTarget } from '../deps/deps.cli.js';
@@ -11,8 +13,17 @@ export async function runManagedDepsFlow(argv: string[]): Promise<void> {
 
   const yesMode = isYesMode(argv);
   const allowDowngrade = argv.includes('--allow-downgrade');
+  const updatePolicy = argv.includes('--update-policy');
 
-  await runPolicyUpdate(true);
+  if (updatePolicy) {
+    const found = await runPolicyUpdate(true);
+    if (!found) {
+      errorMessage(
+        `depsPolicyPath not set in config.\nAdd it to ${pc.cyan(GENX_CONFIG_PATH)} to use --update-policy.`,
+      );
+      process.exit(1);
+    }
+  }
 
   await runManagedLoop({
     yesMode,

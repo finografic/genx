@@ -201,10 +201,11 @@ genx managed <command> [options]
 | `deps`     | Sync deps across managed targets                      |
 | `audit`    | Audit and repair feature state across managed targets |
 
-| Flag                | Description                           |
-| ------------------- | ------------------------------------- |
-| `-y, --yes`         | Skip per-target and per-file confirms |
-| `--allow-downgrade` | Include downgrades (deps only)        |
+| Flag                | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `-y, --yes`         | Skip per-target and per-file confirms          |
+| `--allow-downgrade` | Include downgrades (deps only)                 |
+| `--update-policy`   | Refresh deps-policy before syncing (deps only) |
 
 **Examples:**
 
@@ -214,6 +215,9 @@ genx managed upgrade
 
 # Sync deps for all managed targets
 genx managed deps
+
+# Refresh deps-policy, then sync all managed targets
+genx managed deps --update-policy
 
 # Sync deps non-interactively
 genx managed deps --yes
@@ -226,7 +230,8 @@ genx managed audit
 
 1. Reads managed targets from ~/.config/finografic/genx.config.jsonc
 2. Runs the selected command (upgrade, deps, or audit) on each target
-3. Managed audit scans all targets first, then repairs selected targets
+3. Managed deps uses the current policy snapshot unless --update-policy is passed
+4. Managed audit scans all targets first, then repairs selected targets
 
 <!-- GENERATED:USAGE:END -->
 
@@ -399,15 +404,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                               |
-| --------------- | -------------------------------------------------- | ----------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                  |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`          |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                                  |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--allow-downgrade` |
-| `help`          | Show this help message                             | -                                                     |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                     |
+| Command         | Description                                        | Options                                                                  |
+| --------------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
+| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                   |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                                     |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                             |
+| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                     |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--allow-downgrade`, `--update-policy` |
+| `help`          | Show this help message                             | -                                                                        |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                                        |
 
 See `genx <command> --help` for detailed usage.
 
