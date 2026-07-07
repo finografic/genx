@@ -1,5 +1,4 @@
 import { resolve } from 'node:path';
-import { execa } from 'execa';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PACKAGE_JSON } from 'config/constants.config';
@@ -7,6 +6,10 @@ import { PACKAGE_JSON } from 'config/constants.config';
 import { applyPreviewChanges } from '../../lib/feature-preview/index.js';
 import { applyOxcConfig } from './oxc-config.apply.js';
 import { previewOxcConfig } from './oxc-config.preview.js';
+
+const mocks = vi.hoisted(() => ({
+  runPnpmInstall: vi.fn(),
+}));
 
 vi.mock('./oxc-config.preview.js', () => ({
   previewOxcConfig: vi.fn(),
@@ -16,18 +19,14 @@ vi.mock('../../lib/feature-preview/index.js', () => ({
   applyPreviewChanges: vi.fn(),
 }));
 
-vi.mock('execa', () => ({
-  execa: vi.fn(),
-}));
-
 vi.mock('utils', () => ({
   errorMessage: vi.fn(),
+  runPnpmInstall: mocks.runPnpmInstall,
   spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
 }));
 
 const previewOxcConfigMock = vi.mocked(previewOxcConfig);
 const applyPreviewChangesMock = vi.mocked(applyPreviewChanges);
-const execaMock = vi.mocked(execa);
 
 describe('oxfmt.apply — preview-driven apply', () => {
   beforeEach(() => {
@@ -61,7 +60,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
 
     const result = await applyOxcConfig({ targetDir: '/tmp/x' });
     expect(result).toEqual({ applied: [], noopMessage: 'already ok' });
-    expect(execaMock).not.toHaveBeenCalled();
+    expect(mocks.runPnpmInstall).not.toHaveBeenCalled();
   });
 
   it('returns noop when all preview writes were skipped', async () => {
@@ -83,7 +82,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
 
     const result = await applyOxcConfig({ targetDir: '/tmp/x' });
     expect(result.noopMessage).toBe('All changes were skipped.');
-    expect(execaMock).not.toHaveBeenCalled();
+    expect(mocks.runPnpmInstall).not.toHaveBeenCalled();
   });
 
   it('runs pnpm install when needsInstall and appliedTargetPaths includes package.json (labels ignored)', async () => {
@@ -99,12 +98,12 @@ describe('oxfmt.apply — preview-driven apply', () => {
       applied: ['label with no manifest substring'],
       appliedTargetPaths: [packageJsonPath],
     });
-    execaMock.mockResolvedValue({} as never);
+    mocks.runPnpmInstall.mockResolvedValue(undefined);
 
     const result = await applyOxcConfig({ targetDir });
 
     expect(applyPreviewChangesMock).toHaveBeenCalledWith(preview, { yesAll: undefined });
-    expect(execaMock).toHaveBeenCalledWith('pnpm', ['install'], { cwd: targetDir });
+    expect(mocks.runPnpmInstall).toHaveBeenCalledWith(targetDir);
     expect(result.applied).toEqual(['label with no manifest substring', 'dependencies (pnpm install)']);
     expect(result.appliedTargetPaths).toEqual([packageJsonPath]);
   });
@@ -123,7 +122,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
     });
 
     const result = await applyOxcConfig({ targetDir });
-    expect(execaMock).not.toHaveBeenCalled();
+    expect(mocks.runPnpmInstall).not.toHaveBeenCalled();
     expect(result.applied).toEqual(['oxlint.config.ts']);
   });
 
@@ -141,7 +140,7 @@ describe('oxfmt.apply — preview-driven apply', () => {
     });
 
     const result = await applyOxcConfig({ targetDir });
-    expect(execaMock).not.toHaveBeenCalled();
+    expect(mocks.runPnpmInstall).not.toHaveBeenCalled();
     expect(result.applied).toEqual(['package.json (scripts only)']);
   });
 });

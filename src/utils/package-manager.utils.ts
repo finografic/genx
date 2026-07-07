@@ -4,6 +4,12 @@ import { execa } from 'execa';
 
 import type { PackageJson } from 'types/package-json.types';
 
+const PNPM_INSTALL_ARGS = ['install', '--config.confirmModulesPurge=false'];
+
+export async function runPnpmInstall(targetDir: string): Promise<void> {
+  await execa('pnpm', PNPM_INSTALL_ARGS, { cwd: targetDir });
+}
+
 export async function isDependencyDeclared(targetDir: string, packageName: string): Promise<boolean> {
   const packageJsonPath = resolve(targetDir, 'package.json');
   const raw = await readFile(packageJsonPath, 'utf8');

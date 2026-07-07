@@ -1,6 +1,5 @@
 import { resolve } from 'node:path';
-import { execa } from 'execa';
-import { errorMessage, spinner } from 'utils';
+import { errorMessage, runPnpmInstall, spinner } from 'utils';
 import type { FeatureApplyResult, FeatureContext } from '../feature.types';
 
 import { PACKAGE_JSON } from 'config/constants.config';
@@ -31,7 +30,7 @@ export async function applyCss(context: FeatureContext): Promise<FeatureApplyRes
   installSpin.start('Installing dependencies...');
 
   try {
-    await execa('pnpm', ['install'], { cwd: context.targetDir });
+    await runPnpmInstall(context.targetDir);
     installSpin.stop('Dependencies installed');
     return {
       applied: [...result.applied, 'dependencies (pnpm install)'],

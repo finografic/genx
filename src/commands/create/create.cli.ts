@@ -16,6 +16,7 @@ import {
   infoMessage,
   intro,
   outro,
+  runPnpmInstall,
   spinner,
   validateTargetDir,
 } from 'utils';
@@ -279,7 +280,7 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
     installSpin.start('Installing dependencies...');
 
     try {
-      await execa('pnpm', ['install'], { cwd: targetDir });
+      await runPnpmInstall(targetDir);
       installSpin.stop('Dependencies installed');
     } catch {
       installSpin.stop('Failed to install dependencies');

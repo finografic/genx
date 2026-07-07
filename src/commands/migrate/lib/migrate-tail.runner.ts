@@ -1,8 +1,7 @@
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { execa } from 'execa';
-import { errorMessage, infoMessage, spinner, successMessage } from 'utils';
+import { errorMessage, infoMessage, runPnpmInstall, spinner, successMessage } from 'utils';
 import type { MigrateTargetContext } from './migrate-target-context.js';
 import type { FeatureId } from 'features/feature.types';
 
@@ -76,7 +75,7 @@ export async function installDependenciesIfNeeded(
   installSpin.start('Installing dependencies...');
 
   try {
-    await execa('pnpm', ['install'], { cwd: targetDir });
+    await runPnpmInstall(targetDir);
     installSpin.stop('Dependencies installed');
   } catch {
     installSpin.stop('Failed to install dependencies');

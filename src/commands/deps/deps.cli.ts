@@ -10,7 +10,6 @@ import {
   printDepsRow,
   printDepsTable,
 } from '@finografic/deps-policy/display';
-import { execa } from 'execa';
 import {
   GENX_CONFIG_PATH,
   errorMessage,
@@ -22,6 +21,7 @@ import {
   logMessage,
   readManagedTargets,
   resolveTargetDir,
+  runPnpmInstall,
   spinner,
   successMessage,
   warnMessage,
@@ -309,13 +309,15 @@ export async function syncDepsForTarget(
     installSpin.start(pc.cyan(updatingLabel));
 
     try {
-      await execa('pnpm', ['install'], { cwd: targetDir });
+      await runPnpmInstall(targetDir);
       installSpin.stop(pc.green('Dependencies installed'));
       changedTargetPaths.add(resolve(targetDir, 'pnpm-lock.yaml'));
       logWrittenDependencyVersions(selectedChanges);
-    } catch {
+    } catch (error) {
       installSpin.stop('Failed to install dependencies');
-      errorMessage('pnpm install failed — run it manually');
+      const message = error instanceof Error ? error.message : String(error);
+      errorMessage(`pnpm install failed — ${message}`);
+      return;
     }
   }
 
