@@ -76,7 +76,7 @@ genx create --type react
 **How it works:**
 
 1. Prompts for package type, name, author, and optional features
-2. Copies \_templates/ into the target directory with variable substitution
+2. Copies _templates/ into the target directory with variable substitution
 3. Applies selected features (oxc-config, git-hooks, etc.)
 4. Runs pnpm install and initializes a git repository
 
@@ -243,7 +243,7 @@ genx managed audit -y
 3. Managed deps uses the current policy snapshot unless --update-policy is passed
 4. Managed audit scans all targets first, then prompts for feature selection per target
 5. Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features
-6. Feature keys match src/features/\* folder names, e.g. ai-memory, git-hooks, react-vite
+6. Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite
 
 <!-- GENERATED:USAGE:END -->
 
@@ -427,7 +427,6 @@ my-package/
 | `--help` / `-h` | Show help (works with commands too)                | -                                                                                           |
 
 See `genx <command> --help` for detailed usage.
-
 <!-- GENERATED:COMMANDS_REF:END -->
 
 ---
