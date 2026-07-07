@@ -113,15 +113,15 @@
     "@types/semver": "^7.7.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "oxfmt": "^0.57.0",
-    "oxlint": "^1.72.0",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0",
     "oxlint-tsgolint": "^0.24.0",
     "tsdown": "^0.22.3",
     "tsx": "^4.21.0",
     "typescript": "6.0.2",
     "vitest": "^4.1.10"
   },
-  "packageManager": "pnpm@10.32.1",
+  "packageManager": "pnpm@10.33.4",
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",
@@ -136,6 +136,6 @@
     ]
   },
   "engines": {
-    "node": ">=24.3.0"
+    "node": ">=24.16.0"
   }
 }
