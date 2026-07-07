@@ -21,44 +21,6 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 
 ---
 
-## IMPORTANT: Canonical Template Source (STRICT)
-
-THIS project @finografic/genx, that creates / migrates features to other projects.
-
-- TARGET PROJECT uses `_templates/` as ONLY source of truth for:
-  - scaffolding
-  - merging
-  - generation
-
-- Files OUTSIDE of `_templates/` MUST NEVER be used for:
-  - template content
-  - structure
-  - ordering
-
-- This includes:
-  - this file (root AGENTS.md)
-  - feature READMEs
-  - docs/\*\*
-
-This file defines genx behavior, NOT template content.
-
-## Skills — Check Before Implementing
-
-IMPORTANT: Before writing code for any of the patterns below, invoke the paired skill.
-Skills encode the exact conventions and wiring steps for this repo — skipping them causes pattern drift.
-
-| Task                                           | Skill to invoke                                                              |
-| ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| Add or update CLI help / add a command         | [scaffold-cli-help](.github/skills/scaffold-cli-help/SKILL.md)               |
-| Add a new genx feature module                  | [scaffold-feature](.github/skills/scaffold-feature/SKILL.md)                 |
-| Convert a feature to preview diffs             | [scaffold-feature-preview](.github/skills/scaffold-feature-preview/SKILL.md) |
-| Add a new `src/core/` module                   | [scaffold-core-module](.github/skills/scaffold-core-module/SKILL.md)         |
-| Template-only merge & section order            | [template-canonical-merge](.github/skills/template-canonical-merge/SKILL.md) |
-| Prune Learned sections in AGENTS.md            | [maintain-agents](.github/skills/maintain-agents/SKILL.md)                   |
-| Migrate a CLI project to `@finografic/cli-kit` | [migrate-to-cli-kit](.github/skills/migrate-to-cli-kit/SKILL.md)             |
-
----
-
 ## Rules — Project-Specific
 
 - Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
@@ -103,7 +65,7 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 
 - TypeScript patterns: `.github/instructions/code/typescript-patterns.instructions.md`
 - Modern TS patterns: `.github/instructions/code/modern-typescript-patterns.instructions.md`
-- ESLint & style: `.github/instructions/code/linting-code-style.instructions.md`
+- Oxlint & style: `.github/instructions/code/linting-code-style.instructions.md`
 - Provider/context patterns: `.github/instructions/code/provider-context-patterns.instructions.md`
 - Picocolors CLI styling: `.github/instructions/code/picocolors-cli-styling.instructions.md`
 
@@ -143,6 +105,44 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 
 ---
 
+## IMPORTANT: Canonical Template Source (STRICT)
+
+THIS project @finografic/genx, that creates / migrates features to other projects.
+
+- TARGET PROJECT uses `_templates/` as ONLY source of truth for:
+  - scaffolding
+  - merging
+  - generation
+
+- Files OUTSIDE of `_templates/` MUST NEVER be used for:
+  - template content
+  - structure
+  - ordering
+
+- This includes:
+  - this file (root AGENTS.md)
+  - feature READMEs
+  - docs/\*\*
+
+This file defines genx behavior, NOT template content.
+
+## Skills — Check Before Implementing
+
+IMPORTANT: Before writing code for any of the patterns below, invoke the paired skill.
+Skills encode the exact conventions and wiring steps for this repo — skipping them causes pattern drift.
+
+| Task                                           | Skill to invoke                                                              |
+| ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| Add or update CLI help / add a command         | [scaffold-cli-help](.github/skills/scaffold-cli-help/SKILL.md)               |
+| Add a new genx feature module                  | [scaffold-feature](.github/skills/scaffold-feature/SKILL.md)                 |
+| Convert a feature to preview diffs             | [scaffold-feature-preview](.github/skills/scaffold-feature-preview/SKILL.md) |
+| Add a new `src/core/` module                   | [scaffold-core-module](.github/skills/scaffold-core-module/SKILL.md)         |
+| Template-only merge & section order            | [template-canonical-merge](.github/skills/template-canonical-merge/SKILL.md) |
+| Prune Learned sections in AGENTS.md            | [maintain-agents](.github/skills/maintain-agents/SKILL.md)                   |
+| Migrate a CLI project to `@finografic/cli-kit` | [migrate-to-cli-kit](.github/skills/migrate-to-cli-kit/SKILL.md)             |
+
+---
+
 ## Project Memory Model
 
 - `docs/todo/ROADMAP.md` = milestone plan, near-term tasks, and completed history.
@@ -152,6 +152,12 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 Promote durable findings from memory → handoff, priorities and follow-ups → roadmap.
 
 Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMORY_MODEL.md)
+
+---
+
+## Cursor
+
+- Always-on rules: `.cursor/rules/` (`alwaysApply` — entry point is `AGENTS.md`, same as `CLAUDE.md`)
 
 ---
 

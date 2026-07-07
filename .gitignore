@@ -1,6 +1,3 @@
-# GENX: template dev only — keep template sources in this repo
-!_templates/.agents/memory.md
-
 # Dependencies
 node_modules/
 .pnpm-store/
@@ -103,3 +100,7 @@ Desktop.ini
 
 # Security
 deps-xscan-report.json
+
+# Project-specific
+# GENX: template dev only — keep template sources in this repo
+!_templates/.agents/memory.md
