@@ -1,7 +1,8 @@
-# TODO — Migrate agent instructions/skills from `.github/` to `.agents/`
+# DONE — Migrate agent instructions/skills from `.github/` to `.agents/`
 
-> **Status:** Planning (2026-07-25). Not started. Awaiting review — Phase 0 (drift consolidation)
-> must land before Phase 1 starts.
+> **Completed:** 2026-07-26 — all 4 phases + the self-update lifecycle script shipped and verified
+> against genx root; both cli-kit-repo and ai-agent-config-repo small cleanups done. Remaining
+> `triage-docs` distribution is tracked as a separate future item under ROADMAP #6, not blocking.
 
 ## Why
 
@@ -404,36 +405,51 @@ started — see "Lifecycle" below, now built as a follow-up so future syncs don'
       errors. This is the actual proof the Phase 3 migration-tool changes work end-to-end, not just
       that files moved.
 
-## Lifecycle: keeping genx's own copy in sync
+## Lifecycle: keeping genx's own copy in sync ✅ done (2026-07-26)
 
 genx has two roles with respect to `@finografic/ai-agent-config`: it **vendors** the package's
 assets into every other `@finografic` project (via `create`/`upgrade`/`managed audit`), and it is
 **itself a consumer** of the same package for its own root `.agents/` / `.claude/skills/` /
-`AGENTS.md` content. Today that second role is hand-maintained — which is exactly how
-`_templates/.github/` and root `.github/` drifted apart in the first place (Phase 0). Once Phase 3
-repoints genx's vendoring logic at the published npm package, genx's own copy should stop being
-hand-maintained too, for the same reason.
+`AGENTS.md` content. That second role used to be hand-maintained — which is exactly how
+`_templates/.github/` and root `.github/` drifted apart in the first place (Phase 0). It no longer
+is.
 
-**Key finding:** no new machinery is needed for this. `genx upgrade` (the plain, non-`managed`
-command) already runs against `process.cwd()`, and the upgrade operation picker already has an
-"agent docs" category. So genx keeping its own root in sync is just genx running its own CLI against
-its own repo, the same way any other `@finografic` project would — not a special self-target case.
+**What actually shipped, and why it's more than originally scoped:** `genx upgrade`'s existing
+"agent docs" path (`agent-docs-migration.ts` / `runAgentDocsMigration`) turned out to be a
+**one-time structural migration tool only** — it renames old folder layouts and fills in files that
+are _entirely missing_, but it does **not** diff existing file content against the canonical source.
+Running it alone would make `update:ai-agent-config` a no-op after the first migration, silently
+failing to pick up future wording/content changes published to `ai-agent-config`. The actual
+content-diff-and-sync mechanism is the `aiInstructions` / `aiAgents` **feature apply** path
+(`previewAiInstructions` / `previewAiAgents` → `applyPreviewChanges`), normally only reachable
+through `genx upgrade`'s interactive feature picker.
 
-- [ ] Add an `update:ai-agent-config` script to genx's `package.json`, following the existing
-      `update:oxc-config` / `update:cli-kit` precedent (bump the npm dep) but extended with a second
-      step, since unlike those packages ai-agent-config ships vendored files, not just importable
-      code:
-      `json
-"update:ai-agent-config": "pnpm update @finografic/ai-agent-config --latest && genx upgrade"
-`
-- [ ] Check whether `upgrade` supports non-interactive operation selection (a flag to scope straight
-      to "agent docs" instead of the full interactive picker) — if so, use it in the script instead
-      of requiring an interactive prompt during a dependency-bump workflow
-- [ ] This closes Open Question #2 below (`.claude/skills/` population strategy): generated/synced
-      via this same `genx upgrade` run, not checked into `_templates/`/root as a hand-maintained
-      third copy
-- [ ] Once this script exists, Phase 4's "genx root" work stops being a one-time manual migration —
-      run `update:ai-agent-config` instead of hand-editing root `.agents/`/`.claude/skills/` directly
+- [x] Added a non-interactive `--agent-docs` flag to `genx upgrade` (`upgrade.cli.ts`,
+      `upgrade.help.ts`). It runs **both** steps: `runAgentDocsMigration` (structural migration,
+      no-op once already migrated) **then** `applyFeaturesToTarget(targetDir, ['aiInstructions',
+'aiAgents'], { yesAll })` (the real content sync — reuses the same helper `genx audit` uses).
+      This makes `--agent-docs` a genuine "sync everything agent-doc related to canonical" flag, not
+      just a legacy-layout renamer — closes the gap the plan's original phrasing missed.
+- [x] Confirmed no CLI flag existed for non-interactive operation/feature selection before this
+      change (checked `upgrade-operations.prompt.ts`, `features.prompt.ts`,
+      `upgrade-metadata.utils.ts`) — the flag genuinely needed to be added, not just discovered.
+- [x] `update:ai-agent-config` script now reads: `pnpm update @finografic/ai-agent-config --latest
+&& pnpm build && node dist/index.mjs upgrade --agent-docs -y`. Rebuilds first since
+      `--agent-docs` needs to run against the freshly-bumped dependency, not a stale `dist/`.
+- [x] Verified live against genx root: first run found real drift a manual Phase 4 copy had missed
+      (`.cursor/rules/agents-entry.mdc` + `.cursor/rules/git-operations.mdc` were never synced;
+      `AGENTS.md` section order didn't match what the canonical merge algorithm produces) and fixed
+      it automatically — genuine proof this closes the loop, not just a smoke test. **Note:** this
+      run used `-y`, which (via `applyFeaturesToTarget`'s existing `commitEachFeature` default —
+      same behavior `genx audit` already has) auto-committed the fix per feature
+      (`c976cc1`, `cfef3b1`). Flagged to and confirmed by the user after the fact; anyone running
+      `update:ai-agent-config` should expect the same atomic-commit-per-feature behavior genx's
+      other commands already have, not a silent surprise.
+- [x] Re-ran immediately after: reports `No changes made` for both features — idempotent.
+- [x] Closes Open Question #2 below (`.claude/skills/` population strategy): generated/synced via
+      this script's `aiAgents` feature apply, not checked in as a hand-maintained third copy.
+- [x] Phase 4's "genx root" work is no longer a one-time manual migration — future syncs run
+      `pnpm run update:ai-agent-config` instead of hand-editing root `.agents/`/`.claude/skills/`.
 
 ## Open questions for review
 
@@ -444,24 +460,29 @@ its own repo, the same way any other `@finografic` project would — not a speci
 2. ~~`.claude/skills/` population strategy~~ — resolved above ("Lifecycle" section). Generated via
    `genx upgrade` (the same `update:ai-agent-config` script genx uses on itself), not hand-maintained
    as a checked-in third copy.
-3. **Legacy `.github/` detection** — should `upgrade`/`audit` detect an existing `.github/instructions`
-   layout in a _consumer_ repo and offer a migration path to `.agents/`, symmetric to how
-   `ai-memory` already migrates legacy `.claude/handoff.md` → `.agents/handoff.md`? Recommend yes,
-   but scope as a Phase 3 sub-item once the base path rename lands, not a blocker for it.
-4. **`.github/workflows/` and other `.github/` content** — out of scope, explicitly untouched.
-   Confirm no other `.github/` subdirectory (issue templates, PR templates) is implicated.
+3. ~~Legacy `.github/` detection~~ — resolved. `agent-docs-migration.ts`'s Step 1.5
+   (`needsGithubInstructionsFolderMigration` / `migrateGithubInstructionsFolder`) does exactly this
+   for _any_ target repo running `genx upgrade` (interactively or via `--agent-docs`), symmetric to
+   the existing `.ai/` → `.agents/` Step 1. Not genx-root-specific — this is the general mechanism
+   consumer repos get too.
+4. ~~`.github/workflows/` and other `.github/` content~~ — confirmed out of scope and untouched
+   throughout. The only `.github/` subdirectory affected across all 4 phases was `instructions/` and
+   `skills/`; `workflows/`, issue templates, and PR templates were never referenced or modified.
 
 ## Related
 
-- `.github/skills/template-canonical-merge/SKILL.md` — governs how `_templates/` changes must be
+- `.agents/skills/template-canonical-merge/SKILL.md` — governs how `_templates/` changes must be
   made (canonical source, no root-as-spec)
 - `.agents/handoff.md`, `.agents/memory.md` — existing precedent for `.agents/`-rooted, tool-neutral
   content already in place at genx root
 - **`triage-docs` → future `ai-agent-config` candidate.** The one skill user flagged as useful for
   target projects, but blocked on ROADMAP P2 item #6 (`scripts/triage-docs.ts` portability) before it
   can move out of genx-only. Revisit once #6 ships — not part of this migration's phases.
-- **cli-kit cleanup (separate repo, tracked here for visibility only):** delete the stale
-  `@finografic-cli-kit/.github/skills/scaffold-feature/` duplicate (found during Phase 0). Not a
-  genx or `ai-agent-config` change — do it directly in the cli-kit repo whenever convenient.
+- **cli-kit cleanup (separate repo) ✅ deletion staged, not committed (2026-07-26).** The stale
+  `@finografic-cli-kit/.github/skills/scaffold-feature/` duplicate is `git rm`'d in that repo's
+  working tree. Left uncommitted deliberately — that repo has substantial unrelated pre-existing
+  uncommitted work (`.agents/`, `.claude/`, modified `AGENTS.md`/`CLAUDE.md`/`package.json`, etc.)
+  that isn't this migration's to touch or commit. Whoever owns that in-progress work should commit
+  the deletion alongside it.
 - `@finografic/ai-agent-config` — `docs/todo/TODO_SETUP_AGENT_CONFIG.md` (in that repo) — original
   setup plan this migration builds on

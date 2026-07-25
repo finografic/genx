@@ -10,6 +10,7 @@ import { parseUpgradeArgs } from './lib/upgrade-metadata.utils.js';
 import { promptUpgradeMode } from './lib/upgrade-mode.prompt.js';
 import { promptUpgradeOperations } from './lib/upgrade-operations.prompt.js';
 import { createUpgradeTargetContext } from './lib/upgrade-target-context.js';
+import { applyFeaturesToTarget, logFeatureResults } from 'lib/features/apply-features.runner';
 import { runManagedLoop } from 'lib/managed/managed-loop.runner';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
@@ -28,7 +29,7 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
       infoMessage(`argv[1]: ${process.argv[1] ?? ''}`);
     }
 
-    const flow = createFlowContext(argv, { y: { type: 'boolean' } });
+    const flow = createFlowContext(argv, { 'y': { type: 'boolean' }, 'agent-docs': { type: 'boolean' } });
     const managed = hasManagedFlag(argv);
     const { targetDir } = parseUpgradeArgs(argv, context.cwd);
 
@@ -39,6 +40,25 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
     if (managed && targetDir !== context.cwd) {
       errorMessage('Cannot combine [path] with --managed');
       process.exit(1);
+      return;
+    }
+
+    if (flow.flags['agent-docs']) {
+      if (managed) {
+        errorMessage('Cannot combine --agent-docs with --managed');
+        process.exit(1);
+        return;
+      }
+      // Legacy structural migration first (old .github/ layout → .agents/, .ai/ → .agents/, etc.
+      // no-ops once already migrated), then the real content sync — diffs AGENTS.md, instructions,
+      // and skills against `_templates` / the installed `@finografic/ai-agent-config` and applies
+      // anything that's drifted. Migration alone only fills in files that are missing entirely.
+      await runAgentDocsMigration(targetDir, flow.yesMode);
+      const results = await applyFeaturesToTarget(targetDir, ['aiInstructions', 'aiAgents'], {
+        commandName: 'upgrade',
+        yesAll: flow.yesMode,
+      });
+      logFeatureResults(results);
       return;
     }
 
