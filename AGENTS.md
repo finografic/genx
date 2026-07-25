@@ -32,26 +32,6 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
   - **library** and **config** package types do not use this `core/` layout — TBD whether they get an analogous doc).
 - After editing `docs/spec/CLI_CORE.md`, copy it to `_templates/docs/spec/CLI_CORE.md` so the template stays aligned — `pnpm check:cli-core-spec` (in `release:check` and CI) compares the two files
 
-### Generating Documentation
-
-- Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-- When adding a command, use the **[scaffold-cli-help](/.agents/skills/scaffold-cli-help/SKILL.md)** skill.
-  It covers wiring `src/cli.ts`, `src/cli.help.ts`, and the per-command help file.
-- IMPORTANT: After any change to commands, help text, or examples, run `pnpm docs:usage` to regenerate the README — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-
-### Instructions to Skills Map
-
-Canonical patterns live under `.agents/instructions/project/`. Paired skills live under `.agents/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows.
-
-| Instructions                                                        | Skill (procedure)                                   |
-| ------------------------------------------------------------------- | --------------------------------------------------- |
-| `.agents/instructions/project/feature-patterns.instructions.md`     | `.agents/skills/generate-new-genx-feature/SKILL.md` |
-| `.agents/instructions/project/cli-help-patterns.instructions.md`    | `.agents/skills/scaffold-cli-help/SKILL.md`         |
-| `.agents/instructions/project/core-module-patterns.instructions.md` | `.agents/skills/scaffold-core-module/SKILL.md`      |
-
-- Published to GitHub Packages (`https://npm.pkg.github.com`).
-- Do not reference `@workspace/*` — all imports and deps must use published package names.
-
 ## Rules — Global
 
 Rules are canonical in `.agents/instructions/` — see `README.md` there for folder structure.
@@ -104,6 +84,26 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 - `.agents/instructions/git/git-policy.instructions.md` (see Commits and Releases sections)
 
 ---
+
+### Generating Documentation
+
+- Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
+- When adding a command, use the **[scaffold-cli-help](/.agents/skills/scaffold-cli-help/SKILL.md)** skill.
+  It covers wiring `src/cli.ts`, `src/cli.help.ts`, and the per-command help file.
+- IMPORTANT: After any change to commands, help text, or examples, run `pnpm docs:usage` to regenerate the README — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
+
+### Instructions to Skills Map
+
+Canonical patterns live under `.agents/instructions/project/`. Paired skills live under `.agents/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows.
+
+| Instructions                                                        | Skill (procedure)                                   |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| `.agents/instructions/project/feature-patterns.instructions.md`     | `.agents/skills/generate-new-genx-feature/SKILL.md` |
+| `.agents/instructions/project/cli-help-patterns.instructions.md`    | `.agents/skills/scaffold-cli-help/SKILL.md`         |
+| `.agents/instructions/project/core-module-patterns.instructions.md` | `.agents/skills/scaffold-core-module/SKILL.md`      |
+
+- Published to GitHub Packages (`https://npm.pkg.github.com`).
+- Do not reference `@workspace/*` — all imports and deps must use published package names.
 
 ## Agent execution efficiency
 
