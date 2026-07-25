@@ -35,7 +35,16 @@ No items.
 
 ## P1 — Next Up
 
-No items.
+### 1. Migrate agent instructions/skills from `.github/` to `.agents/`
+
+Rename `.github/instructions/` and `.github/skills/` to `.agents/instructions/` and
+`.agents/skills/` across `_templates/`, genx `src/` feature code, and genx root, plus dual-write
+skills to `.claude/skills/` for native Claude Code discovery. `copilot-instructions.md` stays under
+`.github/` as a thin stub. Spans `@finografic/ai-agent-config` too. First needs a drift-consolidation
+pass — `_templates/.github/` and root `.github/` diverged unintentionally and must be reconciled to
+one source before the rename starts.
+
+Detail: [`docs/todo/TODO_AGENTS_DIR_MIGRATION.md`](./TODO_AGENTS_DIR_MIGRATION.md)
 
 ---
 

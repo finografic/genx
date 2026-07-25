@@ -51,6 +51,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^21.2.0
         version: 21.2.0
+      '@finografic/ai-agent-config':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@finografic/md-lint':
         specifier: ^0.16.6
         version: 0.16.6
@@ -401,6 +404,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@finografic/ai-agent-config@0.0.2':
+    resolution: {integrity: sha512-BnrOip8KBI/d3Trnb0xkaY61q+ewfxaMucMJCz8+VzV7hyoDGl1NjHwDkKNhlybTrl+LeDJZYNzZBgr7yKM/UQ==, tarball: https://npm.pkg.github.com/download/@finografic/ai-agent-config/0.0.2/9f7b2fb7c375a0e1673a544a340cda06e5208eb9}
+    engines: {node: '>=24.16.0'}
 
   '@finografic/cli-kit@1.4.0':
     resolution: {integrity: sha512-E6jvfu5PtgSfn7WeSjIQVVXvdGjTjEp8e/3V8IcF6Q4YByAjVT2E+pYsoUmFOaW0+OLIeUbJKEV5C2d4BhnAqw==, tarball: https://npm.pkg.github.com/download/@finografic/cli-kit/1.4.0/a8f6002444fc2e23b854a25f74f18c183b588327}
@@ -2732,6 +2739,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.0':
     optional: true
+
+  '@finografic/ai-agent-config@0.0.2': {}
 
   '@finografic/cli-kit@1.4.0':
     dependencies:
