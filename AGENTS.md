@@ -85,26 +85,6 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 
 ---
 
-### Generating Documentation
-
-- Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-- When adding a command, use the **[scaffold-cli-help](/.agents/skills/scaffold-cli-help/SKILL.md)** skill.
-  It covers wiring `src/cli.ts`, `src/cli.help.ts`, and the per-command help file.
-- IMPORTANT: After any change to commands, help text, or examples, run `pnpm docs:usage` to regenerate the README — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-
-### Instructions to Skills Map
-
-Canonical patterns live under `.agents/instructions/project/`. Paired skills live under `.agents/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows.
-
-| Instructions                                                        | Skill (procedure)                                   |
-| ------------------------------------------------------------------- | --------------------------------------------------- |
-| `.agents/instructions/project/feature-patterns.instructions.md`     | `.agents/skills/generate-new-genx-feature/SKILL.md` |
-| `.agents/instructions/project/cli-help-patterns.instructions.md`    | `.agents/skills/scaffold-cli-help/SKILL.md`         |
-| `.agents/instructions/project/core-module-patterns.instructions.md` | `.agents/skills/scaffold-core-module/SKILL.md`      |
-
-- Published to GitHub Packages (`https://npm.pkg.github.com`).
-- Do not reference `@workspace/*` — all imports and deps must use published package names.
-
 ## Agent execution efficiency
 
 Prefer the smallest complete implementation and validation loop for the task. Aim for one orientation pass, one coherent edit pass, and one focused validation pass; further loops need a concrete failure or newly discovered dependency.
