@@ -88,9 +88,10 @@ Upgrade an existing @finografic package to current conventions
 genx upgrade [path] [options]
 ```
 
-| Flag        | Description                        |
-| ----------- | ---------------------------------- |
-| `-y, --yes` | Skip per-file confirmation prompts |
+| Flag           | Description                                                                  |
+| -------------- | ---------------------------------------------------------------------------- |
+| `-y, --yes`    | Skip per-file confirmation prompts                                           |
+| `--agent-docs` | Sync AGENTS.md, .agents/instructions/, and .agents/skills/ non-interactively |
 
 **Examples:**
 
@@ -103,6 +104,9 @@ genx upgrade ../my-package
 
 # Apply changes without per-file confirms
 genx upgrade --yes
+
+# Sync agent docs only, no prompts
+genx upgrade --agent-docs -y
 ```
 
 **How it works:**
@@ -419,7 +423,7 @@ my-package/
 | Command         | Description                                        | Options                                                                                     |
 | --------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                      |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`                                                                                        |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`, `--agent-docs`                                                                        |
 | `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                |
 | `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                        |
 | `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--features=KEYS`, `--allow-downgrade`, `--update-policy` |
