@@ -6,12 +6,12 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 July 7, 2026
+📅 July 26, 2026
 
 ## Project
 
 `@finografic/genx` is an opinionated generator and codemod toolkit for the `@finografic`
-ecosystem. Current version: **v5.40.0**.
+ecosystem. Current version: **v5.42.0**.
 
 ## Architecture
 
@@ -39,10 +39,22 @@ stable JSONC ordering with blank lines between groups.
 `oxc-config` removes obsolete ESLint / dprint dependencies and root files, then cleans related
 VS Code and CI surfaces.
 
-**Agent docs:** `ai-agents` owns `AGENTS.md` and portable skill scaffolding. `ai-instructions`
-owns shared Copilot, Cursor, and Claude-facing instructions. `ai-memory` owns roadmap, handoff,
-handoff, session memory, `.gitignore`, and the minimal `CLAUDE.md` shim. When selected alone,
-`ai-memory` syncs the required AGENTS memory-model block without installing skills.
+**Agent docs:** `ai-agents` owns `AGENTS.md` and portable skill scaffolding, dual-written to
+`.agents/skills/` (cross-tool manual reference via `AGENTS.md`) and `.claude/skills/` (native
+Claude Code discovery) from one `_templates/.agents/skills/` source. `ai-instructions` owns shared
+Copilot, Cursor, and Claude-facing instructions under `.agents/instructions/`
+(`.github/copilot-instructions.md` stays a stub — only place Copilot itself reads from). `ai-memory`
+owns roadmap, handoff, session memory, `.gitignore`, and the minimal `CLAUDE.md` shim. When selected
+alone, `ai-memory` syncs the required AGENTS memory-model block without installing skills.
+
+**Single source of truth for agent content:** `@finografic/ai-agent-config` (separate repo,
+published to GitHub Packages) is canonical for instructions/skills shared across every
+`@finografic` project. `_templates/.agents/` and genx root's own `.agents/` both pull from it —
+genx is simultaneously the tool that vendors this content into other projects _and_ a consumer of
+it for its own root. `genx upgrade --agent-docs -y` (wrapped by `pnpm run update:ai-agent-config`)
+is the non-interactive sync path: legacy structural migration (old `.github/instructions/` →
+`.agents/instructions/`, `.ai/` → `.agents/`) followed by real content diff-and-apply via the same
+`applyFeaturesToTarget` helper `genx audit` uses. Applied changes auto-commit per feature.
 
 ## Feature Status
 
@@ -75,6 +87,16 @@ separately.
    command.
 9. Managed deps must not move deps-policy implicitly; policy refresh is explicit via
    `--update-policy`.
+10. `@finografic/ai-agent-config` is the single source of truth for shared agent instructions/
+    skills; genx's own `_templates/.agents/` and root `.agents/` both vendor from it, never from
+    each other. Content flows outward from `ai-agent-config`, never back into it.
+11. Skills dual-write to `.agents/skills/` (manual reference) and `.claude/skills/` (native Claude
+    Code discovery) from one source. Instructions do not dual-write — no tool natively discovers an
+    "instructions" directory the way Claude Code discovers `.claude/skills/`.
+12. Genx-dev-only skills (`generate-new-genx-feature`, `migrate-to-cli-kit`,
+    `scaffold-feature-preview`, `template-canonical-merge`) stay root-only permanently, never
+    distributed via `ai-agent-config`. `triage-docs` is the one exception pending ROADMAP #6
+    (`scripts/triage-docs.ts` portability).
 
 ## Open Work
 
@@ -83,6 +105,10 @@ separately.
 - Modernize the new-feature scaffold for preview-driven detect/apply.
 - Review cli-kit extraction candidates tracked in `docs/todo/ROADMAP.md`.
 - Add the future `maintain-project-memory` skill.
+- Make `scripts/triage-docs.ts` portable (ROADMAP P2 #6), then distribute `triage-docs` via
+  `ai-agent-config`.
+- Delete the stale duplicate `scaffold-feature` skill in `@finografic-cli-kit` — already `git rm`'d
+  in that repo's working tree but left uncommitted (unrelated in-progress work there).
 
 ## References
 
