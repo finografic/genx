@@ -52,8 +52,8 @@ importers:
         specifier: ^21.2.0
         version: 21.2.0
       '@finografic/ai-agent-config':
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       '@finografic/md-lint':
         specifier: ^0.16.6
         version: 0.16.6
@@ -405,8 +405,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@finografic/ai-agent-config@0.0.2':
-    resolution: {integrity: sha512-BnrOip8KBI/d3Trnb0xkaY61q+ewfxaMucMJCz8+VzV7hyoDGl1NjHwDkKNhlybTrl+LeDJZYNzZBgr7yKM/UQ==, tarball: https://npm.pkg.github.com/download/@finografic/ai-agent-config/0.0.2/9f7b2fb7c375a0e1673a544a340cda06e5208eb9}
+  '@finografic/ai-agent-config@0.0.3':
+    resolution: {integrity: sha512-hARQf4i+QfqoRyJNvammgTSShnzsodDbjh6oVRYJHBs9f2cqf+oAVMCfXKUkiV3DClkpfMc1EE5waK9jhrXRUA==, tarball: https://npm.pkg.github.com/download/@finografic/ai-agent-config/0.0.3/c1a41baa15cd18e44c622deeb613ed3b1f9ec19c}
     engines: {node: '>=24.16.0'}
 
   '@finografic/cli-kit@1.4.0':
@@ -2043,8 +2043,8 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
-  postcss@8.5.22:
-    resolution: {integrity: sha512-KBDEIpLrvpv16pp3K0Fw+UCoZfopFjjgeB+0tA/aaThfEE74kKDLrgg603YvOWJyg3+WYtyq3xYsQWsIyZlPqQ==}
+  postcss@8.5.23:
+    resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
     engines: {node: ^10 || ^12 || >=14}
 
   presentable-error@0.0.1:
@@ -2740,7 +2740,7 @@ snapshots:
   '@esbuild/win32-x64@0.28.0':
     optional: true
 
-  '@finografic/ai-agent-config@0.0.2': {}
+  '@finografic/ai-agent-config@0.0.3': {}
 
   '@finografic/cli-kit@1.4.0':
     dependencies:
@@ -4186,7 +4186,7 @@ snapshots:
 
   picomatch@4.0.5: {}
 
-  postcss@8.5.22:
+  postcss@8.5.23:
     dependencies:
       nanoid: 3.3.16
       picocolors: 1.1.1
@@ -4458,7 +4458,7 @@ snapshots:
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.5
-      postcss: 8.5.22
+      postcss: 8.5.23
       rolldown: 1.0.2
       tinyglobby: 0.2.17
     optionalDependencies:
