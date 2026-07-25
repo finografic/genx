@@ -261,9 +261,9 @@ Scaffolds and syncs the agent interface layer of a `@finografic` project.
 - Merges existing `AGENTS.md`: enforces template bodies, strips legacy memory sections, dedupes duplicate Markdown Tables headings, and reorders sections (front matter → Rules spine → extras → Learned)
 - Keeps enforced shared sections in sync with the template: **Project Memory Model**, **Roadmap and Planning Docs**, **Rules — Global**, **Rules — Markdown Tables**, **Git Policy**, **Agent execution efficiency**, and **Cursor**
 - Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
-- Copies portable agent skill procedures into `.agents/skills/` (cross-tool manual reference via
+- Copies portable agent skill procedures into `.agents/skills/` (cross-tool manual reference via `AGENTS.md`) and `.claude/skills/` (native Claude Code discovery) from the same source
 - Adds `scaffold-cli-help` and `scaffold-core-module` only for CLI package types
-- Removes the genx-only `scaffold-feature` skill from generated targets (defensive cleanup — the
+- Removes the genx-only `scaffold-feature` skill from generated targets (defensive cleanup — the canonical skill source no longer ships it, but older scaffolded projects may still have it)
 
 ### ai-instructions
 
