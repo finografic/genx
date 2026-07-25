@@ -204,4 +204,85 @@ LOCAL_PS
   it('extractRulesGeneralSection reads Global block', () => {
     expect(extractRulesGeneralSection(template)).toContain('TEMPLATE_GENERAL');
   });
+
+  it('syncs Agent execution efficiency from template and keeps it after the Rules spine', () => {
+    const templateWithEfficiency = `# AGENTS
+
+## Rules — Project-Specific
+
+TEMPLATE_PS
+
+## Rules — Global
+
+TEMPLATE_GENERAL
+
+---
+
+## Rules — Markdown Tables
+
+TEMPLATE_MD
+
+---
+
+## Git Policy
+
+TEMPLATE_GIT
+
+---
+
+## Agent execution efficiency
+
+TEMPLATE_EFFICIENCY
+
+---
+
+## Cursor
+
+TEMPLATE_CURSOR
+
+---
+`;
+
+    const target = `# Title
+
+## Skills — Extra
+
+KEEP_SKILLS
+
+## Rules — Project-Specific
+
+LOCAL_PS
+
+## Rules — Global
+
+OLD_GENERAL
+
+---
+
+## Agent execution efficiency
+
+STALE_EFFICIENCY
+
+---
+
+## Learned User Preferences
+
+KEEP_LEARNED
+`;
+
+    const next = mergeAgentsFromTemplate(target, templateWithEfficiency);
+    expect(next).not.toBeNull();
+    expect(next).toContain('TEMPLATE_EFFICIENCY');
+    expect(next).toContain('TEMPLATE_CURSOR');
+    expect(next).toContain('KEEP_SKILLS');
+    expect(next).toContain('KEEP_LEARNED');
+    expect(next).not.toContain('STALE_EFFICIENCY');
+
+    const idxGit = next!.indexOf('## Git Policy');
+    const idxEfficiency = next!.indexOf('## Agent execution efficiency');
+    const idxLearned = next!.indexOf('## Learned User Preferences');
+    expect(idxGit).toBeGreaterThan(-1);
+    expect(idxEfficiency).toBeGreaterThan(idxGit);
+    expect(idxLearned).toBeGreaterThan(idxEfficiency);
+  });
 });

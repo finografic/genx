@@ -47,7 +47,7 @@ For `AGENTS.md`, spine order is:
 Then:
 
 - Emit spine sections **in that order** (using the merged bodies collected above).
-- Emit **all other non-spine** sections (extras) in **document order** from the merged list, **after** the spine.
+- Emit **all other non-spine** sections (extras) in **document order** from the merged list, **after** the spine — including shared template sections such as **Agent execution efficiency** and **Cursor** (bodies still reverse-applied from `_templates/AGENTS.md.template`).
 - Emit **`Learned …`** sections **last** (normalized key `learned …`), preserving their relative order.
 
 Reference implementation: `reorderMergedAgentSections` in `ai-instructions.agents.utils.ts`.

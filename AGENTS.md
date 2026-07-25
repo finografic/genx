@@ -105,6 +105,41 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 
 ---
 
+## Agent execution efficiency
+
+Prefer the smallest complete implementation and validation loop for the task. Aim for one orientation pass, one coherent edit pass, and one focused validation pass; further loops need a concrete failure or newly discovered dependency.
+
+Avoid side quests: do not broaden into adjacent refactors, cleanup, environment repair, or unrelated warning fixes unless required to complete or validate the requested change.
+
+### Before editing
+
+- Orient on the owning module, its direct callers/callees, and affected tests — not adjacent subsystems.
+- Read applicable repository instructions before implementing.
+- Once owning surfaces are identified, start implementing.
+
+### Scope
+
+- Reuse established patterns before adding abstractions.
+- Do not generalize one-use helpers unless reuse is immediate and obvious.
+- Preserve unrelated uncommitted files and pre-existing warnings.
+
+### Validation
+
+Use progressive validation and stop once the change is proven:
+
+1. Narrowest relevant test or test file
+2. Typecheck for directly affected packages
+3. Format/lint on touched files when supported
+4. Broader repo checks only when shared exports change, focused checks cannot prove correctness, a failure requires them, or the user asks
+
+### Tool use and failures
+
+- Batch related reads/searches and coherent edits; avoid repeating the same command through different wrappers.
+- Progress updates at phase boundaries only (orientation / implementation / validation).
+- Distinguish failures caused by this change from pre-existing ones; fix unrelated failures only when they block validation, and report them in the summary.
+
+---
+
 ## IMPORTANT: Canonical Template Source (STRICT)
 
 THIS project @finografic/genx, that creates / migrates features to other projects.
