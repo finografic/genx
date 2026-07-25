@@ -459,6 +459,31 @@ pnpm unlink
 
 Or run the built binary directly: `node dist/index.mjs create`
 
+### Keeping genx's own agent docs in sync
+
+genx is both the tool that vendors `AGENTS.md` / `.agents/instructions/` / `.agents/skills/` content
+into every `@finografic` project, and a consumer of that same content itself (its own root
+`AGENTS.md`, `.agents/`, and `.claude/skills/`). The canonical source is the published
+[`@finografic/ai-agent-config`](https://github.com/finografic/ai-agent-config) package. To pull the
+latest content and sync genx's own root:
+
+```bash
+pnpm run update:ai-agent-config
+```
+
+This bumps `@finografic/ai-agent-config` from GitHub Packages (via the `@finografic:registry` scope
+in `.npmrc` — `pnpm update` only needs `--latest`, not an explicit `--registry` flag, which would
+incorrectly apply to every dependency in the install, not just the scoped one), rebuilds `dist/` so
+the sync step runs against the freshly-bumped dependency, then runs
+`genx upgrade --agent-docs -y` — a non-interactive flag that syncs `AGENTS.md`,
+`.agents/instructions/`, and `.agents/skills/` (+ `.claude/skills/`) content, plus migrates any
+lingering legacy `.github/instructions/` or `.ai/` layout. It's safe to re-run; a second run with
+nothing changed reports `No changes made`.
+
+Because this runs through the same `applyFeaturesToTarget` path as `genx audit`, applied changes are
+committed automatically per feature (`aiInstructions`, `aiAgents`) — expect real commits in the
+working tree when content has actually drifted, not just file writes.
+
 ### Documentation
 
 - [Developer Workflow](./docs/DEVELOPER_WORKFLOW.md)
