@@ -4,8 +4,8 @@ import { applyAiInstructions } from './ai-instructions.apply';
 import { auditAiInstructions, detectAiInstructions } from './ai-instructions.detect';
 
 /**
- * AI Instructions feature definition. Installs shared .github/instructions/, Copilot instructions, and Cursor
- * rules.
+ * AI Instructions feature definition. Installs shared .agents/instructions/, Copilot's stub instructions
+ * file, and Cursor rules.
  */
 export const aiInstructionsFeature: Feature = {
   id: 'aiInstructions',

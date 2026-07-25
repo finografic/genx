@@ -65,10 +65,23 @@ export function needsAiFolderMigration(targetDir: string): boolean {
   return fs.existsSync(path.join(targetDir, LEGACY_AI_FOLDER));
 }
 
+/**
+ * True when `.github/instructions/` still exists and hasn't been renamed to `.agents/instructions/`
+ * yet (needs Step 1.5 migration). `.github/skills/` is handled separately by the `ai-agents` feature
+ * (dual-write to `.agents/skills/` + `.claude/skills/`), not by this legacy migration tool.
+ */
+export function needsGithubInstructionsFolderMigration(targetDir: string): boolean {
+  return (
+    fs.existsSync(path.join(targetDir, LEGACY_GITHUB_INSTRUCTIONS_DIR)) &&
+    !fs.existsSync(path.join(targetDir, '.agents/instructions'))
+  );
+}
+
 /** True when the target already uses the canonical agent-docs layout (both steps done). */
 export function isAgentDocsAlreadyMigrated(targetDir: string): boolean {
   if (needsAiFolderMigration(targetDir)) return false;
-  const instDst = path.join(targetDir, '.github/instructions');
+  if (needsGithubInstructionsFolderMigration(targetDir)) return false;
+  const instDst = path.join(targetDir, '.agents/instructions');
   const hasLayout = layoutPresent(instDst);
   const hasHandoff = !fs.existsSync(path.join(targetDir, '.claude/handoff.md'));
   const claudeMd = path.join(targetDir, 'CLAUDE.md');
@@ -145,7 +158,8 @@ function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): v
     replaceAiRefsInFile(path.join(targetDir, rel), result);
   }
 
-  // Also scan .github/instructions/project/ markdown files
+  // Also scan .github/instructions/project/ markdown files (runs before the Step 1.5 folder
+  // rename below, so the old .github/ location is still correct at this point in the sequence).
   const projectInst = path.join(targetDir, '.github/instructions/project');
   if (fs.existsSync(projectInst)) {
     for (const f of fs.readdirSync(projectInst)) {
@@ -156,6 +170,59 @@ function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): v
   }
 }
 
+// ── step 1.5: .github/instructions → .agents/instructions folder migration ──────
+
+// DEPRECATED: `.github/instructions/` was the original location (named after GitHub Copilot, the
+// first tool to standardize on this convention); `.agents/instructions/` is canonical — vendor
+// neutral, matches what Claude Code, Cursor, and Codex actually read. `.github/skills/` → dual
+// `.agents/skills/` + `.claude/skills/` is handled separately by the `ai-agents` feature preview,
+// not here.
+const LEGACY_GITHUB_INSTRUCTIONS_DIR = '.github/instructions';
+
+/** Files to scan for `.github/instructions/` path references when renaming the folder. */
+const GITHUB_INSTRUCTIONS_REF_FILES = [
+  'CLAUDE.md',
+  'AGENTS.md',
+  'README.md',
+  '.github/copilot-instructions.md',
+] as const;
+
+function replaceGithubInstructionsRefsInFile(filePath: string, result: AgentDocsMigrationResult): void {
+  if (!fs.existsSync(filePath)) return;
+  const content = fs.readFileSync(filePath, 'utf8');
+  const updated = content.replace(/\.github\/instructions\//g, '.agents/instructions/');
+  if (updated !== content) {
+    fs.writeFileSync(filePath, updated, 'utf8');
+    result.applied.push(
+      `${path.relative(process.cwd(), filePath)}: .github/instructions/ → .agents/instructions/`,
+    );
+  }
+}
+
+function migrateGithubInstructionsFolder(targetDir: string, result: AgentDocsMigrationResult): void {
+  const oldDir = path.join(targetDir, LEGACY_GITHUB_INSTRUCTIONS_DIR);
+  const newDir = path.join(targetDir, '.agents/instructions');
+
+  if (!fs.existsSync(oldDir)) {
+    result.skipped.push('.github/instructions/ not found — nothing to rename');
+    return;
+  }
+  if (fs.existsSync(newDir)) {
+    result.skipped.push(
+      '.agents/instructions/ already exists — leaving .github/instructions/ untouched (manual cleanup needed)',
+    );
+    return;
+  }
+
+  fs.mkdirSync(path.join(targetDir, '.agents'), { recursive: true });
+  fs.renameSync(oldDir, newDir);
+  result.applied.push('.github/instructions/ → .agents/instructions/');
+
+  for (const rel of GITHUB_INSTRUCTIONS_REF_FILES) {
+    replaceGithubInstructionsRefsInFile(path.join(targetDir, rel), result);
+  }
+}
+
 // ── layout helpers ────────────────────────────────────────────────────────────
 
 function layoutPresent(instDir: string): boolean {
@@ -163,7 +230,7 @@ function layoutPresent(instDir: string): boolean {
 }
 
 // DEPRECATED: numbered flat files (e.g. 01-file-naming.instructions.md) at the root of
-// .github/instructions/. Detected and moved to subdirectories by migrateInPlace().
+// .agents/instructions/. Detected and moved to subdirectories by migrateInPlace().
 function numberedFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   return fs
@@ -291,7 +358,7 @@ These rules guide code suggestions and refactors. Apply them consistently across
 `;
 
 const INSTRUCTIONS_README = `\
-# .github/instructions — AI Instruction Files
+# .agents/instructions — AI Instruction Files
 
 Rules and conventions loaded automatically by Claude Code, Cursor, GitHub Copilot, and other
 AI coding tools. Files use the \`.instructions.md\` suffix. \`README.md\` (this file) is not loaded
@@ -340,7 +407,7 @@ function writeEmbeddedFiles(instDir: string, result: AgentDocsMigrationResult): 
   }
   try {
     fs.writeFileSync(path.join(instDir, 'README.md'), INSTRUCTIONS_README);
-    result.applied.push('.github/instructions/README.md');
+    result.applied.push('.agents/instructions/README.md');
   } catch (e) {
     result.errors.push(`instructions/README.md: ${String(e)}`);
   }
@@ -455,7 +522,9 @@ function hasSection(lines: string[], match: (h: string) => boolean): boolean {
 function sectionHasOldPaths(lines: string[], match: (h: string) => boolean): boolean {
   const range = findSection(lines, match);
   if (!range) return false;
-  return lines.slice(range[0], range[1]).some((l) => /instructions\/\d{2}-/.test(l));
+  return lines
+    .slice(range[0], range[1])
+    .some((l) => /instructions\/\d{2}-/.test(l) || l.includes('.github/instructions/'));
 }
 
 function replaceSection(lines: string[], match: (h: string) => boolean, newLines: string[]): boolean {
@@ -491,37 +560,37 @@ function buildRulesGlobalLines(extra: Array<{ folder: string; name: string }>): 
   const lines = [
     '## Rules — Global',
     '',
-    'Rules are canonical in `.github/instructions/` — see `README.md` there for folder structure.',
+    'Rules are canonical in `.agents/instructions/` — see `README.md` there for folder structure.',
     'Shared across Claude Code, Cursor, and GitHub Copilot.',
     '',
     '**General**',
     '',
-    '- General baseline: `.github/instructions/general.instructions.md`',
+    '- General baseline: `.agents/instructions/general.instructions.md`',
     '',
     '**Code**',
     '',
-    '- TypeScript patterns: `.github/instructions/code/typescript-patterns.instructions.md`',
-    '- Modern TS patterns: `.github/instructions/code/modern-typescript-patterns.instructions.md`',
-    '- Oxlint & style: `.github/instructions/code/linting-code-style.instructions.md`',
-    '- Provider/context patterns: `.github/instructions/code/provider-context-patterns.instructions.md`',
-    '- Picocolors CLI styling: `.github/instructions/code/picocolors-cli-styling.instructions.md`',
+    '- TypeScript patterns: `.agents/instructions/code/typescript-patterns.instructions.md`',
+    '- Modern TS patterns: `.agents/instructions/code/modern-typescript-patterns.instructions.md`',
+    '- Oxlint & style: `.agents/instructions/code/linting-code-style.instructions.md`',
+    '- Provider/context patterns: `.agents/instructions/code/provider-context-patterns.instructions.md`',
+    '- Picocolors CLI styling: `.agents/instructions/code/picocolors-cli-styling.instructions.md`',
     '',
     '**Naming**',
     '',
-    '- File naming: `.github/instructions/naming/file-naming.instructions.md`',
-    '- Variable naming: `.github/instructions/naming/variable-naming.instructions.md`',
+    '- File naming: `.agents/instructions/naming/file-naming.instructions.md`',
+    '- Variable naming: `.agents/instructions/naming/variable-naming.instructions.md`',
     '',
     '**Documentation**',
     '',
-    '- Documentation: `.github/instructions/documentation/documentation.instructions.md`',
-    '- README standards: `.github/instructions/documentation/readme-standards.instructions.md`',
-    '- Agent-facing markdown: `.github/instructions/documentation/agent-facing-markdown.instructions.md`',
-    '- Feature design specs: `.github/instructions/documentation/feature-design-specs.instructions.md`',
-    '- TODO/DONE docs: `.github/instructions/documentation/todo-done-docs.instructions.md`',
+    '- Documentation: `.agents/instructions/documentation/documentation.instructions.md`',
+    '- README standards: `.agents/instructions/documentation/readme-standards.instructions.md`',
+    '- Agent-facing markdown: `.agents/instructions/documentation/agent-facing-markdown.instructions.md`',
+    '- Feature design specs: `.agents/instructions/documentation/feature-design-specs.instructions.md`',
+    '- TODO/DONE docs: `.agents/instructions/documentation/todo-done-docs.instructions.md`',
     '',
     '**Git**',
     '',
-    '- Git policy: `.github/instructions/git/git-policy.instructions.md`',
+    '- Git policy: `.agents/instructions/git/git-policy.instructions.md`',
   ];
 
   if (extra.length > 0) {
@@ -531,7 +600,7 @@ function buildRulesGlobalLines(extra: Array<{ folder: string; name: string }>): 
         .split('-')
         .map((w) => w[0].toUpperCase() + w.slice(1))
         .join(' ');
-      lines.push(`- ${label}: \`.github/instructions/${folder}/${name}.instructions.md\``);
+      lines.push(`- ${label}: \`.agents/instructions/${folder}/${name}.instructions.md\``);
     }
   }
 
@@ -586,6 +655,10 @@ function patchAgentsMd(
     /\.github\/instructions\/\d{2}-git-policy\.instructions\.md/g,
     '.github/instructions/git/git-policy.instructions.md',
   );
+  // Canonicalize any remaining .github/instructions/ references (including the two forms just
+  // fixed above) to .agents/instructions/ — the folder itself may already have been renamed by
+  // migrateGithubInstructionsFolder, or this may be the first pass fixing stale text refs.
+  text = text.replace(/\.github\/instructions\//g, '.agents/instructions/');
 
   const lines = text.split('\n');
   let changed = false;
@@ -674,22 +747,25 @@ export async function migrateAgentDocs(
   // Runs unconditionally because .ai/ may have been renamed in a prior run
   replaceAiRefsInFile(path.join(targetDir, '.agents/handoff.md'), result);
 
+  // ── Step 1.5: .github/instructions → .agents/instructions ────────────────
+  migrateGithubInstructionsFolder(targetDir, result);
+
   // ── Step 2: instructions layout + agent file patches ─────────────────────
-  // Skip if the structure is already canonical (Step 1 may have been the only thing needed).
+  // Skip if the structure is already canonical (Steps 1/1.5 may have been all that was needed).
   if (isAgentDocsAlreadyMigrated(targetDir)) {
     result.skipped.push('agent docs structure already canonical — Step 2 skipped');
     return result;
   }
 
-  const instDst = path.join(targetDir, '.github/instructions');
+  const instDst = path.join(targetDir, '.agents/instructions');
 
   // Fallback canonical source: _templates/ in the genx package
   const fromDir = fileURLToPath(new URL('.', import.meta.url));
   const pkgRoot = findPackageRoot(fromDir);
-  const fallbackInstDir = path.join(pkgRoot, '_templates/.github/instructions');
+  const fallbackInstDir = path.join(pkgRoot, '_templates/.agents/instructions');
 
   if (!fs.existsSync(instDst)) {
-    result.skipped.push('.github/instructions not found');
+    result.skipped.push('.agents/instructions not found');
   } else {
     const pending = numberedFiles(instDst);
     if (pending.length > 0) {
@@ -697,7 +773,7 @@ export async function migrateAgentDocs(
     } else if (!layoutPresent(instDst) && fs.existsSync(fallbackInstDir)) {
       copyFromSource(fallbackInstDir, instDst, result);
     } else {
-      result.skipped.push('.github/instructions already in canonical layout');
+      result.skipped.push('.agents/instructions already in canonical layout');
     }
   }
 
@@ -734,7 +810,17 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
     result.applied.push('.gitignore: canonical template merge');
   }
 
-  // Step 2 plan — skip if already canonical after Step 1
+  // Step 1.5 plan
+  if (needsGithubInstructionsFolderMigration(targetDir)) {
+    result.applied.push('.github/instructions/ → .agents/instructions/ (rename folder)');
+    result.applied.push(
+      'update .github/instructions/ references in: CLAUDE.md, AGENTS.md, README.md, copilot-instructions.md',
+    );
+  } else {
+    result.skipped.push('.github/instructions/ not found or already renamed — Step 1.5 skipped');
+  }
+
+  // Step 2 plan — skip if already canonical after Steps 1/1.5
   const wouldBeCanonical =
     !fs.existsSync(path.join(targetDir, '.ai')) && isAgentDocsAlreadyMigrated(targetDir);
   if (wouldBeCanonical) {
@@ -742,16 +828,16 @@ function planAgentDocsMigration(targetDir: string): AgentDocsMigrationResult {
     return result;
   }
 
-  const instDst = path.join(targetDir, '.github/instructions');
+  const instDst = path.join(targetDir, '.agents/instructions');
 
   if (!fs.existsSync(instDst)) {
-    result.skipped.push('.github/instructions not found');
+    result.skipped.push('.agents/instructions not found');
   } else if (numberedFiles(instDst).length > 0) {
-    result.applied.push('migrate numbered .github/instructions/ → subfolders');
+    result.applied.push('migrate numbered .agents/instructions/ → subfolders');
   } else if (!layoutPresent(instDst)) {
-    result.applied.push('copy canonical subfolder layout to .github/instructions/');
+    result.applied.push('copy canonical subfolder layout to .agents/instructions/');
   } else {
-    result.skipped.push('.github/instructions already in canonical layout');
+    result.skipped.push('.agents/instructions already in canonical layout');
   }
 
   result.applied.push('write general.instructions.md + README.md');

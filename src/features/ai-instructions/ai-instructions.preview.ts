@@ -39,7 +39,7 @@ async function readTemplatedFileBody(srcPath: string, baseName: string, vars: Te
   return shouldTemplate ? applyTemplate(raw, vars) : raw;
 }
 
-/** Template files under `.github/instructions/`, excluding `project/` (never overwritten from genx). */
+/** Template files under `.agents/instructions/`, excluding `project/` (never overwritten from genx). */
 async function collectInstructionTemplateFiles(
   instructionsTemplateRoot: string,
 ): Promise<Array<{ rel: string; abs: string }>> {
@@ -101,7 +101,7 @@ export interface PreviewAiInstructionsOptions {
 }
 
 /**
- * Preview AI instructions: Copilot file, `.github/instructions/*.md` (not `project/`), `.cursor/rules/*.mdc`,
+ * Preview AI instructions: Copilot file, `.agents/instructions/*.md` (not `project/`), `.cursor/rules/*.mdc`,
  * `AGENTS.md`, ESLint ignores.
  */
 export async function previewAiInstructions(
@@ -220,7 +220,7 @@ export async function previewAiInstructions(
     }
   }
 
-  // Delete legacy numbered flat files from the root of .github/instructions/ (e.g. 00-general.instructions.md).
+  // Delete legacy numbered flat files from the root of .agents/instructions/ (e.g. 00-general.instructions.md).
   // These were the old layout; the canonical layout uses subdirectories (code/, naming/, etc.).
   if (fileExists(instructionsDestRoot)) {
     const rootEntries = await readdir(instructionsDestRoot, { withFileTypes: true });
@@ -233,7 +233,7 @@ export async function previewAiInstructions(
             legacyPath,
             legacyContent,
             true,
-            `.github/instructions/${entry.name} (legacy numbered file — replaced by subdirectory layout)`,
+            `${instructionsDirRel}/${entry.name} (legacy numbered file — replaced by subdirectory layout)`,
           ),
         );
       }

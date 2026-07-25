@@ -4,6 +4,7 @@ import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-pre
 import type { FeatureContext } from '../feature.types';
 
 import { previewAiAgents } from '../ai-agents/ai-agents.preview.js';
+import { AI_INSTRUCTIONS_FILES } from '../ai-instructions/ai-instructions.constants.js';
 import { previewAiInstructions } from '../ai-instructions/ai-instructions.preview.js';
 import { previewAiMemoryOwnedFiles } from './ai-memory.preview-owned.js';
 
@@ -15,7 +16,7 @@ export async function previewAiMemory(context: FeatureContext): Promise<FeatureP
   const changes: FeaturePreviewResult['changes'] = [];
   const applied: string[] = [];
 
-  const instructionsDir = resolve(targetDir, '.github/instructions');
+  const instructionsDir = resolve(targetDir, AI_INSTRUCTIONS_FILES[1]);
   if (!fileExists(instructionsDir)) {
     const sub = await previewAiInstructions(context, { skipAgentsInfrastructure: true });
     changes.push(...sub.changes);

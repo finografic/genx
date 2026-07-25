@@ -35,12 +35,13 @@ describe('ai-agents preview-driven detect', () => {
     const templateAgents = join(repoRoot, '_templates/AGENTS.md.template');
     await writeFile(join(root, 'AGENTS.md'), await readFile(templateAgents, 'utf8'));
 
-    const skillsTpl = join(repoRoot, '_templates/.github/skills');
-    const skillsDest = join(root, '.github/skills');
-    await mkdir(skillsDest, { recursive: true });
-    for (const ent of await readdir(skillsTpl, { withFileTypes: true })) {
-      if (ent.isDirectory()) {
-        await mkdir(join(skillsDest, ent.name), { recursive: true });
+    const skillsTpl = join(repoRoot, '_templates/.agents/skills');
+    for (const skillsDest of [join(root, '.agents/skills'), join(root, '.claude/skills')]) {
+      await mkdir(skillsDest, { recursive: true });
+      for (const ent of await readdir(skillsTpl, { withFileTypes: true })) {
+        if (ent.isDirectory()) {
+          await mkdir(join(skillsDest, ent.name), { recursive: true });
+        }
       }
     }
 
@@ -61,10 +62,11 @@ describe('ai-agents preview-driven detect', () => {
     const preview = await previewAiAgents({ targetDir: root });
     const changedPaths = preview.changes.map((change) => change.path);
 
-    expect(changedPaths.some((path) => path.includes('.github/skills/maintain-agents/'))).toBe(true);
-    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-cli-help/'))).toBe(false);
-    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-core-module/'))).toBe(false);
-    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-feature/'))).toBe(false);
+    expect(changedPaths.some((path) => path.includes('.agents/skills/maintain-agents/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.claude/skills/maintain-agents/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('/skills/scaffold-cli-help/'))).toBe(false);
+    expect(changedPaths.some((path) => path.includes('/skills/scaffold-core-module/'))).toBe(false);
+    expect(changedPaths.some((path) => path.includes('/skills/scaffold-feature/'))).toBe(false);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -79,10 +81,13 @@ describe('ai-agents preview-driven detect', () => {
     const preview = await previewAiAgents({ targetDir: root });
     const changedPaths = preview.changes.map((change) => change.path);
 
-    expect(changedPaths.some((path) => path.includes('.github/skills/maintain-agents/'))).toBe(true);
-    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-cli-help/'))).toBe(true);
-    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-core-module/'))).toBe(true);
-    expect(changedPaths.some((path) => path.includes('.github/skills/scaffold-feature/'))).toBe(false);
+    expect(changedPaths.some((path) => path.includes('.agents/skills/maintain-agents/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.claude/skills/maintain-agents/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.agents/skills/scaffold-cli-help/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.claude/skills/scaffold-cli-help/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.agents/skills/scaffold-core-module/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('.claude/skills/scaffold-core-module/'))).toBe(true);
+    expect(changedPaths.some((path) => path.includes('/skills/scaffold-feature/'))).toBe(false);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -93,18 +98,26 @@ describe('ai-agents preview-driven detect', () => {
       join(root, 'package.json'),
       `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:library'] }, null, 2)}\n`,
     );
-    await mkdir(join(root, '.github/skills/scaffold-feature'), { recursive: true });
-    await mkdir(join(root, '.github/skills/scaffold-cli-help'), { recursive: true });
-    await writeFile(join(root, '.github/skills/scaffold-feature/SKILL.md'), 'genx only\n');
-    await writeFile(join(root, '.github/skills/scaffold-cli-help/SKILL.md'), 'cli only\n');
+    for (const skillsRoot of [join(root, '.agents/skills'), join(root, '.claude/skills')]) {
+      await mkdir(join(skillsRoot, 'scaffold-feature'), { recursive: true });
+      await mkdir(join(skillsRoot, 'scaffold-cli-help'), { recursive: true });
+      await writeFile(join(skillsRoot, 'scaffold-feature/SKILL.md'), 'genx only\n');
+      await writeFile(join(skillsRoot, 'scaffold-cli-help/SKILL.md'), 'cli only\n');
+    }
 
     const preview = await previewAiAgents({ targetDir: root });
     const deletes = preview.changes.filter((change) => change.kind === 'delete');
 
-    expect(deletes.some((change) => change.path.endsWith('.github/skills/scaffold-feature/SKILL.md'))).toBe(
+    expect(deletes.some((change) => change.path.endsWith('.agents/skills/scaffold-feature/SKILL.md'))).toBe(
       true,
     );
-    expect(deletes.some((change) => change.path.endsWith('.github/skills/scaffold-cli-help/SKILL.md'))).toBe(
+    expect(deletes.some((change) => change.path.endsWith('.claude/skills/scaffold-feature/SKILL.md'))).toBe(
+      true,
+    );
+    expect(deletes.some((change) => change.path.endsWith('.agents/skills/scaffold-cli-help/SKILL.md'))).toBe(
+      true,
+    );
+    expect(deletes.some((change) => change.path.endsWith('.claude/skills/scaffold-cli-help/SKILL.md'))).toBe(
       true,
     );
 

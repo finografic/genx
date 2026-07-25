@@ -21,7 +21,7 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
-  existsSync(join(repoRoot, '_templates/.github/instructions')) &&
+  existsSync(join(repoRoot, '_templates/.agents/instructions')) &&
   existsSync(join(repoRoot, '_templates/.cursor/rules'));
 
 /**
@@ -32,12 +32,12 @@ async function seedCanonicalAiInstructions(root: string): Promise<void> {
   await mkdir(join(root, '.github'), { recursive: true });
   const copilotSrc = join(repoRoot, '_templates/.github/copilot-instructions.md');
   await writeFile(join(root, '.github/copilot-instructions.md'), await readFile(copilotSrc, 'utf8'));
-  const instRoot = join(repoRoot, '_templates/.github/instructions');
+  const instRoot = join(repoRoot, '_templates/.agents/instructions');
   const relFiles = await fg('**/*', { cwd: instRoot, onlyFiles: true });
   for (const rel of relFiles) {
     if (rel.startsWith('project/') || rel === 'project') continue;
     const src = join(instRoot, rel);
-    const dest = join(root, '.github/instructions', rel);
+    const dest = join(root, '.agents/instructions', rel);
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, await readFile(src, 'utf8'));
   }
@@ -177,8 +177,8 @@ describe('preview migration — drift vs canonical', () => {
         `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
       );
       await seedCanonicalAiInstructions(root);
-      await rm(join(root, '.github/instructions/documentation/agent-facing-markdown.instructions.md'));
-      await rm(join(root, '.github/instructions/documentation/feature-design-specs.instructions.md'));
+      await rm(join(root, '.agents/instructions/documentation/agent-facing-markdown.instructions.md'));
+      await rm(join(root, '.agents/instructions/documentation/feature-design-specs.instructions.md'));
 
       const preview = await previewAiInstructions({ targetDir: root });
       expect(hasPreviewChanges(preview)).toBe(true);

@@ -25,7 +25,7 @@ describe('ai-memory preview-driven detect', () => {
         (c) => c.kind === 'write' && c.path.endsWith('docs/process/PROJECT_MEMORY_MODEL.md'),
       ),
     ).toBe(true);
-    expect(preview.changes.some((c) => c.path.includes('.github/skills/'))).toBe(false);
+    expect(preview.changes.some((c) => c.path.includes('.agents/skills/'))).toBe(false);
     expect(await detectAiMemory({ targetDir: root })).toBe(false);
 
     await rm(root, { recursive: true, force: true });
@@ -38,7 +38,7 @@ describe('ai-memory preview-driven detect', () => {
       `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
     );
     await mkdir(join(root, '.claude'), { recursive: true });
-    await mkdir(join(root, '.github/instructions'), { recursive: true });
+    await mkdir(join(root, '.agents/instructions'), { recursive: true });
     await writeFile(join(root, '.claude/memory.md'), '# Session Memory\n\nLegacy note\n');
     await writeFile(
       join(root, 'AGENTS.md'),
@@ -72,7 +72,7 @@ describe('ai-memory preview-driven detect', () => {
       `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
     );
     await mkdir(join(root, '.claude'), { recursive: true });
-    await mkdir(join(root, '.github/instructions'), { recursive: true });
+    await mkdir(join(root, '.agents/instructions'), { recursive: true });
     await writeFile(join(root, '.claude/handoff.md'), '# Legacy Handoff\n\nOld state\n');
     await writeFile(
       join(root, 'AGENTS.md'),
@@ -108,7 +108,7 @@ describe('ai-memory preview-driven detect', () => {
     await mkdir(join(root, 'docs/process'), { recursive: true });
     await mkdir(join(root, 'docs/todo'), { recursive: true });
     await mkdir(join(root, '.agents'), { recursive: true });
-    await mkdir(join(root, '.github/instructions'), { recursive: true });
+    await mkdir(join(root, '.agents/instructions'), { recursive: true });
     await writeFile(join(root, 'docs/process/PROJECT_MEMORY_MODEL.md'), 'custom model\n');
     await writeFile(join(root, 'docs/todo/ROADMAP.md'), '# Custom Roadmap\n\nKeep me\n');
     await writeFile(join(root, 'docs/todo/NEXT_STEPS.md'), '# Custom Next\n\nKeep me too\n');

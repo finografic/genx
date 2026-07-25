@@ -34,8 +34,23 @@ export const createConfig: CreateConfig = {
    */
   ignorePatterns: {
     /** Ignore AI instructions if not selected */
-    aiInstructions: ['.github/copilot-instructions.md', '.github/instructions', '.cursor'],
-    /** Ignore AI memory model files if not selected */
-    aiMemory: ['CLAUDE.md', '.claude', 'docs/process/PROJECT_MEMORY_MODEL.md', 'docs/todo', '.agents'],
+    aiInstructions: ['.github/copilot-instructions.md', '.agents/instructions', '.cursor'],
+    /**
+     * Ignore AI memory model files if not selected.
+     *
+     * `.agents/handoff.md` and `.agents/memory.md` only — NOT the whole `.agents` directory.
+     * `.agents/instructions` (aiInstructions) and `.agents/skills` (aiAgents) share the same parent
+     * dir now that everything moved out of `.github/`; a blanket `.agents` entry here would strip
+     * their content whenever aiMemory is deselected independently of those other features.
+     */
+    aiMemory: [
+      'CLAUDE.md',
+      '.claude/handoff.md',
+      '.claude/memory.md',
+      'docs/process/PROJECT_MEMORY_MODEL.md',
+      'docs/todo',
+      '.agents/handoff.md',
+      '.agents/memory.md',
+    ],
   },
 };

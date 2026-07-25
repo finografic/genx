@@ -3,10 +3,16 @@
  */
 
 /** Paths created/managed by this feature (relative to targetDir). */
-export const AI_AGENTS_FILES = ['AGENTS.md', '.github/skills/'] as const;
+export const AI_AGENTS_FILES = ['AGENTS.md', '.agents/skills/', '.claude/skills/'] as const;
 
-/** Directory where agent skill procedures are scaffolded. */
-export const AI_AGENTS_SKILLS_DIR = '.github/skills';
+/** Source directory (relative to `_templates/`) that agent skill procedures are read from. */
+export const AI_AGENTS_SKILLS_SOURCE_DIR = '.agents/skills';
+
+/**
+ * Directories (relative to targetDir) skills are dual-written to: `.agents/skills` for cross-tool
+ * manual reference (AGENTS.md-mediated) and `.claude/skills` for native Claude Code discovery.
+ */
+export const AI_AGENTS_SKILLS_TARGET_DIRS = ['.agents/skills', '.claude/skills'] as const;
 
 /** Skills only useful in CLI-shaped target packages. */
 export const AI_AGENTS_CLI_ONLY_SKILL_DIRS = ['scaffold-cli-help', 'scaffold-core-module'] as const;
@@ -51,7 +57,7 @@ export const ROADMAP_AND_PLANNING_DOCS_PATCH_LINES = [
   '- Check `ROADMAP.md` before proposing new initiatives.',
   '- Use `ROADMAP.md#next` for small follow-ups and manual validation.',
   '- Keep detailed plans in `docs/todo/TODO_*.md`; graduate completed plans to `DONE_*.md`.',
-  '- Follow `.github/instructions/documentation/todo-done-docs.instructions.md`.',
+  '- Follow `.agents/instructions/documentation/todo-done-docs.instructions.md`.',
   '',
   '---',
   '',

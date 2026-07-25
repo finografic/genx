@@ -310,37 +310,61 @@ carry forward pre-consolidation content under a renamed path.
 - [ ] Re-diff `_templates/.agents/` against `ai-agent-config/assets/` — should be **identical**
       (this is now a straight copy, not an independent reconciliation)
 
-## Phase 3 — genx `src/` feature code
+## Phase 3 — genx `src/` feature code ✅ done (2026-07-26)
 
 Update every hardcoded `.github/instructions` / `.github/skills` path found during scoping:
 
-- [ ] `src/config/create.config.ts:37` — `aiInstructions: [...]` file list
-- [ ] `src/features/ai-instructions/ai-instructions.constants.ts:7` — `AI_INSTRUCTIONS_FILES`
-      (also check `detect.ts:20`, `preview.ts:135` for direct consumers)
-- [ ] `src/features/ai-agents/ai-agents.constants.ts:6,9` — `AI_AGENTS_FILES`,
-      `AI_AGENTS_SKILLS_DIR` (also check `ai-agents.preview.ts:135-136,161`) — this is where the
-      `.claude/skills` dual-target plumbing needs to land, since no manifest/type exists yet for
-      multi-target output (confirmed during scoping: genx has no `AgentAsset`-style type; these are
-      untyped string constants today)
-- [ ] `src/features/ai-memory/ai-memory.preview.ts:18` — reads `.github/instructions` directly (not
-      via a shared constant — fix in place)
-- [ ] `src/lib/agents-legacy-ai-folder.utils.ts:20` — legacy-folder detection list; decide whether
-      old `.github/instructions` layout needs to be detected as "legacy" going forward (probably
-      yes, symmetric with how `.claude/handoff.md` → `.agents/handoff.md` legacy migration already
-      works for `ai-memory`)
-- [ ] **`src/commands/upgrade/lib/agent-docs-migration.ts`** — heaviest concentration, ~30 hits
-      (lines 71, 85, 148-149, 166, 294, 343, 494-524, 584-587, 632, 684-754, 789). Builds/upgrades
-      the canonical instructions layout, generates README content referencing per-file instruction
-      paths, and falls back to `_templates/.github/instructions` at line 689. Treat as its own
-      focused sub-pass — re-scope with a fresh read of this file before editing, don't batch it in
-      with the smaller constant-file changes above.
-- [ ] `src/commands/upgrade/lib/upgrade-mode.prompt.ts:11` — user-facing prompt hint text
-      mentioning `.github/instructions/`
-- [ ] Add multi-target write support wherever skills get vendored into a consumer repo (the
-      dual-write to `.agents/skills/` + `.claude/skills/` needs to happen in whatever function
-      currently does the single-target copy)
-- [ ] Run existing tests for `ai-instructions`, `ai-agents`, `ai-memory`, and `upgrade` features;
-      add/update fixtures that assert on old `.github/...` paths
+- [x] `src/config/create.config.ts:37` — `aiInstructions: [...]` file list. Also fixed a real bug
+      surfaced by the move: the `aiMemory` ignore-pattern entry was a blanket `.agents` (correct back
+      when `.agents/` held only `handoff.md`/`memory.md`), which would have wrongly stripped the new
+      `.agents/instructions` and `.agents/skills` whenever `aiMemory` was deselected independently of
+      `aiInstructions`/`aiAgents`. Narrowed to the specific owned files
+      (`.agents/handoff.md`, `.agents/memory.md`, `.claude/handoff.md`, `.claude/memory.md`).
+- [x] `src/features/ai-instructions/ai-instructions.constants.ts:7` — `AI_INSTRUCTIONS_FILES`
+      (also `detect.ts`, `preview.ts` — comments + the legacy-numbered-file delete label, which now
+      derives from the constant instead of a separate hardcoded literal)
+- [x] `src/features/ai-agents/ai-agents.constants.ts` — replaced `AI_AGENTS_SKILLS_DIR` with
+      `AI_AGENTS_SKILLS_SOURCE_DIR` (`.agents/skills`, template-side) and
+      `AI_AGENTS_SKILLS_TARGET_DIRS` (`['.agents/skills', '.claude/skills']`, target-side).
+      `ai-agents.preview.ts`'s skill-tree write/delete loops now iterate both target dirs from the
+      one template source — dual-write plumbing landed here, exactly as scoped.
+- [x] `src/features/ai-memory/ai-memory.preview.ts:18` — now imports `AI_INSTRUCTIONS_FILES[1]`
+      from `ai-instructions.constants.ts` instead of a separate hardcoded literal.
+- [x] `src/lib/agents-legacy-ai-folder.utils.ts:20` — re-checked; this file's only `.github/` hit is
+      `.github/copilot-instructions.md` (unrelated to instructions/skills, unaffected by this
+      migration — copilot-instructions.md stays under `.github/`). No change needed. Legacy
+      `.github/instructions` detection for _consumer_ repos was handled separately, in
+      `agent-docs-migration.ts` (see below), not here.
+- [x] **`src/commands/upgrade/lib/agent-docs-migration.ts`** — full sub-pass, see next section.
+- [x] `src/commands/upgrade/lib/upgrade-mode.prompt.ts:11` — hint text updated.
+- [x] Multi-target write support landed in `ai-agents.preview.ts` (see above).
+- [x] Full test suite green: `src/features/ai-agents/ai-agents.preview.test.ts` (dual-write
+      fixtures), `src/features/ai-memory/ai-memory.preview.test.ts` (instructions-dir gate fixture),
+      `src/features/preview-migration.test.ts` (the `aiInstructionsTemplatesPresent` gate was
+      silently skipping 4 tests because it checked a path that had already moved — now un-skipped
+      and passing). 197/197 tests pass, 0 skipped (previously 4 silently skipped).
+
+### `agent-docs-migration.ts` sub-pass — what actually landed
+
+This is genx's legacy migration tool, wired into the real `genx upgrade` → "Upgrade AI agent docs"
+flow (`agent-docs.runner.ts` → `migrateAgentDocs`) — not dead code, so this needed to stay correct,
+not just have its literals swapped. It already had a "Step 1: `.ai/` → `.agents/` folder rename"
+pattern; the fix adds a symmetric **"Step 1.5: `.github/instructions/` → `.agents/instructions/`
+folder rename"** using the same shape (rename, then rewrite path references in
+`CLAUDE.md`/`AGENTS.md`/`README.md`/`copilot-instructions.md`), so a project migrating still has its
+_existing_ instruction content picked up and moved, not silently ignored in favor of fresh canonical
+content. `isAgentDocsAlreadyMigrated` now checks both Step 1 and Step 1.5 preconditions before
+declaring Step 2 (layout normalization) unnecessary. `.github/skills/` → dual-write is explicitly
+**not** handled here — that's the `ai-agents` feature's job (already dual-writing, see above); this
+tool only touches instructions/AGENTS.md/CLAUDE.md/handoff.
+
+All internal destination literals (`instDst`, the `_templates` fallback dir, the embedded
+`README.md` title, the `buildRulesGlobalLines` body text used in both `AGENTS.md` and
+`copilot-instructions.md` patches) moved from `.github/instructions` to `.agents/instructions`.
+`sectionHasOldPaths` was broadened to also flag literal `.github/instructions/` mentions (not just
+the old numbered-file pattern) as stale, and `patchAgentsMd` gained a canonicalizing regex pass so
+any leftover `.github/instructions/` text in a target's `AGENTS.md` gets rewritten regardless of
+which specific old pattern it matches.
 
 ## Phase 4 — genx root (dogfooding copy)
 
@@ -399,8 +423,8 @@ its own repo, the same way any other `@finografic` project would — not a speci
       step, since unlike those packages ai-agent-config ships vendored files, not just importable
       code:
       `json
-    "update:ai-agent-config": "pnpm update @finografic/ai-agent-config --latest && genx upgrade"
-    `
+"update:ai-agent-config": "pnpm update @finografic/ai-agent-config --latest && genx upgrade"
+`
 - [ ] Check whether `upgrade` supports non-interactive operation selection (a flag to scope straight
       to "agent docs" instead of the full interactive picker) — if so, use it in the script instead
       of requiring an interactive prompt during a dependency-bump workflow

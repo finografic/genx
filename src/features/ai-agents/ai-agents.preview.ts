@@ -21,7 +21,8 @@ import { mergeAgentsMdFromTemplate, proposeAgentsMdForNewFile } from './ai-agent
 import {
   AI_AGENTS_CLI_ONLY_SKILL_DIRS,
   AI_AGENTS_REMOVED_SKILL_DIRS,
-  AI_AGENTS_SKILLS_DIR,
+  AI_AGENTS_SKILLS_SOURCE_DIR,
+  AI_AGENTS_SKILLS_TARGET_DIRS,
 } from './ai-agents.constants';
 
 async function collectSkillTreeWrites(
@@ -82,7 +83,9 @@ export interface PreviewAiAgentsOptions {
 }
 
 /**
- * Preview ai-agents: `AGENTS.md` sync + scaffold `.github/skills/*` when missing.
+ * Preview ai-agents: `AGENTS.md` sync + scaffold `.agents/skills/*` (cross-tool manual reference)
+ * and `.claude/skills/*` (native Claude Code discovery) when missing, dual-written from the same
+ * `_templates/.agents/skills/` source.
  */
 export async function previewAiAgents(
   context: FeatureContext,
@@ -132,8 +135,8 @@ export async function previewAiAgents(
     return { changes, applied, noopMessage };
   }
 
-  const skillsTemplateDir = resolve(templateDir, AI_AGENTS_SKILLS_DIR);
-  const skillsTargetDir = resolve(targetDir, AI_AGENTS_SKILLS_DIR);
+  const skillsTemplateDir = resolve(templateDir, AI_AGENTS_SKILLS_SOURCE_DIR);
+  const skillsTargetDirs = AI_AGENTS_SKILLS_TARGET_DIRS.map((dir) => resolve(targetDir, dir));
   const packageJson = JSON.parse(await readFile(resolve(targetDir, 'package.json'), 'utf8')) as PackageJson;
   const isCliPackage = isPackageType(packageJson, 'cli');
   const cliOnlySkillDirs = new Set<string>(AI_AGENTS_CLI_ONLY_SKILL_DIRS);
@@ -156,23 +159,28 @@ export async function previewAiAgents(
       continue;
     }
 
-    const skillDest = resolve(skillsTargetDir, entry.name);
-    if (fileExists(skillDest)) {
-      applied.push(`.github/skills/${entry.name}/`);
-      continue;
-    }
-
     const skillSrc = resolve(skillsTemplateDir, entry.name);
-    const files = await collectSkillTreeWrites(skillSrc, skillDest, targetDir);
-    for (const { dest, body, label } of files) {
-      changes.push(createWritePreviewChange(dest, '', body, label));
+
+    for (const skillsTargetDir of skillsTargetDirs) {
+      const skillDest = resolve(skillsTargetDir, entry.name);
+      if (fileExists(skillDest)) {
+        applied.push(`${relative(targetDir, skillDest)}/`);
+        continue;
+      }
+
+      const files = await collectSkillTreeWrites(skillSrc, skillDest, targetDir);
+      for (const { dest, body, label } of files) {
+        changes.push(createWritePreviewChange(dest, '', body, label));
+      }
     }
   }
 
   for (const skillDir of skillDirsToRemove) {
-    const files = await collectSkillTreeDeletes(resolve(skillsTargetDir, skillDir), targetDir);
-    for (const { dest, body, label } of files) {
-      changes.push(createDeletePreviewChange(dest, body, true, `${label} (not applicable)`));
+    for (const skillsTargetDir of skillsTargetDirs) {
+      const files = await collectSkillTreeDeletes(resolve(skillsTargetDir, skillDir), targetDir);
+      for (const { dest, body, label } of files) {
+        changes.push(createDeletePreviewChange(dest, body, true, `${label} (not applicable)`));
+      }
     }
   }
 

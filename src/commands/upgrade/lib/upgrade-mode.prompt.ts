@@ -8,7 +8,7 @@ export async function promptUpgradeMode(): Promise<'features' | 'agent-docs' | n
       {
         value: 'agent-docs',
         label: 'Upgrade AI agent docs',
-        hint: 'restructure .github/instructions/, AGENTS.md, CLAUDE.md',
+        hint: 'restructure .agents/instructions/, AGENTS.md, CLAUDE.md',
       },
     ],
   });
