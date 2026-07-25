@@ -4,7 +4,7 @@
 
 **Nothing outside `_templates/` should be treated as the canonical source** for what gets written or merged into packages created or updated by genx (including the **ai-instructions** feature). In particular, the **genx repository root** — for example root `AGENTS.md` with **Skills**, **Learned**, and long **Rules — Project-Specific** text — is a **consumer** of the same patterns, not the definition of the template.
 
-Canonical shared content lives under **`_templates/`** (e.g. `_templates/AGENTS.md.template`, `_templates/.github/instructions/…`). The **`AGENTS.md`** and **`CLAUDE.md`** sources use a **`.template` suffix** in `_templates/` so they are not confused with live repo-root files; **`create`** / features map them to **`AGENTS.md`** / **`CLAUDE.md`** on output (see `resolveTemplateSourcePath`, `copyDir` in `src/utils/`). Features must load template paths via the templates directory (e.g. `getTemplatesDir()`), not by reading “whatever is at repo root.”
+Canonical shared content lives under **`_templates/`** (e.g. `_templates/AGENTS.md.template`, `_templates/.agents/instructions/…`). The **`AGENTS.md`** and **`CLAUDE.md`** sources use a **`.template` suffix** in `_templates/` so they are not confused with live repo-root files; **`create`** / features map them to **`AGENTS.md`** / **`CLAUDE.md`** on output (see `resolveTemplateSourcePath`, `copyDir` in `src/utils/`). Features must load template paths via the templates directory (e.g. `getTemplatesDir()`), not by reading “whatever is at repo root.”
 
 ## Problem we hit
 
@@ -37,7 +37,7 @@ Merge-by-walking preserves **target** ordering, which is wrong for **canonical**
 
 ## Agent-facing references
 
-- **Skill (procedure for future work):** [template-canonical-merge](/.github/skills/template-canonical-merge/SKILL.md)
+- **Skill (procedure for future work):** [template-canonical-merge](/.agents/skills/template-canonical-merge/SKILL.md)
 - **Feature README:** `src/features/ai-instructions/README.md`
 
 ## Tests

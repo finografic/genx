@@ -1,0 +1,23 @@
+import type { FeatureApplyResult, FeatureContext } from '../feature.types';
+
+/**
+ * Apply __FEATURE_LABEL__ to the target project.
+ */
+export async function apply__FEATURE_PASCAL__(_context: FeatureContext): Promise<FeatureApplyResult> {
+  const applied: string[] = [];
+
+  // 1. Install dependencies
+  // TODO
+
+  // 2. Create/update config files
+  // TODO
+
+  // 3. Update package.json scripts (if needed)
+  // TODO
+
+  if (applied.length === 0) {
+    return { applied, noopMessage: '__FEATURE_LABEL__ already configured. No changes made.' };
+  }
+
+  return { applied };
+}

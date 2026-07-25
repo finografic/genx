@@ -46,7 +46,7 @@
     "---------- DEV_AND_BUILD": "---------------------------------------------",
     "dev": "tsdown --watch",
     "dev:cli": "NODE_ENV=development tsx src/cli.ts --",
-    "dev:feature": "tsx --tsconfig tsconfig.scripts.json .github/skills/generate-new-genx-feature/new-feature.ts",
+    "dev:feature": "tsx --tsconfig tsconfig.scripts.json .agents/skills/generate-new-genx-feature/new-feature.ts",
     "link": "pnpm build && pnpm link --global",
     "unlink": "pnpm unlink --global",
     "build": "tsdown",

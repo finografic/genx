@@ -1,0 +1,9 @@
+/**
+ * __FEATURE_LABEL__ feature constants.
+ */
+
+// TODO: Add package names, versions, config values
+// Example:
+// export const MY_PACKAGE = 'some-package';
+// export const MY_PACKAGE_VERSION = 'latest';
+// export const MY_VSCODE_EXTENSIONS = ['publisher.extension-id'] as const;

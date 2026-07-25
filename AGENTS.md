@@ -17,16 +17,16 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 - Check `ROADMAP.md` before proposing new initiatives.
 - Use `ROADMAP.md#next` for small follow-ups and manual validation.
 - Keep detailed plans in `docs/todo/TODO_*.md`; graduate completed plans to `DONE_*.md`.
-- Follow `.github/instructions/documentation/todo-done-docs.instructions.md`.
+- Follow `.agents/instructions/documentation/todo-done-docs.instructions.md`.
 
 ---
 
 ## Rules — Project-Specific
 
-- Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
+- Project-specific rules live in `.agents/instructions/project/**/*.instructions.md`.
 - These rules are specific to `@finografic/genx` and not shared with other projects.
 
-- **`docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`** — `_templates/` is the only spec for template merge and `AGENTS.md` spine order (not the genx root file); skill: [template-canonical-merge](/.github/skills/template-canonical-merge/SKILL.md).
+- **`docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`** — `_templates/` is the only spec for template merge and `AGENTS.md` spine order (not the genx root file); skill: [template-canonical-merge](/.agents/skills/template-canonical-merge/SKILL.md).
 - **`docs/spec/CLI_CORE.md`** is the canonical **CLI `src/core/` module spec** for `@finografic` CLI packages.
   - Use it when designing portable `core/` modules, help patterns, and when generating or upgrading **CLI-shaped** projects so generated trees include the same conventions (see `create` / `upgrade`).
   - **library** and **config** package types do not use this `core/` layout — TBD whether they get an analogous doc).
@@ -35,56 +35,56 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 ### Generating Documentation
 
 - Generated README sections are managed by `pnpm docs:usage` — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
-- When adding a command, use the **[scaffold-cli-help](/.github/skills/scaffold-cli-help/SKILL.md)** skill.
+- When adding a command, use the **[scaffold-cli-help](/.agents/skills/scaffold-cli-help/SKILL.md)** skill.
   It covers wiring `src/cli.ts`, `src/cli.help.ts`, and the per-command help file.
 - IMPORTANT: After any change to commands, help text, or examples, run `pnpm docs:usage` to regenerate the README — never edit content between `<!-- GENERATED:*:START/END -->` markers by hand.
 
 ### Instructions to Skills Map
 
-Canonical patterns live under `.github/instructions/project/`. Paired skills live under `.github/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows.
+Canonical patterns live under `.agents/instructions/project/`. Paired skills live under `.agents/skills/<name>/SKILL.md` so Cursor, Copilot, and Claude Code can discover the same workflows.
 
-| Instructions                                                        | Skill (procedure)                              |
-| ------------------------------------------------------------------- | ---------------------------------------------- |
-| `.github/instructions/project/feature-patterns.instructions.md`     | `.github/skills/scaffold-feature/SKILL.md`     |
-| `.github/instructions/project/cli-help-patterns.instructions.md`    | `.github/skills/scaffold-cli-help/SKILL.md`    |
-| `.github/instructions/project/core-module-patterns.instructions.md` | `.github/skills/scaffold-core-module/SKILL.md` |
+| Instructions                                                        | Skill (procedure)                                   |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| `.agents/instructions/project/feature-patterns.instructions.md`     | `.agents/skills/generate-new-genx-feature/SKILL.md` |
+| `.agents/instructions/project/cli-help-patterns.instructions.md`    | `.agents/skills/scaffold-cli-help/SKILL.md`         |
+| `.agents/instructions/project/core-module-patterns.instructions.md` | `.agents/skills/scaffold-core-module/SKILL.md`      |
 
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
 
 ## Rules — Global
 
-Rules are canonical in `.github/instructions/` — see `README.md` there for folder structure.
+Rules are canonical in `.agents/instructions/` — see `README.md` there for folder structure.
 Shared across Claude Code, Cursor, and GitHub Copilot.
 
 **General**
 
-- General baseline: `.github/instructions/general.instructions.md`
+- General baseline: `.agents/instructions/general.instructions.md`
 
 **Code**
 
-- TypeScript patterns: `.github/instructions/code/typescript-patterns.instructions.md`
-- Modern TS patterns: `.github/instructions/code/modern-typescript-patterns.instructions.md`
-- Oxlint & style: `.github/instructions/code/linting-code-style.instructions.md`
-- Provider/context patterns: `.github/instructions/code/provider-context-patterns.instructions.md`
-- Picocolors CLI styling: `.github/instructions/code/picocolors-cli-styling.instructions.md`
+- TypeScript patterns: `.agents/instructions/code/typescript-patterns.instructions.md`
+- Modern TS patterns: `.agents/instructions/code/modern-typescript-patterns.instructions.md`
+- Oxlint & style: `.agents/instructions/code/linting-code-style.instructions.md`
+- Provider/context patterns: `.agents/instructions/code/provider-context-patterns.instructions.md`
+- Picocolors CLI styling: `.agents/instructions/code/picocolors-cli-styling.instructions.md`
 
 **Naming**
 
-- File naming: `.github/instructions/naming/file-naming.instructions.md`
-- Variable naming: `.github/instructions/naming/variable-naming.instructions.md`
+- File naming: `.agents/instructions/naming/file-naming.instructions.md`
+- Variable naming: `.agents/instructions/naming/variable-naming.instructions.md`
 
 **Documentation**
 
-- Documentation: `.github/instructions/documentation/documentation.instructions.md`
-- README standards: `.github/instructions/documentation/readme-standards.instructions.md`
-- Agent-facing markdown: `.github/instructions/documentation/agent-facing-markdown.instructions.md`
-- Feature design specs: `.github/instructions/documentation/feature-design-specs.instructions.md`
-- TODO/DONE docs: `.github/instructions/documentation/todo-done-docs.instructions.md`
+- Documentation: `.agents/instructions/documentation/documentation.instructions.md`
+- README standards: `.agents/instructions/documentation/readme-standards.instructions.md`
+- Agent-facing markdown: `.agents/instructions/documentation/agent-facing-markdown.instructions.md`
+- Feature design specs: `.agents/instructions/documentation/feature-design-specs.instructions.md`
+- TODO/DONE docs: `.agents/instructions/documentation/todo-done-docs.instructions.md`
 
 **Git**
 
-- Git policy: `.github/instructions/git/git-policy.instructions.md`
+- Git policy: `.agents/instructions/git/git-policy.instructions.md`
 
 ---
 
@@ -101,7 +101,7 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 ## Git Policy
 
 - Do not include `Co-Authored-By` lines in commit messages.
-- `.github/instructions/git/git-policy.instructions.md` (see Commits and Releases sections)
+- `.agents/instructions/git/git-policy.instructions.md` (see Commits and Releases sections)
 
 ---
 
@@ -166,15 +166,15 @@ This file defines genx behavior, NOT template content.
 IMPORTANT: Before writing code for any of the patterns below, invoke the paired skill.
 Skills encode the exact conventions and wiring steps for this repo — skipping them causes pattern drift.
 
-| Task                                           | Skill to invoke                                                              |
-| ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| Add or update CLI help / add a command         | [scaffold-cli-help](.github/skills/scaffold-cli-help/SKILL.md)               |
-| Add a new genx feature module                  | [scaffold-feature](.github/skills/scaffold-feature/SKILL.md)                 |
-| Convert a feature to preview diffs             | [scaffold-feature-preview](.github/skills/scaffold-feature-preview/SKILL.md) |
-| Add a new `src/core/` module                   | [scaffold-core-module](.github/skills/scaffold-core-module/SKILL.md)         |
-| Template-only merge & section order            | [template-canonical-merge](.github/skills/template-canonical-merge/SKILL.md) |
-| Prune Learned sections in AGENTS.md            | [maintain-agents](.github/skills/maintain-agents/SKILL.md)                   |
-| Migrate a CLI project to `@finografic/cli-kit` | [migrate-to-cli-kit](.github/skills/migrate-to-cli-kit/SKILL.md)             |
+| Task                                           | Skill to invoke                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------ |
+| Add or update CLI help / add a command         | [scaffold-cli-help](.agents/skills/scaffold-cli-help/SKILL.md)                 |
+| Add a new genx feature module                  | [generate-new-genx-feature](.agents/skills/generate-new-genx-feature/SKILL.md) |
+| Convert a feature to preview diffs             | [scaffold-feature-preview](.agents/skills/scaffold-feature-preview/SKILL.md)   |
+| Add a new `src/core/` module                   | [scaffold-core-module](.agents/skills/scaffold-core-module/SKILL.md)           |
+| Template-only merge & section order            | [template-canonical-merge](.agents/skills/template-canonical-merge/SKILL.md)   |
+| Prune Learned sections in AGENTS.md            | [maintain-agents](.agents/skills/maintain-agents/SKILL.md)                     |
+| Migrate a CLI project to `@finografic/cli-kit` | [migrate-to-cli-kit](.agents/skills/migrate-to-cli-kit/SKILL.md)               |
 
 ---
 

@@ -1,0 +1,11 @@
+import type { FeatureContext } from '../feature.types';
+
+/**
+ * Detect if __FEATURE_LABEL__ is already configured.
+ */
+export async function detect__FEATURE_PASCAL__(_context: FeatureContext): Promise<boolean> {
+  // TODO: Implement detection logic
+  // Use fileExists() from 'utils' for config files
+  // Use isDependencyDeclared() from 'utils' for package checks
+  return false;
+}

@@ -2,7 +2,7 @@
 
 **Canonical copy:** This spec lives in the `@finografic/genx` repository at **`docs/spec/CLI_CORE.md`**. Treat this path as the **authoritative** description of `src/core/` for every `@finografic` CLI project. Temporary bulk-work or staging folders elsewhere are **not** canonical; they may hold scratch notes during migrations but must not replace updates here.
 
-**Companion material:** Agent-oriented checklists and patterns are in `.github/instructions/project/` (for example `core-module-patterns.instructions.md` and `cli-help-patterns.instructions.md`). Those files stay short; this document carries the full module inventory, export tables, and TypeScript rules for `core/`.
+**Companion material:** Agent-oriented checklists and patterns are in `.agents/instructions/project/` (for example `core-module-patterns.instructions.md` and `cli-help-patterns.instructions.md`). Those files stay short; this document carries the full module inventory, export tables, and TypeScript rules for `core/`.
 
 **Applies to:** All `@finografic` CLI tool projects (`@finografic-genx`, `@finografic-gli`, and any new CLI projects scaffolded by genx).
 
@@ -399,5 +399,5 @@ Then:
 
 Skills tied to `core/` in this repository:
 
-- **`scaffold-cli-help`** (`.github/skills/scaffold-cli-help/SKILL.md`) — Maintain `src/cli.help.ts` using the `HelpConfig` + `renderHelp` pattern
-- **`scaffold-core-module`** (`.github/skills/scaffold-core-module/SKILL.md`) — Add or change modules under `src/core/`
+- **`scaffold-cli-help`** (`.agents/skills/scaffold-cli-help/SKILL.md`) — Maintain `src/cli.help.ts` using the `HelpConfig` + `renderHelp` pattern
+- **`scaffold-core-module`** (`.agents/skills/scaffold-core-module/SKILL.md`) — Add or change modules under `src/core/`

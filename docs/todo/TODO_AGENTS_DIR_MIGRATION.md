@@ -366,42 +366,43 @@ the old numbered-file pattern) as stale, and `patchAgentsMd` gained a canonicali
 any leftover `.github/instructions/` text in a target's `AGENTS.md` gets rewritten regardless of
 which specific old pattern it matches.
 
-## Phase 4 — genx root (dogfooding copy)
+## Phase 4 — genx root (dogfooding copy) ✅ done (2026-07-26)
 
-Same content-source caveat as Phase 2: root's current `.github/instructions` / `.github/skills` has
-several stale files per Phase 0 (e.g. the "ESLint/oxlint" wording, the `tsup`/`eslint` example) —
-don't `git mv` it as-is. Ideally this phase is just running `update:ai-agent-config` (see
-"Lifecycle" below) once that script + Phase 3's code changes exist, since that's the whole point of
-building it — but documenting the manual steps here in case the script isn't ready yet when this
-phase starts:
+Done manually (the `update:ai-agent-config` lifecycle script didn't exist yet when this phase
+started — see "Lifecycle" below, now built as a follow-up so future syncs don't need this by hand).
 
-- [ ] Move instructions/skills content: same shared content as `_templates/.agents/` (from
-      `ai-agent-config/assets/`) **plus** root's 5 genx-only skills carried forward unchanged
-      (`generate-new-genx-feature` — with the `name:` frontmatter fix from Phase 0 — plus
-      `migrate-to-cli-kit`, `scaffold-feature-preview`, `template-canonical-merge`, `triage-docs`)
-- [ ] `.agents/instructions/` ends up identical to `_templates/.agents/instructions/` (no root-only
-      instructions expected beyond the existing `project/*` files, which stay root-only as before)
-- [ ] `.agents/skills/` = `_templates/.agents/skills/` (the 2 shared skills) + the 5 genx-only skills
-      above
-- [ ] Populate `.claude/skills/` at genx root (same dual-write as Phase 2/3) — shared skills +
-      genx-only skills, since genx wants native Claude Code discovery for its own dev skills too
-- [ ] Delete old `.github/instructions/`, `.github/skills/` once the above is verified
-- [ ] `copilot-instructions.md` stays a stub under `.github/` (same as Phase 1/2)
-- [ ] Update root `AGENTS.md`:
-  - "Instructions to Skills Map" table (line ~42) — update paths
-  - "Skills — Check Before Implementing" table (line ~164) — update paths
-  - Any other inline `.github/instructions` / `.github/skills` references
-  - Note: `_templates/AGENTS.md.template` does **not** contain either table (confirmed during
-    scoping) — this is genx-root-only content, one edit, not two
-- [ ] Update docs that hardcode these paths as documented convention (not casual mentions):
-  - `docs/spec/CLI_CORE.md:5,402,403`
-  - `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md:7,40`
-  - `docs/process/PROJECT_MEMORY_MODEL.md:29,38`
-  - `docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md:9,22`
-  - `docs/superpowers/plans/2026-04-07-diff-as-detection.md:49,535,585`
-  - `docs/superpowers/specs/2026-04-07-diff-as-detection-design.md:238`
-- [ ] Verify `genx managed audit` (or equivalent) round-trips correctly against the new layout —
-      this is the actual proof the migration works end-to-end, not just that files moved
+- [x] Moved instructions/skills content: shared content copied from `_templates/.agents/` **plus**
+      root's 5 genx-only skills carried forward (`generate-new-genx-feature` — with the `name:`
+      frontmatter fix — plus `migrate-to-cli-kit`, `scaffold-feature-preview`,
+      `template-canonical-merge`, `triage-docs`)
+- [x] `.agents/instructions/` matches `_templates/.agents/instructions/` for shared content; root's
+      3 real `project/*.instructions.md` files preserved (was `.gitkeep`-only in `_templates`, as
+      expected — project-specific, never templated)
+- [x] `.agents/skills/` = `_templates/.agents/skills/` (3 shared skills) + the 5 genx-only skills
+- [x] `.claude/skills/` populated identically (8 skills total) — confirmed live: the Skill tool
+      picked up `.agents/skills/*` and scoped `_templates:*` variants automatically mid-session
+- [x] Old `.github/instructions/`, `.github/skills/` deleted (including stray `.DS_Store`)
+- [x] `.github/copilot-instructions.md` reduced to the stub
+- [x] Root `AGENTS.md` updated: both tables repointed to `.agents/`, plus fixed a **pre-existing
+      bug** found in both tables — they linked `scaffold-feature/SKILL.md`, which hasn't existed
+      since the skill was renamed to `generate-new-genx-feature` (same stale-rename bug already
+      found and fixed in Phase 0's `ai-agent-config` pass, this was the genx-root instance of it)
+- [x] Docs updated: `docs/spec/CLI_CORE.md` (kept byte-identical to its `_templates/` mirror, which
+      `pnpm check:cli-core-spec` enforces), `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`,
+      `docs/process/PROJECT_MEMORY_MODEL.md` (ditto, kept identical to its `_templates/` mirror —
+      not scoped originally but found during the sweep), `docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md`.
+      `docs/superpowers/plans/…` and `docs/superpowers/specs/…` deliberately **left untouched** —
+      dated historical records of completed past work, not live convention docs; rewriting their
+      `.github/` mentions would misrepresent what was actually true when they were written.
+- [x] Found and fixed 3 more spots the original scoping pass missed: `tsconfig.json` and
+      `tsconfig.scripts.json` both had `.github/skills/**/*.ts` in `include`, and
+      `package.json`'s `dev:feature` script hardcoded the skill script's old path. All three
+      updated to `.agents/skills/...`.
+- [x] Verified `genx managed audit` equivalent round-trips: ran `isAgentDocsAlreadyMigrated` and
+      `migrateAgentDocs({ dryRun: true })` directly against genx root post-migration —
+      `isAgentDocsAlreadyMigrated` returns `true`, dry-run reports zero pending changes and zero
+      errors. This is the actual proof the Phase 3 migration-tool changes work end-to-end, not just
+      that files moved.
 
 ## Lifecycle: keeping genx's own copy in sync
 

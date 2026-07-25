@@ -1,0 +1,14 @@
+import type { Feature } from '../feature.types';
+import { apply__FEATURE_PASCAL__ } from './__FOLDER_NAME__.apply';
+import { detect__FEATURE_PASCAL__ } from './__FOLDER_NAME__.detect';
+
+/**
+ * __FEATURE_LABEL__ feature definition.
+ */
+export const __FEATURE_ID__Feature: Feature = {
+  id: '__FEATURE_ID__',
+  label: '__FEATURE_LABEL__',
+  hint: undefined,
+  detect: detect__FEATURE_PASCAL__,
+  apply: apply__FEATURE_PASCAL__,
+};

@@ -19,5 +19,5 @@ export default defineConfig({
   categories,
   rules: { ...rules, ...loosenRules },
   overrides: [testOverrides, configOverrides],
-  ignorePatterns: [...ignorePatterns, '_templates/package-types/**'],
+  ignorePatterns: [...ignorePatterns, '_templates/package-types/**', '**/.claude/skills/**'],
 } satisfies OxlintConfig);
