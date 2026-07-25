@@ -73,6 +73,7 @@
     "·········· REGISTRIES": "················································",
     "view:registry:github": "pnpm view @finografic/genx --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "··················································",
+    "update:ai-agent-config": "pnpm update @finografic/ai-agent-config --latest",
     "update:deps-policy": "pnpm update @finografic/deps-policy --latest",
     "update:cli-kit": "pnpm update @finografic/cli-kit --latest",
     "update:oxc-config": "pnpm update @finografic/oxc-config --latest && pnpm update oxfmt --latest && pnpm update oxlint --latest",
