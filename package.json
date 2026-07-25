@@ -107,7 +107,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.0",
     "@commitlint/config-conventional": "^21.2.0",
-    "@finografic/ai-agent-config": "^0.0.3",
+    "@finografic/ai-agent-config": "^0.0.4",
     "@finografic/md-lint": "^0.16.6",
     "@finografic/oxc-config": "^2.8.2",
     "@finografic/project-scripts": "^1.5.4",

@@ -9,9 +9,9 @@ Rules for how agent-consumed files (AGENTS.md, instructions, skills, specs) refe
 All file references use paths relative to the project root — no leading slash, no traversal.
 
 ```md
-✅ `.github/instructions/05-documentation.instructions.md`
+✅ `.agents/instructions/05-documentation.instructions.md`
 ✅ `AGENTS.md`
-✅ `.github/skills/maintain-agents/SKILL.md`
+✅ `.agents/skills/maintain-agents/SKILL.md`
 
 ❌ `/AGENTS.md`
 ❌ `./helper.ts`
@@ -23,9 +23,9 @@ All file references use paths relative to the project root — no leading slash,
 Every file path is a code identifier — wrap it in backticks to prevent token splitting, accidental natural-language interpretation, and formatter line-wrapping.
 
 ```md
-✅ `.github/instructions/05-documentation.instructions.md`
+✅ `.agents/instructions/05-documentation.instructions.md`
 
-❌ .github/instructions/05-documentation.instructions.md
+❌ .agents/instructions/05-documentation.instructions.md
 ❌ split
 across lines
 ```
@@ -35,7 +35,7 @@ across lines
 Do not alias or paraphrase file locations. The path is the identifier.
 
 ```md
-✅ `.github/instructions/05-documentation.instructions.md`
+✅ `.agents/instructions/05-documentation.instructions.md`
 
 ❌ "the documentation file"
 ❌ "see the instructions doc"
@@ -48,11 +48,11 @@ Default to backtick paths. A Markdown link signals "read this now" — use links
 ```md
 # Default — reference only (agent reads if relevant)
 
-`.github/instructions/05-documentation.instructions.md`
+`.agents/instructions/05-documentation.instructions.md`
 
 # Exception — read-before-acting (use sparingly)
 
-[maintain-agents](/.github/skills/maintain-agents/SKILL.md)
+[maintain-agents](/.agents/skills/maintain-agents/SKILL.md)
 ```
 
 When a Markdown link is used, it MUST still use a repo-root relative path.
@@ -64,11 +64,11 @@ When listing multiple files, group them by purpose.
 ```md
 Skills:
 
-- `.github/skills/maintain-agents/SKILL.md`
-- `.github/skills/scaffold-cli-help/SKILL.md`
+- `.agents/skills/maintain-agents/SKILL.md`
+- `.agents/skills/scaffold-cli-help/SKILL.md`
 
 Instructions:
 
-- `.github/instructions/project/feature-patterns.instructions.md`
-- `.github/instructions/project/cli-help-patterns.instructions.md`
+- `.agents/instructions/project/feature-patterns.instructions.md`
+- `.agents/instructions/project/cli-help-patterns.instructions.md`
 ```

@@ -7,13 +7,19 @@ tools: [file-read, file-edit, terminal]
 
 # Scaffold / maintain CLI help (`cli.help.ts`)
 
-Use this skill for the root CLI help surface only. For reusable `src/core/` infrastructure, use
-`scaffold-core-module`.
+This skill applies the **typed root help** pattern used across `@finografic` CLI tools (`genx`, `gli`, and scaffolds from genx).
 
-## Read first
+## Read first (repo — canonical for this repository)
 
-- `.github/instructions/project/cli-help-patterns.instructions.md` — rules, file locations, `HelpConfig` shape, examples/footer conventions.
+- `.agents/instructions/project/cli-help-patterns.instructions.md` — rules, file locations, `HelpConfig` shape, examples/footer conventions.
+
+## Deeper spec (canonical — in this repo)
+
 - **`docs/spec/CLI_CORE.md`** — full **`core/render-help`** API (`HelpConfig`, `renderHelp`, section shapes), export table, and examples.
+
+**Optional context:** A temporary bulk-task folder in a monorepo (e.g. `___REFACTORING___`) may hold `REPORT_CLI_NORMALIZATION.md` with migration history. That path is **not** canonical; use it when you have it for background, not as the spec.
+
+Keep this skill **procedural**; link to `docs/spec/CLI_CORE.md` for authoritative types and tables.
 
 ## Prerequisites
 
@@ -58,4 +64,7 @@ Use this skill for the root CLI help surface only. For reusable `src/core/` infr
 - Add **Examples** entries where users will copy-paste real invocations.
 - Update any command-specific help files (`src/help/*.help.ts`) if this repo splits per-command help — root skill covers **root** `HelpConfig` only.
 
-Root help stays declarative data (`HelpConfig`); rendering stays centralized in `core/render-help`.
+## Design constraints
+
+- Root help stays **declarative data** (`HelpConfig`); rendering is centralized in `core/render-help`.
+- Do not duplicate `renderHelp` logic in application code.

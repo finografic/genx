@@ -1,4 +1,4 @@
-# .github/instructions — AI Instruction Files
+# .agents/instructions — AI Instruction Files
 
 Rules and conventions loaded automatically by Claude Code, Cursor, GitHub Copilot, and other
 AI coding tools. Files use the `.instructions.md` suffix. `README.md` (this file) is not loaded

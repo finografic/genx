@@ -6,7 +6,6 @@ Rules for planning docs, working docs, and completion records.
 
 - `docs/todo/` holds task-level planning docs and completion records
 - `docs/todo/ROADMAP.md` holds the repo or package roadmap
-- `docs/todo/NEXT_STEPS.md` is optional for medium to large, actively evolving projects
 - `docs/investigation/` is optional for deeper debugging, audits, and research
 - `docs/taxonomy/` is optional for larger systems that need structure, domain models, or content maps
 
@@ -56,20 +55,14 @@ When work is complete:
 2. Update the title from `# TODO` to `# DONE`
 3. Replace the status line with a completion line
 4. Update any links pointing to the old filename
-5. If the work appears in `docs/todo/ROADMAP.md` or `docs/todo/NEXT_STEPS.md`, update those references too
+5. If the work appears in `docs/todo/ROADMAP.md`, update those references too
 
 ## ROADMAP.md
 
 - ROADMAP is for larger initiatives, themes, and sequencing
 - Keep it concise and structured
+- Include a `## Next` section near the top for near-term tasks, manual checks, and small follow-ups
 - Include a `## Done` section at the end for completed roadmap items
 - Link to supporting `TODO_` or `DONE_` docs when detail exists
-- Do not use ROADMAP for session notes, small fixes, or manual testing checklists
-
-## NEXT_STEPS.md
-
-- `docs/todo/NEXT_STEPS.md` is optional
-- Use it for medium to large projects that are active and growing
-- Keep it near-term and action-oriented
-- It can reference roadmap items, but should not replace `docs/todo/ROADMAP.md`
-- Good uses: follow-ups, manual testing, cleanup, short-horizon implementation tasks
+- Do not use ROADMAP for session notes or long investigation narratives
+- Do not create `docs/todo/NEXT_STEPS.md`; use `ROADMAP.md#next` instead

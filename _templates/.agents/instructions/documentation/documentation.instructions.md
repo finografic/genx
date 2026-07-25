@@ -23,7 +23,7 @@
 - Use markdown link syntax when referencing another document — not bare paths or backtick references.
 - Use absolute paths from the repo root: examples:
   - `[AGENTS.md](/AGENTS.md)`
-  - `[00-general.instructions.md](/.github/instructions/00-general.instructions.md)`.
+  - `[00-general.instructions.md](/.agents/instructions/00-general.instructions.md)`.
 - Exception: prose references to `memory.md` and `handoff.md` in session-context blocks do not require links.
 - Prefer em-dash `—` over hyphen-minus `-` as a heading separator — it produces a cleaner `--` slug.
 
