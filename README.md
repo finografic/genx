@@ -259,7 +259,7 @@ Scaffolds and syncs the agent interface layer of a `@finografic` project.
 
 - Creates `AGENTS.md` from the canonical template if absent
 - Merges existing `AGENTS.md`: enforces template bodies, strips legacy memory sections, dedupes duplicate Markdown Tables headings, and reorders sections (front matter → Rules spine → extras → Learned)
-- Keeps enforced shared sections in sync with the template: **Project Memory Model**, **Roadmap and Planning Docs**, **Rules — Global**, **Rules — Markdown Tables**, and **Git Policy**
+- Keeps enforced shared sections in sync with the template: **Project Memory Model**, **Roadmap and Planning Docs**, **Rules — Global**, **Rules — Markdown Tables**, **Git Policy**, **Agent execution efficiency**, and **Cursor**
 - Seeds **Rules — Project-Specific** once (never overwritten — project customises it)
 - Copies portable agent skill procedures into `.github/skills/`
 - Adds `scaffold-cli-help` and `scaffold-core-module` only for CLI package types
@@ -272,7 +272,7 @@ Shared AI tooling instructions for GitHub Copilot, Cursor, and Claude Code.
 - Syncs `.github/copilot-instructions.md` from `_templates` (full file when content differs).
 - Syncs each file under `.github/instructions/` from `_templates`, **except** the `project/` subtree — that folder is never overwritten by genx (per-repo rules stay put).
 - Syncs `.cursor/rules/*.mdc` from `_templates` (always-on Cursor rules that point at `AGENTS.md` and `.github/instructions/`).
-- Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy** → **Cursor**, plus shared bodies for General / Markdown / Git / Cursor). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
+- Syncs **`AGENTS.md`** with **reverse apply** from **`_templates/AGENTS.md.template`** (canonical spine: **Rules — Project-Specific** → **Rules — Global** → **Rules — Markdown Tables** → **Git Policy**, plus shared bodies for General / Markdown / Git / **Agent execution efficiency** / Cursor). The target supplies **Rules — Project-Specific** body and any extra `##` sections; those land **after** the spine (merge order), with **Learned** last. Treat that template file as the spec — not the genx repo’s root `AGENTS.md`. Missing file: write the full template.
 
 ### ai-memory
 
