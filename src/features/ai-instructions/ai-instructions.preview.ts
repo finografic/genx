@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assetsRoot as agentAssetsRoot } from '@finografic/ai-agent-config';
 import { fileExists } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
@@ -133,8 +134,10 @@ export async function previewAiInstructions(
   };
 
   const [copilotFile, instructionsDirRel] = AI_INSTRUCTIONS_FILES;
-  const copilotTemplatePath = resolve(templateDir, copilotFile);
-  const instructionsTemplateRoot = resolve(templateDir, instructionsDirRel);
+  // Copilot file body + instructions tree come from the published `@finografic/ai-agent-config`
+  // package (the single source of truth), not genx's own `_templates/`.
+  const copilotTemplatePath = resolve(agentAssetsRoot, 'copilot-instructions.md');
+  const instructionsTemplateRoot = resolve(agentAssetsRoot, 'instructions');
 
   const copilotDest = resolve(targetDir, copilotFile);
   const copilotProposed = await readTemplatedFileBody(copilotTemplatePath, 'copilot-instructions.md', vars);

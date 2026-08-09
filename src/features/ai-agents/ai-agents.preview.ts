@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assetsRoot as agentAssetsRoot } from '@finografic/ai-agent-config';
 import { fileExists } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
@@ -85,7 +86,7 @@ export interface PreviewAiAgentsOptions {
 /**
  * Preview ai-agents: `AGENTS.md` sync + scaffold `.agents/skills/*` (cross-tool manual reference)
  * and `.claude/skills/*` (native Claude Code discovery) when missing, dual-written from the same
- * `_templates/.agents/skills/` source.
+ * `@finografic/ai-agent-config` `skills/` source.
  */
 export async function previewAiAgents(
   context: FeatureContext,
@@ -135,7 +136,9 @@ export async function previewAiAgents(
     return { changes, applied, noopMessage };
   }
 
-  const skillsTemplateDir = resolve(templateDir, AI_AGENTS_SKILLS_SOURCE_DIR);
+  // Skills tree comes from the published `@finografic/ai-agent-config` package (the single source
+  // of truth), not genx's own `_templates/`.
+  const skillsTemplateDir = resolve(agentAssetsRoot, AI_AGENTS_SKILLS_SOURCE_DIR);
   const skillsTargetDirs = AI_AGENTS_SKILLS_TARGET_DIRS.map((dir) => resolve(targetDir, dir));
   const packageJson = JSON.parse(await readFile(resolve(targetDir, 'package.json'), 'utf8')) as PackageJson;
   const isCliPackage = isPackageType(packageJson, 'cli');

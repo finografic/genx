@@ -5,8 +5,11 @@
 /** Paths created/managed by this feature (relative to targetDir). */
 export const AI_AGENTS_FILES = ['AGENTS.md', '.agents/skills/', '.claude/skills/'] as const;
 
-/** Source directory (relative to `_templates/`) that agent skill procedures are read from. */
-export const AI_AGENTS_SKILLS_SOURCE_DIR = '.agents/skills';
+/**
+ * Source directory (relative to `@finografic/ai-agent-config`'s `assetsRoot`) that agent skill
+ * procedures are read from.
+ */
+export const AI_AGENTS_SKILLS_SOURCE_DIR = 'skills';
 
 /**
  * Directories (relative to targetDir) skills are dual-written to: `.agents/skills` for cross-tool
