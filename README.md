@@ -477,7 +477,7 @@ incorrectly apply to every dependency in the install, not just the scoped one), 
 the sync step runs against the freshly-bumped dependency, then runs
 `genx upgrade --agent-docs -y` — a non-interactive flag that syncs `AGENTS.md`,
 `.agents/instructions/`, and `.agents/skills/` (+ `.claude/skills/`) content, plus migrates any
-lingering legacy `.github/instructions/` or `.ai/` layout. It's safe to re-run; a second run with
+lingering legacy `.github/instructions/` or `.agents/` layout. It's safe to re-run; a second run with
 nothing changed reports `No changes made`.
 
 Because this runs through the same `applyFeaturesToTarget` path as `genx audit`, applied changes are
