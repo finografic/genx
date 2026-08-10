@@ -204,6 +204,7 @@ genx managed <command> [options]
 | `upgrade`  | Upgrade managed targets to current conventions        |
 | `deps`     | Sync deps across managed targets                      |
 | `audit`    | Audit and repair feature state across managed targets |
+| `status`   | Report git worktree status across managed targets     |
 
 | Flag                | Description                                                             |
 | ------------------- | ----------------------------------------------------------------------- |
@@ -238,16 +239,20 @@ genx managed audit --features=ai-memory,vitest
 
 # Audit each target; skip apply/file confirms
 genx managed audit -y
+
+# Show git status per target and select dirty repos
+genx managed status
 ```
 
 **How it works:**
 
 1. Reads managed targets from ~/.config/finografic/genx.config.jsonc
-2. Runs the selected command (upgrade, deps, or audit) on each target
-3. Managed deps uses the current policy snapshot unless --update-policy is passed
-4. Managed audit scans all targets first, then prompts for feature selection per target
-5. Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features
-6. Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite
+2. Runs the selected command (upgrade, deps, audit, or status) on each target
+3. Managed status reads each target worktree, then pre-selects only targets with uncommitted files (clean targets are shown but disabled)
+4. Managed deps uses the current policy snapshot unless --update-policy is passed
+5. Managed audit scans all targets first, then prompts for feature selection per target
+6. Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features
+7. Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite
 
 <!-- GENERATED:USAGE:END -->
 
@@ -420,15 +425,15 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                                                                     |
-| --------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                      |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`, `--agent-docs`                                                                        |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                        |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `-y`, `--features=KEYS`, `--allow-downgrade`, `--update-policy` |
-| `help`          | Show this help message                             | -                                                                                           |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                                                           |
+| Command         | Description                                        | Options                                                                                               |
+| --------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                                |
+| `upgrade`       | Upgrade an existing package to current conventions | `-y`, `--agent-docs`                                                                                  |
+| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                          |
+| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                                  |
+| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `status`, `-y`, `--features=KEYS`, `--allow-downgrade`, `--update-policy` |
+| `help`          | Show this help message                             | -                                                                                                     |
+| `--help` / `-h` | Show help (works with commands too)                | -                                                                                                     |
 
 See `genx <command> --help` for detailed usage.
 <!-- GENERATED:COMMANDS_REF:END -->
