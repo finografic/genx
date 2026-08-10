@@ -3,6 +3,7 @@ import { renderCommandHelp, withHelp } from '@finografic/cli-kit/render-help';
 import { runManagedAuditFlow } from './managed.audit.js';
 import { runManagedDepsFlow } from './managed.deps.js';
 import { help } from './managed.help.js';
+import { runManagedStatusFlow } from './managed.status.js';
 import { runManagedUpgradeFlow } from './managed.upgrade.js';
 
 export async function runManaged(argv: string[], _context: { cwd: string }): Promise<void> {
@@ -17,6 +18,8 @@ export async function runManaged(argv: string[], _context: { cwd: string }): Pro
         return runManagedDepsFlow(subArgs);
       case 'audit':
         return runManagedAuditFlow(subArgs);
+      case 'status':
+        return runManagedStatusFlow(subArgs);
       default:
         if (subcommand) {
           console.error(`Unknown managed subcommand: ${subcommand}\n`);

@@ -8,6 +8,7 @@ export const help: CommandHelpConfig = {
     { name: 'upgrade', description: 'Upgrade managed targets to current conventions' },
     { name: 'deps', description: 'Sync deps across managed targets' },
     { name: 'audit', description: 'Audit and repair feature state across managed targets' },
+    { name: 'status', description: 'Report git worktree status across managed targets' },
   ],
   options: [
     {
@@ -39,10 +40,15 @@ export const help: CommandHelpConfig = {
       description: 'Apply selected feature repairs where needed',
     },
     { command: 'genx managed audit -y', description: 'Audit each target; skip apply/file confirms' },
+    {
+      command: 'genx managed status',
+      description: 'Show git status per target and select dirty repos',
+    },
   ],
   howItWorks: [
     'Reads managed targets from ~/.config/finografic/genx.config.jsonc',
-    'Runs the selected command (upgrade, deps, or audit) on each target',
+    'Runs the selected command (upgrade, deps, audit, or status) on each target',
+    'Managed status reads each target worktree, then pre-selects only targets with uncommitted files (clean targets are shown but disabled)',
     'Managed deps uses the current policy snapshot unless --update-policy is passed',
     'Managed audit scans all targets first, then prompts for feature selection per target',
     'Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features',

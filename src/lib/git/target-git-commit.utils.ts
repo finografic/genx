@@ -16,7 +16,7 @@ function isInsideGitRoot(path: string): boolean {
   return path !== '' && !path.startsWith('..') && !path.startsWith('/');
 }
 
-function parsePorcelainPaths(output: string): Set<string> {
+export function parsePorcelainPaths(output: string): Set<string> {
   const paths = new Set<string>();
   const entries = output.split('\0').filter(Boolean);
 
