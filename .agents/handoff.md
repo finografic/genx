@@ -6,7 +6,7 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 July 26, 2026
+📅 August 11, 2026
 
 ## Project
 
@@ -16,7 +16,22 @@ ecosystem. Current version: **v5.42.0**.
 ## Architecture
 
 **CLI:** `src/cli.ts` exposes `create`, `upgrade`, `deps`, `managed`, and `audit`. Feature
-application is internal infrastructure, not a public command.
+application is internal infrastructure, not a public command. `managed` subcommands are `upgrade`,
+`deps`, `audit`, and `status`.
+
+**Managed status:** `genx managed status` reads every managed target's worktree in parallel, then
+offers a multi-select of dirty targets only. Confirming walks them one at a time, showing each
+target's pending files and an AI-drafted commit message for accept-or-regenerate, then committing
+with `git add -A`. Drafts come from a local Ollama model and are generated read-only, ahead of
+time, so the next target's message is ready while the current prompt is on screen.
+
+**AI commit drafts:** `src/lib/ai/` holds a thin Ollama HTTP client, pure prompt/response logic, and
+a preloading draft cache. Ported from `zconf message` in `~/.zshrc-config` so genx stays
+self-contained. Every failure path returns null and the flow falls back to manual entry.
+
+**Prompt styling:** `src/lib/prompts/styled-multiselect.prompt.ts` is a multi-select with per-row
+state styling, built on `@clack/core`'s `MultiSelectPrompt` plus clack's exported `limitOptions`.
+It exists because clack's own `multiselect` hardcodes its label styler and exposes no hook.
 
 **Templates:** `_templates/` is the only canonical source for generated target content.
 Package-type overlays live under `_templates/package-types/`.
@@ -97,6 +112,12 @@ separately.
     `scaffold-feature-preview`, `template-canonical-merge`) stay root-only permanently, never
     distributed via `ai-agent-config`. `triage-docs` is the one exception pending ROADMAP #6
     (`scripts/triage-docs.ts` portability).
+13. AI commit drafts are generated read-only. Preloading runs ahead of user confirmation, so it must
+    never stage or otherwise mutate a target the user may still skip.
+14. `.env` in the genx package root wins over the shell environment for Ollama settings, inverting
+    Node's `--env-file` precedence, so a globally exported model name cannot silently override it.
+15. `@clack/core` is pinned exact to the version `@clack/prompts` pins. Two copies break `isCancel`,
+    which compares a module-local symbol.
 
 ## Open Work
 
@@ -109,6 +130,10 @@ separately.
   `ai-agent-config`.
 - Delete the stale duplicate `scaffold-feature` skill in `@finografic-cli-kit` — already `git rm`'d
   in that repo's working tree but left uncommitted (unrelated in-progress work there).
+- `@finografic-cli-kit` has no `node_modules`; its commit hooks fail until `pnpm install` runs.
+- `monorepo-starter` has a pre-existing MD012 error in `docs/todo/ROADMAP.md` (auto-fixable).
+- Three managed targets (`plate-editor`, `react`, `zustand-context-creator`) still lack
+  `.markdownlint.jsonc`, but have no `md-lint` wired, so nothing fails yet.
 
 ## References
 
