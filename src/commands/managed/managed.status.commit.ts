@@ -52,20 +52,23 @@ function renderChange(change: TargetGitChange): string {
   return `  ${colorCode(effectiveCode(change))}  ${pc.gray(change.path)}`;
 }
 
-const DRAFT_LABEL = 'suggested commit message';
-const CAPTION_SEPARATOR = pc.gray(' • ');
+const DRAFT_LABEL = 'Suggested commit message:';
 
-/** A caption line pairing the label with the model and latency, then the message itself. */
+/**
+ * The message in yellow, then the model and latency in grey beneath. The label is
+ * printed separately by `takeDraft`, since it doubles as the spinner's completion line
+ * when a draft had to be waited on.
+ *
+ * No leading newline: clack already emits a blank guide-bar line between log entries,
+ * so adding one here produces two.
+ */
 function renderDraft(draft: CommitDraft | null): string {
   if (draft === null) {
     return `${pc.dim('No AI draft available')} ${pc.gray('(Ollama unreachable or no models installed)')}`;
   }
 
-  const caption = [pc.bold(pc.gray(DRAFT_LABEL)), pc.gray(draft.model), pc.gray(`${draft.elapsedMs}ms`)].join(
-    CAPTION_SEPARATOR,
-  );
-
-  return `${caption}\n${pc.yellow(draft.message)}`;
+  const meta = pc.gray(`${draft.model}${pc.gray(' • ')}${draft.elapsedMs}ms`);
+  return `${pc.yellow(draft.message)}\n${meta}`;
 }
 
 /** Prompt for a message by hand — the fallback when no draft could be generated. */
@@ -102,12 +105,19 @@ async function takeDraft(drafts: CommitDraftCache, targetDir: string): Promise<C
   const pending = drafts.take(targetDir);
   const settled = await Promise.race([pending, delay(SPINNER_DELAY_MS).then(() => PENDING)]);
 
-  if (settled !== PENDING) return settled as CommitDraft | null;
+  // Already preloaded — no spinner to flash, so the label is logged directly.
+  if (settled !== PENDING) {
+    const ready = settled as CommitDraft | null;
+    if (ready !== null) logMessage(pc.white(DRAFT_LABEL));
+    return ready;
+  }
 
   const progress = clack.spinner();
   progress.start('Drafting commit message');
   const draft = await pending;
-  progress.stop(draft === null ? 'No draft available' : 'Draft ready');
+  // The spinner's completion line doubles as the label, so a waited-on draft reads the
+  // same as a preloaded one rather than announcing "ready" and then labelling itself.
+  progress.stop(draft === null ? 'No draft available' : DRAFT_LABEL);
   return draft;
 }
 
@@ -173,7 +183,7 @@ async function processTarget(
     progress.start('Generating a new message');
     drafts.invalidate(target.path);
     draft = await drafts.take(target.path);
-    progress.stop(draft === null ? 'Generation failed' : 'New message ready');
+    progress.stop(draft === null ? 'Generation failed' : DRAFT_LABEL);
   }
 }
 
