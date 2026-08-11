@@ -20,6 +20,8 @@ export interface StyledMultiSelectRowState {
   /** The row the cursor is currently on. */
   focused: boolean;
   selected: boolean;
+  /** Rendering the final summary after submit, rather than a live row. */
+  submitted: boolean;
 }
 
 export interface StyledMultiSelectOption<Value> {
@@ -78,9 +80,22 @@ export async function promptStyledMultiSelect<Value>(config: {
   const renderRow = (option: StyledMultiSelectOption<Value>, state: StyledMultiSelectRowState): string =>
     `${renderCheckbox(state)} ${renderText(option, state)}${renderHint(option)}`;
 
+  /**
+   * One entry per line under the guide bar. Clack's own multiselect joins the summary
+   * with commas, which reflows into an unreadable paragraph once a dozen targets are
+   * selected — a vertical list stays scannable.
+   */
+  const asSummaryLines = (entries: string[]): string =>
+    entries.map((entry) => `${pc.gray(S_BAR)}  ${entry}`).join('\n');
+
   /** Flat, checkbox-less rendering for the submitted / cancelled summary lines. */
   const renderSummaryEntry = (option: StyledMultiSelectOption<Value>, cancelled: boolean): string => {
-    const text = renderText(option, { disabled: false, focused: false, selected: true });
+    const text = renderText(option, {
+      disabled: false,
+      focused: false,
+      selected: true,
+      submitted: true,
+    });
     return cancelled ? pc.strikethrough(pc.dim(option.label)) : text;
   };
 
@@ -109,23 +124,20 @@ export async function promptStyledMultiSelect<Value>(config: {
           disabled: option.disabled ?? false,
           focused: active && !option.disabled,
           selected: selectedValues.includes(option.value),
+          submitted: false,
         });
 
       const selectedOptions = this.options.filter((option) => selectedValues.includes(option.value));
 
       switch (this.state) {
         case 'submit': {
-          const summary =
-            selectedOptions.map((option) => renderSummaryEntry(option, false)).join(pc.dim(', ')) ||
-            pc.dim('none');
-          return `${header}${wrapTextWithPrefix(undefined, summary, `${pc.gray(S_BAR)}  `)}`;
+          const entries = selectedOptions.map((option) => renderSummaryEntry(option, false));
+          return `${header}${asSummaryLines(entries.length > 0 ? entries : [pc.dim('none')])}`;
         }
         case 'cancel': {
-          const summary = selectedOptions
-            .map((option) => renderSummaryEntry(option, true))
-            .join(pc.dim(', '));
-          if (summary.trim() === '') return `${header}${pc.gray(S_BAR)}`;
-          return `${header}${wrapTextWithPrefix(undefined, summary, `${pc.gray(S_BAR)}  `)}\n${pc.gray(S_BAR)}`;
+          const entries = selectedOptions.map((option) => renderSummaryEntry(option, true));
+          if (entries.length === 0) return `${header}${pc.gray(S_BAR)}`;
+          return `${header}${asSummaryLines(entries)}\n${pc.gray(S_BAR)}`;
         }
         case 'error': {
           const columnPrefix = `${pc.yellow(S_BAR)}  `;

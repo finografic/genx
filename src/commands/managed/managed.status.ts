@@ -1,5 +1,6 @@
 import { GENX_CONFIG_PATH, errorMessage, infoMessage, intro, readManagedTargets } from 'utils';
 
+import { CommitDraftCache } from 'lib/ai/commit-draft';
 import { readTargetGitStatus } from 'lib/git/target-git-status.utils';
 import type { StyledMultiSelectRowState } from 'lib/prompts/styled-multiselect.prompt';
 import { promptStyledMultiSelect } from 'lib/prompts/styled-multiselect.prompt';
@@ -7,6 +8,8 @@ import { pc } from 'utils/picocolors';
 import { cancel, spinner } from 'utils/prompts.utils';
 
 import type { ManagedTarget } from 'types/managed.types';
+
+import { runCommitPhase } from './managed.status.commit.js';
 
 interface ManagedStatusResult {
   branch: string | null;
@@ -96,14 +99,23 @@ export async function runManagedStatusFlow(_argv: string[]): Promise<void> {
     return;
   }
 
+  // Draft the first target's message now, so it is ready by the time the user finishes
+  // choosing. It is the first pre-checked row; wasted only if they deselect it.
+  const drafts = new CommitDraftCache();
+  drafts.preload(dirtyResults[0]?.target.path);
+
   // Clean targets are omitted entirely — the summary above already accounts for them.
   const options = dirtyResults.map((result) => {
     const { name, suffix } = labelParts(result);
     return {
       value: result.target.path,
       label: optionLabel(result),
-      style: ({ focused }: StyledMultiSelectRowState) =>
-        `${focused ? pc.white(name) : pc.gray(name)} ${pc.yellow(suffix)}`,
+      // Live rows lead with the yellow count; once confirmed the list is a settled
+      // record rather than a call to action, so it recedes to white-on-grey.
+      style: ({ focused, submitted }: StyledMultiSelectRowState) =>
+        submitted
+          ? `${pc.white(name)} ${pc.gray(suffix)}`
+          : `${focused ? pc.white(name) : pc.gray(name)} ${pc.yellow(suffix)}`,
     };
   });
 
@@ -124,10 +136,9 @@ export async function runManagedStatusFlow(_argv: string[]): Promise<void> {
   }
 
   const selected = new Set(selectedPaths);
-  for (const result of results.filter((entry) => selected.has(entry.target.path))) {
-    // TODO: replace with the real resolve/commit action.
-    console.log(
-      `[managed status] selected: ${result.target.name} (${result.dirtyCount} uncommitted) — ${result.target.path}`,
-    );
-  }
+  const selectedTargets = dirtyResults
+    .filter((result) => selected.has(result.target.path))
+    .map((result) => result.target);
+
+  await runCommitPhase(selectedTargets, drafts);
 }

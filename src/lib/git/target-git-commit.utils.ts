@@ -7,16 +7,25 @@ export interface GitCommitTracker {
 }
 
 export interface GitCommitResult {
+  /** Branch the commit landed on, when known. */
+  branch?: string;
   committed: boolean;
   hash?: string;
   message?: string;
+  /** Git's own summary line, e.g. `7 files changed, 93 insertions(+), 40 deletions(-)`. */
+  stat?: string;
 }
 
 function isInsideGitRoot(path: string): boolean {
   return path !== '' && !path.startsWith('..') && !path.startsWith('/');
 }
 
-export function parsePorcelainPaths(output: string): Set<string> {
+/**
+ * Paths touched, for commit tracking. Unlike `parsePorcelainChanges` in
+ * target-git-status.utils.ts, a rename's origin path is kept too — staging a rename
+ * needs both sides.
+ */
+function parsePorcelainPaths(output: string): Set<string> {
   const paths = new Set<string>();
   const entries = output.split('\0').filter(Boolean);
 
@@ -100,4 +109,47 @@ export async function commitTrackedGitChanges(params: {
   const hash = (await execa('git', ['rev-parse', '--short', 'HEAD'], { cwd: params.tracker.gitRoot })).stdout;
 
   return { committed: true, hash, message: params.message };
+}
+
+/**
+ * Stage everything in the target repo and commit it in one go — the `git add -A`
+ * semantics of the `_gcai` shell helper.
+ *
+ * Unlike `commitTrackedGitChanges` (which commits only paths a tracker observed
+ * changing), this deliberately sweeps in whatever is already dirty, so the caller
+ * must have shown the user that file list first.
+ *
+ * Throws on failure — a rejected commit hook is the caller's to report.
+ */
+export async function commitAllChanges(targetDir: string, message: string): Promise<GitCommitResult> {
+  const gitRoot = (await execa('git', ['rev-parse', '--show-toplevel'], { cwd: targetDir })).stdout.trim();
+
+  await execa('git', ['add', '-A'], { cwd: gitRoot });
+
+  const staged = await execa('git', ['diff', '--cached', '--name-only'], { cwd: gitRoot });
+  if (staged.stdout.trim() === '') return { committed: false };
+
+  const commit = await execa('git', ['commit', '-m', message], { cwd: gitRoot });
+
+  const [hashResult, branchResult] = await Promise.all([
+    execa('git', ['rev-parse', '--short', 'HEAD'], { cwd: gitRoot }),
+    execa('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: gitRoot }),
+  ]);
+
+  // Git prints its own tally (`7 files changed, 93 insertions(+), ...`) — reuse it rather
+  // than recomputing, so the numbers always match what git itself reports.
+  const stat = commit.stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => /\bfiles? changed\b/.test(line));
+
+  const branch = branchResult.stdout.trim();
+
+  return {
+    branch: branch === '' || branch === 'HEAD' ? undefined : branch,
+    committed: true,
+    hash: hashResult.stdout,
+    message,
+    stat,
+  };
 }
