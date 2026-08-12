@@ -69,6 +69,14 @@ Blocked on choosing a reference feature.
 Make `scripts/triage-docs.ts` work as a standalone script that any `@finografic` project can use
 without depending on genx's internal utilities. Decision needed on approach before implementing #4.
 
+### 8. `genx design` command — DESIGN.md ↔ design system machinery
+
+New command group giving the DESIGN.md convention (skills live in `ai-agent-config`) its
+deterministic layer: `sync --pull/--push`, `check` (CI drift guard), `render` (DESIGN.html),
+`lint` (wraps `@google/design.md`). MVP = pull + check for PandaCSS and Tailwind v4.
+
+Detail: [`docs/todo/TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)
+
 ### 7. Extract "find file section" helpers to `@finografic/cli-kit`
 
 Promote reusable section find/replace helpers (`.gitignore` `# Title` blocks) from genx into
