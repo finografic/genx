@@ -69,11 +69,12 @@ Blocked on choosing a reference feature.
 Make `scripts/triage-docs.ts` work as a standalone script that any `@finografic` project can use
 without depending on genx's internal utilities. Decision needed on approach before implementing #4.
 
-### 8. `genx design` command — DESIGN.md ↔ design system machinery
+### 8. `genx design` — follow-ups (core command shipped 2026-08-13)
 
-New command group giving the DESIGN.md convention (skills live in `ai-agent-config`) its
-deterministic layer: `sync --pull/--push`, `check` (CI drift guard), `render` (DESIGN.html),
-`lint` (wraps `@google/design.md`). MVP = pull + check for PandaCSS and Tailwind v4.
+Remaining from the shipped command: shadcn CSS-vars push writer, push mapping-file support
+(when ambiguity proves real), `design-md` thin audit feature (drift detection in `genx audit`),
+render→`.gitignore` wiring, and a manual pilot against a real `@finografic/design-system`
+consumer.
 
 Detail: [`docs/todo/TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)
 
@@ -130,6 +131,7 @@ Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_RE
 
 | Date       | Item                                                                                                                                                                              |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-13 | `genx design` command (sync --pull/--push, check, render, lint; PandaCSS + Tailwind v4) — [`TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)                                    |
 | 2026-07-26 | Migrate agent instructions/skills `.github/` → `.agents/`, dual-write `.claude/skills/`, self-update lifecycle — [`DONE_AGENTS_DIR_MIGRATION.md`](./DONE_AGENTS_DIR_MIGRATION.md) |
 | 2026-07-07 | Deps policy refresh and managed deps snapshot flow — [`DONE_DEPS_UPDATE_POLICY.md`](./DONE_DEPS_UPDATE_POLICY.md)                                                                 |
 | 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)                                                                         |

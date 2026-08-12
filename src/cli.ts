@@ -10,6 +10,7 @@ import { cliHelp } from './cli.help.js';
 import { auditPackage } from './commands/audit/audit.cli.js';
 import { createPackage } from './commands/create/create.cli.js';
 import { syncDeps } from './commands/deps/deps.cli.js';
+import { runDesign } from './commands/design/design.cli.js';
 import { runManaged } from './commands/managed/managed.cli.js';
 import { upgradePackage } from './commands/upgrade/upgrade.cli.js';
 import { runSelfUpdateCheck, runSelfUpdateForced } from './core/self-update/index.js';
@@ -71,6 +72,10 @@ async function main(): Promise<void> {
 
     'audit': async (cmdArgs, context) => {
       await auditPackage(cmdArgs, { targetDir: context.cwd });
+    },
+
+    'design': async (cmdArgs, context) => {
+      await runDesign(cmdArgs, context);
     },
 
     'update-self': async () => {

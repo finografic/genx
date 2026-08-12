@@ -1,0 +1,8 @@
+{
+  "name": "fixture-panda-project",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@pandacss/dev": "^1.4.0"
+  }
+}

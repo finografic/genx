@@ -69,49 +69,60 @@ style-dictionary unless a real need appears.
 - No editor app (see ai-agent-config `TODO_DESIGN_MD_EDITOR.md`; it can reuse `design render`).
 - `-y` must never let `sync --push` silently mutate a project's design system.
 
-## Phase 1 - Command skeleton + pull + check (MVP)
+## Phase 1 - Command skeleton + pull + check (MVP) — DONE 2026-08-13
 
-- [ ] `src/commands/design/` following the existing command folder conventions.
-- [ ] Shared core in `src/lib/design-md/`: DESIGN.md parse (frontmatter + body split),
-      token model, `## Source of Truth` section reader.
-- [ ] Extractors: PandaCSS + Tailwind v4 (the two ecosystem-primary targets).
-- [ ] `design sync --pull` with body preservation; idempotent (second run = no diff).
-- [ ] `design check` with clean JSON/text output and exit codes.
-- [ ] Fixtures: panda project, tailwind v4 project, project with hand-edited prose,
-      project with no design system (command refuses pull: nothing canonical to pull from).
+- [x] `src/commands/design/` following the existing command folder conventions.
+- [x] Shared core in `src/lib/design-md/`: DESIGN.md parse (frontmatter + body split),
+      token model, `## Source of Truth` section reader (`source-of-truth:` frontmatter key
+      wins over prose heuristic).
+- [x] Extractors: PandaCSS (jiti-loaded config; recipes→components deliberately skipped —
+      too far from spec sub-tokens to map mechanically) + Tailwind v4 (`@theme` parser).
+- [x] `design sync --pull` with body preservation; idempotent (second run = no diff).
+- [x] `design check` with clean JSON/text output and exit codes.
+- [x] Fixtures: panda project, tailwind v4 project; hand-edited prose + no-design-system
+      refusal covered in `design-e2e.test.ts`.
 
 ### Phase 1 acceptance
 
-- [ ] `pull` twice is byte-idempotent; prose never touched.
-- [ ] `check` exits non-zero on a seeded token drift, zero otherwise.
-- [ ] Works via `pnpm dlx` from a target cwd with no install.
+- [x] `pull` twice is byte-idempotent; prose never touched (e2e-tested).
+- [x] `check` exits non-zero on a seeded token drift, zero otherwise (e2e-tested).
+- [x] Works via `pnpm dlx` from a target cwd with no install (all deps runtime: yaml, jiti,
+      @google/design.md).
 
-## Phase 2 - render + lint
+## Phase 2 - render + lint — DONE 2026-08-13
 
-- [ ] `design render` — one self-contained HTML file, no external assets.
-- [ ] `design lint` passthrough wrapper.
-- [ ] Wire `render` output pattern into `.gitignore` handling (existing section helpers).
+- [x] `design render` — one self-contained HTML file, no external assets
+      (swatches, specimens, scales, component cards, prose).
+- [x] `design lint` via the programmatic `@google/design.md/linter` API (not npx —
+      version-pinned as a real dependency).
+- [ ] Wire `render` output pattern into `.gitignore` handling — deferred; render prints a
+      gitignore hint for now.
 
-## Phase 3 - push (preview-gated)
+## Phase 3 - push (preview-gated) — DONE 2026-08-13 (shadcn deferred)
 
-- [ ] Writers: Tailwind v4 `@theme`, PandaCSS `tokens.gen.ts`, shadcn CSS vars.
-- [ ] Reuse feature-preview/confirm loop; per-file confirmation; refuse when
-      `## Source of Truth` declares the design system canonical.
-- [ ] Mapping-file support + loud failure on ambiguous mappings.
+- [x] Writers: Tailwind v4 `@theme` (rebuilds owned namespaces `--color-*`/`--radius-*`/
+      `--spacing-*`, preserves everything else; semantic no-op detection so reordering never
+      prompts) + PandaCSS `tokens.gen.ts` (config never edited in place).
+- [ ] shadcn CSS-vars writer — deferred until a real shadcn target exists (needs hex↔hsl +
+      var-name mapping decisions).
+- [x] Reuse feature-preview/confirm loop; per-file confirmation; refuse unless DESIGN.md
+      declares itself canonical. `-y` is ignored for push by construction.
+- [ ] Mapping-file support — deferred per the push-mapping note (build when ambiguity is
+      proven in real use).
 
 ## Phase 4 - audit integration (thin feature, optional)
 
 - [ ] `design-md` feature: `genx audit` detects DESIGN.md presence and drift
       (`design check` under the hood) and recommends action. Detection only — audit never
-      generates or mutates DESIGN.md.
+      generates or mutates DESIGN.md. (Deferred — optional.)
 
 ## Validation
 
-- [ ] Focused tests per extractor/writer with fixtures; snapshot the generated frontmatter.
-- [ ] Typecheck, lint, format on touched files.
+- [x] Focused tests per extractor/writer with fixtures (25 design tests; 247 repo-wide green).
+- [x] Typecheck, lint, format on touched files; build + README usage regenerated.
 - [ ] Manual pilot: run `pull` + `check` against a real `@finografic/design-system` consumer.
-- [ ] Confirm ai-agent-config skills (`generate-design-md`, `apply-design-md`) reference the
-      command correctly once shipped (update their SKILL.md tool lists).
+- [x] ai-agent-config skills (`generate-design-md`, `apply-design-md`) updated to reference
+      `genx design lint/check/sync`.
 
 ## Suggested Commit Slices
 

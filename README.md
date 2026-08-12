@@ -22,14 +22,15 @@ Run directly using `pnpm dlx`:
 pnpm dlx @finografic/genx <command> [options]
 ```
 
-| Command   | Description                                        |
-| --------- | -------------------------------------------------- |
-| `create`  | Scaffold a new @finografic package                 |
-| `upgrade` | Upgrade an existing package to current conventions |
-| `deps`    | Sync dependencies to @finografic/deps-policy       |
-| `audit`   | Scan features and apply what is missing or partial |
-| `managed` | Run a command across all managed targets           |
-| `help`    | Show this help message                             |
+| Command   | Description                                           |
+| --------- | ----------------------------------------------------- |
+| `create`  | Scaffold a new @finografic package                    |
+| `upgrade` | Upgrade an existing package to current conventions    |
+| `deps`    | Sync dependencies to @finografic/deps-policy          |
+| `audit`   | Scan features and apply what is missing or partial    |
+| `design`  | DESIGN.md machinery — sync, drift check, render, lint |
+| `managed` | Run a command across all managed targets              |
+| `help`    | Show this help message                                |
 
 ### `genx create`
 
@@ -425,15 +426,16 @@ my-package/
 
 <!-- GENERATED:COMMANDS_REF:START -->
 
-| Command         | Description                                        | Options                                                                                               |
-| --------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                 | `--type <type>`, `--name <name>`, `-y`                                                                |
-| `upgrade`       | Upgrade an existing package to current conventions | `-y`, `--agent-docs`                                                                                  |
-| `deps`          | Sync dependencies to @finografic/deps-policy       | `-y`, `--allow-downgrade`, `--update-policy`                                                          |
-| `audit`         | Scan features and apply what is missing or partial | `-y`                                                                                                  |
-| `managed`       | Run a command across all managed targets           | `upgrade`, `deps`, `audit`, `status`, `-y`, `--features=KEYS`, `--allow-downgrade`, `--update-policy` |
-| `help`          | Show this help message                             | -                                                                                                     |
-| `--help` / `-h` | Show help (works with commands too)                | -                                                                                                     |
+| Command         | Description                                           | Options                                                                                               |
+| --------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `create`        | Scaffold a new @finografic package                    | `--type <type>`, `--name <name>`, `-y`                                                                |
+| `upgrade`       | Upgrade an existing package to current conventions    | `-y`, `--agent-docs`                                                                                  |
+| `deps`          | Sync dependencies to @finografic/deps-policy          | `-y`, `--allow-downgrade`, `--update-policy`                                                          |
+| `audit`         | Scan features and apply what is missing or partial    | `-y`                                                                                                  |
+| `design`        | DESIGN.md machinery — sync, drift check, render, lint | -                                                                                                     |
+| `managed`       | Run a command across all managed targets              | `upgrade`, `deps`, `audit`, `status`, `-y`, `--features=KEYS`, `--allow-downgrade`, `--update-policy` |
+| `help`          | Show this help message                                | -                                                                                                     |
+| `--help` / `-h` | Show help (works with commands too)                   | -                                                                                                     |
 
 See `genx <command> --help` for detailed usage.
 <!-- GENERATED:COMMANDS_REF:END -->

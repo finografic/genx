@@ -15,6 +15,7 @@ export const cliHelp: HelpConfig = {
       { label: 'upgrade', description: 'Upgrade an existing package to current conventions' },
       { label: 'deps', description: 'Sync dependencies to @finografic/deps-policy' },
       { label: 'audit', description: 'Scan features and apply what is missing or partial' },
+      { label: 'design', description: 'DESIGN.md machinery — sync, drift check, render, lint' },
       { label: 'managed', description: 'Run a command across all managed targets' },
       { label: 'help', description: 'Show this help message' },
     ],

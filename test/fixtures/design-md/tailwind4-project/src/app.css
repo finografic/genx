@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #1a1c1e;
+  --color-secondary: #6c7278;
+  --color-surface: #f7f5f2;
+
+  --font-sans: 'Public Sans', sans-serif;
+
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.125rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --spacing: 0.25rem;
+  --spacing-gutter: 24px;
+
+  /* not owned by DESIGN.md sync — must survive a push */
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+body {
+  color: var(--color-primary);
+}
