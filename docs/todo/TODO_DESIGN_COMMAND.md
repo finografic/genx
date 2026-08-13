@@ -103,8 +103,16 @@ style-dictionary unless a real need appears.
 - [x] Writers: Tailwind v4 `@theme` (rebuilds owned namespaces `--color-*`/`--radius-*`/
       `--spacing-*`, preserves everything else; semantic no-op detection so reordering never
       prompts) + PandaCSS `tokens.gen.ts` (config never edited in place).
-- [ ] shadcn CSS-vars writer — deferred until a real shadcn target exists (needs hex↔hsl +
-      var-name mapping decisions).
+- [x] Refuse to push into a `@theme` whose owned entries are `var()` pointers. Pull now resolves
+      that indirection, so writing the resolved values back would inline the base palette and
+      detach the `.dark` overrides — breaking dark mode silently. Errors with the offending
+      property names instead.
+- [ ] shadcn CSS-vars writer — a real target now exists (`@finografic/lucide-manager`), and the
+      pull side handles it. **The deferred design premise is stale:** current shadcn emits
+      `oklch()` in `:root`, not hsl, so the "hex↔hsl conversion" this was waiting on is not the
+      problem. The real question is scope — writing into `:root`/`.dark` means owning two palettes
+      from a DESIGN.md that mirrors one. Needs a decision on how dark mode is represented before
+      any code.
 - [x] Reuse feature-preview/confirm loop; per-file confirmation; refuse unless DESIGN.md
       declares itself canonical. `-y` is ignored for push by construction.
 - [ ] Mapping-file support — deferred per the push-mapping note (build when ambiguity is
@@ -118,18 +126,24 @@ style-dictionary unless a real need appears.
 
 ## Validation
 
-- [x] Focused tests per extractor/writer with fixtures (38 design tests; 283 repo-wide green).
+- [x] Focused tests per extractor/writer with fixtures (55 design tests; 300 repo-wide green).
 - [x] Typecheck, lint, format on touched files; build + README usage regenerated.
 - [x] Manual pilot: `pull` + `check` + `lint` + `render` against the real
-      `@finografic/design-system` (see below).
+      `@finografic/design-system` (PandaCSS) and `@finografic/lucide-manager`
+      (Tailwind v4 + shadcn) — see below.
 - [x] ai-agent-config skills (`generate-design-md`, `apply-design-md`) updated to reference
       `genx design lint/check/sync`.
 
 ### Pilot findings — 2026-08-13
 
-Run against `@finografic-design-system/packages/design-system` (PandaCSS). First run produced a
-DESIGN.md with **zero tokens** and reported success; the second produced 81 lint errors. Four
-defects, all fixed:
+Both extractors were tested only against fixtures hand-written to match what the code already did,
+so the suite proved the code matched its own assumptions. Real input disagreed immediately, in both
+frameworks, in the same way: **the tokens are never where the naive reading looks for them.**
+
+#### PandaCSS — `@finografic-design-system/packages/design-system`
+
+First run produced a DESIGN.md with **zero tokens** and reported success; the second produced 81
+lint errors. Four defects, all fixed:
 
 - **Presets were ignored.** The extractor read only `config.theme`, but a design system keeps its
   decisions in a preset (`presets: [designSystemPreset]`), leaving the top-level theme empty. Now
@@ -151,8 +165,33 @@ are emitted as `0px`.
 
 After the fixes: 128 colours, 9 typography scales, 8 rounding levels, 20 spacing tokens;
 `lint` clean, `check` in sync, second `pull` byte-idempotent, `render` produced a 28 KB
-self-contained preview. Pilot artifacts were removed — the design system repo keeps no DESIGN.md
-yet; that is a decision for its owner, not a side effect of testing.
+self-contained preview.
+
+#### Tailwind v4 + shadcn/ui — `@finografic/lucide-manager`
+
+Predicted from the PandaCSS result and confirmed on the first run: every colour mirrored as
+`var(--primary)` and every radius as `calc(var(--radius) * 0.6)` — the indirection recorded, the
+design lost, and nothing the linter would accept.
+
+- **`@theme` entries point at a `:root` palette.** shadcn declares `--color-primary: var(--primary)`
+  and defines the actual value in `:root`, with `.dark` overriding it. `var()` is now resolved
+  transitively against `:root` (with fallback and cycle handling); an unresolvable reference is left
+  as written. `.dark` is deliberately not mirrored — DESIGN.md carries one palette, the same rule
+  the Panda extractor applies to `base` conditions.
+- **Radius/spacing scales are arithmetic.** `calc()` is now evaluated (`+ - * /`, parentheses, one
+  unit), so the scale reads `0.375rem` rather than an expression. Incompatible units or unsupported
+  functions are returned unchanged rather than guessed at.
+- **Push would have silently broken dark mode.** Because pull now resolves the indirection, a
+  `--push` on a shadcn project would rewrite `@theme` with literals, orphaning the `.dark` block
+  that redefines those custom properties. Push now refuses on any owned `@theme` entry containing
+  `var()`, naming the properties. Caught by reasoning about the change, not by a failing test —
+  the corresponding regression test came after.
+
+Result: 31 colours and 7 rounding levels, 0 lint errors. The remaining warning (no typography) and
+info (no spacing) are true statements about that project, not extractor gaps.
+
+Pilot artifacts were removed from both repositories — neither keeps a DESIGN.md yet; that is a
+decision for its owner, not a side effect of testing.
 
 ## Suggested Commit Slices
 
