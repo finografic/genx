@@ -35,7 +35,13 @@ No items.
 
 ## P1 — Next Up
 
-No items.
+### Implement the asset ownership contract
+
+`@finografic/ai-agent-config` now declares an `ownership` mode per asset
+(`managed` / `merged` / `seed` / `project-owned`). Honour it on apply, fail closed when absent, and
+guarantee `-y` can never overwrite consumer-authored content.
+
+Detail: [`docs/todo/TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md)
 
 ---
 
