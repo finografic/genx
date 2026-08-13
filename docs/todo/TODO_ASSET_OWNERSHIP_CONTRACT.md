@@ -73,11 +73,26 @@ optional `exclude` array on recursive entries. Four assets ship today:
   Added an optional `exists` flag on write changes plus `createFilePreviewChange`, mirroring the
   empty-file-delete handling that already existed.
 
-### Not verified automatically
+### Verified through the real CLI — 2026-08-13
 
-- The interactive `genx audit` path needs a TTY for its feature multiselect (`-y` only skips
-  per-file confirms), so end-to-end behaviour through the real CLI is covered by the manual smoke
-  test in `@finografic-ai-agent-config/docs/NEXT_STEPS.md` (item 2), not by the suite.
+Manually run against a scratch consumer (the interactive `audit` multiselect needs a TTY, so this
+part cannot be covered by the suite):
+
+- consumer-authored `.agents/instructions/project/local.instructions.md` survived `audit -y`;
+- `project/.gitkeep` seed created;
+- `writing-skills.instructions.md` vendored with `applyTo` frontmatter;
+- skills dual-written to `.agents/skills/` and `.claude/skills/`;
+- second run reported both features `ok — config up to date` (idempotent);
+- a hand-edited skill was reported `partial` and restored to canonical on re-apply — the drift the
+  old skip-if-exists logic could never detect.
+
+### Also fixed
+
+- `auditAiAgents` hardcoded `detail: 'AGENTS.md out of date'` for any drift. Now that skills are
+  `managed` and can drift independently, that pointed at the wrong file — observed during the CLI
+  run above. The detail is now derived from the surfaces that actually changed
+  (`AGENTS.md`, `skills`, or both). `auditAiInstructions` keeps its broader
+  `'instructions out of date'` wording; it covers several surfaces and is not actively misleading.
 
 ## Phase 2 - Detect-only reporting for unmanaged domain documents
 

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { agentAssetsSourceRoot } from '../../lib/agent-assets/index.js';
 import { hasPreviewChanges } from '../../lib/feature-preview/feature-preview.utils.js';
-import { detectAiAgents } from './ai-agents.detect.js';
+import { auditAiAgents, detectAiAgents } from './ai-agents.detect.js';
 import { previewAiAgents } from './ai-agents.preview.js';
 
 describe('ai-agents preview-driven detect', () => {
@@ -91,6 +91,32 @@ describe('ai-agents preview-driven detect', () => {
     expect(write?.kind).toBe('write');
     expect(write?.kind === 'write' && write.currentContent).toBe('locally edited\n');
     expect(write?.kind === 'write' && write.proposedContent).toContain('maintain-agents');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('reports which surface drifted, not always AGENTS.md', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'genx-agents-detail-'));
+    await writeFile(
+      join(root, 'package.json'),
+      `${JSON.stringify({ name: 'x', version: '1.0.0', keywords: ['genx:type:cli'] }, null, 2)}\n`,
+    );
+    const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
+    await writeFile(
+      join(root, 'AGENTS.md'),
+      await readFile(join(repoRoot, '_templates/AGENTS.md.template'), 'utf8'),
+    );
+    await seedCanonicalSkills(root);
+
+    // Aligned to start with.
+    expect(await auditAiAgents({ targetDir: root })).toEqual({ status: 'installed' });
+
+    // Drift in a skill only — AGENTS.md is untouched, so the detail must not blame it.
+    await writeFile(join(root, '.agents/skills/maintain-agents/SKILL.md'), 'junk\n');
+    expect(await auditAiAgents({ targetDir: root })).toEqual({
+      status: 'partial',
+      detail: 'skills out of date',
+    });
 
     await rm(root, { recursive: true, force: true });
   });
