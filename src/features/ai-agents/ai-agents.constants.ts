@@ -20,7 +20,18 @@ export const AI_AGENTS_SKILLS_TARGET_DIRS = ['.agents/skills', '.claude/skills']
 /** Skills only useful in CLI-shaped target packages. */
 export const AI_AGENTS_CLI_ONLY_SKILL_DIRS = ['scaffold-cli-help', 'scaffold-core-module'] as const;
 
-/** Legacy target skills that belong to genx itself and should be removed from generated projects. */
+/**
+ * One-off historical cleanup: skills that leaked into generated projects before the content /
+ * structure ownership split, and were never shipped by `@finografic/ai-agent-config`.
+ *
+ * This is **not** the general retirement mechanism. Removal is never inferred from an asset being
+ * absent from the source — genx keeps no install record, so "present in the target but absent from
+ * the source" cannot be distinguished from a skill the project authored itself. Retirement is
+ * declared in the ai-agent-config manifest when it happens; see that package's
+ * `docs/adr/0003-asset-retirement-and-removal-semantics.md`.
+ *
+ * Expected to shrink, never to grow.
+ */
 export const AI_AGENTS_REMOVED_SKILL_DIRS = ['scaffold-feature'] as const;
 
 /**
