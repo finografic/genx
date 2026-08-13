@@ -57,6 +57,8 @@ export interface ExtractedTokens {
   framework: DesignSystemFramework;
   sourceFiles: string[];
   tokens: Pick<RawDesignTokens, TokenGroup>;
+  /** Non-fatal extraction notes (e.g. a preset referenced by name, left unresolved). */
+  warnings?: string[];
 }
 
 /* ────────────────────────────────────────────────────────── */

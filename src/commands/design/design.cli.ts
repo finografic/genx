@@ -44,9 +44,14 @@ export async function runDesign(argv: string[], context: { cwd: string }): Promi
           return;
         }
         intro(args.pull ? 'Sync DESIGN.md from design system' : 'Push DESIGN.md tokens into design system');
-        const result = args.pull
+        const pullResult = args.pull
           ? await runPull(targetDir, { yes: args.yes, framework: args.framework, file: args.file })
-          : await runPush(targetDir, { framework: args.framework, file: args.file });
+          : undefined;
+        const result =
+          pullResult ?? (await runPush(targetDir, { framework: args.framework, file: args.file }));
+        for (const warning of pullResult?.warnings ?? []) {
+          warnMessage(warning);
+        }
         if (result.status === 'error') {
           errorMessage(result.message);
           process.exitCode = 1;

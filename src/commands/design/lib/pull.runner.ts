@@ -12,6 +12,8 @@ import { applyPreviewChanges, createWritePreviewChange } from 'lib/feature-previ
 export interface PullResult {
   status: 'applied' | 'up-to-date' | 'skipped' | 'error';
   message: string;
+  /** Non-fatal extraction notes to surface alongside the result. */
+  warnings?: string[];
 }
 
 /**
@@ -31,6 +33,21 @@ export async function runPull(
       message:
         'No supported design system detected (pandacss, tailwind4). Pull refreshes DESIGN.md ' +
         'from a canonical design system — if DESIGN.md is your canonical source, there is nothing to pull.',
+    };
+  }
+
+  const warnings = extraction.extracted.warnings ?? [];
+
+  // A design system was detected but yielded nothing. Writing a token-less DESIGN.md
+  // would look like success while mirroring no design intent at all, so refuse.
+  if (Object.keys(extraction.extracted.tokens).length === 0) {
+    return {
+      status: 'error',
+      warnings,
+      message:
+        `Detected ${extraction.extracted.framework} (${extraction.detected.sourceFiles.join(', ')}) but ` +
+        'extracted no tokens. Nothing would be mirrored, so DESIGN.md was left alone. Check that the ' +
+        'config defines tokens directly or composes a preset imported as a value.',
     };
   }
 
@@ -76,7 +93,11 @@ export async function runPull(
 
   const proposedContent = serializeDesignMd(nextTokens, body);
   if (proposedContent === currentContent) {
-    return { status: 'up-to-date', message: 'DESIGN.md tokens already match the design system.' };
+    return {
+      status: 'up-to-date',
+      warnings,
+      message: 'DESIGN.md tokens already match the design system.',
+    };
   }
 
   const result = await applyPreviewChanges(
@@ -95,10 +116,11 @@ export async function runPull(
   );
 
   if (result.applied.length === 0) {
-    return { status: 'skipped', message: 'Skipped — DESIGN.md was not modified.' };
+    return { status: 'skipped', warnings, message: 'Skipped — DESIGN.md was not modified.' };
   }
   return {
     status: 'applied',
+    warnings,
     message: `DESIGN.md refreshed from ${extraction.extracted.framework} (${extraction.detected.sourceFiles.join(', ')}).`,
   };
 }

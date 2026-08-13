@@ -8,6 +8,7 @@ import { extractTailwind4Tokens } from './tailwind4.extractor.js';
 
 const FIXTURES = join(fileURLToPath(new URL('.', import.meta.url)), '../../../../test/fixtures/design-md');
 const PANDA_DIR = join(FIXTURES, 'panda-project');
+const PANDA_PRESET_DIR = join(FIXTURES, 'panda-preset-project');
 const TW4_DIR = join(FIXTURES, 'tailwind4-project');
 
 describe('detectDesignSystems', () => {
@@ -42,6 +43,36 @@ describe('extractPandacssTokens', () => {
       fontWeight: 400,
       lineHeight: 1.6,
     });
+  });
+
+  it('merges tokens from object presets, config theme winning', async () => {
+    const result = await extractPandacssTokens(PANDA_PRESET_DIR, 'panda.config.ts');
+    // Preset-only tokens are mirrored; without preset merging the whole file is empty.
+    expect(result.tokens.colors?.surface).toBe('#ffffff');
+    expect(result.tokens.typography?.body).toEqual({ fontSize: '1rem', lineHeight: 1.5 });
+    // Config theme overrides the preset for the same token.
+    expect(result.tokens.rounded?.md).toBe('0.75rem');
+  });
+
+  it('maps Panda DEFAULT keys onto the bare token name', async () => {
+    const result = await extractPandacssTokens(PANDA_PRESET_DIR, 'panda.config.ts');
+    expect(result.tokens.colors?.primary).toBe('oklch(48.8% 0.243 264.376)');
+    expect(result.tokens.colors?.['primary-DEFAULT']).toBeUndefined();
+    // References to a DEFAULT are rewritten the same way.
+    expect(result.tokens.colors?.accent).toBe('{colors.primary}');
+  });
+
+  it('resolves color-mix ramps and gives bare zeros a unit', async () => {
+    const result = await extractPandacssTokens(PANDA_PRESET_DIR, 'panda.config.ts');
+    expect(result.tokens.colors?.['primary-light']).toBe('oklch(58.02% 0.1993 264.376)');
+    expect(result.tokens.colors?.['primary-dark']).toBe('oklch(40.02% 0.1993 264.376)');
+    expect(result.tokens.rounded?.none).toBe('0px');
+    expect(result.tokens.spacing?.['0']).toBe('0px');
+  });
+
+  it('reports presets referenced by name instead of resolving them', async () => {
+    const result = await extractPandacssTokens(PANDA_PRESET_DIR, 'panda.config.ts');
+    expect(result.warnings?.[0]).toContain('@pandacss/preset-panda');
   });
 });
 
