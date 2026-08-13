@@ -1,6 +1,7 @@
 export {
   applyPreviewChanges,
   createDeletePreviewChange,
+  createFilePreviewChange,
   FeaturePreviewCancelledError,
   createWritePreviewChange,
   getChangedPreviewChanges,

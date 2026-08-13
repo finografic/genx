@@ -1,12 +1,12 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assetsRoot as agentAssetsRoot } from '@finografic/ai-agent-config';
 import { fileExists } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 import type { Dirent } from 'node:fs';
 
+import { assetSourcePath, assetTargetPaths, requireAssetBySource, requireOwnership } from 'lib/agent-assets';
 import { parseSections } from 'lib/markdown-sections';
 import { isPackageType } from 'lib/package-type.utils';
 import { getTemplatesDir } from 'utils/package-root.utils';
@@ -23,7 +23,6 @@ import {
   AI_AGENTS_CLI_ONLY_SKILL_DIRS,
   AI_AGENTS_REMOVED_SKILL_DIRS,
   AI_AGENTS_SKILLS_SOURCE_DIR,
-  AI_AGENTS_SKILLS_TARGET_DIRS,
 } from './ai-agents.constants';
 
 async function collectSkillTreeWrites(
@@ -137,9 +136,12 @@ export async function previewAiAgents(
   }
 
   // Skills tree comes from the published `@finografic/ai-agent-config` package (the single source
-  // of truth), not genx's own `_templates/`.
-  const skillsTemplateDir = resolve(agentAssetsRoot, AI_AGENTS_SKILLS_SOURCE_DIR);
-  const skillsTargetDirs = AI_AGENTS_SKILLS_TARGET_DIRS.map((dir) => resolve(targetDir, dir));
+  // of truth), not genx's own `_templates/`. Source, targets, and ownership are read from its
+  // manifest; `requireOwnership` fails closed rather than guessing.
+  const skillsAsset = requireAssetBySource(AI_AGENTS_SKILLS_SOURCE_DIR);
+  const skillsOwnership = requireOwnership(skillsAsset);
+  const skillsTemplateDir = assetSourcePath(skillsAsset);
+  const skillsTargetDirs = assetTargetPaths(skillsAsset, targetDir);
   const packageJson = JSON.parse(await readFile(resolve(targetDir, 'package.json'), 'utf8')) as PackageJson;
   const isCliPackage = isPackageType(packageJson, 'cli');
   const cliOnlySkillDirs = new Set<string>(AI_AGENTS_CLI_ONLY_SKILL_DIRS);
@@ -166,14 +168,23 @@ export async function previewAiAgents(
 
     for (const skillsTargetDir of skillsTargetDirs) {
       const skillDest = resolve(skillsTargetDir, entry.name);
-      if (fileExists(skillDest)) {
-        applied.push(`${relative(targetDir, skillDest)}/`);
-        continue;
-      }
-
       const files = await collectSkillTreeWrites(skillSrc, skillDest, targetDir);
+
       for (const { dest, body, label } of files) {
-        changes.push(createWritePreviewChange(dest, '', body, label));
+        // `managed`: the shared copy is canonical, so an existing file is compared and replaced
+        // after preview rather than skipped — otherwise upstream skill updates never reach
+        // consumers. Only files the manifest ships are touched; skills a project adds of its own
+        // are never enumerated here, so they survive untouched.
+        const current = fileExists(dest) ? await readFile(dest, 'utf8') : '';
+        if (skillsOwnership === 'seed' && current !== '') {
+          applied.push(`${label} (project-owned, left untouched)`);
+          continue;
+        }
+        if (current === body) {
+          applied.push(label);
+          continue;
+        }
+        changes.push(createWritePreviewChange(dest, current, body, label));
       }
     }
   }

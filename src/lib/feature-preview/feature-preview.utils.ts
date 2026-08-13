@@ -37,9 +37,14 @@ async function confirmFileWriteOrDelete(
   exists: boolean,
   state?: DiffConfirmState,
 ): Promise<DiffAction> {
-  if (currentContent === proposedContent) return 'skip';
+  if (exists && currentContent === proposedContent) return 'skip';
 
-  renderFileDiff(filePath, currentContent, proposedContent);
+  if (!exists && proposedContent === '') {
+    // An empty file has no diff to render; state the creation explicitly instead.
+    clack.log.message(`${pc.bold(pc.white(filePath))}\n${pc.green('+ (empty file — will be created)')}`);
+  } else {
+    renderFileDiff(filePath, currentContent, proposedContent);
+  }
 
   if (state?.yesAll) return 'write';
 
@@ -134,6 +139,19 @@ export function createWritePreviewChange(
   return { kind: 'write', path, currentContent, proposedContent, summary };
 }
 
+/**
+ * Write change for a file that does not exist yet. Unlike
+ * `createWritePreviewChange`, this survives the identical-content filter, so it
+ * can create a zero-byte file such as a `.gitkeep` seed.
+ */
+export function createFilePreviewChange(
+  path: string,
+  proposedContent: string,
+  summary?: string,
+): FeaturePreviewChangeWrite {
+  return { kind: 'write', path, currentContent: '', proposedContent, summary, exists: false };
+}
+
 export function createDeletePreviewChange(
   path: string,
   currentContent: string,
@@ -149,6 +167,8 @@ function appliedLabelForChange(change: FeaturePreviewChange): string {
 
 export function isPreviewChangeChanged(change: FeaturePreviewChange): boolean {
   if (change.kind === 'write') {
+    // Creating a file is a change even when its content is empty — see `exists` on the type.
+    if (change.exists === false) return true;
     if (change.currentContent === change.proposedContent) return false;
     if (
       useSemanticJsonComparison(change.path) &&

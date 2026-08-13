@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
 
+import { agentAssetsSourceRoot } from '../lib/agent-assets/index.js';
 import { hasPreviewChanges } from '../lib/feature-preview/feature-preview.utils.js';
 import { detectAiInstructions } from './ai-instructions/ai-instructions.detect.js';
 import { previewAiInstructions } from './ai-instructions/ai-instructions.preview.js';
@@ -21,21 +22,28 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 const aiInstructionsTemplatesPresent =
   existsSync(join(repoRoot, '_templates/.github/copilot-instructions.md')) &&
-  existsSync(join(repoRoot, '_templates/.agents/instructions')) &&
   existsSync(join(repoRoot, '_templates/.cursor/rules'));
 
 /**
- * Copy `_templates` Copilot + instruction files (excluding `project/`) + `AGENTS.md` for aligned-detect
- * tests.
+ * Seed a target with the canonical aligned state for detect tests.
+ *
+ * Instruction files and the Copilot pointer come from the installed
+ * `@finografic/ai-agent-config` assets — the same source the preview reads, so
+ * "aligned" means aligned with the package rather than with a copy inside
+ * `_templates/` (there is no such copy: content lives in the package, structure
+ * in `_templates`, per that package's ADR 0002). `_templates` still supplies
+ * genx-owned structure: `AGENTS.md`, Cursor rules, `.gitignore`.
+ *
+ * `instructions/project/` is seeded too: it is a `seed` asset, so the aligned
+ * state includes it existing.
  */
 async function seedCanonicalAiInstructions(root: string): Promise<void> {
   await mkdir(join(root, '.github'), { recursive: true });
-  const copilotSrc = join(repoRoot, '_templates/.github/copilot-instructions.md');
+  const copilotSrc = join(agentAssetsSourceRoot, 'copilot-instructions.md');
   await writeFile(join(root, '.github/copilot-instructions.md'), await readFile(copilotSrc, 'utf8'));
-  const instRoot = join(repoRoot, '_templates/.agents/instructions');
-  const relFiles = await fg('**/*', { cwd: instRoot, onlyFiles: true });
+  const instRoot = join(agentAssetsSourceRoot, 'instructions');
+  const relFiles = await fg('**/*', { cwd: instRoot, onlyFiles: true, dot: true });
   for (const rel of relFiles) {
-    if (rel.startsWith('project/') || rel === 'project') continue;
     const src = join(instRoot, rel);
     const dest = join(root, '.agents/instructions', rel);
     await mkdir(dirname(dest), { recursive: true });

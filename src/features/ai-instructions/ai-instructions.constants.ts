@@ -16,5 +16,8 @@ export const AI_INSTRUCTIONS_CURSOR_RULES_DIR = '.cursor/rules' as const;
  */
 export const AI_INSTRUCTIONS_AGENTS_MD = 'AGENTS.md' as const;
 
-/** Under `.agents/instructions/` — never overwrite from templates (per-repo content). */
-export const AI_INSTRUCTIONS_SKIP_SUBDIR = 'project' as const;
+/**
+ * Which subtrees under `.agents/instructions/` are consumer-owned is no longer hardcoded here — it
+ * comes from the `exclude` and `ownership` fields of the `@finografic/ai-agent-config` manifest.
+ * See `lib/agent-assets` and that package's distribution contract.
+ */

@@ -1,11 +1,19 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assetsRoot as agentAssetsRoot } from '@finografic/ai-agent-config';
+import type { AgentAsset } from '@finografic/ai-agent-config';
 import { fileExists } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
+import {
+  assetSourcePath,
+  assetTargetPaths,
+  childAssetsOf,
+  isExcludedPath,
+  requireAssetBySource,
+  requireOwnership,
+} from 'lib/agent-assets';
 import { getTemplatesDir } from 'utils/package-root.utils';
 import { resolveTemplateSourcePath } from 'utils/template-source.utils';
 import { applyTemplate } from 'utils/template.utils';
@@ -19,6 +27,7 @@ import {
 } from '../../lib/agents-legacy-ai-folder.utils.js';
 import {
   createDeletePreviewChange,
+  createFilePreviewChange,
   createWritePreviewChange,
 } from '../../lib/feature-preview/feature-preview.utils.js';
 import { mergeAgentsFromTemplate } from './ai-instructions.agents.utils.js';
@@ -26,7 +35,6 @@ import {
   AI_INSTRUCTIONS_AGENTS_MD,
   AI_INSTRUCTIONS_CURSOR_RULES_DIR,
   AI_INSTRUCTIONS_FILES,
-  AI_INSTRUCTIONS_SKIP_SUBDIR,
 } from './ai-instructions.constants';
 
 const TEMPLATE_EXTENSIONS = ['.json', '.ts', '.md', '.yml', '.yaml', '.mjs', '.js'] as const;
@@ -40,9 +48,14 @@ async function readTemplatedFileBody(srcPath: string, baseName: string, vars: Te
   return shouldTemplate ? applyTemplate(raw, vars) : raw;
 }
 
-/** Template files under `.agents/instructions/`, excluding `project/` (never overwritten from genx). */
-async function collectInstructionTemplateFiles(
-  instructionsTemplateRoot: string,
+/**
+ * Files under an asset's source tree, skipping any subtree the manifest carves
+ * out via `exclude` (those are owned by their own entry, with their own
+ * ownership mode — see `collectSeedChanges`).
+ */
+async function collectAssetTreeFiles(
+  sourceRoot: string,
+  asset: AgentAsset,
 ): Promise<Array<{ rel: string; abs: string }>> {
   const out: Array<{ rel: string; abs: string }> = [];
 
@@ -50,11 +63,9 @@ async function collectInstructionTemplateFiles(
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.name === '.DS_Store') continue;
-      if (entry.name === AI_INSTRUCTIONS_SKIP_SUBDIR && entry.isDirectory()) {
-        continue;
-      }
       const abs = join(dir, entry.name);
-      const rel = relative(instructionsTemplateRoot, abs);
+      const rel = relative(sourceRoot, abs);
+      if (isExcludedPath(asset, rel)) continue;
       if (entry.isDirectory()) {
         await walk(abs);
       } else {
@@ -63,8 +74,42 @@ async function collectInstructionTemplateFiles(
     }
   }
 
-  await walk(instructionsTemplateRoot);
+  await walk(sourceRoot);
   return out.toSorted((a, b) => a.rel.localeCompare(b.rel));
+}
+
+/**
+ * Vendor a `seed` asset: create each file when absent, never touch it when
+ * present. This is how the consumer-authored `instructions/project/` tree gets
+ * its directory without genx ever overwriting what a project puts there.
+ */
+async function collectSeedChanges(
+  asset: AgentAsset,
+  targetDir: string,
+): Promise<{ changes: FeaturePreviewResult['changes']; applied: string[] }> {
+  const changes: FeaturePreviewResult['changes'] = [];
+  const applied: string[] = [];
+
+  const sourceRoot = assetSourcePath(asset);
+  if (!fileExists(sourceRoot)) return { changes, applied };
+
+  const files = await collectAssetTreeFiles(sourceRoot, asset);
+
+  for (const destRoot of assetTargetPaths(asset, targetDir)) {
+    for (const { rel, abs } of files) {
+      const destPath = join(destRoot, rel);
+      const label = relative(targetDir, destPath);
+      if (fileExists(destPath)) {
+        applied.push(`${label} (project-owned, left untouched)`);
+        continue;
+      }
+      // `createFilePreviewChange` (not `createWritePreviewChange`) so a zero-byte seed such as
+      // `.gitkeep` is not filtered out as identical-to-empty and re-proposed forever.
+      changes.push(createFilePreviewChange(destPath, await readFile(abs, 'utf8'), `${label} (seed)`));
+    }
+  }
+
+  return { changes, applied };
 }
 
 /** Template files under `.cursor/rules/`. */
@@ -135,9 +180,15 @@ export async function previewAiInstructions(
 
   const [copilotFile, instructionsDirRel] = AI_INSTRUCTIONS_FILES;
   // Copilot file body + instructions tree come from the published `@finografic/ai-agent-config`
-  // package (the single source of truth), not genx's own `_templates/`.
-  const copilotTemplatePath = resolve(agentAssetsRoot, 'copilot-instructions.md');
-  const instructionsTemplateRoot = resolve(agentAssetsRoot, 'instructions');
+  // package (the single source of truth), not genx's own `_templates/`. Sources and ownership are
+  // read from its manifest; `requireOwnership` fails closed on an asset genx cannot safely apply.
+  const copilotAsset = requireAssetBySource('copilot-instructions.md');
+  const instructionsAsset = requireAssetBySource('instructions');
+  requireOwnership(copilotAsset);
+  requireOwnership(instructionsAsset);
+
+  const copilotTemplatePath = assetSourcePath(copilotAsset);
+  const instructionsTemplateRoot = assetSourcePath(instructionsAsset);
 
   const copilotDest = resolve(targetDir, copilotFile);
   const copilotProposed = await readTemplatedFileBody(copilotTemplatePath, 'copilot-instructions.md', vars);
@@ -158,7 +209,7 @@ export async function previewAiInstructions(
     applied.push(copilotFile);
   }
 
-  const instructionFiles = await collectInstructionTemplateFiles(instructionsTemplateRoot);
+  const instructionFiles = await collectAssetTreeFiles(instructionsTemplateRoot, instructionsAsset);
   const instructionsDestRoot = resolve(targetDir, instructionsDirRel);
 
   for (const { rel, abs: srcAbs } of instructionFiles) {
@@ -174,6 +225,16 @@ export async function previewAiInstructions(
     } else {
       applied.push(join(instructionsDirRel, rel));
     }
+  }
+
+  // Subtrees the instructions asset excludes are owned by their own manifest entry. Today that is
+  // `instructions/project/` with `seed` ownership: created when missing, never overwritten.
+  for (const child of childAssetsOf(instructionsAsset)) {
+    const ownership = requireOwnership(child);
+    if (ownership !== 'seed') continue;
+    const seeded = await collectSeedChanges(child, targetDir);
+    changes.push(...seeded.changes);
+    applied.push(...seeded.applied);
   }
 
   const cursorRulesTemplateRoot = resolve(templateDir, AI_INSTRUCTIONS_CURSOR_RULES_DIR);

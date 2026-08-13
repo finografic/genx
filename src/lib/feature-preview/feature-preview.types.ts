@@ -10,6 +10,13 @@ export interface FeaturePreviewChangeWrite {
   proposedContent: string;
   /** User-facing label for feedback (e.g. `remove prettier config`); falls back to `path` when applying. */
   summary?: string;
+  /**
+   * Whether the path already exists. Only needed to create a file whose content is empty (e.g. a
+   * `.gitkeep` seed): `currentContent === proposedContent === ''` is otherwise indistinguishable
+   * from "no change", so the write would be filtered out and re-proposed on every run. Leave unset
+   * for ordinary writes, where content comparison is sufficient.
+   */
+  exists?: boolean;
 }
 
 /**

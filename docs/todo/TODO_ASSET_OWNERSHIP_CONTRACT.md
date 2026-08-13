@@ -1,6 +1,6 @@
 # TODO - Implement the Asset Ownership Contract
 
-> **Status:** Not started. Contract accepted upstream 2026-08-13.
+> **Status:** Phase 1 complete (2026-08-13). Phases 2–3 open.
 >
 > **Primary repository:** this repo (`@finografic/genx`)
 >
@@ -35,25 +35,49 @@ optional `exclude` array on recursive entries. Four assets ship today:
 - Do not change `AGENTS.md` ownership. genx `_templates` keeps it, per the contract.
 - Do not run a managed multi-repository rollout as part of this work.
 
-## Phase 1 - Honour ownership on apply
+## Phase 1 - Honour ownership on apply — DONE 2026-08-13
 
-- [ ] Read `ownership` from the manifest wherever assets are resolved.
-- [ ] Fail closed: an asset without a valid mode aborts that asset with a clear message, and the
-      run reports it rather than skipping silently.
-- [ ] `managed` — current behaviour: diff preview, confirm, replace.
-- [ ] `seed` — create when absent; when present, skip without diffing and report "project-owned,
-      left untouched".
-- [ ] `project-owned` — never create, never write; detect and report only.
-- [ ] `-y` may skip confirmation for `managed` only. Assert it cannot create or overwrite `seed`.
-- [ ] Honour `exclude` so `instructions/project/` is not swept up by the recursive
-      `instructions/` entry.
+- [x] Read `ownership` from the manifest wherever assets are resolved — new `src/lib/agent-assets/`
+      is the single reader; `ai-instructions` and `ai-agents` no longer hardcode source paths.
+- [x] Fail closed — `requireOwnership` throws `AgentAssetContractError` on a missing, unrecognised,
+      or unimplemented mode, naming the valid ones. Never defaults.
+- [x] `managed` — diff preview, confirm, replace.
+- [x] `seed` — create when absent; report "project-owned, left untouched" when present.
+- [x] `project-owned` — validated and accepted by the reader; no asset uses it yet, so no feature
+      path exercises it (see Phase 2 for detect-only reporting of unmanaged domain docs).
+- [x] `-y` cannot reach a `seed` file: no change is emitted for one that exists, so there is
+      nothing for `yesAll` to approve. Structural, not a flag check.
+- [x] Honour `exclude` via `isExcludedPath`, replacing the hardcoded `AI_INSTRUCTIONS_SKIP_SUBDIR`.
 
 ### Phase 1 acceptance
 
-- [ ] Applying twice is idempotent.
-- [ ] A consumer's file under `.agents/instructions/project/` survives a sync byte-for-byte,
-      including with `-y`.
-- [ ] An asset with a bogus ownership value aborts with an actionable message.
+- [x] Applying twice is idempotent (`ai-instructions.ownership.test.ts`).
+- [x] A consumer's file under `.agents/instructions/project/` survives byte-for-byte including with
+      `-y` (same file).
+- [x] An asset with a bogus ownership value aborts with an actionable message
+      (`agent-assets.utils.test.ts`).
+
+### Fixed along the way
+
+- **Skills were behaving as `seed`, not `managed`.** `ai-agents.preview.ts` skipped any skill whose
+  directory already existed, so upstream skill updates never reached a consumer that had installed
+  them once. Now compared per file and replaced after preview. Skills a project authors itself are
+  still never enumerated, so they survive untouched.
+- **Removed duplicated content from `_templates/`.** `_templates/.agents/instructions/`,
+  `_templates/.agents/skills/`, and `_templates/.claude/skills/` were stale copies of the package
+  content (missing `applyTo` frontmatter and two whole files), referenced only by tests while
+  production code read the package. They shipped inside genx as a second source of truth, which
+  ADR 0002 forbids. Deleted; tests now seed from the installed package assets.
+- **genx could not create an empty file.** The preview machinery filters a write whose content
+  equals the current content, so a zero-byte `.gitkeep` seed was dropped and re-proposed every run.
+  Added an optional `exists` flag on write changes plus `createFilePreviewChange`, mirroring the
+  empty-file-delete handling that already existed.
+
+### Not verified automatically
+
+- The interactive `genx audit` path needs a TTY for its feature multiselect (`-y` only skips
+  per-file confirms), so end-to-end behaviour through the real CLI is covered by the manual smoke
+  test in `@finografic-ai-agent-config/docs/NEXT_STEPS.md` (item 2), not by the suite.
 
 ## Phase 2 - Detect-only reporting for unmanaged domain documents
 
