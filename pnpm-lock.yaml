@@ -15,8 +15,8 @@ importers:
         specifier: 1.7.0
         version: 1.7.0
       '@finografic/ai-agent-config':
-        specifier: ^0.0.5
-        version: 0.0.5
+        specifier: ^0.1.0
+        version: 0.1.0
       '@finografic/cli-kit':
         specifier: ^1.4.0
         version: 1.4.0
@@ -407,8 +407,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@finografic/ai-agent-config@0.0.5':
-    resolution: {integrity: sha512-dMYouO2yBSDoimJ+/RWpJZyCpL+WHVSlG9TIjeD+glcG3KUT97CSb+MfXQ4T5vg1N22Ml3WY+oAJEzCdDPqVlA==, tarball: https://npm.pkg.github.com/download/@finografic/ai-agent-config/0.0.5/a2aa56c7093a83777dd4afbcac2fceff55ac3668}
+  '@finografic/ai-agent-config@0.1.0':
+    resolution: {integrity: sha512-xyAJVsGbYp82ElR8y8D56U6n8SAm/JU7a8u1TbMeNiVKQZAuPuTzlH7NbndTgPouUh5CZbVxZpcsp+VBVnAX6w==, tarball: https://npm.pkg.github.com/download/@finografic/ai-agent-config/0.1.0/71efa347416f034840e5597c65c5e1303252149b}
     engines: {node: '>=24.16.0'}
 
   '@finografic/cli-kit@1.4.0':
@@ -610,12 +610,12 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
-  '@napi-rs/wasm-runtime@1.2.2':
-    resolution: {integrity: sha512-JfB4kuJQjaoHuCTseIINHtHWeJnvgEcxjwA5t/Y00ZgaOO1Crz3fjT/p8kT28zA/Caz7oiUMn3d6H2yOVCVwuw==}
+  '@napi-rs/wasm-runtime@1.2.3':
+    resolution: {integrity: sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     peerDependencies:
-      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.3
-      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.3
+      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
+      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2907,7 +2907,7 @@ snapshots:
   '@esbuild/win32-x64@0.28.0':
     optional: true
 
-  '@finografic/ai-agent-config@0.0.5': {}
+  '@finografic/ai-agent-config@0.1.0': {}
 
   '@finografic/cli-kit@1.4.0':
     dependencies:
@@ -3141,7 +3141,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@napi-rs/wasm-runtime@1.2.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+  '@napi-rs/wasm-runtime@1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
@@ -3415,14 +3415,14 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.2.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.2':
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.2.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.1.3':
