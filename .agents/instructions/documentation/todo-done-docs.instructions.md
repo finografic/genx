@@ -1,3 +1,8 @@
+---
+applyTo: '**/*.md'
+description: TODO, DONE, and ROADMAP naming, lifecycle, and formatting conventions.
+---
+
 # TODO, DONE, and Roadmap Documentation Conventions
 
 Rules for planning docs, working docs, and completion records.

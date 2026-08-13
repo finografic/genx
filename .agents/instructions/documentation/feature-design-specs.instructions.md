@@ -1,3 +1,8 @@
+---
+applyTo: '**/*.md'
+description: Design specification document structure and lifecycle.
+---
+
 # Design Specs
 
 Rules for creating and maintaining design specification documents.

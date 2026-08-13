@@ -1,8 +1,13 @@
 # .agents/instructions — AI Instruction Files
 
-Rules and conventions loaded automatically by Claude Code, Cursor, GitHub Copilot, and other
-AI coding tools. Files use the `.instructions.md` suffix. `README.md` (this file) is not loaded
-as a rule file — it exists purely for navigation and to define how this folder is maintained.
+Reusable rules and conventions, read **on demand** via pointers from `AGENTS.md`. Files use the
+`.instructions.md` suffix. `README.md` (this file) is not a rule file — it exists for navigation
+and to define how this folder is maintained.
+
+> **These files are not loaded automatically.** No supported tool auto-loads this tree: Claude Code
+> follows backticked pointers only when it judges them relevant, and Copilot applies a file only
+> when its `applyTo` glob matches. A rule that must never be missed belongs in `AGENTS.md` itself.
+> See `docs/reference/AGENT_FILE_LOADING.md` and `docs/adr/0001-agent-instruction-file-architecture.md`.
 
 ---
 
@@ -23,8 +28,26 @@ as a rule file — it exists purely for navigation and to define how this folder
 
 1. Pick the folder using the table above.
 2. Name it descriptively — no numeric prefix: `my-topic.instructions.md`.
-3. If the rule applies only to this repository (not a general convention), put it in `project/`.
-4. Add an entry to the relevant section in `/AGENTS.md` so agents know it exists.
+3. Add the required frontmatter (see below).
+4. If the rule applies only to this repository (not a general convention), put it in `project/`.
+5. Add a pointer in the relevant section of `AGENTS.md` that says **when and why** to read it.
+
+## Required Frontmatter
+
+Every `.instructions.md` file starts with:
+
+```yaml
+---
+applyTo: '**'
+description: One line — what it covers and when to read it.
+---
+```
+
+- `applyTo` is a glob and is **required**: GitHub Copilot ignores path-scoped instruction files
+  without it. Use `'**'` for genuinely universal rules, or narrow it
+  (`'**/*.{ts,tsx}'`, `'**/*.md'`) so the file only loads where it applies.
+- `description` is what an agent reads when deciding whether the file is relevant. Write it as a
+  trigger, not a title.
 
 ---
 

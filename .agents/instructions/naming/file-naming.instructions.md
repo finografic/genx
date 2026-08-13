@@ -1,3 +1,8 @@
+---
+applyTo: '**'
+description: File naming and organisation rules. Read before creating or renaming files.
+---
+
 # File Naming & Organization Rules
 
 ## Naming

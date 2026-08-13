@@ -1,3 +1,8 @@
+---
+applyTo: '**/*.md'
+description: How agent-consumed files reference other files. Read before adding a pointer to any agent-facing doc.
+---
+
 # Agent-facing Markdown
 
 Rules for how agent-consumed files (AGENTS.md, instructions, skills, specs) reference other files. These rules do NOT apply to user-facing documentation (README, CHANGELOG, docs/).
@@ -9,7 +14,7 @@ Rules for how agent-consumed files (AGENTS.md, instructions, skills, specs) refe
 All file references use paths relative to the project root — no leading slash, no traversal.
 
 ```md
-✅ `.agents/instructions/05-documentation.instructions.md`
+✅ `.agents/instructions/documentation/documentation.instructions.md`
 ✅ `AGENTS.md`
 ✅ `.agents/skills/maintain-agents/SKILL.md`
 
@@ -23,9 +28,9 @@ All file references use paths relative to the project root — no leading slash,
 Every file path is a code identifier — wrap it in backticks to prevent token splitting, accidental natural-language interpretation, and formatter line-wrapping.
 
 ```md
-✅ `.agents/instructions/05-documentation.instructions.md`
+✅ `.agents/instructions/documentation/documentation.instructions.md`
 
-❌ .agents/instructions/05-documentation.instructions.md
+❌ .agents/instructions/documentation/documentation.instructions.md
 ❌ split
 across lines
 ```
@@ -35,7 +40,7 @@ across lines
 Do not alias or paraphrase file locations. The path is the identifier.
 
 ```md
-✅ `.agents/instructions/05-documentation.instructions.md`
+✅ `.agents/instructions/documentation/documentation.instructions.md`
 
 ❌ "the documentation file"
 ❌ "see the instructions doc"
@@ -48,16 +53,33 @@ Default to backtick paths. A Markdown link signals "read this now" — use links
 ```md
 # Default — reference only (agent reads if relevant)
 
-`.agents/instructions/05-documentation.instructions.md`
+`.agents/instructions/documentation/documentation.instructions.md`
 
 # Exception — read-before-acting (use sparingly)
 
-[maintain-agents](/.agents/skills/maintain-agents/SKILL.md)
+[maintain-agents](.agents/skills/maintain-agents/SKILL.md)
 ```
 
-When a Markdown link is used, it MUST still use a repo-root relative path.
+When a Markdown link is used, it MUST still use a repo-root relative path — no leading slash.
 
-## 5. Group related references
+## 5. State when and why to read the target
+
+A bare path tells the agent a file exists, not whether it matters right now. Because instruction
+files are loaded on demand rather than automatically, a pointer without a reason is routinely
+skipped.
+
+Every pointer names the trigger condition, the target, and what the target decides.
+
+```md
+✅ Before any commit, push, or tag: `.agents/instructions/git/git-policy.instructions.md`
+✅ When adding a provider: `.agents/instructions/code/provider-context-patterns.instructions.md`
+   — defines the required 3-file structure.
+
+❌ See `.agents/instructions/git/git-policy.instructions.md`
+❌ Relevant: `.agents/instructions/code/provider-context-patterns.instructions.md`
+```
+
+## 6. Group related references
 
 When listing multiple files, group them by purpose.
 

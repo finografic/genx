@@ -1,3 +1,8 @@
+---
+applyTo: '**/*.md'
+description: Documentation structure, date tags, and markdown link rules. Read before writing docs.
+---
+
 # Documentation Rules
 
 ## Date Tags
