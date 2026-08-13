@@ -73,8 +73,8 @@ without depending on genx's internal utilities. Decision needed on approach befo
 
 Remaining from the shipped command: shadcn CSS-vars push writer, push mapping-file support
 (when ambiguity proves real), `design-md` thin audit feature (drift detection in `genx audit`),
-render→`.gitignore` wiring, and a manual pilot against a real `@finografic/design-system`
-consumer.
+and render→`.gitignore` wiring. The pilot against the real `@finografic/design-system` is done
+(2026-08-13) — four extraction defects found and fixed.
 
 Detail: [`docs/todo/TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)
 

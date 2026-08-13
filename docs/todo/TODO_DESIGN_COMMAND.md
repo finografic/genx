@@ -118,11 +118,41 @@ style-dictionary unless a real need appears.
 
 ## Validation
 
-- [x] Focused tests per extractor/writer with fixtures (25 design tests; 247 repo-wide green).
+- [x] Focused tests per extractor/writer with fixtures (38 design tests; 283 repo-wide green).
 - [x] Typecheck, lint, format on touched files; build + README usage regenerated.
-- [ ] Manual pilot: run `pull` + `check` against a real `@finografic/design-system` consumer.
+- [x] Manual pilot: `pull` + `check` + `lint` + `render` against the real
+      `@finografic/design-system` (see below).
 - [x] ai-agent-config skills (`generate-design-md`, `apply-design-md`) updated to reference
       `genx design lint/check/sync`.
+
+### Pilot findings — 2026-08-13
+
+Run against `@finografic-design-system/packages/design-system` (PandaCSS). First run produced a
+DESIGN.md with **zero tokens** and reported success; the second produced 81 lint errors. Four
+defects, all fixed:
+
+- **Presets were ignored.** The extractor read only `config.theme`, but a design system keeps its
+  decisions in a preset (`presets: [designSystemPreset]`), leaving the top-level theme empty. Now
+  walks object presets depth-first, config theme winning. Presets referenced by _name_ are
+  deliberately not resolved — Panda's built-ins would bury the project's own tokens under a default
+  palette — and are reported as a warning instead.
+- **Pull wrote a token-less DESIGN.md and called it success.** Extracting nothing from a detected
+  design system is now an error with an actionable message, not a silent empty mirror.
+- **`color-mix()` ramps failed the spec linter** (81 errors) and told an agent nothing about the
+  actual colour. Resolved to literal `oklch()` at extraction. Deliberately narrow — OKLCH space,
+  `oklch()`/`white`/`black` operands only — anything else passes through untouched rather than
+  being approximated. Widen with a colour library when a real project needs another form.
+- **Panda's `DEFAULT` key leaked into token names.** `colors.primary.DEFAULT` became
+  `primary-DEFAULT`, so the spec's `primary` was missing entirely and the linter warned that it
+  would auto-generate key colours. `DEFAULT` is now stripped, in names and in `{refs}`.
+
+Also: a bare `0` radius is not a valid dimension per the spec, so bare zeros in `rounded`/`spacing`
+are emitted as `0px`.
+
+After the fixes: 128 colours, 9 typography scales, 8 rounding levels, 20 spacing tokens;
+`lint` clean, `check` in sync, second `pull` byte-idempotent, `render` produced a 28 KB
+self-contained preview. Pilot artifacts were removed — the design system repo keeps no DESIGN.md
+yet; that is a decision for its owner, not a side effect of testing.
 
 ## Suggested Commit Slices
 
