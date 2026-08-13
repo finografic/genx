@@ -30,6 +30,27 @@ function themePropsEqual(cssA: string, cssB: string): boolean {
   return true;
 }
 
+const OWNED_PREFIXES = ['color-', 'radius-', 'spacing-'];
+
+/**
+ * Owned `@theme` entries that point at other custom properties rather than
+ * holding a literal — the shadcn/ui layout, where `@theme` maps onto a `:root`
+ * palette that `.dark` overrides. Pull resolves that indirection; push must not
+ * write the resolved values back over it.
+ */
+function indirectOwnedProperties(css: string): string[] {
+  const indirect: string[] = [];
+  for (const block of extractThemeBlocks(css)) {
+    for (const [name, value] of Object.entries(parseCustomProperties(block))) {
+      const owned = name === 'spacing' || OWNED_PREFIXES.some((prefix) => name.startsWith(prefix));
+      if (owned && /\bvar\(/.test(value)) {
+        indirect.push(`--${name}`);
+      }
+    }
+  }
+  return indirect;
+}
+
 export interface PushResult {
   status: 'applied' | 'up-to-date' | 'skipped' | 'error';
   message: string;
@@ -76,6 +97,18 @@ export async function runPush(
     for (const file of detected.sourceFiles) {
       const cssPath = join(targetDir, file);
       const css = readFileSync(cssPath, 'utf8');
+      const indirect = indirectOwnedProperties(css);
+      if (indirect.length > 0) {
+        return {
+          status: 'error',
+          message:
+            `${file} builds its @theme from custom properties (${indirect.slice(0, 3).join(', ')}` +
+            `${indirect.length > 3 ? `, +${indirect.length - 3} more` : ''}). DESIGN.md mirrors those ` +
+            'already resolved, so pushing would inline the base palette and detach the `.dark` ' +
+            'overrides that redefine it — silently breaking dark mode. Edit the custom properties ' +
+            'directly, or keep the design system canonical and use `genx design sync --pull`.',
+        };
+      }
       const updated = writeTailwind4Theme(css, parsed.tokens);
       // Semantic no-op check: the writer normalizes declaration order, so
       // compare the resulting custom-property maps, not the raw text.

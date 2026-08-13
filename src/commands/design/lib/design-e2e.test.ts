@@ -90,6 +90,34 @@ describe('design sync --pull / check (tailwind4 e2e)', () => {
     expect(result.message).toContain('sync --pull');
   });
 
+  it('push refuses to flatten a shadcn-style @theme built from custom properties', async () => {
+    const shadcnDir = mkdtempSync(join(tmpdir(), 'genx-design-shadcn-'));
+    try {
+      cpSync(join(FIXTURES, 'tailwind4-shadcn-project'), shadcnDir, { recursive: true });
+      await runPull(shadcnDir, { yes: true });
+      const designMdPath = join(shadcnDir, 'DESIGN.md');
+      writeFileSync(
+        designMdPath,
+        readFileSync(designMdPath, 'utf8').replace(
+          'source-of-truth: design-system',
+          'source-of-truth: design-md',
+        ),
+        'utf8',
+      );
+
+      const result = await runPush(shadcnDir, {});
+      expect(result.status).toBe('error');
+      expect(result.message).toContain('--color-background');
+      expect(result.message).toContain('dark mode');
+      // The stylesheet is untouched: the indirection layer survives.
+      expect(readFileSync(join(shadcnDir, 'src/app.css'), 'utf8')).toContain(
+        '--color-primary: var(--primary);',
+      );
+    } finally {
+      rmSync(shadcnDir, { recursive: true, force: true });
+    }
+  });
+
   it('push reports up-to-date when the design system already matches (no prompt reached)', async () => {
     await runPull(workDir, { yes: true });
     const designMdPath = join(workDir, 'DESIGN.md');

@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ExtractedTokens, RawTypographyToken } from '../design-md.types.js';
 
+import { normalizeDimension, resolveColorMix } from '../color-value.utils.js';
+import { evaluateCalc, parseRootProperties, resolveCssVars } from '../css-value.utils.js';
+
 /** Extract the declaration bodies of every `@theme` block in a CSS source. */
 export function extractThemeBlocks(css: string): string[] {
   const blocks: string[] = [];
@@ -50,8 +53,16 @@ export function parseCustomProperties(block: string): Record<string, string> {
  * `--color-*` → colors, `--radius-*` → rounded, `--spacing(-*)` → spacing,
  * `--font-*` (families) + `--text-*` (sizes, with `--text-x--line-height`
  * companions) → typography tokens named `text-<size>`.
+ *
+ * `vars` supplies the custom properties a theme entry may point at (typically
+ * `:root`), so `var()` indirection and `calc()` scales resolve to the literal
+ * value instead of being mirrored as an expression that says nothing.
  */
-export function mapThemeProperties(props: Record<string, string>): ExtractedTokens['tokens'] {
+export function mapThemeProperties(
+  props: Record<string, string>,
+  vars: Record<string, string> = {},
+): ExtractedTokens['tokens'] {
+  const flatten = (value: string): string => evaluateCalc(resolveCssVars(value, vars));
   const colors: Record<string, string> = {};
   const rounded: Record<string, string> = {};
   const spacing: Record<string, string> = {};
@@ -60,13 +71,13 @@ export function mapThemeProperties(props: Record<string, string>): ExtractedToke
 
   for (const [name, value] of Object.entries(props)) {
     if (name.startsWith('color-')) {
-      colors[name.slice('color-'.length)] = value;
+      colors[name.slice('color-'.length)] = resolveColorMix(flatten(value));
     } else if (name.startsWith('radius-')) {
-      rounded[name.slice('radius-'.length)] = value;
+      rounded[name.slice('radius-'.length)] = normalizeDimension(flatten(value));
     } else if (name === 'spacing') {
-      spacing.base = value;
+      spacing.base = normalizeDimension(flatten(value));
     } else if (name.startsWith('spacing-')) {
-      spacing[name.slice('spacing-'.length)] = value;
+      spacing[name.slice('spacing-'.length)] = normalizeDimension(flatten(value));
     } else if (
       name.startsWith('font-weight-') ||
       name.startsWith('font-feature-') ||
@@ -74,14 +85,14 @@ export function mapThemeProperties(props: Record<string, string>): ExtractedToke
     ) {
       // Not mapped standalone; weights live on typography tokens.
     } else if (name.startsWith('font-')) {
-      families[name.slice('font-'.length)] = value;
+      families[name.slice('font-'.length)] = flatten(value);
     } else if (name.startsWith('text-')) {
       const rest = name.slice('text-'.length);
       const lineHeightMatch = rest.match(/^(.+)--line-height$/);
       if (lineHeightMatch?.[1]) {
-        (textSizes[lineHeightMatch[1]] ??= {}).lineHeight = value;
+        (textSizes[lineHeightMatch[1]] ??= {}).lineHeight = flatten(value);
       } else if (!rest.includes('--')) {
-        (textSizes[rest] ??= {}).fontSize = value;
+        (textSizes[rest] ??= {}).fontSize = flatten(value);
       }
     }
   }
@@ -107,17 +118,21 @@ export function mapThemeProperties(props: Record<string, string>): ExtractedToke
 /** Extract DESIGN.md tokens from every `@theme` block across the given CSS files. */
 export function extractTailwind4Tokens(targetDir: string, themeFiles: string[]): ExtractedTokens {
   const allProps: Record<string, string> = {};
+  const rootProps: Record<string, string> = {};
 
   for (const file of themeFiles) {
     const css = readFileSync(join(targetDir, file), 'utf8');
     for (const block of extractThemeBlocks(css)) {
       Object.assign(allProps, parseCustomProperties(block));
     }
+    // Base layer only: a `.dark` block is a second palette, and DESIGN.md mirrors
+    // one — the same rule the Panda extractor applies to `base` conditions.
+    Object.assign(rootProps, parseRootProperties(css));
   }
 
   return {
     framework: 'tailwind4',
     sourceFiles: themeFiles,
-    tokens: mapThemeProperties(allProps),
+    tokens: mapThemeProperties(allProps, { ...rootProps, ...allProps }),
   };
 }

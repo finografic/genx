@@ -10,6 +10,7 @@ const FIXTURES = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..
 const PANDA_DIR = join(FIXTURES, 'panda-project');
 const PANDA_PRESET_DIR = join(FIXTURES, 'panda-preset-project');
 const TW4_DIR = join(FIXTURES, 'tailwind4-project');
+const TW4_SHADCN_DIR = join(FIXTURES, 'tailwind4-shadcn-project');
 
 describe('detectDesignSystems', () => {
   it('detects pandacss via panda.config.ts', () => {
@@ -95,5 +96,34 @@ describe('extractTailwind4Tokens', () => {
       fontFamily: "'Public Sans', sans-serif",
       fontSize: '1.125rem',
     });
+  });
+
+  it('resolves shadcn var() indirection against the :root palette', () => {
+    const result = extractTailwind4Tokens(TW4_SHADCN_DIR, ['src/app.css']);
+    expect(result.tokens.colors).toMatchObject({
+      background: 'oklch(1 0 0)',
+      foreground: 'oklch(0.147 0.004 49.25)',
+      primary: 'oklch(0.841 0.238 128.85)',
+    });
+    // Light mode is the mirrored palette; `.dark` is a second one.
+    expect(result.tokens.colors?.background).not.toBe('oklch(0.147 0.004 49.25)');
+  });
+
+  it('falls back inside var() and leaves unresolvable references alone', () => {
+    const result = extractTailwind4Tokens(TW4_SHADCN_DIR, ['src/app.css']);
+    expect(result.tokens.colors?.muted).toBe('oklch(0.97 0.001 106.424)');
+    expect(result.tokens.colors?.missing).toBe('var(--nowhere)');
+  });
+
+  it('evaluates calc() scales into literal dimensions', () => {
+    const result = extractTailwind4Tokens(TW4_SHADCN_DIR, ['src/app.css']);
+    expect(result.tokens.rounded).toEqual({ sm: '0.375rem', lg: '0.625rem', xl: '0.875rem' });
+    expect(result.tokens.spacing).toEqual({ gutter: '24px' });
+  });
+
+  it('resolves font families through indirection', () => {
+    const result = extractTailwind4Tokens(TW4_SHADCN_DIR, ['src/app.css']);
+    // No --text-* sizes here, so typography stays empty rather than invented.
+    expect(result.tokens.typography).toBeUndefined();
   });
 });

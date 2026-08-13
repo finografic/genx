@@ -1,0 +1,37 @@
+/*
+ * Fixture: the shadcn/ui layout for Tailwind v4 — `@theme` holds no literals at
+ * all, only pointers into a `:root` palette that `.dark` overrides, plus a
+ * radius scale derived arithmetically from a single `--radius`.
+ */
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Roboto Variable', sans-serif;
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-muted: var(--muted, oklch(0.97 0.001 106.424));
+  --color-missing: var(--nowhere);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --spacing-gutter: calc(var(--spacing-unit) * 3);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.147 0.004 49.25);
+  --primary: oklch(0.841 0.238 128.85);
+  --radius: 0.625rem;
+  --spacing-unit: 8px;
+}
+
+.dark {
+  /* A second palette — deliberately not mirrored into DESIGN.md. */
+  --background: oklch(0.147 0.004 49.25);
+  --foreground: oklch(0.985 0.001 106.423);
+  --primary: oklch(0.648 0.2 131.684);
+}
