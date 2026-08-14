@@ -118,8 +118,7 @@ a dark context because of this file.
       (swatches, specimens, scales, component cards, prose).
 - [x] `design lint` via the programmatic `@google/design.md/linter` API (not npx —
       version-pinned as a real dependency).
-- [ ] Wire `render` output pattern into `.gitignore` handling — deferred; render prints a
-      gitignore hint for now.
+- [x] Wire `render` output pattern into `.gitignore` handling — preview-gated; see Phase 4.
 
 ## Phase 3 - push (preview-gated) — DONE 2026-08-13 (shadcn deferred)
 
@@ -140,11 +139,31 @@ a dark context because of this file.
 - [ ] Mapping-file support — deferred per the push-mapping note (build when ambiguity is
       proven in real use).
 
-## Phase 4 - audit integration (thin feature, optional)
+## Phase 4 - audit integration (thin feature) — DONE 2026-08-13
 
-- [ ] `design-md` feature: `genx audit` detects DESIGN.md presence and drift
-      (`design check` under the hood) and recommends action. Detection only — audit never
-      generates or mutates DESIGN.md. (Deferred — optional.)
+- [x] `design-md` feature: `genx audit` reports DESIGN.md presence and token drift
+      (`design check` under the hood). `missing` points at the `generate-design-md` skill;
+      `partial` means the mirror has drifted.
+- [x] **Apply refreshes, never authors.** The original wording here was "audit never generates or
+      mutates DESIGN.md", which would leave a `partial` entry that no-ops when selected — a dead
+      end in the audit UX. Apply now runs the same preview-gated `sync --pull` that refreshes a
+      drifted mirror, and still refuses to create one from nothing: authoring means consolidating
+      inconsistencies and naming design intent, which is the skill's judgement work, not an
+      unattended sync's.
+- [x] New `Feature.applicable` predicate. Without it the feature reads `missing` in every package
+      that has no design system — noise, not a finding. It is now omitted from the audit entirely
+      there. First conditional feature; parallels the existing `selfPackageName` exclusion.
+- [x] `render` offers its artifact to `.gitignore` (preview-gated, `# Design` section, extends an
+      existing section rather than duplicating it). A project with no `.gitignore` is left alone —
+      creating one is a bigger decision than this command should make.
+
+### Fixed along the way
+
+- **Design-system detection scanned the whole tree.** `fg.sync('**/*.css')` meant a repository's
+  own fixtures, demos, and example apps registered as its design system — genx detected its
+  `test/fixtures/**` Tailwind projects and offered the feature on that basis. Detection is now
+  anchored at conventional stylesheet roots (`*.css`, `src/**`, `app/**`, `styles/**`, `assets/**`).
+  Found by running the audit against real repositories, not by a test.
 
 ## Validation
 

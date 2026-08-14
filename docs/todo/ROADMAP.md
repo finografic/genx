@@ -71,8 +71,9 @@ without depending on genx's internal utilities. Decision needed on approach befo
 
 ### 8. `genx design` — follow-ups (core command shipped 2026-08-13)
 
-Remaining from the shipped command: push mapping-file support (when ambiguity proves real),
-`design-md` thin audit feature (drift detection in `genx audit`), and render→`.gitignore` wiring.
+Remaining from the shipped command: push mapping-file support only — deferred until ambiguity is
+proven in real use. The `design-md` audit feature and render→`.gitignore` wiring shipped
+2026-08-13.
 
 Pilots against the real `@finografic/design-system` (PandaCSS) and `@finografic/lucide-manager`
 (Tailwind v4 + shadcn) are done (2026-08-13) — seven extraction defects found and fixed; both
