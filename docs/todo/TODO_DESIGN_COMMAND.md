@@ -61,9 +61,32 @@ Prefer wrapping `@google/design.md` (lint/diff/export + programmatic `lint()` AP
 reimplementing. New deps kept minimal: `yaml`, small color-space lib (`culori`); avoid
 style-dictionary unless a real need appears.
 
+## Dark mode — decided 2026-08-13
+
+**DESIGN.md mirrors the base (light) palette only. Dark stays canonical in the design system.**
+
+The spec has no theme concept: `colors` is a flat `<token-name>: <Color>` map, with no conditions,
+variants, or modes anywhere in the schema. Confirmed against the spec and the real linter:
+
+| Option                              | Verdict                                                                    |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| Repeated `## Colors` section        | **Illegal** — spec: duplicate section heading is "Error; reject the file"  |
+| Custom top-level key (`colorsDark`) | Warned and inert — "will be silently ignored by export commands"           |
+| Suffix convention (`surface-dark`)  | Legal, but doubles every token (128 → 256 here), burying the design intent |
+| Mirror base only, state it          | **Chosen** — matches the spec rather than bending it                       |
+
+Both real pilots have two palettes (PandaCSS: 39 `_dark` conditions; shadcn: 31 `.dark` overrides),
+so the omission is real and must not be silent. Pull therefore warns with the count, and a
+generated DESIGN.md says in its `## Source of Truth` section that this is the base palette — an
+agent must not infer that only one exists.
+
+Revisit only if the spec gains a theme concept, or if an agent is observed applying light values in
+a dark context because of this file.
+
 ## Non-Goals
 
 - No new shared policy wording in genx (stays in `ai-agent-config`).
+- No second palette in DESIGN.md, by any encoding (see Dark mode above).
 - No DESIGN.md _generation_ — that is the `generate-design-md` skill (judgement).
 - No skill installation logic — the existing asset-manifest pipeline already distributes skills.
 - No editor app (see ai-agent-config `TODO_DESIGN_MD_EDITOR.md`; it can reuse `design render`).
@@ -107,12 +130,11 @@ style-dictionary unless a real need appears.
       that indirection, so writing the resolved values back would inline the base palette and
       detach the `.dark` overrides — breaking dark mode silently. Errors with the offending
       property names instead.
-- [ ] shadcn CSS-vars writer — a real target now exists (`@finografic/lucide-manager`), and the
-      pull side handles it. **The deferred design premise is stale:** current shadcn emits
-      `oklch()` in `:root`, not hsl, so the "hex↔hsl conversion" this was waiting on is not the
-      problem. The real question is scope — writing into `:root`/`.dark` means owning two palettes
-      from a DESIGN.md that mirrors one. Needs a decision on how dark mode is represented before
-      any code.
+- [ ] shadcn CSS-vars writer — **effectively closed by the dark-mode decision.** The premise was
+      stale anyway (current shadcn emits `oklch()`, not hsl, so no conversion is needed), and
+      since DESIGN.md carries one palette by design, a writer could only ever author `:root` while
+      leaving `.dark` untouched — which the push guard already refuses as unsafe. Revive only if
+      DESIGN.md ever becomes canonical for a shadcn project, which no project does today.
 - [x] Reuse feature-preview/confirm loop; per-file confirmation; refuse unless DESIGN.md
       declares itself canonical. `-y` is ignored for push by construction.
 - [ ] Mapping-file support — deferred per the push-mapping note (build when ambiguity is
