@@ -7,9 +7,18 @@ const PANDA_CONFIG_NAMES = ['panda.config.ts', 'panda.config.mts', 'panda.config
 
 const CSS_IGNORE = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**', '**/coverage/**'];
 
+/**
+ * Where a project's own stylesheets live. Deliberately anchored at conventional
+ * top-level directories rather than scanning the whole tree: a repository's
+ * fixtures, demos, and example apps contain `@theme` blocks that are not its
+ * design system. Scanning `**` made genx detect its own test fixtures as a
+ * Tailwind project and offer the whole feature on that basis.
+ */
+const CSS_ROOTS = ['*.css', 'src/**/*.css', 'app/**/*.css', 'styles/**/*.css', 'assets/**/*.css'];
+
 /** Find CSS files containing a Tailwind v4 `@theme` block, relative to targetDir. */
 export function findTailwind4ThemeFiles(targetDir: string): string[] {
-  const cssFiles = fg.sync('**/*.css', { cwd: targetDir, ignore: CSS_IGNORE, dot: false });
+  const cssFiles = fg.sync(CSS_ROOTS, { cwd: targetDir, ignore: CSS_IGNORE, dot: false });
   return cssFiles.filter((file) => {
     try {
       return /@theme\b/.test(readFileSync(join(targetDir, file), 'utf8'));

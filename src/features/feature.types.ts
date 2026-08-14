@@ -6,6 +6,7 @@ export type FeatureId =
   | 'aiMemory'
   | 'aiInstructions'
   | 'css'
+  | 'designMd'
   | 'gitHooks'
   | 'githubWorkflow'
   | 'markdown'
@@ -77,6 +78,14 @@ export interface Feature {
   hint?: string;
   /** Optional VSCode-specific configuration */
   vscode?: FeatureVSCodeConfig;
+
+  /**
+   * Optional applicability check. When it returns false the feature is omitted from `genx audit`
+   * entirely — not reported as missing. For features that only make sense in some projects (a
+   * design-token mirror needs a design system to mirror), where "missing" would be noise rather
+   * than a finding. Omit for features that belong in every `@finografic` package.
+   */
+  applicable?: (context: FeatureContext) => boolean | Promise<boolean>;
 
   /**
    * Optional detection function to check if feature is already present. Returns true if feature is detected,

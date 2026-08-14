@@ -4,6 +4,7 @@ import { aiAgentsFeature } from './ai-agents/ai-agents.feature';
 import { aiInstructionsFeature } from './ai-instructions/ai-instructions.feature';
 import { aiMemoryFeature } from './ai-memory/ai-memory.feature';
 import { cssFeature } from './css/css.feature';
+import { designMdFeature } from './design-md/design-md.feature';
 import { gitHooksFeature } from './git-hooks/git-hooks.feature';
 import { markdownFeature } from './markdown/markdown.feature';
 import { oxcConfigFeature } from './oxc-config/oxc-config.feature';
@@ -23,6 +24,7 @@ export const features: Feature[] = [
   aiMemoryFeature,
   markdownFeature,
   gitHooksFeature,
+  designMdFeature,
 ];
 
 /**

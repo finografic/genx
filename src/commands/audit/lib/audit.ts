@@ -15,6 +15,11 @@ export async function auditFeatures(context: FeatureContext): Promise<FeatureAud
   const entries: FeatureAuditEntry[] = [];
 
   for (const feature of features) {
+    // An inapplicable feature is not a finding — omit it rather than report it missing.
+    if (feature.applicable && !(await feature.applicable(context))) {
+      continue;
+    }
+
     let result: AuditResult;
 
     if (feature.audit) {

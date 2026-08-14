@@ -24,6 +24,12 @@ describe('detectDesignSystems', () => {
     expect(detected[0]?.framework).toBe('tailwind4');
     expect(detected[0]?.sourceFiles).toEqual(['src/app.css']);
   });
+
+  it('ignores @theme blocks in fixtures, demos, and examples', () => {
+    // The fixtures root itself holds several `@theme` projects, none of which are
+    // the design system of the repository that contains them.
+    expect(detectDesignSystems(FIXTURES)).toEqual([]);
+  });
 });
 
 describe('extractPandacssTokens', () => {

@@ -107,7 +107,7 @@ export async function runDesign(argv: string[], context: { cwd: string }): Promi
       }
 
       case 'render': {
-        const result = runRender(targetDir, { file: args.file, out: args.out });
+        const result = await runRender(targetDir, { file: args.file, out: args.out, yes: args.yes });
         if (result.exitCode === 0) {
           successMessage(result.message);
         } else {

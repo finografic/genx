@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runCheck } from './check.runner.js';
 import { runPull } from './pull.runner.js';
 import { runPush } from './push.runner.js';
+import { runRender } from './render.runner.js';
 
 const FIXTURES = join(fileURLToPath(new URL('.', import.meta.url)), '../../../../test/fixtures/design-md');
 
@@ -81,6 +82,26 @@ describe('design sync --pull / check (tailwind4 e2e)', () => {
     const result = await runPull(workDir, { yes: true });
     expect(result.status).toBe('error');
     expect(result.message).toContain('canonical');
+  });
+
+  it('render adds the artifact to an existing .gitignore', async () => {
+    await runPull(workDir, { yes: true });
+    writeFileSync(join(workDir, '.gitignore'), 'node_modules\n', 'utf8');
+
+    const result = await runRender(workDir, { yes: true });
+    expect(result.exitCode).toBe(0);
+    expect(readFileSync(join(workDir, '.gitignore'), 'utf8')).toContain('DESIGN.html');
+    // Already listed on a second run: the file is not rewritten, and the
+    // message drops the hint.
+    expect((await runRender(workDir, { yes: true })).message).not.toContain('consider gitignoring');
+  });
+
+  it('render leaves a project without a .gitignore alone', async () => {
+    await runPull(workDir, { yes: true });
+    const result = await runRender(workDir, { yes: true });
+    expect(result.exitCode).toBe(0);
+    expect(existsSync(join(workDir, '.gitignore'))).toBe(false);
+    expect(result.message).toContain('consider gitignoring');
   });
 
   it('push refuses when DESIGN.md does not declare itself canonical', async () => {
