@@ -3,7 +3,12 @@ import { join } from 'node:path';
 import type { ExtractedTokens, RawTypographyToken } from '../design-md.types.js';
 
 import { normalizeDimension, resolveColorMix } from '../color-value.utils.js';
-import { evaluateCalc, parseRootProperties, resolveCssVars } from '../css-value.utils.js';
+import {
+  evaluateCalc,
+  parseDarkProperties,
+  parseRootProperties,
+  resolveCssVars,
+} from '../css-value.utils.js';
 
 /** Extract the declaration bodies of every `@theme` block in a CSS source. */
 export function extractThemeBlocks(css: string): string[] {
@@ -119,6 +124,7 @@ export function mapThemeProperties(
 export function extractTailwind4Tokens(targetDir: string, themeFiles: string[]): ExtractedTokens {
   const allProps: Record<string, string> = {};
   const rootProps: Record<string, string> = {};
+  const darkProps: Record<string, string> = {};
 
   for (const file of themeFiles) {
     const css = readFileSync(join(targetDir, file), 'utf8');
@@ -128,11 +134,17 @@ export function extractTailwind4Tokens(targetDir: string, themeFiles: string[]):
     // Base layer only: a `.dark` block is a second palette, and DESIGN.md mirrors
     // one — the same rule the Panda extractor applies to `base` conditions.
     Object.assign(rootProps, parseRootProperties(css));
+    Object.assign(darkProps, parseDarkProperties(css));
   }
+
+  // Only overrides of a base property are a second palette; a dark-only helper
+  // property is not something DESIGN.md would have carried anyway.
+  const darkTokenCount = Object.keys(darkProps).filter((name) => name in rootProps).length;
 
   return {
     framework: 'tailwind4',
     sourceFiles: themeFiles,
     tokens: mapThemeProperties(allProps, { ...rootProps, ...allProps }),
+    ...(darkTokenCount > 0 && { darkTokenCount }),
   };
 }

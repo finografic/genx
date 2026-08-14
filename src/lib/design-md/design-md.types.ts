@@ -59,6 +59,12 @@ export interface ExtractedTokens {
   tokens: Pick<RawDesignTokens, TokenGroup>;
   /** Non-fatal extraction notes (e.g. a preset referenced by name, left unresolved). */
   warnings?: string[];
+  /**
+   * Count of tokens the design system also defines a dark value for. The spec has
+   * no theme concept, so only the base palette is mirrored — this records what was
+   * deliberately left behind rather than dropping it silently.
+   */
+  darkTokenCount?: number;
 }
 
 /* ────────────────────────────────────────────────────────── */

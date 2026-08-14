@@ -46,7 +46,12 @@ export function serializeDesignMd(tokens: RawDesignTokens, body: string): string
  * Minimal body skeleton for a freshly created DESIGN.md. Prose is human-owned,
  * so this stays near-empty: pull must never invent design rationale.
  */
-export function createSkeletonBody(options: { name: string; canonicalSource: string }): string {
+export function createSkeletonBody(options: {
+  name: string;
+  canonicalSource: string;
+  /** Whether the design system also defines a dark palette this file does not carry. */
+  hasDarkPalette?: boolean;
+}): string {
   return [
     '# Design System',
     '',
@@ -59,6 +64,14 @@ export function createSkeletonBody(options: { name: string; canonicalSource: str
     '',
     `Tokens are canonical in ${options.canonicalSource}. This file mirrors them for agent`,
     'consumption — when they disagree, the design system wins; refresh with `genx design sync --pull`.',
+    ...(options.hasDarkPalette
+      ? [
+          '',
+          'These tokens are the **base (light) palette**. The design system also defines a dark',
+          'palette; the DESIGN.md schema has no concept of themes, so it is not mirrored here and',
+          'stays canonical in the design system. Do not infer that only one palette exists.',
+        ]
+      : []),
     '',
   ].join('\n');
 }

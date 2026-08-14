@@ -75,6 +75,14 @@ describe('extractPandacssTokens', () => {
     const result = await extractPandacssTokens(PANDA_PRESET_DIR, 'panda.config.ts');
     expect(result.warnings?.[0]).toContain('@pandacss/preset-panda');
   });
+
+  it('counts dark conditions without mirroring them', async () => {
+    const result = await extractPandacssTokens(PANDA_PRESET_DIR, 'panda.config.ts');
+    expect(result.darkTokenCount).toBe(2);
+    // The base value is what reaches DESIGN.md.
+    expect(result.tokens.colors?.surface).toBe('#ffffff');
+    expect(result.tokens.colors?.text).toBe('#111111');
+  });
 });
 
 describe('extractTailwind4Tokens', () => {
@@ -125,5 +133,15 @@ describe('extractTailwind4Tokens', () => {
     const result = extractTailwind4Tokens(TW4_SHADCN_DIR, ['src/app.css']);
     // No --text-* sizes here, so typography stays empty rather than invented.
     expect(result.tokens.typography).toBeUndefined();
+  });
+
+  it('counts the dark palette it deliberately does not mirror', () => {
+    const result = extractTailwind4Tokens(TW4_SHADCN_DIR, ['src/app.css']);
+    // --background, --foreground, --primary are overridden in `.dark`.
+    expect(result.darkTokenCount).toBe(3);
+  });
+
+  it('reports no dark palette when the project has none', () => {
+    expect(extractTailwind4Tokens(TW4_DIR, ['src/app.css']).darkTokenCount).toBeUndefined();
   });
 });

@@ -258,28 +258,54 @@ export function evaluateCalc(value: string): string {
   return current;
 }
 
-/** Custom properties declared in `:root` — the base layer theme entries point at. */
-export function parseRootProperties(css: string): Record<string, string> {
+/**
+ * Custom properties declared in a dark scope — `.dark`, `[data-theme='dark']`,
+ * or a `prefers-color-scheme: dark` media query. Not mirrored into DESIGN.md
+ * (the spec has no theme concept); counted so the omission can be stated.
+ */
+export function parseDarkProperties(css: string): Record<string, string> {
   const props: Record<string, string> = {};
-  const pattern = /(^|[\s,}])(:root|html)\b[^{]*\{/g;
-  let match: RegExpExecArray | null = pattern.exec(css);
+  const selectors = /(^|[\s,{}])(\.dark\b|\[data-theme[~^|]?=['"]?dark['"]?\])[^{]*\{/g;
+  Object.assign(props, collectBlocks(css, selectors));
 
+  const media = /@media[^{]*prefers-color-scheme\s*:\s*dark[^{]*\{/g;
+  let match: RegExpExecArray | null = media.exec(css);
   while (match !== null) {
-    const start = match.index + match[0].length;
-    let depth = 1;
-    let index = start;
-    while (index < css.length && depth > 0) {
-      if (css[index] === '{') {
-        depth += 1;
-      } else if (css[index] === '}') {
-        depth -= 1;
-      }
-      index += 1;
-    }
-    Object.assign(props, parseDeclarations(css.slice(start, index - 1)));
-    match = pattern.exec(css);
+    const body = blockBody(css, match.index + match[0].length);
+    Object.assign(props, parseDeclarations(body), collectBlocks(body, /[^{}]*\{/g));
+    match = media.exec(css);
   }
   return props;
+}
+
+/** Body of a block whose opening brace has already been consumed at `start`. */
+function blockBody(css: string, start: number): string {
+  let depth = 1;
+  let index = start;
+  while (index < css.length && depth > 0) {
+    if (css[index] === '{') {
+      depth += 1;
+    } else if (css[index] === '}') {
+      depth -= 1;
+    }
+    index += 1;
+  }
+  return css.slice(start, index - 1);
+}
+
+function collectBlocks(css: string, selectors: RegExp): Record<string, string> {
+  const props: Record<string, string> = {};
+  let match: RegExpExecArray | null = selectors.exec(css);
+  while (match !== null) {
+    Object.assign(props, parseDeclarations(blockBody(css, match.index + match[0].length)));
+    match = selectors.exec(css);
+  }
+  return props;
+}
+
+/** Custom properties declared in `:root` — the base layer theme entries point at. */
+export function parseRootProperties(css: string): Record<string, string> {
+  return collectBlocks(css, /(^|[\s,}])(:root|html)\b[^{]*\{/g);
 }
 
 function parseDeclarations(block: string): Record<string, string> {

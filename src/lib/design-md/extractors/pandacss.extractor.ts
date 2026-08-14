@@ -95,6 +95,33 @@ function flattenTextStyles(group: unknown): Record<string, RawTypographyToken> {
   return result;
 }
 
+/**
+ * Count leaves whose value is a condition map carrying a dark variant
+ * (`{ value: { base: X, _dark: Y } }`). Only `base` reaches DESIGN.md.
+ */
+function countDarkConditions(group: unknown): number {
+  let count = 0;
+
+  function visit(node: unknown): void {
+    if (!isRecord(node)) {
+      return;
+    }
+    if ('value' in node) {
+      const raw = node.value;
+      if (isRecord(raw) && Object.keys(raw).some((key) => key.startsWith('_dark'))) {
+        count += 1;
+      }
+      return;
+    }
+    for (const child of Object.values(node)) {
+      visit(child);
+    }
+  }
+
+  visit(group);
+  return count;
+}
+
 /** Read a theme key, merging `theme.extend.<key>` over `theme.<key>`. */
 function themeKey(theme: UnknownRecord, key: string): unknown {
   const extend = isRecord(theme.extend) ? theme.extend : {};
@@ -174,6 +201,7 @@ export async function extractPandacssTokens(targetDir: string, configFile: strin
   const rounded: Record<string, string> = {};
   const spacing: Record<string, string> = {};
   const typography: Record<string, RawTypographyToken> = {};
+  let darkTokenCount = 0;
 
   for (const theme of themes) {
     const tokens = isRecord(themeKey(theme, 'tokens')) ? (themeKey(theme, 'tokens') as UnknownRecord) : {};
@@ -197,6 +225,7 @@ export async function extractPandacssTokens(targetDir: string, configFile: strin
       flattenTokenGroup(semanticTokens.spacing, normalizeDimension),
     );
     Object.assign(typography, flattenTextStyles(themeKey(theme, 'textStyles')));
+    darkTokenCount += countDarkConditions(semanticTokens);
   }
 
   const warnings = skippedPresets.map(
@@ -215,5 +244,6 @@ export async function extractPandacssTokens(targetDir: string, configFile: strin
       ...(Object.keys(spacing).length > 0 && { spacing }),
     },
     ...(warnings.length > 0 && { warnings }),
+    ...(darkTokenCount > 0 && { darkTokenCount }),
   };
 }

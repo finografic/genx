@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluateCalc, parseRootProperties, resolveCssVars } from './css-value.utils.js';
+import { evaluateCalc, parseDarkProperties, parseRootProperties, resolveCssVars } from './css-value.utils.js';
 
 const VARS = { primary: 'oklch(0.84 0.23 128)', brand: 'var(--primary)', radius: '0.625rem' };
 
@@ -71,5 +71,26 @@ describe('parseRootProperties', () => {
 
   it('reads the base layer only, ignoring dark overrides', () => {
     expect(parseRootProperties(CSS)).toEqual({ primary: '#111', radius: '0.5rem' });
+  });
+});
+
+describe('parseDarkProperties', () => {
+  it('reads a .dark class scope', () => {
+    expect(parseDarkProperties('.dark { --primary: #eee; }')).toEqual({ primary: '#eee' });
+  });
+
+  it('reads a data-theme attribute scope', () => {
+    expect(parseDarkProperties('[data-theme="dark"] { --primary: #eee; }')).toEqual({
+      primary: '#eee',
+    });
+  });
+
+  it('reads a prefers-color-scheme media query', () => {
+    const css = '@media (prefers-color-scheme: dark) { :root { --primary: #eee; } }';
+    expect(parseDarkProperties(css)).toEqual({ primary: '#eee' });
+  });
+
+  it('finds nothing in a single-palette stylesheet', () => {
+    expect(parseDarkProperties(':root { --primary: #111; }')).toEqual({});
   });
 });

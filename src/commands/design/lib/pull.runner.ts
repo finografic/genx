@@ -36,7 +36,15 @@ export async function runPull(
     };
   }
 
-  const warnings = extraction.extracted.warnings ?? [];
+  const warnings = [...(extraction.extracted.warnings ?? [])];
+  const darkTokenCount = extraction.extracted.darkTokenCount ?? 0;
+  if (darkTokenCount > 0) {
+    warnings.push(
+      `${darkTokenCount} token${darkTokenCount === 1 ? '' : 's'} also define a dark value. The ` +
+        'DESIGN.md schema has no concept of themes, so only the base (light) palette is mirrored — ' +
+        'dark stays canonical in the design system.',
+    );
+  }
 
   // A design system was detected but yielded nothing. Writing a token-less DESIGN.md
   // would look like success while mirroring no design intent at all, so refuse.
@@ -81,6 +89,7 @@ export async function runPull(
     body = createSkeletonBody({
       name: packageName,
       canonicalSource: `\`${extraction.detected.sourceFiles.join('`, `')}\` (${extraction.extracted.framework})`,
+      hasDarkPalette: darkTokenCount > 0,
     });
   }
 

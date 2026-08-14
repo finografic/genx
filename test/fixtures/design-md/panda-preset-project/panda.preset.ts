@@ -24,6 +24,7 @@ const preset = {
     semanticTokens: {
       colors: {
         surface: { value: { base: '#ffffff', _dark: '#0b1326' } },
+        text: { value: { base: '#111111', _dark: '#eeeeee' } },
         accent: { value: '{colors.primary.DEFAULT}' },
       },
     },
