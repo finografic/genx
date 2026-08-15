@@ -22,8 +22,10 @@ document the losers as deviations — do not average, and do not include both.
 `DESIGN.md` = YAML frontmatter (machine-readable tokens) + markdown body (rationale).
 Canonical section order — omit irrelevant ones, never reorder:
 
-1. Overview · 2. Colors · 3. Typography · 4. Layout · 5. Elevation & Depth · 6. Shapes ·
-2. Components · 8. Do's and Don'ts
+`Overview` → `Colors` → `Typography` → `Layout` → `Elevation & Depth` → `Shapes` →
+`Components` → `Do's and Don'ts`
+
+Note **Elevation & Depth comes before Shapes**. The linter reports `section-order` otherwise.
 
 Frontmatter schema (token types: Color `"#RRGGBB"`, Dimension `Npx|em|rem`,
 Typography object, Token Reference `"{path.to.token}"`):
@@ -121,6 +123,16 @@ Pages will disagree. Resolve every conflict to a single winner:
 4. **Fill gaps minimally and in-character.** Missing error color, hover variant, or focus style:
    derive a SMALL addition consistent with the established palette/geometry (same hue family,
    same radius language). Mark additions `(proposed)` in prose so humans can veto them.
+
+   **Only in groups you own.** When a design system is canonical (Step 1), the groups it
+   produces — usually `colors` and `rounded` — are a mirror, and any token you add to them is
+   **drift by definition**: `genx design check` reports it as "in DESIGN.md, gone from design
+   system", and the next `sync --pull` deletes it. A proposed token for a mirrored group belongs
+   in prose and in the deviations log, with the change to make in the design system itself
+   ("add `--radius-full` to `@theme`, then pull"). Groups the extractor does not produce —
+   typically `typography`, `spacing`, `components` when the project uses framework defaults —
+   are yours to author and survive every pull.
+
 5. **Log every losing value** — this is the alignment work-list:
 
 ```md
@@ -136,6 +148,11 @@ Write to the project root (or `.stitch/DESIGN.md` if the project already uses th
 
 - Frontmatter: consolidated tokens only. Components reference tokens (`"{colors.primary}"`),
   never repeat literals. Variants as sibling entries (`button-primary-hover`).
+- **Omit a component property whose real value is an alpha tint or blend** (`bg-destructive/10`,
+  `color-mix(...)`). The spec has no opacity concept, so recording the base token claims a solid
+  fill the product does not have — and pairing it with its own foreground produces a phantom
+  1:1 `contrast-ratio` failure. Describe the tint in prose instead; it is a property of the
+  implementation, not a token.
 - Body: each canonical section in order. Prose explains _intent and usage_, not just values —
   "Primary (#1A1C1E): headlines and the single most important action per screen".
 - `## Do's and Don'ts`: encode the deviations just fixed as guardrails ("Don't introduce
@@ -155,7 +172,13 @@ the mirror is drift-free)
 Fix all **errors** (`broken-ref`: unresolvable `{refs}`, unknown component properties;
 duplicate section headings). Address **warnings** deliberately: `contrast-ratio` below 4.5:1
 (adjust the token, this is a real defect), `missing-primary`, `missing-typography`,
-`orphaned-tokens`, `section-order`. Re-run until errors are zero; explain any warning left.
+`section-order`. Re-run until errors are zero; explain any warning left.
+
+**`orphaned-tokens` is expected when mirroring a design system** and is not a defect to fix. A
+semantic palette (shadcn's ~30 role tokens, a Panda ramp) defines far more colours than the
+handful of components you model; one warning per unreferenced token is the normal result. Never
+invent component entries to silence it — that manufactures a design system that does not exist.
+Say so in the report and move on.
 
 ## Step 6 — Report
 

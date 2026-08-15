@@ -54,6 +54,17 @@ Framework-aware route discovery:
 | Astro                   | `src/pages/**`                              |
 | SvelteKit               | `src/routes/**/+page.svelte`                |
 | Vue/Nuxt                | `pages/**`                                  |
+| **No router**           | **the entry component — see below**         |
+
+**Router-less apps are normal, not an edge case.** A Vite/CRA SPA, a dashboard, or a desktop-style
+tool often has one entry component and no routes at all. Finding no routes is not a reason to
+stop: fall back to the **view tree** from the entry point (`src/main.*` → `App.*`), and treat each
+top-level pane, panel, or view component as a "route" for the rest of this skill. Panes rendered
+side by side are exactly where drift shows up, for the same reason separate pages are.
+
+Also distinguish **app-authored** components from **vendored** ones (`src/components/ui/**` from
+shadcn, or anything a generator owns and will overwrite). Both get audited, but only app-authored
+files are safe to fix without asking — see Step 4.
 
 For each route, build its **implementation closure**: the page file, its layout(s), and the
 local components it imports (follow imports one or two levels — shared UI primitives matter
@@ -100,6 +111,14 @@ Per finding, choose the smallest conforming change, in this preference order:
 
 Never: change copy/content, alter layout structure beyond the cited rule, rename things,
 reformat untouched lines, or "fix" a page that had no findings.
+
+**Vendored components are not yours to fix.** Files a generator owns — `src/components/ui/**`
+from shadcn/ui, anything re-emitted by a CLI — are overwritten on the next `add`/upgrade, so an
+edit there is silently lost and creates a permanent diff against upstream. Audit them, report
+their findings, and route them to **Not auto-fixed** with that reason. The exception is an
+explicit instruction from the user that the project has adopted those files as its own. Where a
+vendored primitive is genuinely off-scale, the durable fix is usually a token in the design
+system, not an edit to the vendored file.
 
 ## Step 5 — Verify
 
