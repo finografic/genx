@@ -159,6 +159,15 @@ a dark context because of this file.
 
 ### Fixed along the way
 
+- **A partial group could silently delete hand-authored tokens.** Pull replaces a token group
+  wholesale whenever the extractor produces at least one entry for it. Adding a single
+  `--text-caption` to a project's `@theme` therefore flipped `typography` from hand-authored to
+  mirrored, and the next pull proposed deleting the five hand-authored entries alongside it.
+  Interactively the diff shows this; with `-y` — which `genx audit` and `genx managed audit` use —
+  it would not. The entry is genuinely ambiguous (hand-authored vs retired upstream) and genx keeps
+  no record of which, the same ambiguity as ADR 0003. Pull now **refuses under `-y`** when it would
+  remove any token, naming them, and writes nothing; interactive pull is unchanged. Found by using
+  the tool on a real project, not by a test.
 - **Design-system detection scanned the whole tree.** `fg.sync('**/*.css')` meant a repository's
   own fixtures, demos, and example apps registered as its design system — genx detected its
   `test/fixtures/**` Tailwind projects and offered the feature on that basis. Detection is now

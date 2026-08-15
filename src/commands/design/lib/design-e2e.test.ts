@@ -84,6 +84,35 @@ describe('design sync --pull / check (tailwind4 e2e)', () => {
     expect(result.message).toContain('canonical');
   });
 
+  it('refuses to delete tokens the extractor does not produce when -y is set', async () => {
+    await runPull(workDir, { yes: true });
+    const designMdPath = join(workDir, 'DESIGN.md');
+    // A hand-authored entry in a group the design system also populates — the
+    // shape that appears when a project expresses only part of a scale.
+    writeFileSync(
+      designMdPath,
+      readFileSync(designMdPath, 'utf8').replace('rounded:\n', 'rounded:\n  hand-authored: 3px\n'),
+      'utf8',
+    );
+    const before = readFileSync(designMdPath, 'utf8');
+
+    const result = await runPull(workDir, { yes: true });
+    expect(result.status).toBe('error');
+    expect(result.message).toContain('rounded.hand-authored');
+    expect(result.message).toContain('without `-y`');
+    // Untouched: refusing must not be a partial write.
+    expect(readFileSync(designMdPath, 'utf8')).toBe(before);
+  });
+
+  it('still refreshes normally when nothing would be removed', async () => {
+    await runPull(workDir, { yes: true });
+    const designMdPath = join(workDir, 'DESIGN.md');
+    writeFileSync(designMdPath, readFileSync(designMdPath, 'utf8').replace('#1a1c1e', '#000000'), 'utf8');
+    const result = await runPull(workDir, { yes: true });
+    expect(result.status).toBe('applied');
+    expect(readFileSync(designMdPath, 'utf8')).toContain('#1a1c1e');
+  });
+
   it('render adds the artifact to an existing .gitignore', async () => {
     await runPull(workDir, { yes: true });
     writeFileSync(join(workDir, '.gitignore'), 'node_modules\n', 'utf8');

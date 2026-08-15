@@ -93,11 +93,39 @@ export async function runPull(
     });
   }
 
+  const removed: string[] = [];
   for (const group of TOKEN_GROUPS) {
     const extractedGroup = extraction.extracted.tokens[group];
     if (extractedGroup && Object.keys(extractedGroup).length > 0) {
+      const currentGroup = (nextTokens as Record<TokenGroup, unknown>)[group];
+      if (isTokenRecord(currentGroup)) {
+        for (const token of Object.keys(currentGroup)) {
+          if (!(token in extractedGroup)) {
+            removed.push(`${group}.${token}`);
+          }
+        }
+      }
       (nextTokens as Record<TokenGroup, unknown>)[group] = extractedGroup;
     }
+  }
+
+  // A group the extractor produces is replaced wholesale, so any entry DESIGN.md
+  // holds but the design system does not is dropped. That entry is ambiguous —
+  // hand-authored (must survive) or retired upstream (should go) — and genx has
+  // no record of which. Interactively the diff makes the choice visible; with
+  // `-y` it would not, so refuse rather than delete silently. Same fail-closed
+  // shape as the seed-ownership and push guards.
+  if (removed.length > 0 && options.yes) {
+    return {
+      status: 'error',
+      warnings,
+      message:
+        `Pull would remove ${removed.length} token${removed.length === 1 ? '' : 's'} from ` +
+        `${basename(designMdPath)} that the design system no longer defines: ${removed.slice(0, 6).join(', ')}` +
+        `${removed.length > 6 ? `, +${removed.length - 6} more` : ''}. These may be hand-authored ` +
+        'rather than stale, so they are not deleted without confirmation. Re-run without `-y` to ' +
+        'review the diff, or delete them from DESIGN.md first.',
+    };
   }
 
   const proposedContent = serializeDesignMd(nextTokens, body);
@@ -132,6 +160,10 @@ export async function runPull(
     warnings,
     message: `DESIGN.md refreshed from ${extraction.extracted.framework} (${extraction.detected.sourceFiles.join(', ')}).`,
   };
+}
+
+function isTokenRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function readPackageName(targetDir: string): string | undefined {
