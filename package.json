@@ -93,7 +93,7 @@
   "dependencies": {
     "@clack/core": "1.4.3",
     "@clack/prompts": "1.7.0",
-    "@finografic/ai-agent-config": "^0.1.0",
+    "@finografic/ai-agent-config": "^0.1.1",
     "@finografic/cli-kit": "^1.4.0",
     "@finografic/core": "^0.9.2",
     "@finografic/deps-policy": "^0.26.10",
