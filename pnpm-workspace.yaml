@@ -1,2 +1,6 @@
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@finografic/ai-agent-config@0.1.1'
+  - '@finografic/deps-policy@0.26.12'
+  - '@finografic/project-scripts@1.6.1'
