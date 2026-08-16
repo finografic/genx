@@ -12,6 +12,7 @@ import {
   infoMessage,
   intro,
   outro,
+  readMonorepoStarterConfig,
   runPnpmInstall,
   spinner,
   validateTargetDir,
@@ -19,9 +20,11 @@ import {
 
 import {
   applyMonorepoIdentity,
-  cloneStarter,
+  describeMonorepoSource,
   ENV_DEVELOPMENT_FILE,
   ENV_EXAMPLE_FILE,
+  materializeStarter,
+  resolveMonorepoSource,
   seedDevEnvFile,
 } from 'lib/monorepo';
 import { pc } from 'utils/picocolors';
@@ -45,10 +48,31 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
     const flow = createFlowContext(argv, {
       'y': { type: 'boolean' },
       'name': { type: 'string' },
+      'tag': { type: 'string' },
       'no-install': { type: 'boolean' },
     });
 
     const skipInstall = argv.includes('--no-install');
+
+    // Resolve the starter source before prompting — a bad --tag or an unreachable remote should
+    // fail before the user fills in a manifest.
+    const starterConfig = await readMonorepoStarterConfig();
+    let source;
+    try {
+      source = await resolveMonorepoSource({
+        tagFlag: typeof flow.flags['tag'] === 'string' ? flow.flags['tag'] : undefined,
+        configTag: starterConfig?.tag,
+        configPath: starterConfig?.path,
+        pinnedTag: monorepoConfig.pinnedTag,
+        repoUrl: monorepoConfig.repoUrl,
+      });
+    } catch (error) {
+      errorMessage(error instanceof Error ? error.message : 'Unknown error');
+      process.exit(1);
+      return;
+    }
+
+    infoMessage(`Starter source: ${describeMonorepoSource(source)}`);
 
     // 1. Prompt for identity (no package type, no feature picker)
     const config = await promptCreateMonorepo(flow);
@@ -64,19 +88,20 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
       return;
     }
 
-    // 3. Clone the starter at the pinned tag
+    // 3. Materialise the starter from the resolved source
     const cloneSpin = spinner();
-    cloneSpin.start(`Cloning monorepo-starter at ${monorepoConfig.pinnedTag}...`);
+    const sourceLabel = describeMonorepoSource(source);
+    cloneSpin.start(
+      source.kind === 'local'
+        ? 'Copying local monorepo-starter...'
+        : `Cloning monorepo-starter at ${source.tag}...`,
+    );
 
     try {
-      await cloneStarter({
-        repoUrl: monorepoConfig.repoUrl,
-        tag: monorepoConfig.pinnedTag,
-        targetDir,
-      });
-      cloneSpin.stop(`Cloned monorepo-starter at ${monorepoConfig.pinnedTag}`);
+      await materializeStarter(source, monorepoConfig.repoUrl, targetDir);
+      cloneSpin.stop(`monorepo-starter ready — ${sourceLabel}`);
     } catch (error) {
-      cloneSpin.stop('Failed to clone monorepo-starter');
+      cloneSpin.stop('Failed to obtain monorepo-starter');
       errorMessage(error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
       return;

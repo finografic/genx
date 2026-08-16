@@ -3,7 +3,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { createXdgPaths, parseJsoncObject } from '@finografic/cli-kit/xdg';
 import { z } from 'zod';
 
-import type { ManagedConfig, ManagedTarget } from 'types/managed.types';
+import type { ManagedConfig, ManagedTarget, MonorepoStarterConfig } from 'types/managed.types';
 
 const xdg = createXdgPaths();
 
@@ -22,8 +22,14 @@ const managedTargetSchema = z.object({
   path: z.string().trim().min(1),
 });
 
+const monorepoStarterSchema = z.object({
+  tag: z.string().trim().min(1).optional(),
+  path: z.string().trim().min(1).optional(),
+});
+
 const managedConfigSchema = z.object({
   depsPolicyPath: z.string().trim().min(1).optional(),
+  monorepoStarter: monorepoStarterSchema.optional(),
   managed: z.array(managedTargetSchema),
 });
 
@@ -56,10 +62,24 @@ export async function readManagedConfig(): Promise<ManagedConfig> {
 
   return {
     depsPolicyPath: parsed.depsPolicyPath,
+    monorepoStarter: parsed.monorepoStarter && {
+      tag: parsed.monorepoStarter.tag,
+      path: parsed.monorepoStarter.path && resolve(parsed.monorepoStarter.path),
+    },
     managed: parsed.managed.map((target) =>
       Object.assign(target, { path: isAbsolute(target.path) ? target.path : resolve(target.path) }),
     ),
   };
+}
+
+/** Returns the monorepo starter overrides from config, or null when unset or unreadable. */
+export async function readMonorepoStarterConfig(): Promise<MonorepoStarterConfig | null> {
+  try {
+    const config = await readManagedConfig();
+    return config.monorepoStarter ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function readManagedTargets(): Promise<ManagedTarget[]> {

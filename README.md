@@ -96,11 +96,12 @@ Create a new full-stack monorepo from the pinned monorepo-starter tag
 genx create monorepo [options]
 ```
 
-| Flag            | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `--name <name>` | Workspace name (without scope)                     |
-| `--no-install`  | Skip pnpm install, env seeding, and database setup |
-| `-y, --yes`     | Accept defaults without prompting                  |
+| Flag            | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `--name <name>` | Workspace name (without scope)                              |
+| `--tag <tag>`   | Starter tag to use; "latest" resolves the newest remote tag |
+| `--no-install`  | Skip pnpm install, env seeding, and database setup          |
+| `-y, --yes`     | Accept defaults without prompting                           |
 
 **Examples:**
 
@@ -111,19 +112,26 @@ genx create monorepo
 # Create a monorepo with a specific name
 genx create monorepo --name my-app
 
+# Use the newest tag on the starter remote
+genx create monorepo --tag latest
+
+# Generate from a specific older tag
+genx create monorepo --tag v0.2.0
+
 # Scaffold without running pnpm install
 genx create monorepo --no-install
 ```
 
 **TEMPLATE SOURCE:**
 
-| Type     | Description                                                                  |
-| -------- | ---------------------------------------------------------------------------- |
-| `repo`   | finografic/monorepo-starter                                                  |
-| `tag`    | v0.2.1                                                                       |
-| `source` | the starter repo, not _templates/ — it stays a real app that builds and runs |
-| `tags`   | bumped manually in src/config/monorepo.config.ts                             |
-| `scope`  | internal packages keep the generic @workspace/* scope                        |
+| Type       | Description                                                                  |
+| ---------- | ---------------------------------------------------------------------------- |
+| `repo`     | finografic/monorepo-starter                                                  |
+| `tag`      | v0.2.1 (this release's pin)                                                  |
+| `source`   | the starter repo, not _templates/ — it stays a real app that builds and runs |
+| `scope`    | internal packages keep the generic @workspace/* scope                        |
+| `override` | --tag, then monorepoStarter.tag / .path in genx.config.jsonc                 |
+| `local`    | set monorepoStarter.path to generate from a working tree, no tag needed      |
 
 **How it works:**
 

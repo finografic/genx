@@ -122,16 +122,56 @@ After install, generation prepares the workspace so `pnpm dev` works immediately
 Both are skipped by `--no-install` (they need `node_modules`) and both are non-fatal — a failure is
 reported with the command to run by hand, since the workspace is already valid without them.
 
+## Choosing the starter source
+
+Resolution order, highest precedence first:
+
+| Source                         | Set by                                                      | Use when                                                          |
+| ------------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| `--tag <tag>` / `--tag latest` | Flag                                                        | One-off: try a specific tag, or take the newest on the remote     |
+| `monorepoStarter.path`         | `genx.config.jsonc`                                         | Generate from a **local working tree**, uncommitted work included |
+| `monorepoStarter.tag`          | `genx.config.jsonc`                                         | Stay ahead of the release pin without waiting for a genx release  |
+| `pinnedTag`                    | [`monorepo.config.ts`](../../src/config/monorepo.config.ts) | Default — reproducible, verified                                  |
+
+An explicit `--tag` beats a configured local `path`, so a flag can always get back to a clean
+tagged source without editing config. The resolved source is printed before generation starts, so
+the choice is never silent.
+
+```jsonc
+// ~/.config/finografic/genx.config.jsonc
+"monorepoStarter": {
+  "tag": "v0.3.0",
+  "path": "/Users/justin/repos-finografic/monorepo-starter",
+},
+```
+
+### Why the default stays pinned rather than floating
+
+The identity transform is coupled to the starter's _shape_ — root `package.json` fields,
+`.agents/`, `docs/todo/`, and the workspace/scripts tables hardcoded in `buildMonorepoReadme`. If
+the starter gains `apps/worker`, a floating default would silently produce a README that lies about
+the workspace, on every machine, with no signal. A pin turns that into a deliberate bump you notice.
+
+`--tag latest` and `monorepoStarter.tag` exist precisely so that staying current is easy without
+making "current" the unexamined default.
+
+### Local path mode
+
+Set `monorepoStarter.path` to generate from a checkout instead of a tag. The working tree is copied
+**including uncommitted changes** — that is the point: it lets a starter change be tried in a real
+generated workspace before it is committed or tagged.
+
+`node_modules`, `.git`, `.turbo` and `dist` are skipped, at the root and in every workspace member.
+
 ## Maintenance
 
 ### Bumping the pinned tag
 
-1. Land the change in `monorepo-starter` and tag it (`vX.Y.Z`).
+1. Land the change in `monorepo-starter` and tag it (`vX.Y.Z`) — `_gtag` tags from `package.json`.
 2. Update `pinnedTag` in [`src/config/monorepo.config.ts`](../../src/config/monorepo.config.ts).
-3. Generate into a scratch directory and confirm the result installs and runs.
-
-The tag is bumped **manually and deliberately** — never track a branch. Generation must be
-reproducible for a given genx version.
+3. Regenerate the README: `pnpm docs:usage`. The pin is embedded in generated docs, and nothing
+   enforces this — a stale README is easy to ship.
+4. Generate into a scratch directory and confirm the result installs and runs.
 
 ### When the starter's layout changes
 

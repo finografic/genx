@@ -17,6 +17,7 @@ export const help: CommandHelpConfig = {
   usage: 'genx create monorepo [options]',
   options: [
     { flag: '--name <name>', description: 'Workspace name (without scope)' },
+    { flag: '--tag <tag>', description: 'Starter tag to use; "latest" resolves the newest remote tag' },
     { flag: '--no-install', description: 'Skip pnpm install, env seeding, and database setup' },
     { flag: '-y, --yes', description: 'Accept defaults without prompting' },
   ],
@@ -25,6 +26,14 @@ export const help: CommandHelpConfig = {
     {
       command: 'genx create monorepo --name my-app',
       description: 'Create a monorepo with a specific name',
+    },
+    {
+      command: 'genx create monorepo --tag latest',
+      description: 'Use the newest tag on the starter remote',
+    },
+    {
+      command: 'genx create monorepo --tag v0.2.0',
+      description: 'Generate from a specific older tag',
     },
     {
       command: 'genx create monorepo --no-install',
@@ -47,11 +56,12 @@ export const help: CommandHelpConfig = {
       // and falls back to raw (badly rendered) text if any line is prose. Rationale lives in
       // docs/process/MONOREPO_GENERATION.md.
       content: [
-        `  repo    ${repoSlug}`,
-        `  tag     ${monorepoConfig.pinnedTag}`,
-        '  source  the starter repo, not _templates/ — it stays a real app that builds and runs',
-        '  tags    bumped manually in src/config/monorepo.config.ts',
-        '  scope   internal packages keep the generic @workspace/* scope',
+        `  repo      ${repoSlug}`,
+        `  tag       ${monorepoConfig.pinnedTag} (this release's pin)`,
+        '  source    the starter repo, not _templates/ — it stays a real app that builds and runs',
+        '  scope     internal packages keep the generic @workspace/* scope',
+        '  override  --tag, then monorepoStarter.tag / .path in genx.config.jsonc',
+        '  local     set monorepoStarter.path to generate from a working tree, no tag needed',
       ].join('\n'),
     },
   ],
