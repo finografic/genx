@@ -24,7 +24,6 @@ const managedTargetSchema = z.object({
 
 const monorepoStarterSchema = z.object({
   tag: z.string().trim().min(1).optional(),
-  path: z.string().trim().min(1).optional(),
 });
 
 const managedConfigSchema = z.object({
@@ -62,10 +61,7 @@ export async function readManagedConfig(): Promise<ManagedConfig> {
 
   return {
     depsPolicyPath: parsed.depsPolicyPath,
-    monorepoStarter: parsed.monorepoStarter && {
-      tag: parsed.monorepoStarter.tag,
-      path: parsed.monorepoStarter.path && resolve(parsed.monorepoStarter.path),
-    },
+    monorepoStarter: parsed.monorepoStarter,
     managed: parsed.managed.map((target) =>
       Object.assign(target, { path: isAbsolute(target.path) ? target.path : resolve(target.path) }),
     ),

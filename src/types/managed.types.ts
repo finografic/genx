@@ -10,12 +10,6 @@ export interface MonorepoStarterConfig {
    * release without waiting for one.
    */
   tag?: string;
-  /**
-   * Absolute path to a local `monorepo-starter` checkout. When set, generation copies the working
-   * tree instead of cloning a tag — including uncommitted work, which is the point: it lets you
-   * see what a real workspace looks like before tagging anything.
-   */
-  path?: string;
 }
 
 export interface ManagedConfig {

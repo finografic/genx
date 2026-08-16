@@ -1,9 +1,15 @@
 import { execa } from 'execa';
 
-/** Where a generation run should take the starter from. */
-export type MonorepoSource =
-  | { kind: 'tag'; tag: string; origin: SourceOrigin }
-  | { kind: 'local'; path: string };
+/**
+ * Which tag a generation run clones, and where that choice came from.
+ *
+ * A tag is the only supported source — see `cloneStarter` for why generating from a local working
+ * tree was removed.
+ */
+export interface MonorepoSource {
+  tag: string;
+  origin: SourceOrigin;
+}
 
 /** Which layer supplied the resolved tag — surfaced to the user so the choice is never silent. */
 export type SourceOrigin = 'flag' | 'flag-latest' | 'config' | 'pinned';
@@ -95,53 +101,42 @@ export async function resolveLatestRemoteTag(repoUrl: string): Promise<string> {
 export interface ResolveMonorepoSourceOptions {
   /** Value of `--tag`, if passed. `latest` resolves the newest remote tag. */
   tagFlag?: string;
-  /** `monorepoStarter` block from `genx.config.jsonc`, if present. */
+  /** `monorepoStarter.tag` from `genx.config.jsonc`, if set. */
   configTag?: string;
-  configPath?: string;
-  /** Tag pinned in this genx release — the reproducible default. */
+  /** Tag pinned in this genx release — the default. */
   pinnedTag: string;
   repoUrl: string;
 }
 
 /**
- * Decide where the starter comes from.
+ * Decide which tag the starter comes from.
  *
- * Precedence, highest first: `--tag` → config `tag` → the release pin. A configured local `path`
- * wins over all of them but is still overridden by an explicit `--tag`, so a one-off flag can
- * always get back to a clean tagged source without editing config.
+ * Precedence, highest first: `--tag` → config `tag` → the release pin. The pin is the default
+ * because a tag is a version signed off as ready, so generation never depends on unreviewed state.
  */
 export async function resolveMonorepoSource({
   tagFlag,
   configTag,
-  configPath,
   pinnedTag,
   repoUrl,
 }: ResolveMonorepoSourceOptions): Promise<MonorepoSource> {
   if (tagFlag === LATEST_TAG_KEYWORD) {
-    return { kind: 'tag', tag: await resolveLatestRemoteTag(repoUrl), origin: 'flag-latest' };
+    return { tag: await resolveLatestRemoteTag(repoUrl), origin: 'flag-latest' };
   }
 
   if (tagFlag) {
-    return { kind: 'tag', tag: tagFlag, origin: 'flag' };
-  }
-
-  if (configPath) {
-    return { kind: 'local', path: configPath };
+    return { tag: tagFlag, origin: 'flag' };
   }
 
   if (configTag) {
-    return { kind: 'tag', tag: configTag, origin: 'config' };
+    return { tag: configTag, origin: 'config' };
   }
 
-  return { kind: 'tag', tag: pinnedTag, origin: 'pinned' };
+  return { tag: pinnedTag, origin: 'pinned' };
 }
 
 /** Human-readable description of a resolved source, for the generation log. */
 export function describeMonorepoSource(source: MonorepoSource): string {
-  if (source.kind === 'local') {
-    return `local checkout ${source.path} (including uncommitted changes)`;
-  }
-
   const suffix = {
     'flag': ' (--tag)',
     'flag-latest': ' (--tag latest)',

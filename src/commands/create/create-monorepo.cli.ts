@@ -20,10 +20,10 @@ import {
 
 import {
   applyMonorepoIdentity,
+  cloneStarter,
   describeMonorepoSource,
   ENV_DEVELOPMENT_FILE,
   ENV_EXAMPLE_FILE,
-  materializeStarter,
   resolveMonorepoSource,
   seedDevEnvFile,
 } from 'lib/monorepo';
@@ -62,7 +62,6 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
       source = await resolveMonorepoSource({
         tagFlag: typeof flow.flags['tag'] === 'string' ? flow.flags['tag'] : undefined,
         configTag: starterConfig?.tag,
-        configPath: starterConfig?.path,
         pinnedTag: monorepoConfig.pinnedTag,
         repoUrl: monorepoConfig.repoUrl,
       });
@@ -88,20 +87,15 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
       return;
     }
 
-    // 3. Materialise the starter from the resolved source
+    // 3. Clone the starter at the resolved tag
     const cloneSpin = spinner();
-    const sourceLabel = describeMonorepoSource(source);
-    cloneSpin.start(
-      source.kind === 'local'
-        ? 'Copying local monorepo-starter...'
-        : `Cloning monorepo-starter at ${source.tag}...`,
-    );
+    cloneSpin.start(`Cloning monorepo-starter at ${source.tag}...`);
 
     try {
-      await materializeStarter(source, monorepoConfig.repoUrl, targetDir);
-      cloneSpin.stop(`monorepo-starter ready — ${sourceLabel}`);
+      await cloneStarter({ repoUrl: monorepoConfig.repoUrl, tag: source.tag, targetDir });
+      cloneSpin.stop(`Cloned monorepo-starter — ${describeMonorepoSource(source)}`);
     } catch (error) {
-      cloneSpin.stop('Failed to obtain monorepo-starter');
+      cloneSpin.stop('Failed to clone monorepo-starter');
       errorMessage(error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
       return;

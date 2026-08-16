@@ -61,7 +61,6 @@ describe('parseRemoteTags', () => {
 describe('resolveMonorepoSource', () => {
   it('falls back to the release pin when nothing is configured', async () => {
     await expect(resolveMonorepoSource({ pinnedTag, repoUrl })).resolves.toEqual({
-      kind: 'tag',
       tag: 'v0.2.1',
       origin: 'pinned',
     });
@@ -69,44 +68,35 @@ describe('resolveMonorepoSource', () => {
 
   it('prefers a configured tag over the pin', async () => {
     await expect(resolveMonorepoSource({ configTag: 'v0.3.0', pinnedTag, repoUrl })).resolves.toEqual({
-      kind: 'tag',
       tag: 'v0.3.0',
       origin: 'config',
     });
   });
 
-  it('prefers a configured local path over a configured tag', async () => {
-    await expect(
-      resolveMonorepoSource({ configTag: 'v0.3.0', configPath: '/tmp/starter', pinnedTag, repoUrl }),
-    ).resolves.toEqual({ kind: 'local', path: '/tmp/starter' });
-  });
-
-  it('lets an explicit --tag override a configured local path', async () => {
-    await expect(
-      resolveMonorepoSource({ tagFlag: 'v0.9.9', configPath: '/tmp/starter', pinnedTag, repoUrl }),
-    ).resolves.toEqual({ kind: 'tag', tag: 'v0.9.9', origin: 'flag' });
+  it('prefers a prerelease tag when asked for one', async () => {
+    // Trying unreleased starter changes goes through the same path: tag a prerelease.
+    await expect(resolveMonorepoSource({ tagFlag: 'v0.3.0-rc.1', pinnedTag, repoUrl })).resolves.toEqual({
+      tag: 'v0.3.0-rc.1',
+      origin: 'flag',
+    });
   });
 
   it('prefers --tag over a configured tag', async () => {
     await expect(
       resolveMonorepoSource({ tagFlag: 'v0.9.9', configTag: 'v0.3.0', pinnedTag, repoUrl }),
-    ).resolves.toEqual({ kind: 'tag', tag: 'v0.9.9', origin: 'flag' });
+    ).resolves.toEqual({ tag: 'v0.9.9', origin: 'flag' });
   });
 });
 
 describe('describeMonorepoSource', () => {
   it('names the override that supplied the tag', () => {
-    expect(describeMonorepoSource({ kind: 'tag', tag: 'v0.2.1', origin: 'pinned' })).toBe('tag v0.2.1');
-    expect(describeMonorepoSource({ kind: 'tag', tag: 'v0.3.0', origin: 'config' })).toBe(
+    expect(describeMonorepoSource({ tag: 'v0.2.1', origin: 'pinned' })).toBe('tag v0.2.1');
+    expect(describeMonorepoSource({ tag: 'v0.3.0', origin: 'config' })).toBe(
       'tag v0.3.0 (genx.config.jsonc)',
     );
-    expect(describeMonorepoSource({ kind: 'tag', tag: 'v0.9.9', origin: 'flag' })).toBe('tag v0.9.9 (--tag)');
-    expect(describeMonorepoSource({ kind: 'tag', tag: 'v1.0.0', origin: 'flag-latest' })).toBe(
+    expect(describeMonorepoSource({ tag: 'v0.9.9', origin: 'flag' })).toBe('tag v0.9.9 (--tag)');
+    expect(describeMonorepoSource({ tag: 'v1.0.0', origin: 'flag-latest' })).toBe(
       'tag v1.0.0 (--tag latest)',
     );
-  });
-
-  it('flags that a local source carries uncommitted work', () => {
-    expect(describeMonorepoSource({ kind: 'local', path: '/tmp/starter' })).toContain('uncommitted changes');
   });
 });
