@@ -1,5 +1,9 @@
-# TODO — `genx create monorepo` (v0)
+# DONE — `genx create monorepo` (v0)
 
+> **Status:** v0 shipped 2026-08-17, verified by an end-to-end generation run from tag `v0.2.1`.
+> Living reference: [`docs/process/MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md).
+> The v1 and v2 sections below remain open — tracked on the roadmap.
+>
 > **Primary repository:** this repo (`@finografic/genx`)
 >
 > **Template source:** `finografic/monorepo-starter` (a real, running app — not `_templates/`)

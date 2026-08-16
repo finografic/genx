@@ -6,12 +6,12 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 August 11, 2026
+📅 August 17, 2026
 
 ## Project
 
 `@finografic/genx` is an opinionated generator and codemod toolkit for the `@finografic`
-ecosystem. Current version: **v5.42.0**.
+ecosystem. Current version: **v5.45.2**.
 
 ## Architecture
 
@@ -38,6 +38,15 @@ Package-type overlays live under `_templates/package-types/`.
 
 **Package types:** `library`, `cli`, `config`, and `react`. Package-type inference is centralized
 in `src/lib/package-type.utils.ts`; explicit `genx:type:*` keywords win over heuristics.
+
+**Monorepo generation:** `genx create monorepo` clones the `monorepo-starter` repository at a
+pinned tag — not `_templates/`, and not a fifth package type. A monorepo root is a workspace kind,
+orthogonal to package type. `src/lib/monorepo/` holds clone, tag resolution, identity rewrite, and
+env/database bootstrap; `src/config/monorepo.config.ts` holds the pin and the root-feature
+allowlist. Only documentation/agent features apply — toolchain config is the starter's own, kept
+current by upgrading and re-tagging the starter rather than re-deriving it per generation. A cloned
+tag is the only source: local-checkout generation was built, leaked `.env.*` and the dev database,
+and was removed. Reference: `docs/process/MONOREPO_GENERATION.md`.
 
 **Features:** Self-contained modules live under `src/features/`. Preview-driven change sets power
 both detection and apply flows. Audit reports `installed`, `partial`, and `missing` states.

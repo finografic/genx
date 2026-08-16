@@ -194,7 +194,7 @@ structural change to the starter.
 
 ## Planned work
 
-Detail and locked decisions: [`docs/todo/TODO_MONOREPO_GENERATOR.md`](../todo/TODO_MONOREPO_GENERATOR.md).
+Detail and locked decisions: [`docs/todo/DONE_MONOREPO_GENERATOR.md`](../todo/DONE_MONOREPO_GENERATOR.md).
 
 - **v1 — workspace-aware upgrade.** `genx:workspace:monorepo` marker plus member iteration over
   `pnpm-workspace.yaml`, so package-scoped features can run.

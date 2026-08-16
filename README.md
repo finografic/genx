@@ -439,7 +439,7 @@ Testing via Vitest.
 
 ## 📦 What's Included
 
-Every scaffolded package includes:
+Every scaffolded **package** includes:
 
 - `package.json` — configured with scope, name, and package type
 - `tsconfig.json` — strict TypeScript config
@@ -464,7 +464,7 @@ Optional features (selected during `create`, selected during `upgrade`, or repai
 
 ---
 
-## 🏗️ Generated Structure
+## 🏗️ Generated Package Structure
 
 ```
 my-package/
@@ -482,6 +482,10 @@ my-package/
     ├── copilot-instructions.md
     └── instructions/
 ```
+
+Monorepos do not use this layout and are not scaffolded from `_templates/` — `genx create monorepo`
+clones the `monorepo-starter` repository at a pinned tag. See
+[Monorepo Generation](./docs/process/MONOREPO_GENERATION.md).
 
 ---
 
@@ -556,9 +560,12 @@ working tree when content has actually drifted, not just file writes.
 
 ### Documentation
 
-- [Developer Workflow](./docs/DEVELOPER_WORKFLOW.md)
-- [Release Process](./docs/RELEASES.md)
-- [GitHub Packages Setup](./docs/GITHUB_PACKAGES_SETUP.md)
+- [Developer Workflow](./docs/process/DEVELOPER_WORKFLOW.md)
+- [Release Process](./docs/process/RELEASE_PROCESS.md)
+- [GitHub Packages Setup](./docs/process/GITHUB_PACKAGES_SETUP.md)
+- [Monorepo Generation](./docs/process/MONOREPO_GENERATION.md)
+- [Deps Policy](./docs/process/DEPS_POLICY.md)
+- [Project Memory Model](./docs/process/PROJECT_MEMORY_MODEL.md)
 
 ---
 

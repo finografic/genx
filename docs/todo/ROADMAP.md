@@ -23,7 +23,12 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## Next
 
-No active follow-ups.
+- Run `genx upgrade` on `monorepo-starter` to adopt `.agents/instructions/` + `.agents/skills/`
+  (still on legacy `.github/instructions/`), decline the package-shaped oxc-config diffs, bump the
+  version and re-tag, then move `pinnedTag` in `src/config/monorepo.config.ts`. Makes the
+  generation-time migration a no-op.
+- `check:starter-tag` — warn (never fail) in `release:check` when `pinnedTag` is behind the newest
+  remote tag. Warn-only because it needs network + SSH.
 
 ---
 
@@ -35,16 +40,17 @@ No items.
 
 ## P1 — Next Up
 
-### `genx create monorepo` (v0)
-
-Generate a new full-stack monorepo by cloning a pinned `monorepo-starter` tag, rewriting root
-identity, and aligning the toolchain — no feature options, no app-code subtraction. Content lives
-in `monorepo-starter` (a real, running app); genx orchestrates. Detail:
-[`TODO_MONOREPO_GENERATOR.md`](./TODO_MONOREPO_GENERATOR.md).
+No items.
 
 ---
 
 ## P2 — Planned
+
+### Monorepo generator v1 — workspace-aware upgrade
+
+Add a `genx:workspace:monorepo` marker on the root plus member iteration over `pnpm-workspace.yaml`,
+so package-scoped features (`vitest`, `css`, `reactVite`) can run against members instead of being
+excluded outright. Detail: [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md).
 
 ### 1. `genx create` — apply resolvePolicy() immediately after scaffold
 
@@ -99,6 +105,13 @@ Detail: [`docs/todo/TODO_FIND_FILE_SECTION.md`](./TODO_FIND_FILE_SECTION.md)
 
 ## P3 — Backlog / Ideas
 
+### Monorepo generator v2 — additive starter slices
+
+Reduce `monorepo-starter` to a minimal core plus opt-in overlays (`_slices/auth/`, `_slices/i18n/`,
+`_slices/design-system-<x>/`). Additive rather than subtractive: auth spans server files, client
+context, pages, db schemas and routes, so post-clone deletion leaves dangling imports. Gated on
+real demand. Detail: [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md).
+
 ### cli-kit managed-loop extraction review
 
 Review whether the managed-target prompt/loop primitive (`runManagedLoop`) is generic enough
@@ -139,30 +152,31 @@ Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_RE
 
 ## Done
 
-| Date       | Item                                                                                                                                                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-13 | Asset ownership contract — manifest-driven resolution, fail-closed ownership, seed protection, skills fixed to managed, removal semantics decided — [`TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md) |
-| 2026-08-13 | `genx design` command (sync --pull/--push, check, render, lint; PandaCSS + Tailwind v4) — [`TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)                                                                               |
-| 2026-07-26 | Migrate agent instructions/skills `.github/` → `.agents/`, dual-write `.claude/skills/`, self-update lifecycle — [`DONE_AGENTS_DIR_MIGRATION.md`](./DONE_AGENTS_DIR_MIGRATION.md)                                            |
-| 2026-07-07 | Deps policy refresh and managed deps snapshot flow — [`DONE_DEPS_UPDATE_POLICY.md`](./DONE_DEPS_UPDATE_POLICY.md)                                                                                                            |
-| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)                                                                                                                    |
-| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                                                                                                                               |
-| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                                                                                                                              |
-| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                                                                                                                             |
-| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                                                                                                                                     |
-| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                                                                                                                                  |
-| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)                                                                                                               |
-| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)                                                                                                                     |
-| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                                                                                                                                   |
-| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)                                                                                                                    |
-| 2026-05-26 | Upgrade command refactor (Phases 1-3) — [`DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_REFACTOR.md)                                                                                                             |
-| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                                                                                                                                         |
-| 2026-04-07 | #3 Husky template completion                                                                                                                                                                                                 |
-| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                                                                                                                              |
-| 2026-04-07 | jsdiff per-file diff display                                                                                                                                                                                                 |
-| 2026-04-07 | Structured markdown section management                                                                                                                                                                                       |
-| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                                                                                                                            |
-| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                                                                                                                                  |
+| Date       | Item                                                                                                                                                                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-17 | `genx create monorepo` (v0) — clone a pinned `monorepo-starter` tag, rewrite root identity, apply doc/agent features only, seed `.env.development` + database — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md), [`MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md) |
+| 2026-08-13 | Asset ownership contract — manifest-driven resolution, fail-closed ownership, seed protection, skills fixed to managed, removal semantics decided — [`TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md)                                                                |
+| 2026-08-13 | `genx design` command (sync --pull/--push, check, render, lint; PandaCSS + Tailwind v4) — [`TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)                                                                                                                                              |
+| 2026-07-26 | Migrate agent instructions/skills `.github/` → `.agents/`, dual-write `.claude/skills/`, self-update lifecycle — [`DONE_AGENTS_DIR_MIGRATION.md`](./DONE_AGENTS_DIR_MIGRATION.md)                                                                                                           |
+| 2026-07-07 | Deps policy refresh and managed deps snapshot flow — [`DONE_DEPS_UPDATE_POLICY.md`](./DONE_DEPS_UPDATE_POLICY.md)                                                                                                                                                                           |
+| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)                                                                                                                                                                                   |
+| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                                                                                                                                                                                              |
+| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                                                                                                                                                                                             |
+| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                                                                                                                                                                                            |
+| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                                                                                                                                                                                                    |
+| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                                                                                                                                                                                                 |
+| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)                                                                                                                                                                              |
+| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)                                                                                                                                                                                    |
+| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                                                                                                                                                                                                  |
+| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)                                                                                                                                                                                   |
+| 2026-05-26 | Upgrade command refactor (Phases 1-3) — [`DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_REFACTOR.md)                                                                                                                                                                            |
+| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                                                                                                                                                                                                        |
+| 2026-04-07 | #3 Husky template completion                                                                                                                                                                                                                                                                |
+| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                                                                                                                                                                                             |
+| 2026-04-07 | jsdiff per-file diff display                                                                                                                                                                                                                                                                |
+| 2026-04-07 | Structured markdown section management                                                                                                                                                                                                                                                      |
+| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                                                                                                                                                                                           |
+| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                                                                                                                                                                                                 |
 
 | Date       | Deleted file (obsolete)                                                   |
 | ---------- | ------------------------------------------------------------------------- |
