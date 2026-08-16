@@ -96,11 +96,11 @@ Create a new full-stack monorepo from the pinned monorepo-starter tag
 genx create monorepo [options]
 ```
 
-| Flag            | Description                       |
-| --------------- | --------------------------------- |
-| `--name <name>` | Workspace name (without scope)    |
-| `--no-install`  | Skip pnpm install                 |
-| `-y, --yes`     | Accept defaults without prompting |
+| Flag            | Description                                        |
+| --------------- | -------------------------------------------------- |
+| `--name <name>` | Workspace name (without scope)                     |
+| `--no-install`  | Skip pnpm install, env seeding, and database setup |
+| `-y, --yes`     | Accept defaults without prompting                  |
 
 **Examples:**
 
@@ -130,8 +130,10 @@ genx create monorepo --no-install
 1. Prompts for workspace name, description, and author
 2. Clones finografic/monorepo-starter at tag v0.2.1 and drops its git history
 3. Rewrites root identity (package.json, README, project memory) — app code is untouched
-4. Applies policy toolchain versions, runs pnpm install, and applies root-scoped features
-5. Initializes a fresh git repository and prints the managed-config block to register it
+4. Applies policy toolchain versions and runs pnpm install
+5. Applies documentation/agent features only — toolchain config comes from the starter
+6. Seeds .env.development with a fresh AUTH_SECRET, then runs pnpm dev:db:reset
+7. Initializes a fresh git repository and prints the managed-config block to register it
 
 ### `genx upgrade`
 

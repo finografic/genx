@@ -144,6 +144,15 @@ describe('buildMonorepoReadme', () => {
     expect(readme).toContain('MIT © [Justin Rankin](https://example.com)');
   });
 
+  it('documents the env target the starter actually expects', () => {
+    const readme = buildMonorepoReadme(identity);
+
+    // The starter's .env.example says "Copy to .env.development" — not `.env`.
+    expect(readme).toContain('cp .env.example .env.development');
+    expect(readme).toContain('pnpm dev:db:reset');
+    expect(readme).not.toMatch(/cp \.env\.example \.env$/m);
+  });
+
   it('renders the author without a link when no url is given', () => {
     const readme = buildMonorepoReadme({ ...identity, author: { ...identity.author, url: '' } });
 

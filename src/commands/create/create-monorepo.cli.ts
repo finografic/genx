@@ -17,7 +17,13 @@ import {
   validateTargetDir,
 } from 'utils';
 
-import { applyMonorepoIdentity, cloneStarter } from 'lib/monorepo';
+import {
+  applyMonorepoIdentity,
+  cloneStarter,
+  ENV_DEVELOPMENT_FILE,
+  ENV_EXAMPLE_FILE,
+  seedDevEnvFile,
+} from 'lib/monorepo';
 import { pc } from 'utils/picocolors';
 import { promptCreateMonorepo } from 'utils/prompts';
 
@@ -124,15 +130,44 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
       }
     }
 
-    // 6. Apply root-scoped features only.
-    // Package-scoped features (vitest, css, reactVite) assume a single-package src/ layout.
+    // 6. Apply documentation/agent features only — see monorepoConfig.rootFeatures for why the
+    // toolchain-shaped and package-scoped features are excluded.
     for (const featureId of monorepoConfig.rootFeatures) {
       const feature = getFeature(featureId);
       if (!feature) continue;
       await feature.apply({ targetDir });
     }
 
-    // 7. Initialize git
+    // 7. Bootstrap the local dev environment. Both steps need node_modules, so they follow the
+    // same skip as install. Failures are reported and skipped, never fatal — the workspace is
+    // already valid at this point and the commands can be re-run by hand.
+    if (!skipInstall) {
+      const envSpin = spinner();
+      envSpin.start('Seeding .env.development...');
+      try {
+        const seeded = await seedDevEnvFile(targetDir);
+        envSpin.stop(
+          seeded
+            ? '.env.development seeded (fresh AUTH_SECRET generated)'
+            : 'Skipped .env.development (nothing to copy, or it already exists)',
+        );
+      } catch (error) {
+        envSpin.stop('Failed to seed .env.development');
+        errorMessage(error instanceof Error ? error.message : 'Unknown error');
+      }
+
+      const dbSpin = spinner();
+      dbSpin.start('Resetting and seeding the database...');
+      try {
+        await execa('pnpm', ['dev:db:reset'], { cwd: targetDir });
+        dbSpin.stop('Database reset and seeded');
+      } catch {
+        dbSpin.stop('Failed to reset the database');
+        errorMessage('You can run `pnpm dev:db:reset` manually');
+      }
+    }
+
+    // 8. Initialize git
     const gitSpin = spinner();
     gitSpin.start('Initializing git repository...');
 
@@ -146,7 +181,7 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
       errorMessage('You can initialize git manually');
     }
 
-    // 8. Done — print the managed-config block rather than writing it.
+    // 9. Done — print the managed-config block rather than writing it.
     // genx.config.jsonc carries hand-maintained comment dividers; preserving them on write is a
     // separate task (see docs/todo/TODO_MONOREPO_GENERATOR.md).
     outro('Monorepo created successfully!');
@@ -159,10 +194,11 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
     console.log(`\n${pc.dim('Next steps:')}`);
     console.log(`cd ${config.name}`);
     if (skipInstall) {
+      // Install was skipped, so the env + database bootstrap was skipped with it.
       console.log('pnpm install');
+      console.log(`cp ${ENV_EXAMPLE_FILE} ${ENV_DEVELOPMENT_FILE}`);
+      console.log('pnpm dev:db:reset');
     }
-    console.log('cp .env.example .env');
-    console.log('pnpm db:setup');
     console.log('pnpm dev');
 
     console.log(`\n${pc.cyan('🦋 Happy coding!')}\n`);

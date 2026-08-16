@@ -21,8 +21,19 @@ export interface MonorepoConfig {
   /**
    * Features applied to the workspace root after scaffolding.
    *
-   * Package-scoped features (`vitest`, `css`, `reactVite`) assume a single-package `src/` layout
-   * and are excluded until `upgrade` learns to iterate workspace members.
+   * Deliberately limited to features that write documentation and agent content only. Three
+   * categories are excluded:
+   *
+   * - **Toolchain-shaped** (`oxc-config`, `markdown`, `gitHooks`) — their canonical content is written for a
+   *   single package. `oxc-config` in particular rewrites `update:oxc-config` without `--recursive` (which
+   *   silently stops updating workspace members) and swaps the root `oxlint.config.ts` for the _library_
+   *   preset. The starter already owns these correctly.
+   * - **Package-scoped** (`vitest`, `css`, `reactVite`) — they assume a single-package `src/` layout and need
+   *   to run per workspace member.
+   * - Anything that mutates the root `package.json`.
+   *
+   * The features listed here only read `package.json` (for template variables) and write
+   * markdown, `.agents/`, `.cursor/rules`, `.github/copilot-instructions.md`, and `.gitignore`.
    */
   rootFeatures: readonly FeatureId[];
 
@@ -38,7 +49,7 @@ export const monorepoConfig: MonorepoConfig = {
 
   pinnedTag: 'v0.2.1',
 
-  rootFeatures: ['oxc-config', 'markdown', 'gitHooks', 'aiAgents', 'aiInstructions', 'aiMemory', 'designMd'],
+  rootFeatures: ['aiAgents', 'aiInstructions', 'aiMemory', 'designMd'],
 
   docsTodoResetPrefixes: ['TODO_', 'DONE_'],
 };

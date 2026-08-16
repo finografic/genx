@@ -78,16 +78,49 @@ Renaming it would touch ~38 files for no benefit. Keeping it also means every ge
 shares identical member names, which makes future member iteration predictable rather than
 per-repo. Do not add renaming without a concrete reason.
 
-## Root-scoped vs package-scoped features
+## Which features generation applies
 
-After install, generation applies only the features in `monorepoConfig.rootFeatures`
+After install, generation applies only `monorepoConfig.rootFeatures`
 ([`src/config/monorepo.config.ts`](../../src/config/monorepo.config.ts)):
+`aiAgents`, `aiInstructions`, `aiMemory`, `designMd`.
 
-`oxc-config`, `markdown`, `gitHooks`, `aiAgents`, `aiInstructions`, `aiMemory`, `designMd`.
+These write documentation and agent content only — markdown, `.agents/`, `.cursor/rules`,
+`.github/copilot-instructions.md`, `.gitignore`. They read the root `package.json` for template
+variables but never mutate it.
 
-Excluded: `vitest`, `css`, `reactVite` — these assume a single-package `src/` layout and would need
-to run per workspace member. Until `upgrade` iterates members, they are left out rather than
-applied incorrectly at the root.
+Everything else is excluded, in two groups:
+
+| Excluded                             | Why                                                                                                                                                                                                                                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `oxc-config`, `markdown`, `gitHooks` | Canonical content is written for a single package. `oxc-config` rewrites `update:oxc-config` **without `--recursive`**, silently dropping workspace members from updates, and replaces the root `oxlint.config.ts` with the _library_ preset. The starter already owns all three, correctly. |
+| `vitest`, `css`, `reactVite`         | Assume a single-package `src/` layout; they need to run per workspace member.                                                                                                                                                                                                                |
+
+### Why toolchain config is the starter's job, not generation's
+
+The starter is itself a genx-managed repo. At any tagged commit it is already in the state you
+want — that is what tagging it means. Re-deriving that state at generation time, from
+package-shaped templates, can only make it worse.
+
+So when the starter falls behind current conventions, the fix is upstream: run `genx upgrade` on
+`monorepo-starter`, accept what belongs there, bump the version, re-tag, and move the pin. Every
+generated workspace then inherits the result, and you review those diffs once instead of on every
+generation.
+
+**Known outstanding example:** the starter still carries the legacy `.github/instructions/` layout
+and has no `.agents/instructions/` or `.agents/skills/`. `aiInstructions` and `aiAgents` migrate
+this at generation time today; doing it in the starter would make that a no-op.
+
+## Environment bootstrap
+
+After install, generation prepares the workspace so `pnpm dev` works immediately:
+
+1. Copy `.env.example` → `.env.development` (the target the starter's own `.env.example` names),
+   replacing the shipped `AUTH_SECRET` placeholder with a freshly generated 32-character value so
+   no two workspaces share a secret. An existing `.env.development` is never overwritten.
+2. Run `pnpm dev:db:reset` to create, migrate and seed the database.
+
+Both are skipped by `--no-install` (they need `node_modules`) and both are non-fatal — a failure is
+reported with the command to run by hand, since the workspace is already valid without them.
 
 ## Maintenance
 

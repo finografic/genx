@@ -17,7 +17,7 @@ export const help: CommandHelpConfig = {
   usage: 'genx create monorepo [options]',
   options: [
     { flag: '--name <name>', description: 'Workspace name (without scope)' },
-    { flag: '--no-install', description: 'Skip pnpm install' },
+    { flag: '--no-install', description: 'Skip pnpm install, env seeding, and database setup' },
     { flag: '-y, --yes', description: 'Accept defaults without prompting' },
   ],
   examples: [
@@ -35,7 +35,9 @@ export const help: CommandHelpConfig = {
     'Prompts for workspace name, description, and author',
     `Clones ${repoSlug} at tag ${monorepoConfig.pinnedTag} and drops its git history`,
     'Rewrites root identity (package.json, README, project memory) — app code is untouched',
-    'Applies policy toolchain versions, runs pnpm install, and applies root-scoped features',
+    'Applies policy toolchain versions and runs pnpm install',
+    'Applies documentation/agent features only — toolchain config comes from the starter',
+    'Seeds .env.development with a fresh AUTH_SECRET, then runs pnpm dev:db:reset',
     'Initializes a fresh git repository and prints the managed-config block to register it',
   ],
   sections: [

@@ -102,10 +102,12 @@ export function buildMonorepoReadme(identity: MonorepoIdentity): string {
 
 \`\`\`bash
 pnpm install
-cp .env.example .env
-pnpm db:setup
+cp .env.example .env.development
+pnpm dev:db:reset
 pnpm dev
 \`\`\`
+
+\`genx create monorepo\` runs the first three for you — \`pnpm dev\` should work straight away.
 
 ## Workspace
 
