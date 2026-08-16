@@ -88,6 +88,51 @@ genx create monorepo
 3. Applies selected features (oxc-config, git-hooks, etc.)
 4. Runs pnpm install and initializes a git repository
 
+### `genx create monorepo`
+
+Create a new full-stack monorepo from the pinned monorepo-starter tag
+
+```bash
+genx create monorepo [options]
+```
+
+| Flag            | Description                       |
+| --------------- | --------------------------------- |
+| `--name <name>` | Workspace name (without scope)    |
+| `--no-install`  | Skip pnpm install                 |
+| `-y, --yes`     | Accept defaults without prompting |
+
+**Examples:**
+
+```bash
+# Create a new monorepo interactively
+genx create monorepo
+
+# Create a monorepo with a specific name
+genx create monorepo --name my-app
+
+# Scaffold without running pnpm install
+genx create monorepo --no-install
+```
+
+**TEMPLATE SOURCE:**
+
+| Type     | Description                                                                  |
+| -------- | ---------------------------------------------------------------------------- |
+| `repo`   | finografic/monorepo-starter                                                  |
+| `tag`    | v0.2.1                                                                       |
+| `source` | the starter repo, not _templates/ — it stays a real app that builds and runs |
+| `tags`   | bumped manually in src/config/monorepo.config.ts                             |
+| `scope`  | internal packages keep the generic @workspace/* scope                        |
+
+**How it works:**
+
+1. Prompts for workspace name, description, and author
+2. Clones finografic/monorepo-starter at tag v0.2.1 and drops its git history
+3. Rewrites root identity (package.json, README, project memory) — app code is untouched
+4. Applies policy toolchain versions, runs pnpm install, and applies root-scoped features
+5. Initializes a fresh git repository and prints the managed-config block to register it
+
 ### `genx upgrade`
 
 Upgrade an existing @finografic package to current conventions

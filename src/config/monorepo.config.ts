@@ -36,7 +36,7 @@ export interface MonorepoConfig {
 export const monorepoConfig: MonorepoConfig = {
   repoUrl: 'git@github.com:finografic/monorepo-starter.git',
 
-  pinnedTag: 'v0.1.0',
+  pinnedTag: 'v0.2.1',
 
   rootFeatures: ['oxc-config', 'markdown', 'gitHooks', 'aiAgents', 'aiInstructions', 'aiMemory', 'designMd'],
 

@@ -4,6 +4,7 @@ import type { CommandHelpConfig } from '@finografic/cli-kit/render-help';
 
 import { cliHelp as rootHelp } from '../src/cli.help';
 import { help as auditHelp } from '../src/commands/audit/audit.help';
+import { help as createMonorepoHelp } from '../src/commands/create/create-monorepo.help';
 import { help as createHelp } from '../src/commands/create/create.help';
 import { help as depsHelp } from '../src/commands/deps/deps.help';
 import { help as managedHelp } from '../src/commands/managed/managed.help';
@@ -182,6 +183,9 @@ function sectionContentToTableRows(content: string): string[][] {
 
 const COMMAND_CONFIGS: ReadonlyArray<{ name: string; help: ReadmeCommandHelpConfig }> = [
   { name: 'create', help: createHelp },
+  // Rendered as its own section: `create monorepo` generates a different artifact class than the
+  // package types, and a subcommand table row cannot carry its options, flow, or template source.
+  { name: 'create monorepo', help: createMonorepoHelp },
   { name: 'upgrade', help: upgradeHelp },
   { name: 'deps', help: depsHelp },
   { name: 'audit', help: auditHelp },
