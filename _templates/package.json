@@ -36,8 +36,8 @@
   "scripts": {
     "---------- DEV_AND_BUILD": "---------------------------------------------",
     "dev": "tsdown --watch",
-    "link": "pnpm build && pnpm link --global",
-    "unlink": "pnpm unlink --global",
+    "link": "pnpm build && pnpm add -g .",
+    "unlink": "pnpm remove -g $npm_package_name",
     "build": "tsdown",
     "·········· TESTING": "···················································",
     "test": "vitest",

@@ -49,8 +49,10 @@ export const sharedConfig: SharedConfig = {
     'release:github:patch': 'pnpm run release:check && pnpm version patch && git push --follow-tags',
     'release:github:minor': 'pnpm run release:check && pnpm version minor && git push --follow-tags',
     'release:github:major': 'pnpm run release:check && pnpm version major && git push --follow-tags',
-    'link': 'pnpm build && pnpm link --global',
-    'unlink': 'pnpm unlink --global',
+    // pnpm 11 removed `link --global`; `add -g .` registers the package's bins globally.
+    // `unlink` reads $npm_package_name so the script stays identical across every package.
+    'link': 'pnpm build && pnpm add -g .',
+    'unlink': 'pnpm remove -g $npm_package_name',
     'prepack': 'pnpm build',
     'prepare': 'husky',
   },

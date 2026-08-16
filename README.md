@@ -523,13 +523,16 @@ pnpm test:run
 Link globally (recommended — rebuilds take effect immediately):
 
 ```bash
-pnpm link
+pnpm run link
 genx create
 genx upgrade --help
 
 # When done:
-pnpm unlink
+pnpm run unlink
 ```
+
+`pnpm run` is required: bare `pnpm link` / `pnpm unlink` resolve to pnpm's own builtins, which
+take precedence over same-named scripts.
 
 Or run the built binary directly: `node dist/index.mjs create`
 
