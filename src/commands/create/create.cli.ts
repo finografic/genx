@@ -29,6 +29,7 @@ import { promptCreatePackage } from 'utils/prompts';
 import { createConfig } from 'config/create.config';
 import { policy, toolchain } from 'config/policy.js';
 
+import { createMonorepo } from './create-monorepo.cli.js';
 import { help } from './create.help.js';
 
 // NOTE: This command never prompts directly.
@@ -38,6 +39,12 @@ import { help } from './create.help.js';
  * Create a new @finografic package from template.
  */
 export async function createPackage(argv: string[], context: { cwd: string }): Promise<void> {
+  // `create monorepo` scaffolds a workspace from the pinned monorepo-starter tag, not from
+  // _templates/. Dispatch before the package flow claims the args.
+  if (argv[0] === 'monorepo') {
+    return createMonorepo(argv.slice(1), context);
+  }
+
   return withHelp(argv, help, async () => {
     intro('Create new @finografic package');
 

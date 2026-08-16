@@ -40,6 +40,10 @@ Create a new @finografic package from template
 genx create [options]
 ```
 
+| Subcommand | Description                                                                 |
+| ---------- | --------------------------------------------------------------------------- |
+| `monorepo` | Create a full-stack monorepo workspace from the pinned monorepo-starter tag |
+
 | Flag            | Description                       |
 | --------------- | --------------------------------- |
 | `--type <type>` | Package type (see below)          |
@@ -63,6 +67,9 @@ genx create --type config
 
 # Create a Vite + React app
 genx create --type react
+
+# Create a full-stack monorepo workspace
+genx create monorepo
 ```
 
 **PACKAGE TYPES:**
@@ -428,7 +435,7 @@ my-package/
 
 | Command         | Description                                           | Options                                                                                               |
 | --------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `create`        | Scaffold a new @finografic package                    | `--type <type>`, `--name <name>`, `-y`                                                                |
+| `create`        | Scaffold a new @finografic package                    | `monorepo`, `--type <type>`, `--name <name>`, `-y`                                                    |
 | `upgrade`       | Upgrade an existing package to current conventions    | `-y`, `--agent-docs`                                                                                  |
 | `deps`          | Sync dependencies to @finografic/deps-policy          | `-y`, `--allow-downgrade`, `--update-policy`                                                          |
 | `audit`         | Scan features and apply what is missing or partial    | `-y`                                                                                                  |

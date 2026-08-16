@@ -30,6 +30,7 @@ export const cliHelp: HelpConfig = {
     title: 'Examples',
     list: [
       { label: 'Create a new package', description: 'genx create' },
+      { label: 'Create a new monorepo workspace', description: 'genx create monorepo' },
       { label: 'Upgrade current directory', description: 'genx upgrade' },
       {
         label: 'Upgrade a specific directory',

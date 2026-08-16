@@ -35,7 +35,12 @@ No items.
 
 ## P1 — Next Up
 
-No items.
+### `genx create monorepo` (v0)
+
+Generate a new full-stack monorepo by cloning a pinned `monorepo-starter` tag, rewriting root
+identity, and aligning the toolchain — no feature options, no app-code subtraction. Content lives
+in `monorepo-starter` (a real, running app); genx orchestrates. Detail:
+[`TODO_MONOREPO_GENERATOR.md`](./TODO_MONOREPO_GENERATOR.md).
 
 ---
 

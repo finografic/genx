@@ -11,6 +11,12 @@ export const help: CommandHelpConfig = {
   command: 'genx create',
   description: 'Create a new @finografic package from template',
   usage: 'genx create [options]',
+  subcommands: [
+    {
+      name: 'monorepo',
+      description: 'Create a full-stack monorepo workspace from the pinned monorepo-starter tag',
+    },
+  ],
   options: [
     { flag: '--type <type>', description: 'Package type (see below)' },
     { flag: '--name <name>', description: 'Package name (@finografic/...)' },
@@ -25,6 +31,7 @@ export const help: CommandHelpConfig = {
     },
     { command: 'genx create --type config', description: 'Create a shared config package' },
     { command: 'genx create --type react', description: 'Create a Vite + React app' },
+    { command: 'genx create monorepo', description: 'Create a full-stack monorepo workspace' },
   ],
   howItWorks: [
     'Prompts for package type, name, author, and optional features',
