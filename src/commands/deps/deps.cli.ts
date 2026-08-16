@@ -114,6 +114,14 @@ function logWrittenDependencyVersions(changes: DependencyChange[]): void {
   logMessage(body);
 }
 
+/** Spinner label for the single install, which may cover dependencies, the toolchain, or both. */
+function describeInstallStep(dependencyCount: number, toolchainCount: number): string {
+  if (dependencyCount === 0) return 'Installing with updated toolchain';
+
+  const dependencies = dependencyCount === 1 ? '1 dependency' : `${dependencyCount} dependencies`;
+  return toolchainCount > 0 ? `Updating ${dependencies} and toolchain` : `Updating ${dependencies}`;
+}
+
 async function commitDepsChanges(
   tracker: GitCommitTracker | null,
   changedTargetPaths: readonly string[],
@@ -304,30 +312,7 @@ export async function syncDepsForTarget(
   }
 
   let updatedPackageJson = applyDependencyChanges(packageJson, selectedChanges);
-
-  if (selectedChanges.length > 0) {
-    await writePackageJson(packageJsonPath, updatedPackageJson);
-    changedTargetPaths.add(packageJsonPath);
-
-    const installSpin = spinner();
-    const updatingLabel =
-      selectedChanges.length === 1
-        ? 'Updating 1 dependency'
-        : `Updating ${selectedChanges.length} dependencies`;
-    installSpin.start(pc.cyan(updatingLabel));
-
-    try {
-      await runPnpmInstall(targetDir);
-      installSpin.stop(pc.green('Dependencies installed'));
-      changedTargetPaths.add(resolve(targetDir, 'pnpm-lock.yaml'));
-      logWrittenDependencyVersions(selectedChanges);
-    } catch (error) {
-      installSpin.stop('Failed to install dependencies');
-      const message = error instanceof Error ? error.message : String(error);
-      errorMessage(`pnpm install failed — ${message}`);
-      return;
-    }
-  }
+  changedTargetPaths.add(packageJsonPath);
 
   if (toolchainChanges.length > 0) {
     const labels = toolchainChanges.map((c) => {
@@ -337,12 +322,32 @@ export async function syncDepsForTarget(
     logMessage(`${pc.cyan('Toolchain versions:')}\n${labels.join('\n')}`);
 
     updatedPackageJson = await applyToolchainChanges(targetDir, updatedPackageJson, toolchainChanges);
-    await writePackageJson(packageJsonPath, updatedPackageJson);
-    changedTargetPaths.add(packageJsonPath);
     if (toolchainChanges.some((change) => change.target === '.nvmrc')) {
       changedTargetPaths.add(resolve(targetDir, '.nvmrc'));
     }
     successMessage('Toolchain versions updated');
+  }
+
+  await writePackageJson(packageJsonPath, updatedPackageJson);
+
+  // Install last, after every write. A `packageManager` bump must be on disk before pnpm runs, or
+  // the install executes under the version being replaced — and a toolchain-only run would
+  // otherwise never install at all, leaving a version that has never been exercised locally.
+  const installSpin = spinner();
+  installSpin.start(pc.cyan(describeInstallStep(selectedChanges.length, toolchainChanges.length)));
+
+  try {
+    await runPnpmInstall(targetDir);
+    installSpin.stop(pc.green('Dependencies installed'));
+    changedTargetPaths.add(resolve(targetDir, 'pnpm-lock.yaml'));
+    if (selectedChanges.length > 0) {
+      logWrittenDependencyVersions(selectedChanges);
+    }
+  } catch (error) {
+    installSpin.stop('Failed to install dependencies');
+    const message = error instanceof Error ? error.message : String(error);
+    errorMessage(`pnpm install failed — ${message}`);
+    return;
   }
 
   await commitDepsChanges(commitTracker, [...changedTargetPaths]);
