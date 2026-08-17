@@ -28,6 +28,30 @@ describe('resolveColorMix', () => {
     expect(mixed).toBe('oklch(50% 0.1 0)');
   });
 
+  it('mixing with transparent yields the same colour at reduced alpha', () => {
+    // Premultiplied alpha: transparent contributes no colour, only dilution. Averaging the
+    // channels instead would drag the result towards black and change the hue.
+    expect(resolveColorMix(`color-mix(in oklch, ${BASE} 50%, transparent)`)).toBe(
+      'oklch(48.8% 0.243 264.376 / 0.5)',
+    );
+  });
+
+  it('keeps the colour intact at any transparency weight', () => {
+    expect(resolveColorMix(`color-mix(in oklch, ${BASE} 20%, transparent)`)).toBe(
+      'oklch(48.8% 0.243 264.376 / 0.2)',
+    );
+  });
+
+  it('reads an existing alpha on an operand', () => {
+    expect(resolveColorMix('color-mix(in oklch, oklch(50% 0.1 264 / 0.4) 50%, transparent)')).toBe(
+      'oklch(50% 0.1 264 / 0.2)',
+    );
+  });
+
+  it('collapses a fully transparent mix', () => {
+    expect(resolveColorMix('color-mix(in oklch, transparent 50%, transparent)')).toBe('oklch(0% 0 0 / 0)');
+  });
+
   it('leaves unsupported forms untouched rather than approximating', () => {
     const srgb = 'color-mix(in srgb, #ff0000 50%, #0000ff)';
     expect(resolveColorMix(srgb)).toBe(srgb);

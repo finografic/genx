@@ -11,11 +11,15 @@ interface Oklch {
   c: number;
   /** Hue in degrees, or null when the colour is achromatic (powerless hue). */
   h: number | null;
+  /** 0–1. Absent means fully opaque. */
+  a: number;
 }
 
 const NAMED: Record<string, Oklch> = {
-  white: { l: 100, c: 0, h: null },
-  black: { l: 0, c: 0, h: null },
+  white: { l: 100, c: 0, h: null, a: 1 },
+  black: { l: 0, c: 0, h: null, a: 1 },
+  // Mixing against `transparent` is how a design system spells "this token at N% alpha".
+  transparent: { l: 0, c: 0, h: null, a: 0 },
 };
 
 function parseOklch(value: string): Oklch | null {
@@ -23,12 +27,18 @@ function parseOklch(value: string): Oklch | null {
   if (named) {
     return named;
   }
-  const match = /^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*\)$/i.exec(value);
+  const match = /^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+%?)\s*)?\)$/i.exec(value);
   if (!match) {
     return null;
   }
-  const [, l, c, h] = match;
-  return { l: Number(l), c: Number(c), h: Number(h) };
+  const [, l, c, h, alpha] = match;
+  return { l: Number(l), c: Number(c), h: Number(h), a: parseAlpha(alpha) };
+}
+
+/** CSS accepts alpha as a 0–1 number or a percentage. */
+function parseAlpha(raw: string | undefined): number {
+  if (raw === undefined) return 1;
+  return raw.endsWith('%') ? Number(raw.slice(0, -1)) / 100 : Number(raw);
 }
 
 /** Trim float noise (0.1 + 0.2 artefacts) without forcing trailing zeros. */
@@ -36,15 +46,41 @@ function round(value: number, decimals: number): string {
   return String(Number(value.toFixed(decimals)));
 }
 
-function formatOklch({ l, c, h }: Oklch): string {
-  return `oklch(${round(l, 2)}% ${round(c, 4)} ${round(h ?? 0, 3)})`;
+function formatOklch({ l, c, h, a }: Oklch): string {
+  const base = `${round(l, 2)}% ${round(c, 4)} ${round(h ?? 0, 3)}`;
+  return a >= 1 ? `oklch(${base})` : `oklch(${base} / ${round(a, 4)})`;
 }
 
-/** Interpolate in OKLCH. An achromatic endpoint contributes no hue (CSS Color 4). */
+/**
+ * Interpolate in OKLCH. An achromatic endpoint contributes no hue (CSS Color 4).
+ *
+ * Alpha is premultiplied, per CSS Color 5: each endpoint's colour contributes in proportion to
+ * `weight × alpha`, and the result's alpha is the plain weighted sum. That is what makes
+ * `color-mix(in oklch, C 50%, transparent)` collapse to C at 50% alpha rather than dragging C
+ * halfway towards black.
+ */
 function mixOklch(a: Oklch, b: Oklch, weightA: number): Oklch {
   const weightB = 1 - weightA;
-  const hue = a.c === 0 ? b.h : b.c === 0 ? a.h : interpolateHue(a.h, b.h, weightA);
-  return { l: a.l * weightA + b.l * weightB, c: a.c * weightA + b.c * weightB, h: hue };
+  const alpha = a.a * weightA + b.a * weightB;
+
+  if (alpha === 0) {
+    return { l: 0, c: 0, h: null, a: 0 };
+  }
+
+  const shareA = (a.a * weightA) / alpha;
+  const shareB = (b.a * weightB) / alpha;
+  const hue =
+    shareA === 0
+      ? b.h
+      : shareB === 0
+        ? a.h
+        : a.c === 0
+          ? b.h
+          : b.c === 0
+            ? a.h
+            : interpolateHue(a.h, b.h, shareA);
+
+  return { l: a.l * shareA + b.l * shareB, c: a.c * shareA + b.c * shareB, h: hue, a: alpha };
 }
 
 function interpolateHue(a: number | null, b: number | null, weightA: number): number | null {
@@ -91,11 +127,12 @@ function splitPercentage(operand: string): { color: string; percentage: number |
  * Resolve `color-mix(in oklch, …)` to a literal `oklch()` value.
  *
  * Deliberately narrow: only the OKLCH interpolation space, and only operands
- * that are themselves `oklch()` or `white`/`black`. That covers the shade-ramp
- * idiom design systems actually use, and anything else is returned untouched
- * rather than approximated — a wrong colour in DESIGN.md is worse than an
- * unresolved expression, which the linter will flag out loud. Widen this (a
- * colour-space library) when a real project needs another form.
+ * that are themselves `oklch()` or `white`/`black`/`transparent`. That covers
+ * the shade-ramp and translucency idioms design systems actually use, and
+ * anything else is returned untouched rather than approximated — a wrong colour
+ * in DESIGN.md is worse than an unresolved expression, which the linter will
+ * flag out loud. Widen this (a colour-space library) when a real project needs
+ * another form.
  */
 export function resolveColorMix(value: string): string {
   const trimmed = value.trim();
