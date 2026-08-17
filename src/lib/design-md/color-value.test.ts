@@ -52,6 +52,19 @@ describe('resolveColorMix', () => {
     expect(resolveColorMix('color-mix(in oklch, transparent 50%, transparent)')).toBe('oklch(0% 0 0 / 0)');
   });
 
+  it('accepts unitless lightness, the form shadcn Tailwind v4 themes are written in', () => {
+    // oklch(0.444 …) is the same colour as oklch(44.4% …) — CSS Color 4 allows both.
+    expect(resolveColorMix('color-mix(in oklch, oklch(0.444 0.019 43.1) 50%, transparent)')).toBe(
+      'oklch(44.4% 0.019 43.1 / 0.5)',
+    );
+  });
+
+  it('treats unitless and percentage lightness as identical inputs', () => {
+    const unitless = resolveColorMix('color-mix(in oklch, oklch(0.5 0.1 264) 40%, transparent)');
+    const percent = resolveColorMix('color-mix(in oklch, oklch(50% 0.1 264) 40%, transparent)');
+    expect(unitless).toBe(percent);
+  });
+
   it('leaves unsupported forms untouched rather than approximating', () => {
     const srgb = 'color-mix(in srgb, #ff0000 50%, #0000ff)';
     expect(resolveColorMix(srgb)).toBe(srgb);

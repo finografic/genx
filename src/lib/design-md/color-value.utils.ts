@@ -27,12 +27,20 @@ function parseOklch(value: string): Oklch | null {
   if (named) {
     return named;
   }
-  const match = /^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+%?)\s*)?\)$/i.exec(value);
+  const match = /^oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+%?)\s*)?\)$/i.exec(value);
   if (!match) {
     return null;
   }
   const [, l, c, h, alpha] = match;
-  return { l: Number(l), c: Number(c), h: Number(h), a: parseAlpha(alpha) };
+  return { l: parseLightness(l), c: Number(c), h: Number(h), a: parseAlpha(alpha) };
+}
+
+/**
+ * CSS Color 4 allows lightness as either `48.8%` or the unitless `0.488`, and design systems use
+ * both — shadcn's Tailwind v4 theme writes the unitless form. Normalised to 0–100 internally.
+ */
+function parseLightness(raw: string): number {
+  return raw.endsWith('%') ? Number(raw.slice(0, -1)) : Number(raw) * 100;
 }
 
 /** CSS accepts alpha as a 0–1 number or a percentage. */
