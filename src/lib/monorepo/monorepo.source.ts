@@ -11,8 +11,13 @@ export interface MonorepoSource {
   origin: SourceOrigin;
 }
 
-/** Which layer supplied the resolved tag — surfaced to the user so the choice is never silent. */
-export type SourceOrigin = 'flag' | 'flag-latest' | 'config' | 'pinned';
+/**
+ * Which layer supplied the resolved tag — surfaced to the user so the choice is never silent.
+ *
+ * `pinned-fallback` exists to be announced: it means the remote could not be reached and generation
+ * fell back to a tag baked into this genx release, which may be older than what the starter has.
+ */
+export type SourceOrigin = 'flag' | 'flag-latest' | 'config' | 'latest' | 'pinned-fallback';
 
 /** Literal accepted by `--tag` to resolve the newest remote tag instead of a fixed one. */
 export const LATEST_TAG_KEYWORD = 'latest';
@@ -103,7 +108,7 @@ export interface ResolveMonorepoSourceOptions {
   tagFlag?: string;
   /** `monorepoStarter.tag` from `genx.config.jsonc`, if set. */
   configTag?: string;
-  /** Tag pinned in this genx release — the default. */
+  /** Tag baked into this genx release — used only when the remote cannot be reached. */
   pinnedTag: string;
   repoUrl: string;
 }
@@ -111,8 +116,15 @@ export interface ResolveMonorepoSourceOptions {
 /**
  * Decide which tag the starter comes from.
  *
- * Precedence, highest first: `--tag` → config `tag` → the release pin. The pin is the default
- * because a tag is a version signed off as ready, so generation never depends on unreviewed state.
+ * Precedence, highest first: `--tag` → config `tag` → the newest remote tag → the release pin.
+ *
+ * The newest remote tag is the default because tagging the starter *is* the sign-off. A pin in
+ * genx would be a second gate saying the same thing, and one that nothing forces anyone to update —
+ * it goes stale the moment the starter is tagged, silently generating from an older starter than
+ * the one that was just released.
+ *
+ * The pin survives only as an offline fallback, and `describeMonorepoSource` announces when it is
+ * used so a stale source is never mistaken for a deliberate one.
  */
 export async function resolveMonorepoSource({
   tagFlag,
@@ -132,7 +144,13 @@ export async function resolveMonorepoSource({
     return { tag: configTag, origin: 'config' };
   }
 
-  return { tag: pinnedTag, origin: 'pinned' };
+  try {
+    return { tag: await resolveLatestRemoteTag(repoUrl), origin: 'latest' };
+  } catch {
+    // Offline, no SSH, or a remote with no tags. The pin still produces a valid workspace, so this
+    // degrades rather than fails — but the caller reports which tag it settled on.
+    return { tag: pinnedTag, origin: 'pinned-fallback' };
+  }
 }
 
 /** Human-readable description of a resolved source, for the generation log. */
@@ -141,7 +159,8 @@ export function describeMonorepoSource(source: MonorepoSource): string {
     'flag': ' (--tag)',
     'flag-latest': ' (--tag latest)',
     'config': ' (genx.config.jsonc)',
-    'pinned': '',
+    'latest': ' (newest on remote)',
+    'pinned-fallback': " (remote unreachable — falling back to this release's pin)",
   }[source.origin];
 
   return `tag ${source.tag}${suffix}`;

@@ -24,7 +24,7 @@ Only the first is new. Generated monorepos are added to the managed list and the
 `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`). It is deliberately thin: config files plus a single
 `src/index.ts`.
 
-The monorepo template is the **`monorepo-starter` repository**, cloned at a pinned tag.
+The monorepo template is the **`monorepo-starter` repository**, cloned at a tag.
 
 Why not vendor it into `_templates/`:
 
@@ -34,7 +34,7 @@ Why not vendor it into `_templates/`:
 - It would chain genx's release cadence to app-framework churn.
 
 `monorepo-starter` stays a real app that builds and runs. That is what makes it trustworthy as a
-template. The cost is that generation requires network access and a pinned tag.
+template. The cost is that generation reaches the network to resolve which tag to clone.
 
 ## Workspace kind is not a package type
 
@@ -102,8 +102,9 @@ want — that is what tagging it means. Re-deriving that state at generation tim
 package-shaped templates, can only make it worse.
 
 So when the starter falls behind current conventions, the fix is upstream: run `genx upgrade` on
-`monorepo-starter`, accept what belongs there, bump the version, re-tag, and move the pin. Every
-generated workspace then inherits the result, and you review those diffs once instead of on every
+`monorepo-starter`, accept what belongs there, then `pnpm release:github:<patch|minor>`, which bumps
+and tags in one step. Generation picks the new tag up immediately — no genx change, no release. Every
+generated workspace inherits the result, and you review those diffs once instead of on every
 generation.
 
 **Known outstanding example:** the starter still carries the legacy `.github/instructions/` layout
@@ -126,11 +127,12 @@ reported with the command to run by hand, since the workspace is already valid w
 
 A cloned tag is the **only** source. Resolution order, highest precedence first:
 
-| Source                         | Set by                                                      | Use when                                                         |
-| ------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| `--tag <tag>` / `--tag latest` | Flag                                                        | One-off: a specific tag, or the newest on the remote             |
-| `monorepoStarter.tag`          | `genx.config.jsonc`                                         | Stay ahead of the release pin without waiting for a genx release |
-| `pinnedTag`                    | [`monorepo.config.ts`](../../src/config/monorepo.config.ts) | Default                                                          |
+| Source                   | Set by                                                      | Use when                                         |
+| ------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
+| `--tag <tag>`            | Flag                                                        | One-off: pin a specific tag, or try a prerelease |
+| `monorepoStarter.tag`    | `genx.config.jsonc`                                         | Pin every run on this machine to one tag         |
+| **Newest tag on remote** | `git ls-remote`                                             | **Default**                                      |
+| `pinnedTag`              | [`monorepo.config.ts`](../../src/config/monorepo.config.ts) | Fallback only — the remote could not be reached  |
 
 ```jsonc
 // ~/.config/finografic/genx.config.jsonc
@@ -139,7 +141,8 @@ A cloned tag is the **only** source. Resolution order, highest precedence first:
 },
 ```
 
-The resolved tag is printed before generation starts, so an override is never silent.
+The resolved tag is printed before generation starts, so neither an override nor a fallback is ever
+silent.
 
 ### Why a tag is the only source
 
@@ -159,25 +162,34 @@ one code path, and that class of bug cannot recur.
 `genx create monorepo --tag v0.3.0-rc.1`. Tag ordering ranks a prerelease below its release, so an
 `-rc` tag is never selected by `--tag latest`.
 
-### Why the default is pinned rather than floating
+### Why the default is the newest tag rather than a pin
 
-The identity transform is coupled to the starter's _shape_ — root `package.json` fields,
-`.agents/`, `docs/todo/`, and the workspace/scripts tables hardcoded in `buildMonorepoReadme`. If
-the starter gains `apps/worker`, a floating default would silently produce a README that lies about
-the workspace, on every machine, with no signal. A pin turns that into a deliberate bump you notice.
+Tagging the starter **is** the sign-off. A pin inside genx would be a second gate asserting the same
+thing, and one nothing obliges anyone to update — so it goes stale the moment the starter is tagged,
+quietly generating from an older starter than the one just released. That is not hypothetical: the
+pin fell behind within hours of `v0.2.2`, with no signal, and was noticed only by chance.
 
-`--tag latest` and `monorepoStarter.tag` exist so that staying current is easy without making
-"current" the unexamined default.
+Resolving the newest tag removes the duplicate decision. Generation is still never based on
+unreviewed state, because an untagged commit is never selectable.
+
+The cost is that generation needs network and SSH. When the lookup fails, `pinnedTag` still produces
+a valid workspace, and the run reports `remote unreachable — falling back to this release's pin` so
+a stale source is never mistaken for a deliberate one.
+
+To pin deliberately, use `--tag` for one run or `monorepoStarter.tag` for every run on a machine.
 
 ## Maintenance
 
-### Bumping the pinned tag
+### Releasing a starter change
 
-1. Land the change in `monorepo-starter` and tag it (`vX.Y.Z`) — `_gtag` tags from `package.json`.
-2. Update `pinnedTag` in [`src/config/monorepo.config.ts`](../../src/config/monorepo.config.ts).
-3. Regenerate the README: `pnpm docs:usage`. The pin is embedded in generated docs, and nothing
-   enforces this — a stale README is easy to ship.
-4. Generate into a scratch directory and confirm the result installs and runs.
+1. Land the change in `monorepo-starter`.
+2. `pnpm release:github:<patch|minor|major>` — gates on the starter's own checks, then bumps,
+   tags and pushes in one step.
+3. Generate into a scratch directory and confirm the result installs and runs.
+
+There is no genx-side step: the next generation resolves the new tag on its own. Only refresh
+`pinnedTag` when the offline fallback has drifted far enough to be worth updating, which is a
+convenience, not a correctness requirement.
 
 ### When the starter's layout changes
 

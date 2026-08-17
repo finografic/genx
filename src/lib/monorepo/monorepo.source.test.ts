@@ -59,14 +59,14 @@ describe('parseRemoteTags', () => {
 });
 
 describe('resolveMonorepoSource', () => {
-  it('falls back to the release pin when nothing is configured', async () => {
-    await expect(resolveMonorepoSource({ pinnedTag, repoUrl })).resolves.toEqual({
-      tag: 'v0.2.1',
-      origin: 'pinned',
-    });
+  it('falls back to the release pin when the remote cannot be reached', async () => {
+    // Unreachable remote: nothing configured, so resolution reaches the network and fails.
+    await expect(
+      resolveMonorepoSource({ pinnedTag, repoUrl: 'git@example.invalid:nope/nope.git' }),
+    ).resolves.toEqual({ tag: 'v0.2.1', origin: 'pinned-fallback' });
   });
 
-  it('prefers a configured tag over the pin', async () => {
+  it('prefers a configured tag over reaching the remote', async () => {
     await expect(resolveMonorepoSource({ configTag: 'v0.3.0', pinnedTag, repoUrl })).resolves.toEqual({
       tag: 'v0.3.0',
       origin: 'config',
@@ -89,14 +89,21 @@ describe('resolveMonorepoSource', () => {
 });
 
 describe('describeMonorepoSource', () => {
-  it('names the override that supplied the tag', () => {
-    expect(describeMonorepoSource({ tag: 'v0.2.1', origin: 'pinned' })).toBe('tag v0.2.1');
+  it('names the layer that supplied the tag', () => {
+    expect(describeMonorepoSource({ tag: 'v0.2.2', origin: 'latest' })).toBe('tag v0.2.2 (newest on remote)');
     expect(describeMonorepoSource({ tag: 'v0.3.0', origin: 'config' })).toBe(
       'tag v0.3.0 (genx.config.jsonc)',
     );
     expect(describeMonorepoSource({ tag: 'v0.9.9', origin: 'flag' })).toBe('tag v0.9.9 (--tag)');
     expect(describeMonorepoSource({ tag: 'v1.0.0', origin: 'flag-latest' })).toBe(
       'tag v1.0.0 (--tag latest)',
+    );
+  });
+
+  it('says out loud when a stale pin was used because the remote was unreachable', () => {
+    // The fallback must never look like a deliberate choice — that is the whole reason it is named.
+    expect(describeMonorepoSource({ tag: 'v0.2.2', origin: 'pinned-fallback' })).toBe(
+      "tag v0.2.2 (remote unreachable — falling back to this release's pin)",
     );
   });
 });

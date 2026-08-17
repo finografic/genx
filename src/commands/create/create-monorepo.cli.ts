@@ -54,8 +54,9 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
 
     const skipInstall = argv.includes('--no-install');
 
-    // Resolve the starter source before prompting — a bad --tag or an unreachable remote should
-    // fail before the user fills in a manifest.
+    // Resolve the starter source before prompting, so the tag is reported and any failure lands
+    // before the user fills in a manifest. An unreachable remote is not a failure here — it falls
+    // back to the release pin, which the reported source names explicitly.
     const starterConfig = await readMonorepoStarterConfig();
     let source;
     try {

@@ -24,11 +24,9 @@ When an item is done, move it to the Done section at the bottom with a completio
 ## Next
 
 - Run `genx upgrade` on `monorepo-starter` to adopt `.agents/instructions/` + `.agents/skills/`
-  (still on legacy `.github/instructions/`), decline the package-shaped oxc-config diffs, bump the
-  version and re-tag, then move `pinnedTag` in `src/config/monorepo.config.ts`. Makes the
-  generation-time migration a no-op.
-- `check:starter-tag` — warn (never fail) in `release:check` when `pinnedTag` is behind the newest
-  remote tag. Warn-only because it needs network + SSH.
+  (still on legacy `.github/instructions/`), decline the package-shaped oxc-config diffs, then
+  `pnpm release:github:minor`. Makes the generation-time migration a no-op. No genx change needed —
+  generation resolves the newest tag on its own.
 
 ---
 

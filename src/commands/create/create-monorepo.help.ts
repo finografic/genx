@@ -26,11 +26,11 @@ function keyValueSection(rows: ReadonlyArray<readonly [string, string]>): string
 
 export const help: CommandHelpConfig = {
   command: 'genx create monorepo',
-  description: 'Create a new full-stack monorepo from the pinned monorepo-starter tag',
+  description: 'Create a new full-stack monorepo from the newest monorepo-starter tag',
   usage: 'genx create monorepo [options]',
   options: [
     { flag: '--name <name>', description: 'Workspace name (without scope)' },
-    { flag: '--tag <tag>', description: 'Starter tag to use; "latest" resolves the newest remote tag' },
+    { flag: '--tag <tag>', description: 'Pin a specific starter tag instead of the newest one' },
     { flag: '--no-install', description: 'Skip pnpm install, env seeding, and database setup' },
     { flag: '-y, --yes', description: 'Accept defaults without prompting' },
   ],
@@ -39,10 +39,6 @@ export const help: CommandHelpConfig = {
     {
       command: 'genx create monorepo --name my-app',
       description: 'Create a monorepo with a specific name',
-    },
-    {
-      command: 'genx create monorepo --tag latest',
-      description: 'Use the newest tag on the starter remote',
     },
     {
       command: 'genx create monorepo --tag v0.2.0',
@@ -55,7 +51,7 @@ export const help: CommandHelpConfig = {
   ],
   howItWorks: [
     'Prompts for workspace name, description, and author',
-    `Clones ${repoSlug} at tag ${monorepoConfig.pinnedTag} and drops its git history`,
+    `Clones ${repoSlug} at its newest tag and drops its git history`,
     'Rewrites root identity (package.json, README, project memory) — app code is untouched',
     'Applies policy toolchain versions and runs pnpm install',
     'Applies documentation/agent features only — toolchain config comes from the starter',
@@ -67,11 +63,12 @@ export const help: CommandHelpConfig = {
       title: 'TEMPLATE SOURCE',
       content: keyValueSection([
         ['repo', repoSlug],
-        ['tag', `${monorepoConfig.pinnedTag} (this release's pin)`],
+        ['tag', 'the newest tag on the remote, resolved at generation time'],
         ['why', 'the starter repo, not _templates/ — it stays a real app that builds and runs'],
         ['scope', 'internal packages keep the generic @workspace/* scope'],
-        ['source', 'always a cloned tag — a tag is a version you signed off as ready'],
-        ['override', '--tag, then monorepoStarter.tag in genx.config.jsonc'],
+        ['source', 'always a cloned tag — tagging the starter is the sign-off'],
+        ['pin', '--tag, or monorepoStarter.tag in genx.config.jsonc'],
+        ['offline', `falls back to ${monorepoConfig.pinnedTag}, and says so when it does`],
         ['early', 'to try starter changes before release, tag a prerelease (v0.3.0-rc.1)'],
       ]),
     },

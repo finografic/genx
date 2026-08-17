@@ -11,10 +11,14 @@ export interface MonorepoConfig {
   repoUrl: string;
 
   /**
-   * Tag the generator clones.
+   * Offline fallback tag — **not** the default source.
    *
-   * Bumped manually, as a deliberate genx release decision — never track a branch, because
-   * generation must be reproducible for a given genx version.
+   * Generation resolves the newest tag on the remote, because tagging the starter is already the
+   * sign-off; a pin here would duplicate that decision and then go stale unnoticed. This value is
+   * used only when the remote cannot be reached, and that case is announced rather than silent.
+   *
+   * Keep it roughly current so an offline run still produces something recent, but it no longer has
+   * to be bumped in lockstep with the starter.
    */
   pinnedTag: string;
 
@@ -47,7 +51,7 @@ export interface MonorepoConfig {
 export const monorepoConfig: MonorepoConfig = {
   repoUrl: 'git@github.com:finografic/monorepo-starter.git',
 
-  pinnedTag: 'v0.2.1',
+  pinnedTag: 'v0.2.2',
 
   rootFeatures: ['aiAgents', 'aiInstructions', 'aiMemory', 'designMd'],
 

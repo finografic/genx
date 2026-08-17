@@ -90,18 +90,18 @@ genx create monorepo
 
 ### `genx create monorepo`
 
-Create a new full-stack monorepo from the pinned monorepo-starter tag
+Create a new full-stack monorepo from the newest monorepo-starter tag
 
 ```bash
 genx create monorepo [options]
 ```
 
-| Flag            | Description                                                 |
-| --------------- | ----------------------------------------------------------- |
-| `--name <name>` | Workspace name (without scope)                              |
-| `--tag <tag>`   | Starter tag to use; "latest" resolves the newest remote tag |
-| `--no-install`  | Skip pnpm install, env seeding, and database setup          |
-| `-y, --yes`     | Accept defaults without prompting                           |
+| Flag            | Description                                          |
+| --------------- | ---------------------------------------------------- |
+| `--name <name>` | Workspace name (without scope)                       |
+| `--tag <tag>`   | Pin a specific starter tag instead of the newest one |
+| `--no-install`  | Skip pnpm install, env seeding, and database setup   |
+| `-y, --yes`     | Accept defaults without prompting                    |
 
 **Examples:**
 
@@ -112,9 +112,6 @@ genx create monorepo
 # Create a monorepo with a specific name
 genx create monorepo --name my-app
 
-# Use the newest tag on the starter remote
-genx create monorepo --tag latest
-
 # Generate from a specific older tag
 genx create monorepo --tag v0.2.0
 
@@ -124,20 +121,21 @@ genx create monorepo --no-install
 
 **TEMPLATE SOURCE:**
 
-| Type       | Description                                                                  |
-| ---------- | ---------------------------------------------------------------------------- |
-| `repo`     | finografic/monorepo-starter                                                  |
-| `tag`      | v0.2.1 (this release's pin)                                                  |
-| `why`      | the starter repo, not _templates/ — it stays a real app that builds and runs |
-| `scope`    | internal packages keep the generic @workspace/* scope                        |
-| `source`   | always a cloned tag — a tag is a version you signed off as ready             |
-| `override` | --tag, then monorepoStarter.tag in genx.config.jsonc                         |
-| `early`    | to try starter changes before release, tag a prerelease (v0.3.0-rc.1)        |
+| Type      | Description                                                                  |
+| --------- | ---------------------------------------------------------------------------- |
+| `repo`    | finografic/monorepo-starter                                                  |
+| `tag`     | the newest tag on the remote, resolved at generation time                    |
+| `why`     | the starter repo, not _templates/ — it stays a real app that builds and runs |
+| `scope`   | internal packages keep the generic @workspace/* scope                        |
+| `source`  | always a cloned tag — tagging the starter is the sign-off                    |
+| `pin`     | --tag, or monorepoStarter.tag in genx.config.jsonc                           |
+| `offline` | falls back to v0.2.2, and says so when it does                               |
+| `early`   | to try starter changes before release, tag a prerelease (v0.3.0-rc.1)        |
 
 **How it works:**
 
 1. Prompts for workspace name, description, and author
-2. Clones finografic/monorepo-starter at tag v0.2.1 and drops its git history
+2. Clones finografic/monorepo-starter at its newest tag and drops its git history
 3. Rewrites root identity (package.json, README, project memory) — app code is untouched
 4. Applies policy toolchain versions and runs pnpm install
 5. Applies documentation/agent features only — toolchain config comes from the starter
