@@ -3,6 +3,40 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { upgradeConfig } from 'config/upgrade.config';
 import type { PackageJson } from 'types/package-json.types';
 
+export interface PackageAuthor {
+  name: string;
+  email: string;
+}
+
+/** `Name <email> (url)` — npm's string form. Email and url are both optional. */
+const AUTHOR_STRING = /^\s*([^<(]*?)\s*(?:<([^>]*)>)?\s*(?:\([^)]*\))?\s*$/;
+
+/**
+ * Read `author` from a package.json in either npm form — the `{ name, email }` object or the
+ * `Name <email> (url)` string.
+ *
+ * Returns empty strings when absent, which callers must treat as "unknown" rather than
+ * substituting: a LICENSE whose copyright line names nobody is worse than no LICENSE at all.
+ */
+export function parsePackageAuthor(packageJson: PackageJson): PackageAuthor {
+  const { author } = packageJson;
+
+  if (typeof author === 'string') {
+    const match = AUTHOR_STRING.exec(author);
+    return { name: match?.[1] ?? '', email: match?.[2] ?? '' };
+  }
+
+  if (typeof author === 'object' && author !== null) {
+    const { name, email } = author as { name?: unknown; email?: unknown };
+    return {
+      name: typeof name === 'string' ? name : '',
+      email: typeof email === 'string' ? email : '',
+    };
+  }
+
+  return { name: '', email: '' };
+}
+
 function ensureKeyword(keywords: string[], keyword: string): { keywords: string[]; changed: boolean } {
   if (keywords.some((k) => k.toLowerCase() === keyword.toLowerCase())) {
     return { keywords, changed: false };

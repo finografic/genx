@@ -3,7 +3,7 @@ import { createDiffConfirmState } from '@finografic/cli-kit/file-diff';
 import { errorMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
-import { readPackageJson } from 'lib/package-policy/package-json.utils';
+import { parsePackageAuthor, readPackageJson } from 'lib/package-policy/package-json.utils';
 import { validateExistingPackage } from 'utils/validation.utils';
 
 import { upgradeConfig } from 'config/upgrade.config';
@@ -58,14 +58,19 @@ export async function createUpgradeTargetContext(params: {
     return null;
   }
 
+  // Author comes from the target's own package.json. `create` gets it from prompts; upgrade has no
+  // prompts, and hardcoding empty strings here is what wrote `Copyright (c) 2026` with no name into
+  // generated LICENSE files.
+  const author = parsePackageAuthor(packageJson);
+
   const vars: TemplateVars = {
     SCOPE: parsed.scope,
     NAME: parsed.name,
     PACKAGE_NAME: `${parsed.scope}/${parsed.name}`,
     YEAR: new Date().getFullYear().toString(),
     DESCRIPTION: typeof packageJson.description === 'string' ? packageJson.description : '',
-    AUTHOR_NAME: '',
-    AUTHOR_EMAIL: '',
+    AUTHOR_NAME: author.name,
+    AUTHOR_EMAIL: author.email,
   };
 
   const { plan, state } = await planUpgrade(

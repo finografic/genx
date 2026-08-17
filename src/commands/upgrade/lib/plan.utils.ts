@@ -6,7 +6,7 @@ import { errorMessage, fileExists, findPackageRoot, getTemplatesDir, infoMessage
 import type { FeatureId } from 'features/feature.types';
 
 import { planDependencyChanges } from 'lib/package-policy/dependencies.utils';
-import { patchPackageJson } from 'lib/package-policy/package-json.utils';
+import { parsePackageAuthor, patchPackageJson } from 'lib/package-policy/package-json.utils';
 import { pc } from 'utils/picocolors';
 
 import { dependencyRules } from 'config/dependencies.rules';
@@ -163,13 +163,17 @@ export async function planUpgrade(
     plan.push(`${pc.cyan('sync')} ${item.targetPath} (from template ${item.templatePath})`);
   }
 
-  // Check for LICENSE file
+  // Check for LICENSE file. Requires a known author: the template's copyright line is
+  // `__YEAR__ __AUTHOR_NAME__`, and a grant naming nobody is worse than no file at all.
   const licensePath = resolve(targetDir, 'LICENSE');
   const licenseExists = fileExists(licensePath);
   const packageLicense = (packageJson.license as string | undefined) || 'MIT';
-  const shouldCopyLicense = !licenseExists && packageLicense === 'MIT';
+  const licenseAuthor = parsePackageAuthor(packageJson).name.trim();
+  const shouldCopyLicense = !licenseExists && packageLicense === 'MIT' && licenseAuthor !== '';
   if (shouldCopyLicense) {
     plan.push(`${pc.cyan('sync')} LICENSE (from template LICENSE)`);
+  } else if (!licenseExists && packageLicense === 'MIT') {
+    plan.push(pc.gray('LICENSE skipped — package.json has no author to put in the copyright line'));
   }
 
   // Features planning
