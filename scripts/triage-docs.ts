@@ -6,17 +6,35 @@
  * Scans known agent output locations for spec-like markdown files,
  * then prompts to move each to docs/specs/, docs/drafts/, or discard.
  *
- * Usage: pnpm triage:docs
- * pnpm triage:docs --scan-dir=custom/path
+ * Operates entirely on `process.cwd()` and imports nothing from genx, so it runs unchanged in any
+ * repository — the prerequisite for lifting it into `@finografic/project-scripts` alongside
+ * clean-docs and purge-builds.
+ *
+ * Usage: tsx scripts/triage-docs.ts
+ * tsx scripts/triage-docs.ts --scan-dir=custom/path
  */
 
+import { existsSync } from 'node:fs';
 import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { extname, join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import * as clack from '@clack/prompts';
+import * as picocolorsNamespace from 'picocolors';
 
-import { fileExists } from '../src/utils/fs.utils';
-import { pc } from '../src/utils/picocolors';
+/**
+ * Picocolors with ESM interop. Its CJS `export =` becomes `namespace.default` when Node loads it as
+ * ESM, leaving `namespace.black` undefined — so pick whichever shape actually has the functions.
+ *
+ * Inlined rather than imported from genx: this script is written to be lifted into
+ * `@finografic/project-scripts` and run in any repo, so it must not reach into genx's `src/`.
+ */
+const withDefault = (picocolorsNamespace as { default?: unknown }).default;
+const pc =
+  typeof withDefault === 'object' &&
+  withDefault !== null &&
+  typeof (withDefault as { black?: unknown }).black === 'function'
+    ? (withDefault as typeof picocolorsNamespace)
+    : picocolorsNamespace;
 
 /* ────────────────────────────────────────────────────────── */
 /* Config                                                      */
@@ -94,7 +112,7 @@ async function findDocFiles(scanDirs: string[], cwd: string): Promise<DocFile[]>
 
   for (const dir of scanDirs) {
     const absDir = resolve(cwd, dir);
-    if (!fileExists(absDir)) continue;
+    if (!existsSync(absDir)) continue;
 
     const dirStat = await stat(absDir);
     if (!dirStat.isDirectory()) continue;
@@ -141,6 +159,22 @@ function previewContent(content: string, maxLines: number = 6): string {
 /* Main                                                        */
 /* ────────────────────────────────────────────────────────── */
 
+/**
+ * Label the run with the repository it is operating on.
+ *
+ * Hardcoding a tool name would misreport which project's documents are being moved once this runs
+ * outside genx, and the whole point of the scan is that it deletes and relocates files.
+ */
+async function readProjectLabel(cwd: string): Promise<string> {
+  try {
+    const raw = await readFile(resolve(cwd, 'package.json'), 'utf8');
+    const { name } = JSON.parse(raw) as { name?: string };
+    return name ? `${name} · triage docs` : 'triage docs';
+  } catch {
+    return 'triage docs';
+  }
+}
+
 async function main(): Promise<void> {
   const cwd = process.cwd();
 
@@ -155,7 +189,7 @@ async function main(): Promise<void> {
 
   const scanDirs = [...DEFAULT_SCAN_DIRS, ...extraDirs];
 
-  clack.intro(pc.bgCyan(pc.black(' genx · triage docs ')));
+  clack.intro(pc.bgCyan(pc.black(` ${await readProjectLabel(cwd)} `)));
 
   /* ── Scan ── */
 
@@ -257,7 +291,7 @@ async function main(): Promise<void> {
 
   for (const dir of scanDirs) {
     const absDir = resolve(cwd, dir);
-    if (!fileExists(absDir)) continue;
+    if (!existsSync(absDir)) continue;
 
     try {
       const entries = await readdir(absDir);

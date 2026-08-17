@@ -69,8 +69,17 @@ Blocked on choosing a reference feature.
 
 ### 6. `triage-docs` — cross-project portability
 
-Make `scripts/triage-docs.ts` work as a standalone script that any `@finografic` project can use
-without depending on genx's internal utilities. Decision needed on approach before implementing #4.
+**Approach decided (2026-08-17): move it to `@finografic/project-scripts`** as a `triage-docs` bin,
+consumed via `pnpm dlx` exactly like `purge-builds` and `clean-docs`. That package already exists
+for this shape of tool, and every managed repo already depends on it — a second distribution
+mechanism would be inventing one where one is already in use.
+
+The genx-side prerequisite is **done**: `scripts/triage-docs.ts` no longer imports anything from
+genx's `src/`, operates entirely on `process.cwd()`, and labels its run from the consuming repo's
+`package.json`. Verified running unchanged in a foreign repo.
+
+Remaining: port the file into project-scripts, add the bin entry, release, then delete genx's copy
+and point at the dlx invocation. Unblocks #4.
 
 ### 8. `genx design` — follow-ups (core command shipped 2026-08-13)
 
