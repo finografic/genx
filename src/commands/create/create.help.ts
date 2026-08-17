@@ -14,7 +14,7 @@ export const help: CommandHelpConfig = {
   subcommands: [
     {
       name: 'monorepo',
-      description: 'Create a full-stack monorepo workspace from the pinned monorepo-starter tag',
+      description: 'Create a full-stack monorepo workspace from the newest monorepo-starter tag',
     },
   ],
   options: [

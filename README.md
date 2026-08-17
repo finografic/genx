@@ -42,7 +42,7 @@ genx create [options]
 
 | Subcommand | Description                                                                 |
 | ---------- | --------------------------------------------------------------------------- |
-| `monorepo` | Create a full-stack monorepo workspace from the pinned monorepo-starter tag |
+| `monorepo` | Create a full-stack monorepo workspace from the newest monorepo-starter tag |
 
 | Flag            | Description                       |
 | --------------- | --------------------------------- |
@@ -482,7 +482,7 @@ my-package/
 ```
 
 Monorepos do not use this layout and are not scaffolded from `_templates/` — `genx create monorepo`
-clones the `monorepo-starter` repository at a pinned tag. See
+clones the `monorepo-starter` repository at its newest tag. See
 [Monorepo Generation](./docs/process/MONOREPO_GENERATION.md).
 
 ---

@@ -22,12 +22,13 @@ import {
 } from 'utils';
 
 import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
+import { alignScaffoldDependencies } from 'lib/package-policy/scaffold-policy.utils';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
 
 import { createConfig } from 'config/create.config';
-import { policy, toolchain } from 'config/policy.js';
+import { policy, resolvePolicy, toPolicyPackageType, toolchain } from 'config/policy.js';
 
 import { createMonorepo } from './create-monorepo.cli.js';
 import { help } from './create.help.js';
@@ -274,7 +275,24 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
         }
       }
 
+      // Align every declared dependency to policy, last, so it also covers the versions the react
+      // and CLI branches just wrote. The template decides which dependencies a new package gets;
+      // policy decides their versions — so `_templates/package.json` no longer needs to carry a
+      // second copy of every version number, which is the copy that goes stale unnoticed.
+      const { packageJson: alignedPkgJson, aligned } = alignScaffoldDependencies(
+        pkgJson,
+        resolvePolicy(toPolicyPackageType(config.packageType.id)),
+      );
+      if (aligned.length > 0) {
+        await writeFile(pkgJsonPath, JSON.stringify(alignedPkgJson, null, 2) + '\n', 'utf8');
+      }
+
       spin.stop('Project structure created');
+
+      if (aligned.length > 0) {
+        const label = aligned.length === 1 ? '1 dependency' : `${aligned.length} dependencies`;
+        infoMessage(pc.gray(`Aligned ${label} to deps-policy`));
+      }
     } catch (err) {
       spin.stop('Failed to create project structure');
       errorMessage(err instanceof Error ? err.message : 'Unknown error');
