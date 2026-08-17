@@ -127,7 +127,7 @@
     "typescript": "7.0.2",
     "vitest": "^4.1.10"
   },
-  "packageManager": "pnpm@11.14.0",
+  "packageManager": "pnpm@11.21.0",
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",
@@ -142,6 +142,6 @@
     ]
   },
   "engines": {
-    "node": ">=24.16.0"
+    "node": ">=24.19.0"
   }
 }
