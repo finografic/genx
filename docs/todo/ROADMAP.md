@@ -50,12 +50,6 @@ Add a `genx:workspace:monorepo` marker on the root plus member iteration over `p
 so package-scoped features (`vitest`, `css`, `reactVite`) can run against members instead of being
 excluded outright. Detail: [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md).
 
-### 1. `genx create` — apply resolvePolicy() immediately after scaffold
-
-After scaffolding, run `resolvePolicy(packageType)` and write resolved dependency versions directly
-into the new `package.json` instead of relying on hardcoded versions in `_templates/package.json`.
-Low risk — additive change to the create pipeline.
-
 ### 2. Type-specific policy divergence in deps-policy
 
 Allow `library.ts` and `config.ts` in `@finografic/deps-policy` to intentionally diverge from
@@ -152,6 +146,7 @@ Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_RE
 
 | Date       | Item                                                                                                                                                                                                                                                                                        |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-17 | `genx create` aligns scaffolded dependency versions to deps-policy — `_templates/package.json` no longer carries a second copy of every version (it was 11 stale for every package type)                                                                                                    |
 | 2026-08-17 | `genx create monorepo` (v0) — clone a pinned `monorepo-starter` tag, rewrite root identity, apply doc/agent features only, seed `.env.development` + database — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md), [`MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md) |
 | 2026-08-13 | Asset ownership contract — manifest-driven resolution, fail-closed ownership, seed protection, skills fixed to managed, removal semantics decided — [`TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md)                                                                |
 | 2026-08-13 | `genx design` command (sync --pull/--push, check, render, lint; PandaCSS + Tailwind v4) — [`TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)                                                                                                                                              |
