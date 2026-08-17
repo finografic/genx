@@ -6,9 +6,14 @@
  * Scans known agent output locations for spec-like markdown files,
  * then prompts to move each to docs/specs/, docs/drafts/, or discard.
  *
- * Operates entirely on `process.cwd()` and imports nothing from genx, so it runs unchanged in any
- * repository — the prerequisite for lifting it into `@finografic/project-scripts` alongside
- * clean-docs and purge-builds.
+ * PLANNED MOVE: this script is scheduled to be ported to `@finografic/project-scripts` as a
+ * `triage-docs` bin, run via `pnpm dlx` like clean-docs and purge-builds. Plan and open decisions
+ * live there, in `docs/todo/TODO_TRIAGE_DOCS.md`. Prefer fixing it there once the bin ships; until
+ * then, keep changes here portable.
+ *
+ * It already operates entirely on `process.cwd()` and imports nothing from genx, so it runs
+ * unchanged in any repository — the prerequisite for that move, and the reason it must stay that
+ * way.
  *
  * Usage: tsx scripts/triage-docs.ts
  * tsx scripts/triage-docs.ts --scan-dir=custom/path

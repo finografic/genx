@@ -78,8 +78,12 @@ The genx-side prerequisite is **done**: `scripts/triage-docs.ts` no longer impor
 genx's `src/`, operates entirely on `process.cwd()`, and labels its run from the consuming repo's
 `package.json`. Verified running unchanged in a foreign repo.
 
-Remaining: port the file into project-scripts, add the bin entry, release, then delete genx's copy
-and point at the dlx invocation. Unblocks #4.
+**The port itself is planned and tracked in the destination repo**, not here:
+`@finografic-project-scripts/docs/todo/TODO_TRIAGE_DOCS.md` (P1 there). It covers the prompt-layer
+conversion — clack to `@inquirer` + `ora` — which is the only non-mechanical part.
+
+Remaining on the genx side, once the bin ships: delete `scripts/triage-docs.ts` and point the
+`triage-docs` skill at `pnpm --package=@finografic/project-scripts dlx triage-docs`. Unblocks #4.
 
 ### 8. `genx design` — follow-ups (core command shipped 2026-08-13)
 
