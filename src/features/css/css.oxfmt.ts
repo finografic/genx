@@ -4,9 +4,8 @@ import { fileExists } from 'utils';
 
 import { OXFMT_CONFIG_FILENAME } from './css.constants';
 
-/** Regex matching the named import block from either the old or new oxc-config package. */
-const OXC_IMPORT_BLOCK_RE =
-  /import\s*\{([^}]+)\}\s*from\s*['"](?:@finografic\/oxfmt-config|@finografic\/oxc-config\/oxfmt)['"]/s;
+/** Regex matching the named import block from the oxc-config package. */
+const OXC_IMPORT_BLOCK_RE = /import\s*\{([^}]+)\}\s*from\s*['"]@finografic\/oxc-config\/oxfmt['"]/s;
 
 function hasCssOverride(content: string): boolean {
   return content.includes("files: ['*.css', '*.scss']") || content.includes('files: ["*.css", "*.scss"]');
@@ -26,10 +25,7 @@ function oxfmtConfigAlreadyHasCssPreset(content: string): boolean {
   return hasCssOverride(content) && hasCssNamedImport(content);
 }
 
-/**
- * Ensure `css` is imported from the oxc-config package (insert after `base,`). Handles both
- * `@finografic/oxfmt-config` and `@finografic/oxc-config/oxfmt`.
- */
+/** Ensure `css` is imported from `@finografic/oxc-config/oxfmt` (insert after `base,`). */
 export function ensureCssImportInOxfmtConfig(content: string): string {
   if (hasCssNamedImport(content)) return content;
   if (!hasOxcConfigImport(content)) return content;

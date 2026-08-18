@@ -32,9 +32,6 @@ export const PRETTIER_PACKAGES = ['prettier'] as const;
  */
 export const PRETTIER_PACKAGE_PATTERNS = ['*prettier-plugin-*'] as const;
 
-/** Legacy @finografic/oxfmt-config replaced by @finografic/oxc-config. */
-export const LEGACY_OXFMT_CONFIG_PACKAGE = '@finografic/oxfmt-config' as const;
-
 /**
  * Legacy lint-staged keys merged into {@link OXFMT_LINT_STAGED_DATA_PATTERN} (data files only; `*.md` is
  * handled separately).
@@ -74,9 +71,9 @@ export const OXFMT_UPDATE_SCRIPT = {
     'pnpm update @finografic/oxc-config --latest && pnpm update oxfmt --latest && pnpm update oxlint --latest',
 };
 
-// DEPRECATED: Old update script keys — removed when canonicalizing scripts.
-export const LEGACY_OXFMT_UPDATE_SCRIPT_KEY = 'update:oxfmt-config' as const;
-export const LEGACY_UPDATE_SCRIPTS_TO_REMOVE = ['update:oxfmt-config', 'update:eslint-config'] as const;
+// DEPRECATED: Old update script keys — removed when canonicalizing scripts. Remove once no managed
+// target still carries @finografic/eslint-config (touch-monorepo and plate-editor still do).
+export const LEGACY_UPDATE_SCRIPTS_TO_REMOVE = ['update:eslint-config'] as const;
 
 export const OXFMT_LINT_STAGED_COMMAND = 'oxfmt --no-error-on-unmatched-pattern';
 export const OXLINT_LINT_STAGED_COMMAND = 'oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern';

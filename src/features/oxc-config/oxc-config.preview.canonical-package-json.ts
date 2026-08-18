@@ -13,8 +13,6 @@ import type { PackageJson } from 'types/package-json.types';
 import {
   FORMATTING_SCRIPTS,
   FORMATTING_SECTION_TITLE,
-  LEGACY_OXFMT_CONFIG_PACKAGE,
-  LEGACY_OXFMT_UPDATE_SCRIPT_KEY,
   LEGACY_UPDATE_SCRIPTS_TO_REMOVE,
   LINTING_SCRIPTS,
   LINTING_SECTION_TITLE,
@@ -95,10 +93,6 @@ function stripListedDependencies(packageJson: PackageJson, names: readonly strin
   return next;
 }
 
-function removeLegacyOxfmtConfigPackage(packageJson: PackageJson): PackageJson {
-  return stripListedDependencies(packageJson, [LEGACY_OXFMT_CONFIG_PACKAGE]);
-}
-
 function ensureOxcToolchainDevDependencies(packageJson: PackageJson): PackageJson {
   const dev = { ...packageJson.devDependencies };
   let changed = false;
@@ -144,12 +138,11 @@ function ensureUpdateOxcScriptPlacement(scripts: Record<string, string>): {
   const { value } = OXFMT_UPDATE_SCRIPT;
   const keys = Object.keys(scripts);
 
-  // Remove legacy update script key alongside the new one
-  const without = keys.filter((k) => k !== key && k !== LEGACY_OXFMT_UPDATE_SCRIPT_KEY);
+  const without = keys.filter((k) => k !== key);
 
   const packagesIdx = without.indexOf(PACKAGE_JSON_SCRIPTS_PACKAGES_SECTION);
   if (packagesIdx === -1) {
-    const alreadyCorrect = scripts[key] === value && !scripts[LEGACY_OXFMT_UPDATE_SCRIPT_KEY];
+    const alreadyCorrect = scripts[key] === value;
     if (alreadyCorrect) {
       return { next: scripts, changed: false };
     }
@@ -176,11 +169,7 @@ function ensureUpdateOxcScriptPlacement(scripts: Record<string, string>): {
     next[k] = k === key ? value : scripts[k];
   }
 
-  const changed =
-    scripts[key] !== value ||
-    !!scripts[LEGACY_OXFMT_UPDATE_SCRIPT_KEY] ||
-    JSON.stringify(Object.keys(scripts).filter((k) => k !== LEGACY_OXFMT_UPDATE_SCRIPT_KEY)) !==
-      JSON.stringify(newKeys);
+  const changed = scripts[key] !== value || JSON.stringify(Object.keys(scripts)) !== JSON.stringify(newKeys);
 
   return { next, changed };
 }
@@ -578,7 +567,6 @@ export function computeCanonicalOxfmtPackageJson(source: PackageJson): PackageJs
   const prettierNames = collectPrettierPackageNames(pkg);
   pkg = stripListedDependencies(pkg, prettierNames);
   pkg = removeAssociatedLegacyPackageJsonDependencies(pkg, 'oxc-config');
-  pkg = removeLegacyOxfmtConfigPackage(pkg);
   pkg = ensureOxcToolchainDevDependencies(pkg);
   pkg = applyOxfmtPackageJsonLayoutTransforms(pkg);
 
