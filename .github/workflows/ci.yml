@@ -47,4 +47,4 @@ jobs:
         run: pnpm format:check
 
       - name: CLI core spec template matches canonical
-        run: pnpm check:cli-core-spec
+        run: pnpm templates:cli-core:check

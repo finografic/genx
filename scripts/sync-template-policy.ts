@@ -12,7 +12,7 @@
  * - `upgrade --merges` merges `_templates/package.json` into the target.
  *
  * `--check` writes nothing and exits non-zero on drift; that mode runs in `release:check` and CI,
- * for the same reason `check:cli-core-spec` does — a writer alone drifts again the moment someone
+ * for the same reason `templates:cli-core:check` does — a writer alone drifts again the moment someone
  * forgets to run it.
  *
  * Only fields policy owns are touched. Scripts, lint-staged globs and file structure are
@@ -125,7 +125,7 @@ async function main(): Promise<void> {
   if (checkOnly) {
     console.error(
       `\n${drift.length} field(s) in _templates/ have drifted from deps-policy.\n` +
-        'Run `pnpm sync:templates` to align them.',
+        'Run `pnpm templates:policy:sync` to align them.',
     );
     process.exit(1);
   }

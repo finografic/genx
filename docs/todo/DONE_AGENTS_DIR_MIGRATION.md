@@ -389,7 +389,7 @@ started — see "Lifecycle" below, now built as a follow-up so future syncs don'
       since the skill was renamed to `generate-new-genx-feature` (same stale-rename bug already
       found and fixed in Phase 0's `ai-agent-config` pass, this was the genx-root instance of it)
 - [x] Docs updated: `docs/spec/CLI_CORE.md` (kept byte-identical to its `_templates/` mirror, which
-      `pnpm check:cli-core-spec` enforces), `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`,
+      `pnpm templates:cli-core:check` enforces), `docs/TEMPLATE_SOURCES_AND_AGENTS_MERGE.md`,
       `docs/process/PROJECT_MEMORY_MODEL.md` (ditto, kept identical to its `_templates/` mirror —
       not scoped originally but found during the sweep), `docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md`.
       `docs/superpowers/plans/…` and `docs/superpowers/specs/…` deliberately **left untouched** —

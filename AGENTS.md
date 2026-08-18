@@ -30,7 +30,7 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 - **`docs/spec/CLI_CORE.md`** is the canonical **CLI `src/core/` module spec** for `@finografic` CLI packages.
   - Use it when designing portable `core/` modules, help patterns, and when generating or upgrading **CLI-shaped** projects so generated trees include the same conventions (see `create` / `upgrade`).
   - **library** and **config** package types do not use this `core/` layout — TBD whether they get an analogous doc).
-- After editing `docs/spec/CLI_CORE.md`, copy it to `_templates/docs/spec/CLI_CORE.md` so the template stays aligned — `pnpm check:cli-core-spec` (in `release:check` and CI) compares the two files
+- After editing `docs/spec/CLI_CORE.md`, copy it to `_templates/docs/spec/CLI_CORE.md` so the template stays aligned — `pnpm templates:cli-core:check` (in `release:check` and CI) compares the two files
 
 ## Rules — Global
 
