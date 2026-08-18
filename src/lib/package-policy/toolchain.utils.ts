@@ -7,9 +7,17 @@ import { fileExists } from 'utils/fs.utils';
 import type { PackageJson } from 'types/package-json.types';
 
 export interface ToolchainChange {
-  target: '.nvmrc' | 'engines.node' | 'packageManager';
+  target: '.nvmrc' | 'engines.node' | 'engines.pnpm' | 'packageManager';
   from?: string;
   to: string;
+}
+
+interface CurrentToolchainState {
+  nvmrc?: string;
+  enginesNode?: string;
+  /** Absent when the target does not declare one — see `planToolchainChanges`. */
+  enginesPnpm?: string;
+  packageManager?: string;
 }
 
 /**
@@ -18,8 +26,8 @@ export interface ToolchainChange {
 async function readCurrentToolchainState(
   targetDir: string,
   packageJson: PackageJson,
-): Promise<{ nvmrc?: string; enginesNode?: string; packageManager?: string }> {
-  const state: { nvmrc?: string; enginesNode?: string; packageManager?: string } = {};
+): Promise<CurrentToolchainState> {
+  const state: CurrentToolchainState = {};
 
   const nvmrcPath = resolve(targetDir, '.nvmrc');
   if (fileExists(nvmrcPath)) {
@@ -32,6 +40,7 @@ async function readCurrentToolchainState(
 
   const engines = packageJson['engines'] as Record<string, string> | undefined;
   state.enginesNode = engines?.['node'];
+  state.enginesPnpm = engines?.['pnpm'];
 
   state.packageManager = packageJson['packageManager'] as string | undefined;
 
@@ -40,7 +49,7 @@ async function readCurrentToolchainState(
 
 /**
  * Plan toolchain version changes for a target project.
- * Compares `.nvmrc`, `engines.node`, and `packageManager` against the policy toolchain values.
+ * Compares `.nvmrc`, `engines.node`, `engines.pnpm` and `packageManager` against policy.
  */
 export async function planToolchainChanges(
   targetDir: string,
@@ -57,6 +66,16 @@ export async function planToolchainChanges(
   const wantEngines = `>=${tc.node}`;
   if (current.enginesNode !== wantEngines) {
     changes.push({ target: 'engines.node', from: current.enginesNode, to: wantEngines });
+  }
+
+  // Only aligned when the target already declares it — adding an engines.pnpm floor to a package
+  // that deliberately has none would impose a constraint nobody asked for. But when it *is*
+  // declared and left behind, it contradicts packageManager in the same file: deps-xscan sat at
+  // `engines.pnpm: "10.x"` with `packageManager: pnpm@11.14.0`, and pnpm obeys packageManager, so
+  // every install failed its own engine check with ERR_PNPM_UNSUPPORTED_ENGINE.
+  const wantEnginesPnpm = `>=${tc.pnpm}`;
+  if (current.enginesPnpm !== undefined && current.enginesPnpm !== wantEnginesPnpm) {
+    changes.push({ target: 'engines.pnpm', from: current.enginesPnpm, to: wantEnginesPnpm });
   }
 
   const wantPm = `pnpm@${tc.pnpm}`;
@@ -84,6 +103,10 @@ export async function applyToolchainChanges(
     } else if (change.target === 'engines.node') {
       const engines = (pkg['engines'] ?? {}) as Record<string, string>;
       engines['node'] = change.to;
+      pkg = { ...pkg, engines };
+    } else if (change.target === 'engines.pnpm') {
+      const engines = (pkg['engines'] ?? {}) as Record<string, string>;
+      engines['pnpm'] = change.to;
       pkg = { ...pkg, engines };
     } else if (change.target === 'packageManager') {
       pkg = { ...pkg, packageManager: change.to };
