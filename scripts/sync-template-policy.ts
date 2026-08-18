@@ -25,6 +25,7 @@ import process from 'node:process';
 import type { PackageJson } from '../src/types/package-json.types';
 
 import { policy, toolchain } from '../src/config/policy';
+import { pc } from '../src/utils/picocolors';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const TEMPLATE_PACKAGE_JSON = path.join(ROOT, '_templates/package.json');
@@ -108,31 +109,40 @@ async function collectDrift(): Promise<{ drift: Drift[]; packageJson: PackageJso
   return { drift, packageJson, nvmrc };
 }
 
+function fieldCount(count: number): string {
+  return `${count} field${count === 1 ? '' : 's'}`;
+}
+
 async function main(): Promise<void> {
   const checkOnly = process.argv.includes('--check');
   const { drift, packageJson } = await collectDrift();
 
   if (drift.length === 0) {
-    console.log('_templates/ is aligned with deps-policy.');
+    console.log(`${pc.green('✔')} ${pc.green('_templates/ is aligned with deps-policy.')}`);
     return;
   }
 
+  // Drift is a finding in --check and a work item in sync, so the rows stay neutral and the
+  // verdict below carries the colour: stale value in red, the policy value replacing it in green.
+  console.log(pc.yellow(`\n${fieldCount(drift.length)} out of sync with deps-policy:\n`));
+
   const width = Math.max(...drift.map((entry) => `${entry.file} ${entry.field}`.length));
   for (const entry of drift) {
-    console.log(`  ${`${entry.file} ${entry.field}`.padEnd(width)}  ${entry.from} → ${entry.to}`);
+    const label = `${entry.file} ${entry.field}`.padEnd(width);
+    console.log(`  ${pc.white(label)}  ${pc.red(entry.from)} ${pc.gray('→')} ${pc.green(entry.to)}`);
   }
 
   if (checkOnly) {
     console.error(
-      `\n${drift.length} field(s) in _templates/ have drifted from deps-policy.\n` +
-        'Run `pnpm templates:policy:sync` to align them.',
+      `\n${pc.red('✘')} ${pc.red(`${fieldCount(drift.length)} in _templates/ have drifted from deps-policy.`)}\n` +
+        `  ${pc.gray('Run')} ${pc.cyan('pnpm templates:policy:sync')} ${pc.gray('to align them.')}`,
     );
     process.exit(1);
   }
 
   await writeFile(TEMPLATE_PACKAGE_JSON, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
   await writeFile(TEMPLATE_NVMRC, expectedNvmrc, 'utf8');
-  console.log(`\nAligned ${drift.length} field(s) in _templates/.`);
+  console.log(`\n${pc.green('✔')} ${pc.green(`Aligned ${fieldCount(drift.length)} in _templates/.`)}`);
 }
 
 await main();
