@@ -18,7 +18,10 @@ export const upgradeConfig: UpgradeConfig = {
       targetPath: '.husky/commit-msg',
     },
     { section: 'hooks', templatePath: 'commitlint.config.mjs', targetPath: 'commitlint.config.mjs' },
-    { section: 'nvmrc', templatePath: '.nvmrc', targetPath: '.nvmrc' },
+    // No `.nvmrc` entry: the `node` section writes it from deps-policy's toolchain, the same source
+    // `create` uses. Copying `_templates/.nvmrc` as well made the template a second source of truth
+    // for the node version, and a stale template downgraded targets — monorepo-starter went from
+    // 24.16.0 to 24.3.0 that way, contradicting its own engines.node in the same run.
     {
       section: 'workflows',
       templatePath: '.github/workflows/ci.yml',

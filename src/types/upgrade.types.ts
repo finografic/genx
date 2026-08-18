@@ -1,7 +1,6 @@
 export const UPGRADE_ONLY_SECTIONS = [
   'package-json',
   'hooks',
-  'nvmrc',
   'oxc-config',
   'workflows',
   'docs',
