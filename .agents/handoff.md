@@ -6,12 +6,12 @@
 > — Write in present tense. No code snippets — describe what exists, not how it works.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 August 17, 2026
+📅 August 19, 2026
 
 ## Project
 
 `@finografic/genx` is an opinionated generator and codemod toolkit for the `@finografic`
-ecosystem. Current version: **v5.45.2**.
+ecosystem. Current version: **v5.47.1**.
 
 ## Architecture
 
@@ -34,7 +34,13 @@ state styling, built on `@clack/core`'s `MultiSelectPrompt` plus clack's exporte
 It exists because clack's own `multiselect` hardcodes its label styler and exposes no hook.
 
 **Templates:** `_templates/` is the only canonical source for generated target content.
-Package-type overlays live under `_templates/package-types/`.
+Package-type overlays live under `_templates/package-types/`. `templates:policy:check` and
+`templates:cli-core:check` fail when the template copies drift; both run in `release:check`.
+
+**Upgrade merges:** `merges` covers `package.json` only, so it is not independently selectable — it
+rides with the `package-json` operation in the picker, and stays reachable via `--only merges`. It
+plans only real changes, applies against disk rather than plan-time content, and confirms through
+the same per-file diff as every other `package.json` writer.
 
 **Package types:** `library`, `cli`, `config`, and `react`. Package-type inference is centralized
 in `src/lib/package-type.utils.ts`; explicit `genx:type:*` keywords win over heuristics.
@@ -127,22 +133,29 @@ separately.
     Node's `--env-file` precedence, so a globally exported model name cannot silently override it.
 15. `@clack/core` is pinned exact to the version `@clack/prompts` pins. Two copies break `isCancel`,
     which compares a module-local symbol.
+16. Every write to a target's `package.json` goes through a per-file diff confirmation. No path may
+    write it on the strength of a filename list or an up-front batch prompt.
+17. Values duplicated outside their source of truth need a check that fails when they drift —
+    `_templates` versions, `.nvmrc`, `engines.pnpm`, and the CLI core spec copy each have one.
 
 ## Open Work
 
-- Apply policy resolution directly after `genx create` scaffolding.
-- Review type-specific `deps-policy` divergence.
-- Modernize the new-feature scaffold for preview-driven detect/apply.
-- Review cli-kit extraction candidates tracked in `docs/todo/ROADMAP.md`.
-- Add the future `maintain-project-memory` skill.
-- Make `scripts/triage-docs.ts` portable (ROADMAP P2 #6), then distribute `triage-docs` via
-  `ai-agent-config`.
-- Delete the stale duplicate `scaffold-feature` skill in `@finografic-cli-kit` — already `git rm`'d
-  in that repo's working tree but left uncommitted (unrelated in-progress work there).
-- `@finografic-cli-kit` has no `node_modules`; its commit hooks fail until `pnpm install` runs.
+Nothing is at P0 or P1. `docs/todo/ROADMAP.md` is canonical for items and priorities; two things it
+does not make obvious:
+
+- The critical path is #6 → #4, and **#6's next move is in `@finografic/project-scripts`, not
+  here** — the genx side is done, the port and its clack → `@inquirer` + `ora` conversion are
+  tracked there. Once that bin ships, delete `scripts/triage-docs.ts` and repoint the skill.
+- **Monorepo generator v1** (workspace-aware upgrade) is the only substantial genx-side item both
+  scoped and unblocked today.
+
+Open in other repos, tracked in each:
+
+- `@finografic/react` has no consumers; `touch-monorepo` carries drifted vendored copies of
+  `useBoundingRect` / `useKeyPress`.
 - `monorepo-starter` has a pre-existing MD012 error in `docs/todo/ROADMAP.md` (auto-fixable).
-- Three managed targets (`plate-editor`, `react`, `zustand-context-creator`) still lack
-  `.markdownlint.jsonc`, but have no `md-lint` wired, so nothing fails yet.
+- `plate-editor`, `react`, and `zustand-context-creator` lack `.markdownlint.jsonc`, but have no
+  `md-lint` wired, so nothing fails yet.
 
 ## References
 
