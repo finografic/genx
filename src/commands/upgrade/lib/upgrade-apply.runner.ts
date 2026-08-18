@@ -27,7 +27,7 @@ import {
   installDependenciesIfNeeded,
   logFeatureResults,
 } from './upgrade-tail.runner.js';
-import { confirmMerges, confirmNodeVersionUpgrade } from './upgrade.prompt.js';
+import { confirmNodeVersionUpgrade } from './upgrade.prompt.js';
 
 export async function applyUpgradeTarget(params: {
   context: UpgradeTargetContext;
@@ -58,14 +58,6 @@ export async function applyUpgradeTarget(params: {
         process.exit(0);
         return;
       }
-    }
-  }
-
-  if (shouldRunSection(only, 'merges') && mergeChanges.length > 0) {
-    const confirmed = await confirmMerges(mergeChanges);
-    if (!confirmed) {
-      process.exit(0);
-      return;
     }
   }
 
@@ -144,9 +136,23 @@ export async function applyUpgradeTarget(params: {
 
   context.packageJson = updatedPackageJson;
 
+  // Runs after the package.json writers above and re-reads from disk, so it only contributes keys
+  // the target still lacks. Each merge is confirmed against its own diff — package.json is the only
+  // merge rule, and it must not be written on the strength of a filename list.
   if (shouldRunSection(only, 'merges') && mergeChanges.length > 0) {
-    await applyMerges(context.targetDir, mergeChanges, templateDir, context.vars);
-    successMessage(`Merged ${mergeChanges.length} file(s)`);
+    const mergedCount = await applyMerges(
+      context.targetDir,
+      mergeChanges,
+      templateDir,
+      context.vars,
+      context.diffState,
+    );
+    if (mergedCount > 0) {
+      successMessage(`Merged ${mergedCount} file(s)`);
+      // The merge wrote package.json behind the in-memory copy; later steps read from it.
+      updatedPackageJson = await readPackageJson(context.packageJsonPath);
+      context.packageJson = updatedPackageJson;
+    }
   }
 
   const { gitignoreUpgrade } = context.state;

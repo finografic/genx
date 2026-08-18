@@ -77,6 +77,7 @@ export async function createUpgradeTargetContext(params: {
     params.targetDir,
     packageJson,
     parsed,
+    vars,
     params.selectedFeatureIds,
     params.only,
     params.debug,

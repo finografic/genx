@@ -15,6 +15,7 @@ import { policy, toolchain } from 'config/policy';
 import { renameRules } from 'config/rename.rules';
 import { upgradeConfig } from 'config/upgrade.config';
 import type { PackageJson } from 'types/package-json.types';
+import type { TemplateVars } from 'types/template.types';
 import type { UpgradeOnlySection } from 'types/upgrade.types';
 
 import { planGitignoreUpgrade } from './gitignore-upgrade.utils.js';
@@ -29,7 +30,7 @@ export interface UpgradePlanState {
   nodeTypesChange: ReturnType<typeof planNodeTypesChange>;
   existingFiles: Set<string> | null;
   renameChanges: ReturnType<typeof planRenames>;
-  mergeChanges: ReturnType<typeof planMerges>;
+  mergeChanges: Awaited<ReturnType<typeof planMerges>>;
   gitignoreUpgrade: Awaited<ReturnType<typeof planGitignoreUpgrade>> | null;
   shouldCopyLicense: boolean;
   templateDir: string;
@@ -47,6 +48,7 @@ export async function planUpgrade(
   targetDir: string,
   packageJson: PackageJson,
   parsed: { scope: string; name: string },
+  vars: TemplateVars,
   selectedFeatureIds: FeatureId[],
   only: Set<UpgradeOnlySection> | null,
   debug: boolean,
@@ -112,7 +114,7 @@ export async function planUpgrade(
   // Merges planning
   // Note: Merge planning needs to be aware of pending renames
   // If a file will be renamed to the canonical name, treat it as existing
-  let mergeChanges: ReturnType<typeof planMerges> = [];
+  let mergeChanges: Awaited<ReturnType<typeof planMerges>> = [];
   if (shouldRunSection(only, 'merges')) {
     if (existingFiles === null) {
       existingFiles = await getExistingFiles(targetDir, renameRules);
@@ -123,7 +125,7 @@ export async function planUpgrade(
       filesAfterRenames.delete(rename.from);
       filesAfterRenames.add(rename.to);
     }
-    mergeChanges = planMerges(filesAfterRenames, mergeConfig, templateDir);
+    mergeChanges = await planMerges(targetDir, filesAfterRenames, mergeConfig, templateDir, vars);
     if (mergeChanges.length > 0) {
       plan.push(`${pc.yellow('merges')}: ${mergeChanges.map((m) => m.file).join(', ')}`);
     }

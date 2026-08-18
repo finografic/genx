@@ -33,17 +33,6 @@ export async function confirmNodeVersionUpgrade(params: {
   return true;
 }
 
-export async function confirmMerges(files: Array<{ file: string }>): Promise<boolean | null> {
-  const fileList = files.map((f) => pc.cyan(f.file)).join(', ');
-  const ok = await clack.confirm({
-    message: `The following ${files.length} file(s) will be merged: ${fileList}. Continue?`,
-    initialValue: true,
-  });
-
-  if (clack.isCancel(ok) || !ok) return cancel();
-  return true;
-}
-
 export async function confirmReleasesRename(): Promise<boolean | null> {
   const ok = await clack.confirm({
     message: `Rename ${pc.yellow('docs/RELEASES.md')} ${pc.white('to')} ${pc.greenBright(

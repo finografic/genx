@@ -23,10 +23,7 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## Next
 
-- Run `genx upgrade` on `monorepo-starter` to adopt `.agents/instructions/` + `.agents/skills/`
-  (still on legacy `.github/instructions/`), decline the package-shaped oxc-config diffs, then
-  `pnpm release:github:minor`. Makes the generation-time migration a no-op. No genx change needed —
-  generation resolves the newest tag on its own.
+No items.
 
 ---
 
@@ -159,6 +156,7 @@ Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_RE
 
 | Date       | Item                                                                                                                                                                                                                                                                                        |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-19 | `upgrade` merges confirm per file — `merges` no longer writes package.json from a filename list, rides with `package-json` in the picker, plans only real changes, and keeps the trailing newline                                                                                           |
 | 2026-08-17 | `genx create` aligns scaffolded dependency versions to deps-policy — `_templates/package.json` no longer carries a second copy of every version (it was 11 stale for every package type)                                                                                                    |
 | 2026-08-17 | `genx create monorepo` (v0) — clone a pinned `monorepo-starter` tag, rewrite root identity, apply doc/agent features only, seed `.env.development` + database — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md), [`MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md) |
 | 2026-08-13 | Asset ownership contract — manifest-driven resolution, fail-closed ownership, seed protection, skills fixed to managed, removal semantics decided — [`TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md)                                                                |

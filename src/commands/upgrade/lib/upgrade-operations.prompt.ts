@@ -12,9 +12,6 @@ const UPGRADE_OPERATION_OPTIONS: Array<{
   { value: 'dependencies', label: 'dependencies', hint: 'align versions to deps-policy' },
   { value: 'node', label: 'node', hint: '.nvmrc, CI node version, @types/node' },
   { value: 'renames', label: 'renames', hint: 'normalize canonical filenames' },
-  // `merges` is package.json only — see config/merge.rules.ts. Named accordingly, because
-  // deselecting `package-json` while leaving this on does not protect package.json.
-  { value: 'merges', label: 'merges', hint: 'merge _templates/package.json into package.json' },
   { value: 'hooks', label: 'hooks', hint: 'husky and commitlint files' },
   { value: 'workflows', label: 'workflows', hint: 'GitHub CI and release workflows' },
   { value: 'docs', label: 'docs', hint: 'docs and .env.example sync' },
@@ -28,9 +25,14 @@ const UPGRADE_OPERATION_OPTIONS: Array<{
 const DEFAULT_UPGRADE_OPERATIONS = UPGRADE_OPERATION_OPTIONS.map((option) => option.value);
 
 export async function promptUpgradeOperations(flow: FlowContext): Promise<UpgradeOnlySection[]> {
-  return promptMultiSelect(flow, {
+  const selected = await promptMultiSelect(flow, {
     message: 'Select upgrade operations:',
     options: UPGRADE_OPERATION_OPTIONS,
     initialValues: DEFAULT_UPGRADE_OPERATIONS,
   });
+
+  // `merges` is package.json only (see config/merge.rules.ts), so it is not offered as its own
+  // operation: leaving it selectable meant deselecting `package-json` did not protect package.json.
+  // It rides with `package-json` here and stays reachable explicitly via `--only merges`.
+  return selected.includes('package-json') ? [...selected, 'merges'] : selected;
 }
