@@ -179,12 +179,19 @@ function migrateAiFolder(targetDir: string, result: AgentDocsMigrationResult): v
 // not here.
 const LEGACY_GITHUB_INSTRUCTIONS_DIR = '.github/instructions';
 
-/** Files to scan for `.github/instructions/` path references when renaming the folder. */
+/**
+ * Files to scan for `.github/instructions/` path references when renaming the folder.
+ *
+ * The Cursor rules are here because they point at instruction files by path too. Leaving them out
+ * meant a migrated repo kept telling Cursor to read a directory that no longer existed.
+ */
 const GITHUB_INSTRUCTIONS_REF_FILES = [
   'CLAUDE.md',
   'AGENTS.md',
   'README.md',
   '.github/copilot-instructions.md',
+  '.cursor/rules/agents-entry.mdc',
+  '.cursor/rules/git-operations.mdc',
 ] as const;
 
 function replaceGithubInstructionsRefsInFile(filePath: string, result: AgentDocsMigrationResult): void {

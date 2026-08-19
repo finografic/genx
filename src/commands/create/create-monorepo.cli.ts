@@ -16,6 +16,7 @@ import {
   runPnpmInstall,
   spinner,
   validateTargetDir,
+  warnMessage,
 } from 'utils';
 
 import {
@@ -183,7 +184,8 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
         dbSpin.stop('Database reset and seeded');
       } catch {
         dbSpin.stop('Failed to reset the database');
-        errorMessage('You can run `pnpm dev:db:reset` manually');
+        // Not an error: the workspace is generated and usable, one manual step short of running.
+        warnMessage('Please run `pnpm dev:db:reset` manually');
       }
     }
 
