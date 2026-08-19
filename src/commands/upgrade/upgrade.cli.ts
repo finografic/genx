@@ -1,4 +1,6 @@
+import { resolve } from 'node:path';
 import { createFlowContext } from '@finografic/cli-kit/flow';
+import type { FlowContext } from '@finografic/cli-kit/flow';
 import { withHelp } from '@finografic/cli-kit/render-help';
 import { errorMessage, hasManagedFlag, infoMessage, intro, warnMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
@@ -10,8 +12,15 @@ import { parseUpgradeArgs } from './lib/upgrade-metadata.utils.js';
 import { promptUpgradeMode } from './lib/upgrade-mode.prompt.js';
 import { promptUpgradeOperations } from './lib/upgrade-operations.prompt.js';
 import { createUpgradeTargetContext } from './lib/upgrade-target-context.js';
+import {
+  partitionFeaturesForWorkspace,
+  reportBlockedWorkspaceFeatures,
+  runWorkspaceMemberFeatures,
+} from './lib/workspace-features.runner.js';
 import { applyFeaturesToTarget, logFeatureResults } from 'lib/features/apply-features.runner';
 import { runManagedLoop } from 'lib/managed/managed-loop.runner';
+import { isMonorepoRoot } from 'lib/monorepo/monorepo.workspace';
+import { readPackageJson } from 'lib/package-policy/package-json.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
 import { isDevelopment } from 'utils/env.utils';
 
@@ -88,6 +97,7 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
         actionLabel: 'Upgrade',
         runTarget: async (target) => {
           await upgradeSingleTarget({
+            flow,
             targetDir: target.path,
             selectedOperations,
             debug,
@@ -99,6 +109,7 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
     }
 
     await upgradeSingleTarget({
+      flow,
       targetDir,
       selectedOperations,
       debug,
@@ -108,16 +119,31 @@ export async function upgradePackage(argv: string[], context: { cwd: string }): 
 }
 
 export async function upgradeSingleTarget(params: {
+  flow: FlowContext;
   targetDir: string;
   selectedOperations: Set<UpgradeOnlySection>;
   debug: boolean;
   selectedFeatureIds: FeatureId[];
 }): Promise<void> {
+  // A workspace root is not a package. Features are split before the target context is built so
+  // the plan reports only what the root will actually receive.
+  const packageJson = await readPackageJson(resolve(params.targetDir, 'package.json'));
+  const isWorkspaceRoot = await isMonorepoRoot(params.targetDir, packageJson);
+
+  const partition = isWorkspaceRoot
+    ? partitionFeaturesForWorkspace(params.selectedFeatureIds)
+    : { root: params.selectedFeatureIds, member: [], blocked: [] };
+
+  if (isWorkspaceRoot) {
+    infoMessage(`Workspace root detected — package-scoped features run against members.`);
+    reportBlockedWorkspaceFeatures(partition.blocked);
+  }
+
   const context = await createUpgradeTargetContext({
     targetDir: params.targetDir,
     only: params.selectedOperations,
     debug: params.debug,
-    selectedFeatureIds: params.selectedFeatureIds,
+    selectedFeatureIds: partition.root,
   });
   if (!context) {
     return;
@@ -127,6 +153,12 @@ export async function upgradeSingleTarget(params: {
   await applyUpgradeTarget({
     context,
     only: params.selectedOperations,
-    selectedFeatureIds: params.selectedFeatureIds,
+    selectedFeatureIds: partition.root,
+  });
+
+  await runWorkspaceMemberFeatures({
+    flow: params.flow,
+    targetDir: params.targetDir,
+    featureIds: partition.member,
   });
 }

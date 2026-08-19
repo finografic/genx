@@ -42,6 +42,15 @@ export interface MonorepoConfig {
   rootFeatures: readonly FeatureId[];
 
   /**
+   * Features that `upgrade` runs against each selected workspace member instead of the root.
+   *
+   * These assume a single-package `src/` layout — a vitest config, a CSS entry point, a Vite app —
+   * so running them at the root writes files nothing reads. Any feature that is in neither this
+   * list nor {@link rootFeatures} is starter-owned toolchain and is skipped at the root entirely.
+   */
+  memberFeatures: readonly FeatureId[];
+
+  /**
    * Filename prefixes removed from the generated repo's `docs/todo/` — the starter's own build
    * history, which is meaningless in a new project.
    */
@@ -54,6 +63,8 @@ export const monorepoConfig: MonorepoConfig = {
   pinnedTag: 'v0.2.2',
 
   rootFeatures: ['aiAgents', 'aiInstructions', 'aiMemory', 'designMd'],
+
+  memberFeatures: ['vitest', 'css', 'reactVite'],
 
   docsTodoResetPrefixes: ['TODO_', 'DONE_'],
 };

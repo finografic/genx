@@ -35,6 +35,7 @@ export async function runManagedUpgradeFlow(argv: string[]): Promise<void> {
     actionLabel: 'Upgrade',
     runTarget: async (target) => {
       await upgradeSingleTarget({
+        flow,
         targetDir: target.path,
         selectedOperations,
         debug,

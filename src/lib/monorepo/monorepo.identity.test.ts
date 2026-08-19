@@ -20,7 +20,13 @@ const identity: MonorepoIdentity = {
 
 const toolchain = { node: '24.16.0', pnpm: '11.21.0' };
 
-/** Mirrors the starter's root package.json fields the transform cares about. */
+/**
+ * The starter's root package.json _fields_ — not its current values.
+ *
+ * `engines`, `packageManager`, `version` and the `starter` keyword are deliberately stale here so
+ * the assertions prove the transform overwrote them. A fixture already matching policy would pass
+ * even if `rewriteRootPackageJson` never touched those fields.
+ */
 const STARTER_PACKAGE_JSON = {
   name: '@finografic/monorepo-starter',
   version: '0.1.0',
@@ -84,6 +90,8 @@ describe('rewriteRootPackageJson', () => {
     expect(pkg['description']).toBe('A new full-stack workspace');
     expect(pkg['keywords']).not.toContain('starter');
     expect(pkg['keywords']).toContain('monorepo');
+    // The marker `upgrade` reads to route a workspace root away from the single-package path.
+    expect(pkg['keywords']).toContain('genx:workspace:monorepo');
     expect(pkg['homepage']).toBe('https://github.com/finografic/my-app');
     expect(pkg['bugs']).toEqual({ url: 'https://github.com/finografic/my-app/issues' });
     expect(pkg['repository']).toEqual({

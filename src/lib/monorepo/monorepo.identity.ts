@@ -4,6 +4,8 @@ import { join } from 'node:path';
 
 import type { PackageJson } from 'types/package-json.types';
 
+import { MONOREPO_WORKSPACE_KEYWORD } from './monorepo.workspace.js';
+
 export interface MonorepoIdentity {
   /** Package scope, with or without a leading `@`. */
   scope: string;
@@ -57,8 +59,14 @@ export async function rewriteRootPackageJson(
   const existingKeywords = Array.isArray(pkg.keywords)
     ? pkg.keywords.filter((keyword): keyword is string => typeof keyword === 'string')
     : [];
+  // The workspace marker is what lets `upgrade` treat this root as a workspace rather than a
+  // single package. Detection falls back to `pnpm-workspace.yaml`, but the keyword is explicit.
   pkg['keywords'] = [
-    ...new Set([scopeClean, ...existingKeywords.filter((k) => !STARTER_ONLY_KEYWORDS.has(k))]),
+    ...new Set([
+      scopeClean,
+      MONOREPO_WORKSPACE_KEYWORD,
+      ...existingKeywords.filter((k) => !STARTER_ONLY_KEYWORDS.has(k)),
+    ]),
   ];
 
   pkg['homepage'] = repoUrl;
