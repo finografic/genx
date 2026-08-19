@@ -7,6 +7,7 @@ import { findPackageRoot } from 'utils/package-root.utils';
 import { findGitignoreCommentSectionRange } from './gitignore-section.utils.js';
 
 const PROJECT_SPECIFIC_HEADER = '# Project-specific';
+const PROJECT_SPECIFIC_TITLE = 'project-specific';
 
 let cachedCanonicalLines: readonly string[] | null = null;
 
@@ -68,6 +69,14 @@ function trimTrailingBlankLines(lines: string[]): string[] {
   return out;
 }
 
+function trimLeadingBlankLines(lines: string[]): string[] {
+  const out = [...lines];
+  while (out.length > 0 && out[0]?.trim() === '') {
+    out.shift();
+  }
+  return out;
+}
+
 function skipSection(lines: readonly string[], startIndex: number): number {
   let index = startIndex + 1;
   while (index < lines.length) {
@@ -81,60 +90,56 @@ function skipSection(lines: readonly string[], startIndex: number): number {
  * Collect target-only sections and pattern lines not present in `_templates/.gitignore`.
  * Canonical sections in the target are dropped (replaced by the template). Extras are appended after the
  * canonical body under `# Project-specific`.
+ *
+ * Comment lines are buffered and only emitted once a surviving pattern line claims them, so a wrapped
+ * multi-line comment stays attached to its rule. Only the first comment of a run is treated as a section
+ * heading — continuation lines look like headings to `parseSectionHeader` but must not split the block.
  */
 function extractTargetExtras(targetLines: string[], canonicalLines: readonly string[]): string[] {
   const canonicalSections = getCanonicalSectionTitles(canonicalLines);
   const canonicalPatterns = getCanonicalPatternSet(canonicalLines);
   const extras: string[] = [];
+  let pending: string[] = [];
   let index = 0;
+
+  const flushPending = (): void => {
+    const body = trimTrailingBlankLines(trimLeadingBlankLines(pending));
+    const separated = pending.some((entry) => entry.trim() === '');
+    if (extras.length > 0 && (separated || body.length > 0)) extras.push('');
+    extras.push(...body);
+    pending = [];
+  };
 
   while (index < targetLines.length) {
     const line = targetLines[index] ?? '';
-    const sectionTitle = parseSectionHeader(line);
 
-    if (sectionTitle === PROJECT_SPECIFIC_HEADER.slice(2).trim().toLowerCase()) {
-      index++;
-      while (index < targetLines.length) {
-        const extraLine = targetLines[index] ?? '';
-        if (parseSectionHeader(extraLine) !== null) break;
-        if (isPatternLine(extraLine) && !canonicalPatterns.has(extraLine.trim())) {
-          extras.push(extraLine);
-        }
-        index++;
+    if (isPatternLine(line)) {
+      if (canonicalPatterns.has(line.trim())) {
+        pending = [];
+      } else {
+        flushPending();
+        extras.push(line);
       }
+      index++;
       continue;
     }
 
-    if (sectionTitle) {
-      if (canonicalSections.has(sectionTitle)) {
-        index = skipSection(targetLines, index);
-        continue;
-      }
+    const startsRun = !pending.some((entry) => entry.trim() !== '');
+    const sectionTitle = startsRun ? parseSectionHeader(line) : null;
 
-      const sectionLines: string[] = [line];
+    if (sectionTitle === PROJECT_SPECIFIC_TITLE) {
+      pending = [];
       index++;
-      while (index < targetLines.length) {
-        const nextLine = targetLines[index] ?? '';
-        if (parseSectionHeader(nextLine) !== null) break;
-        if (isPatternLine(nextLine) && !canonicalPatterns.has(nextLine.trim())) {
-          sectionLines.push(nextLine);
-        } else if (!isPatternLine(nextLine)) {
-          sectionLines.push(nextLine);
-        }
-        index++;
-      }
-
-      const trimmedSection = trimTrailingBlankLines(sectionLines);
-      if (trimmedSection.some(isPatternLine)) {
-        if (extras.length > 0) extras.push('');
-        extras.push(...trimmedSection);
-      }
       continue;
     }
 
-    if (isPatternLine(line) && !canonicalPatterns.has(line.trim())) {
-      extras.push(line);
+    if (sectionTitle && canonicalSections.has(sectionTitle)) {
+      pending = [];
+      index = skipSection(targetLines, index);
+      continue;
     }
+
+    pending.push(line);
     index++;
   }
 

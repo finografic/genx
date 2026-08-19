@@ -81,6 +81,45 @@ Desktop.ini
     expect(after).not.toContain('# OS\n');
   });
 
+  it('proposeGitignoreMerge keeps wrapped multi-line comments attached to their rule', () => {
+    // Continuation lines such as `# no secrets. …` parse as section headings, which used to split the
+    // block into comment-only fragments and drop every line but the last.
+    const comment = [
+      '# Server env symlink',
+      '# `apps/server` resolves its env through this link, and a symlink stores only a relative path —',
+      '# no secrets. The blanket `.env.*` rule above matches the link itself, so without this negation a',
+      '# fresh clone (including `genx create monorepo`) has no way to find the root env file.',
+    ];
+    const before = `${getCanonicalGitignoreBody()}
+
+# Project-specific
+${comment.join('\n')}
+!apps/server/.env.development
+`;
+    const after = proposeGitignoreMerge(before);
+    for (const line of comment) {
+      expect(after).toContain(line);
+    }
+    expect(after.endsWith('!apps/server/.env.development\n')).toBe(true);
+    expect(proposeGitignoreMerge(after)).toBe(after);
+  });
+
+  it('proposeGitignoreMerge drops a comment whose patterns are all canonical', () => {
+    const before = `${getCanonicalGitignoreBody()}
+
+# Project-specific
+# Stale heading
+coverage/
+
+# Real extra
+vendor-cache/
+`;
+    const after = proposeGitignoreMerge(before);
+    expect(after).not.toContain('# Stale heading');
+    expect(after).toContain('# Real extra');
+    expect(after).toContain('vendor-cache/');
+  });
+
   it('proposeGitignoreMerge is idempotent once canonical', () => {
     const complete = `${getCanonicalGitignoreBody()}\n`;
     const once = proposeGitignoreMerge(complete);
