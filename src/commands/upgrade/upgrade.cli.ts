@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { createFlowContext } from '@finografic/cli-kit/flow';
 import type { FlowContext } from '@finografic/cli-kit/flow';
 import { withHelp } from '@finografic/cli-kit/render-help';
-import { errorMessage, hasManagedFlag, infoMessage, intro, warnMessage } from 'utils';
+import { errorMessage, hasManagedFlag, infoMessage, intro, successMessage, warnMessage } from 'utils';
 import type { FeatureId } from 'features/feature.types';
 
 import { runAgentDocsMigration } from './lib/agent-docs.runner.js';
@@ -156,9 +156,14 @@ export async function upgradeSingleTarget(params: {
     selectedFeatureIds: partition.root,
   });
 
+  // Member features run after the root is done, so the completion message belongs here rather than
+  // at the end of `applyUpgradeTarget` — otherwise it announces "complete" with every member still
+  // to go, which reads as a finished run in a `managed upgrade` sweep.
   await runWorkspaceMemberFeatures({
     flow: params.flow,
     targetDir: params.targetDir,
     featureIds: partition.member,
   });
+
+  successMessage('Upgrade complete');
 }

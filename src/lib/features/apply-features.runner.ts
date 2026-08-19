@@ -10,6 +10,8 @@ import { commitFeatureGitChanges, createFeatureGitCommitTracker } from './featur
 export interface ApplyFeaturesToTargetOptions {
   commandName?: string;
   commitEachFeature?: boolean;
+  /** Workspace member this target is, named in the commit subject so per-member commits differ. */
+  targetLabel?: string;
   yesAll?: boolean;
 }
 
@@ -82,6 +84,7 @@ export async function applyFeaturesToTarget(
             commandName,
             feature,
             targetDir,
+            targetLabel: options.targetLabel,
             tracker,
           });
 

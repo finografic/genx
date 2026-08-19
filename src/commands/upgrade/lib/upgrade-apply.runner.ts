@@ -195,5 +195,4 @@ export async function applyUpgradeTarget(params: {
 
   hasDependencyChanges = await ensureCliHelpFile({ context, only, hasDependencyChanges });
   await installDependenciesIfNeeded(context.targetDir, hasDependencyChanges);
-  successMessage('Upgrade complete');
 }

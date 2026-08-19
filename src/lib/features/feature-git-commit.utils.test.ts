@@ -45,7 +45,20 @@ describe('feature git commits', () => {
         commandName: 'audit',
         feature: testFeature,
       }),
-    ).toBe('feat(ai-instructions): genx audit used to update AI Instructions (Copilot, Cursor rules)');
+    ).toBe('feat(ai-instructions): update AI Instructions (Copilot, Cursor rules) via genx audit');
+  });
+
+  it('names the workspace member so per-member commits are distinguishable', () => {
+    expect(
+      createFeatureCommitSubject({
+        action: 'add',
+        commandName: 'upgrade',
+        feature: testFeature,
+        targetLabel: 'apps/server',
+      }),
+    ).toBe(
+      'feat(ai-instructions): add AI Instructions (Copilot, Cursor rules) in apps/server via genx upgrade',
+    );
   });
 
   it('commits feature paths and newly dirty side effects without committing pre-existing dirty files', async () => {

@@ -83,6 +83,7 @@ export async function runWorkspaceMemberFeatures(params: {
     infoMessage(`Workspace member: ${pc.cyan(member.relativePath)}`);
     const results = await applyFeaturesToTarget(member.dir, params.featureIds, {
       commandName: 'upgrade',
+      targetLabel: member.relativePath,
       yesAll: params.flow.yesMode,
     });
     logFeatureResults(results);
