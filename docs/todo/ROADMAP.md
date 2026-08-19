@@ -23,11 +23,7 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## Next
 
-- Verify monorepo v1 end to end: run `genx upgrade` in `monorepo-starter`, select a mix of
-  doc/agent, package-scoped and toolchain features, and confirm the root receives only the
-  doc/agent ones, members are offered for `vitest`/`css`/`reactVite`, and toolchain features are
-  reported as skipped. Unit tests and `pnpm smoke:workspace` cover detection and routing; the full
-  interactive run has not been exercised.
+No items.
 
 ---
 
@@ -57,6 +53,38 @@ Add a `design-docs` feature to set up `docs/specs/`, `docs/scratch/`, triage scr
 instruction file in any `@finografic` package. Unblocked 2026-08-19 by #6 — the triage step is now
 `pnpm --package=@finografic/project-scripts dlx triage-docs`, so the feature ships an instruction
 file and the two directories rather than a script.
+
+### 9. Vitest DOM environment for React packages without a bundler config
+
+`previewVitest` decides the test environment as a side effect of which template it picks, and the
+template choice keys off whether the package has a `vite.config.ts` to `mergeConfig`. A shadcn-style
+component library has no bundler config of its own — the consuming app owns it — so it falls back to
+the base template and `environment: 'node'`, while the app that mostly does routing gets
+`happy-dom`. Backwards: the component library is the DOM-dependent one.
+
+Two changes, both small:
+
+1. Treat `react` alone as frontend for test-environment purposes. `inferPackageTypeId` currently
+   needs `react` **and** `vite`, so a component library is typed `library` and never reaches the
+   frontend branch.
+2. Decide the environment independently of the template. `_templates/` is the only content source,
+   so this means a third template (standalone react — `defineConfig` with `happy-dom`, no
+   `mergeConfig`) rather than patching the base template's string.
+
+No failure until someone writes the first component test, at which point the fix by hand is one line
+plus one devDependency. Observed 2026-08-19 on a generated monorepo's `packages/ui`.
+
+### 10. `REACT_DEV_DEPS` has no drift check
+
+`src/features/react-vite/react-vite.constants.ts` pins React-side versions in genx because
+deps-policy has no `react` group by design (see `src/config/policy.ts`). Nothing keeps them current:
+as of 2026-08-19 genx says `vite ^7.1.10`, `@vitejs/plugin-react ^5.1.0`, `concurrently ^9.2.1`
+while `monorepo-starter` already ships `^8.1.0`, `^6.0.3` and `^10.0.5`. A fresh `genx create` of a
+react package therefore scaffolds versions behind the starter.
+
+Same shape as Key Decision 17 — a value duplicated with nothing forcing it current — but unlike
+`_templates/` there is no policy group to check against. Either give `react` a deps-policy group, or
+add a check that compares these constants with the starter at its pinned tag.
 
 ### 5. `generate-new-genx-feature` skill — modernize for diff-as-detection
 

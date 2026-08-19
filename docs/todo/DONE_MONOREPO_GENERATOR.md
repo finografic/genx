@@ -1,8 +1,8 @@
-# DONE — `genx create monorepo` (v0)
+# DONE — `genx create monorepo` (v0 + v1)
 
-> **Status:** v0 shipped 2026-08-17, verified by an end-to-end generation run from tag `v0.2.1`.
+> **Status:** v0 shipped 2026-08-17; v1 (workspace-aware upgrade) shipped and verified end to end
+> 2026-08-19. Only v2 (slices) remains, parked in ROADMAP P3 pending real demand.
 > Living reference: [`docs/process/MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md).
-> The v1 and v2 sections below remain open — tracked on the roadmap.
 >
 > **Primary repository:** this repo (`@finografic/genx`)
 >
@@ -113,16 +113,25 @@ low and the evidence is real.
 
 ## Status
 
-v0 is implemented (typecheck, lint, format clean; 331 tests pass, 9 of them covering the identity
-transform). **Not yet verified end to end** — the clone step cannot run until `monorepo-starter`
-carries the `v0.1.0` tag. Everything downstream of the clone is unit-tested against a fixture tree.
+**v0 and v1 are both shipped and verified end to end** (2026-08-19, genx 5.48.4 against
+`monorepo-starter` v0.4.4).
+
+The verification run covered generation, `pnpm db:setup` in the generated repo, and a full
+interactive `genx upgrade` confirming all three feature buckets: root features applied at the
+workspace root only, `vitest` applied per selected member with its own diffs, and `oxc-config`
+reported as skipped rather than written. `.gitignore` proposed no change, confirming the canonical
+merge is a fixed point for the starter.
+
+Four defects surfaced by that interactive run — none reachable from unit tests — were fixed in
+5.48.4: the react `vitest.config.ts` template was unreachable, React members got
+`environment: 'node'`, per-member commits shared one indistinguishable subject, and
+`Upgrade complete` printed before member work began.
 
 ## Prerequisites in `monorepo-starter`
 
-1. **Create a tag.** The repo currently has **zero tags**; pinning has nothing to point at.
-   Establish `v0.1.0` and a convention that generator-visible changes get a tag bump.
-2. Confirm `apps/server` boots from `.env.example` alone, so a generated repo runs without
-   out-of-band setup.
+Both satisfied. The repo is tagged (`v0.4.4` at time of verification) and generator-visible changes
+get a tag bump; `apps/server` boots in a fresh clone — the `.env.development` symlink that makes
+`pnpm db:setup` work is now tracked, via a `.gitignore` negation under `# Project-specific`.
 
 ## Decisions (locked 2026-08-16)
 
@@ -136,9 +145,11 @@ carries the `v0.1.0` tag. Everything downstream of the clone is unit-tested agai
 
 ## Later phases (do not build speculatively)
 
-**v1 — workspace-aware upgrade.** Add the `genx:workspace:monorepo` root marker and teach
-`upgrade` to iterate `pnpm-workspace.yaml` members for package-scoped features, reusing the shape
-of `src/lib/managed/managed-loop.runner.ts` (intra-repo rather than cross-repo).
+**v1 — workspace-aware upgrade. Shipped 2026-08-19.** The `genx:workspace:monorepo` root marker,
+`pnpm-workspace.yaml` member resolution, and the root / member / blocked feature partition all
+landed; see the Status section above. One detection subtlety is worth remembering: since pnpm 10 a
+single-package repo may carry a `pnpm-workspace.yaml` for `allowBuilds`, so a workspace requires a
+non-empty `packages:` list, not merely the file.
 
 **v2 — slices.** Reduce the starter to a minimal core plus additive overlays
 (`_slices/auth/`, `_slices/i18n/`, `_slices/design-system-<x>/`) that copy in and merge.
