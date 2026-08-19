@@ -11,7 +11,7 @@
 ## Project
 
 `@finografic/genx` is an opinionated generator and codemod toolkit for the `@finografic`
-ecosystem. Current version: **v5.47.1**.
+ecosystem. Current version: **v5.48.4**.
 
 ## Architecture
 
@@ -53,6 +53,12 @@ allowlist. Only documentation/agent features apply — toolchain config is the s
 current by upgrading and re-tagging the starter rather than re-deriving it per generation. A cloned
 tag is the only source: local-checkout generation was built, leaked `.env.*` and the dev database,
 and was removed. Reference: `docs/process/MONOREPO_GENERATION.md`.
+
+**Workspace-aware upgrade:** against a monorepo root, `upgrade` partitions selected features into
+root (doc/agent), member (`vitest`, `css`, `reactVite`, applied per selected workspace member), and
+blocked (starter-owned toolchain, reported as skipped). Detection requires a non-empty `packages:`
+list in `pnpm-workspace.yaml` — since pnpm 10 a single package may carry that file for `allowBuilds`
+alone. Upgrade _operations_ are not scoped this way; see ROADMAP #11.
 
 **Features:** Self-contained modules live under `src/features/`. Preview-driven change sets power
 both detection and apply flows. Audit reports `installed`, `partial`, and `missing` states.
@@ -145,9 +151,14 @@ does not make obvious:
 
 - #6 shipped 2026-08-19, so **#4 (`design-docs`) is the unblocked item on the critical path** — and
   it no longer ships a script, only the two directories and an instruction file pointing at the bin.
-- Monorepo generator v1 (workspace-aware upgrade) shipped; what remains is the interactive
-  end-to-end run listed under `ROADMAP.md#next`, which unit tests and `pnpm smoke:workspace` cannot
-  cover.
+  `docs/specs/` now exists with its first occupant, so #4 has a real consumer to build against.
+- Monorepo generation is **done and verified end to end** (v0 + v1, 2026-08-19). The substantive
+  remainder is #11: `upgrade` scopes features but never scoped _operations_, which still run at the
+  workspace root by inherited default. Design in
+  [`docs/specs/2026-08-19-workspace-ownership-model.md`](../docs/specs/2026-08-19-workspace-ownership-model.md).
+- #11's scope-as-a-set decision should land **before** the recursive `AGENTS.md` work, not during
+  it — that work needs a root spine plus per-package files, which the current exclusive partition
+  cannot express.
 
 Open in other repos, tracked in each:
 
@@ -161,5 +172,6 @@ Open in other repos, tracked in each:
 
 - Roadmap: `docs/todo/ROADMAP.md`
 - Near-term work: `docs/todo/ROADMAP.md#next`
+- Design specs: `docs/specs/`
 - Memory model: `docs/process/PROJECT_MEMORY_MODEL.md`
 - Future memory skill: `docs/todo/TODO_MAINTAIN_PROJECT_MEMORY_SKILL.md`

@@ -43,37 +43,11 @@ No items.
 
 ### 11. What does a workspace root own? — upgrade operation scoping
 
-**Open design question, not yet a task.** v1 partitions _features_ into root / member / blocked, but
-_operations_ (`package-json`, `dependencies`, `node`, `renames`, `hooks`, `workflows`, `docs`,
-`gitignore`) were never scoped — they all run against the workspace root as if it were an ordinary
-package, and have never been exercised there (the verification run selected only `gitignore`).
+**Open design question, not yet a task.** v1 scopes _features_ (root / member / blocked) but never
+scoped _operations_ — they all run against the workspace root as if it were an ordinary package, and
+have never been exercised there. Settle ownership first, then route by it.
 
-The framing to settle first: **ownership, not location.** Every file genx writes has exactly one
-owner — the workspace, an individual package, or the starter — and "root vs recursive" should fall
-out of that rather than being a mode. Sketch:
-
-| Concern                           | Likely owner | Note                                                          |
-| --------------------------------- | ------------ | ------------------------------------------------------------- |
-| `gitignore`, `workflows`, `hooks` | workspace    | git- and repo-level singletons; husky installs once           |
-| `dependencies`                    | package      | each manifest has its own; **the root has real ones too**     |
-| `node`                            | split        | one `.nvmrc`; `engines.node` per manifest                     |
-| `package-json`                    | split        | root scripts are turbo orchestration, member scripts are real |
-| `docs`, `renames`                 | workspace    | mostly                                                        |
-
-Three things this has to account for:
-
-1. **Scope is a set, not a value.** The recursive `AGENTS.md` work will need a root spine _and_ a
-   per-package file, so the current exclusive partition breaks. `root | member | both | starter-owned`.
-2. **`workspace:*` specs must never be policy-aligned.** The starter has two (`@workspace/ui`,
-   `@workspace/config`); rewriting them to a semver range would break the workspace link.
-3. **The blocked bucket conflates two different reasons.** `oxc-config` is skipped at the root as
-   "the starter already owns it" — but the root genuinely _uses_ oxc-config (devDep plus a
-   `lint: oxlint` script). "Doesn't apply here" and "someone else owns it" need different handling;
-   as it stands the root's lint config drifts from genx canonical with nothing to reconcile it.
-
-Related: `genx deps` recursion is the same question from the dependency side, plus how it divides
-labour with `syncpack` (already in the starter at `^15.3.3`) — deps-policy aligns each package
-against the org, syncpack aligns packages against each other. pnpm `catalog:` may collapse both.
+Detail: [`docs/specs/2026-08-19-workspace-ownership-model.md`](../specs/2026-08-19-workspace-ownership-model.md)
 
 ### 2. Type-specific policy divergence in deps-policy
 
