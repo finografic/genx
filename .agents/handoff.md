@@ -144,8 +144,9 @@ Nothing is at P0 or P1. `docs/todo/ROADMAP.md` is canonical for items and priori
 does not make obvious:
 
 - The critical path is #6 → #4, and **#6's next move is in `@finografic/project-scripts`, not
-  here** — the genx side is done, the port and its clack → `@inquirer` + `ora` conversion are
-  tracked there. Once that bin ships, delete `scripts/triage-docs.ts` and repoint the skill.
+  here** — the genx side is done, and the port is mechanical: the script keeps `@clack/prompts`,
+  which that package is moving to anyway. Once the bin ships, delete `scripts/triage-docs.ts` and
+  repoint the skill.
 - **Monorepo generator v1** (workspace-aware upgrade) is the only substantial genx-side item both
   scoped and unblocked today.
 

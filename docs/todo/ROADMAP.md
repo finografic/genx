@@ -76,8 +76,10 @@ genx's `src/`, operates entirely on `process.cwd()`, and labels its run from the
 `package.json`. Verified running unchanged in a foreign repo.
 
 **The port itself is planned and tracked in the destination repo**, not here:
-`@finografic-project-scripts/docs/todo/TODO_TRIAGE_DOCS.md` (P1 there). It covers the prompt-layer
-conversion — clack to `@inquirer` + `ora` — which is the only non-mechanical part.
+`@finografic-project-scripts/docs/todo/TODO_TRIAGE_DOCS.md` (P1 there). No prompt-layer rewrite is
+involved: the script keeps `@clack/prompts` and the port just adds that dependency. Inquirer is the
+straggler there, not the target — project-scripts is scheduled to move _to_ clack, and landing
+`triage-docs` unconverted is the cheapest way to introduce it.
 
 Remaining on the genx side, once the bin ships: delete `scripts/triage-docs.ts` and point the
 `triage-docs` skill at `pnpm --package=@finografic/project-scripts dlx triage-docs`. Unblocks #4.
