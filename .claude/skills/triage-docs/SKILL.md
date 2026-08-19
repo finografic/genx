@@ -18,21 +18,21 @@ Before proceeding, read `12-design-specs.instructions.md` for the rules governin
 - When the user asks to organize, triage, or clean up planning docs
 - During `genx upgrade` if ad-hoc doc directories are detected
 
-## Preferred: use the triage script
+## Preferred: use the triage-docs bin
 
 ```bash
-pnpm triage:docs
+pnpm --package=@finografic/project-scripts dlx triage-docs
 ```
 
-The script scans known agent output locations, suggests a category for each file based on content markers, and prompts for the action (move to specs, move to scratch, delete, or skip). It also cleans up empty directories afterward.
+The bin scans known agent output locations, suggests a category for each file based on content markers, and prompts for the action (move to specs, move to scratch, delete, or skip). It also cleans up empty directories afterward.
 
 For additional directories not in the default scan list:
 
 ```bash
-pnpm triage:docs --scan-dir=custom/path
+pnpm --package=@finografic/project-scripts dlx triage-docs --scan-dir=custom/path
 ```
 
-## Manual triage (when the script is unavailable)
+## Manual triage (when the bin is unavailable)
 
 ### Step 1 — Identify artifacts
 
@@ -94,4 +94,4 @@ Scratch files: no strict naming — they're gitignored and temporary.
 
 ## Adding new scan locations
 
-If a new agent tool creates planning artifacts in a novel location, add that path to the `DEFAULT_SCAN_DIRS` array in `scripts/triage-docs.ts` and update this skill's Step 1 list.
+If a new agent tool creates planning artifacts in a novel location, pass it as `--scan-dir=<path>`, then add it to `DEFAULT_SCAN_DIRS` in `@finografic/project-scripts` (`src/triage-docs/triage-docs.config.ts`) and update this skill's Step 1 list.

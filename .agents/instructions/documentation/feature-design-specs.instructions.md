@@ -77,7 +77,7 @@ Task breakdowns, checklists, draft notes, manual test steps, and other throwaway
 
 ## Triaging agent output
 
-Agents may create planning artifacts in ad-hoc locations (`docs/superpowers/`, `.cursor/plans/`, `.claude/drafts/`, etc.). If this repo has `pnpm triage:docs` available, use it to scan these locations and interactively move files to the correct destination (currently a `genx`-only script — see `.agents/skills/triage-docs/SKILL.md` in the genx repo). Otherwise, manually classify each file as a spec (`docs/specs/`) or scratch (`docs/drafts/`) using the criteria above.
+Agents may create planning artifacts in ad-hoc locations (`docs/superpowers/`, `.cursor/plans/`, `.claude/drafts/`, etc.). Run `pnpm --package=@finografic/project-scripts dlx triage-docs` to scan these locations and interactively move files to the correct destination (see `.agents/skills/triage-docs/SKILL.md`). If that is unavailable, manually classify each file as a spec (`docs/specs/`) or scratch (`docs/drafts/`) using the criteria above.
 
 ## Cross-project applicability
 

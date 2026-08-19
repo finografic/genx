@@ -54,33 +54,15 @@ Deferred until concrete need arises.
 ### 4. `design-docs` genx feature
 
 Add a `design-docs` feature to set up `docs/specs/`, `docs/scratch/`, triage script, and
-instruction file in any `@finografic` package. Blocked on #6 (triage-docs portability).
+instruction file in any `@finografic` package. Unblocked 2026-08-19 by #6 — the triage step is now
+`pnpm --package=@finografic/project-scripts dlx triage-docs`, so the feature ships an instruction
+file and the two directories rather than a script.
 
 ### 5. `generate-new-genx-feature` skill — modernize for diff-as-detection
 
 Update the `feature-template/` skeleton so newly scaffolded features use the preview-driven
 detect/apply pattern (`*.preview.ts`) instead of the old signal-based detection.
 Blocked on choosing a reference feature.
-
-### 6. `triage-docs` — cross-project portability
-
-**Approach decided (2026-08-17): move it to `@finografic/project-scripts`** as a `triage-docs` bin,
-consumed via `pnpm dlx` exactly like `purge-builds` and `clean-docs`. That package already exists
-for this shape of tool, and every managed repo already depends on it — a second distribution
-mechanism would be inventing one where one is already in use.
-
-The genx-side prerequisite is **done**: `scripts/triage-docs.ts` no longer imports anything from
-genx's `src/`, operates entirely on `process.cwd()`, and labels its run from the consuming repo's
-`package.json`. Verified running unchanged in a foreign repo.
-
-**The port itself is planned and tracked in the destination repo**, not here:
-`@finografic-project-scripts/docs/todo/TODO_TRIAGE_DOCS.md` (P1 there). No prompt-layer rewrite is
-involved: the script keeps `@clack/prompts` and the port just adds that dependency. Inquirer is the
-straggler there, not the target — project-scripts is scheduled to move _to_ clack, and landing
-`triage-docs` unconverted is the cheapest way to introduce it.
-
-Remaining on the genx side, once the bin ships: delete `scripts/triage-docs.ts` and point the
-`triage-docs` skill at `pnpm --package=@finografic/project-scripts dlx triage-docs`. Unblocks #4.
 
 ### 8. `genx design` — follow-ups (core command shipped 2026-08-13)
 
@@ -156,6 +138,7 @@ Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_RE
 
 | Date       | Item                                                                                                                                                                                                                                                                                                                         |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-19 | `triage-docs` cross-project portability — shipped as a `triage-docs` bin in `@finografic/project-scripts` 2.0.0, consumed via `pnpm dlx` like `purge-builds`; genx's local `scripts/triage-docs.ts` deleted and the skill, instruction file and dependency repointed. Unblocks #4                                            |
 | 2026-08-19 | Monorepo generator v1 — `upgrade` routes features by workspace scope: `genx:workspace:monorepo` marker, `pnpm-workspace.yaml` member resolution, doc/agent features at the root, package-scoped features per selected member, starter-owned toolchain skipped — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md) |
 | 2026-08-19 | `upgrade` merges confirm per file — `merges` no longer writes package.json from a filename list, rides with `package-json` in the picker, plans only real changes, and keeps the trailing newline                                                                                                                            |
 | 2026-08-17 | `genx create` aligns scaffolded dependency versions to deps-policy — `_templates/package.json` no longer carries a second copy of every version (it was 11 stale for every package type)                                                                                                                                     |

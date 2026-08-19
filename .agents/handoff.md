@@ -125,8 +125,8 @@ separately.
     "instructions" directory the way Claude Code discovers `.claude/skills/`.
 12. Genx-dev-only skills (`generate-new-genx-feature`, `migrate-to-cli-kit`,
     `scaffold-feature-preview`, `template-canonical-merge`) stay root-only permanently, never
-    distributed via `ai-agent-config`. `triage-docs` is the one exception pending ROADMAP #6
-    (`scripts/triage-docs.ts` portability).
+    distributed via `ai-agent-config`. `triage-docs` was the one exception and is now portable — it
+    ships as a bin in `@finografic/project-scripts`, so the skill only wraps a `pnpm dlx` call.
 13. AI commit drafts are generated read-only. Preloading runs ahead of user confirmation, so it must
     never stage or otherwise mutate a target the user may still skip.
 14. `.env` in the genx package root wins over the shell environment for Ollama settings, inverting
@@ -143,12 +143,11 @@ separately.
 Nothing is at P0 or P1. `docs/todo/ROADMAP.md` is canonical for items and priorities; two things it
 does not make obvious:
 
-- The critical path is #6 → #4, and **#6's next move is in `@finografic/project-scripts`, not
-  here** — the genx side is done, and the port is mechanical: the script keeps `@clack/prompts`,
-  which that package is moving to anyway. Once the bin ships, delete `scripts/triage-docs.ts` and
-  repoint the skill.
-- **Monorepo generator v1** (workspace-aware upgrade) is the only substantial genx-side item both
-  scoped and unblocked today.
+- #6 shipped 2026-08-19, so **#4 (`design-docs`) is the unblocked item on the critical path** — and
+  it no longer ships a script, only the two directories and an instruction file pointing at the bin.
+- Monorepo generator v1 (workspace-aware upgrade) shipped; what remains is the interactive
+  end-to-end run listed under `ROADMAP.md#next`, which unit tests and `pnpm smoke:workspace` cannot
+  cover.
 
 Open in other repos, tracked in each:
 
