@@ -6,6 +6,7 @@ import { fileExists, isDependencyDeclared } from 'utils';
 import type { FeaturePreviewResult } from '../../lib/feature-preview/feature-preview.types.js';
 import type { FeatureContext } from '../feature.types';
 
+import { inferPackageTypeId, isFrontendPackageType } from 'lib/package-type.utils';
 import { findPackageRoot } from 'utils/package-root.utils';
 
 import {
@@ -17,6 +18,7 @@ import type { PackageJson } from 'types/package-json.types';
 
 import { createWritePreviewChange } from '../../lib/feature-preview/feature-preview.utils.js';
 import { packageJsonManifestDependencyFieldsChanged } from '../oxc-config/oxc-config.preview.js';
+import { HAPPY_DOM_PACKAGE, HAPPY_DOM_PACKAGE_VERSION } from '../react-vite/react-vite.constants.js';
 import {
   TEST_SCRIPTS,
   TESTING_SECTION_TITLE,
@@ -95,6 +97,18 @@ function withTestingScripts(packageJson: PackageJson): PackageJson {
   return { ...packageJson, scripts: newScripts };
 }
 
+/** The react `vitest.config.ts` declares `environment: 'happy-dom'`, which needs the package. */
+function withHappyDomDependency(packageJson: PackageJson): PackageJson {
+  if (packageJson.devDependencies?.[HAPPY_DOM_PACKAGE]) {
+    return packageJson;
+  }
+  const devDependencies = sortedRecord({
+    ...packageJson.devDependencies,
+    [HAPPY_DOM_PACKAGE]: HAPPY_DOM_PACKAGE_VERSION,
+  });
+  return { ...packageJson, devDependencies };
+}
+
 function withVitestDependency(packageJson: PackageJson): PackageJson {
   const devDeps = packageJson.devDependencies;
   if (devDeps?.[VITEST_PACKAGE]) {
@@ -105,6 +119,18 @@ function withVitestDependency(packageJson: PackageJson): PackageJson {
     [VITEST_PACKAGE]: VITEST_PACKAGE_VERSION,
   });
   return { ...packageJson, devDependencies };
+}
+
+/**
+ * Whether this target gets the react `vitest.config.ts` template.
+ *
+ * The react template merges the package's own `vite.config`, so tests inherit its aliases and
+ * plugins — but only a package that actually has one can use it. A frontend package without a
+ * `vite.config.ts` (a component library, say) falls back to the base template.
+ */
+function usesReactVitestTemplate(targetDir: string, packageJson: PackageJson): boolean {
+  const packageTypeId = inferPackageTypeId(packageJson);
+  return isFrontendPackageType(packageTypeId) && fileExists(resolve(targetDir, 'vite.config.ts'));
 }
 
 /**
@@ -119,9 +145,18 @@ export async function previewVitest(context: FeatureContext): Promise<FeaturePre
   const rawPkg = await readFile(packageJsonPath, 'utf8');
   let pkg = JSON.parse(rawPkg) as PackageJson;
 
+  const vitestConfigPath = resolve(targetDir, 'vitest.config.ts');
+  const writesConfig = !fileExists(vitestConfigPath);
+  // Only when this run writes the react config — an existing config may well be the node one, and
+  // adding a DOM environment it does not ask for would be a dependency nothing uses.
+  const writesReactConfig = writesConfig && usesReactVitestTemplate(targetDir, pkg);
+
   const hadDep = await isDependencyDeclared(targetDir, VITEST_PACKAGE);
   if (!hadDep) {
     pkg = withVitestDependency(pkg);
+  }
+  if (writesReactConfig) {
+    pkg = withHappyDomDependency(pkg);
   }
   pkg = withTestingScripts(pkg);
 
@@ -139,11 +174,13 @@ export async function previewVitest(context: FeatureContext): Promise<FeaturePre
     applied.push('package.json (vitest manifest)');
   }
 
-  const vitestConfigPath = resolve(targetDir, 'vitest.config.ts');
-  if (!fileExists(vitestConfigPath)) {
+  if (writesConfig) {
     const fromDir = fileURLToPath(new URL('.', import.meta.url));
     const packageRoot = findPackageRoot(fromDir);
-    const templateVitestConfigPath = resolve(packageRoot, '_templates/vitest.config.ts');
+    const templateVitestConfigPath = resolve(
+      packageRoot,
+      writesReactConfig ? '_templates/package-types/react/vitest.config.ts' : '_templates/vitest.config.ts',
+    );
     if (!fileExists(templateVitestConfigPath)) {
       throw new Error('Template vitest.config.ts not found');
     }

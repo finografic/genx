@@ -29,3 +29,11 @@ export const REACT_DEV_DEPS: Record<string, string> = {
   'concurrently': '^9.2.1',
   'vite': '^7.1.10',
 };
+
+/**
+ * DOM test environment for frontend packages. Declared here rather than in deps-policy because
+ * `react` has no policy group — see `src/config/policy.ts`. The `vitest` feature adds it alongside
+ * the react `vitest.config.ts`, which sets `environment: 'happy-dom'`.
+ */
+export const HAPPY_DOM_PACKAGE = 'happy-dom';
+export const HAPPY_DOM_PACKAGE_VERSION = '^20.11.2';
