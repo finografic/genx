@@ -1,4 +1,4 @@
-import { promptAutocompleteMultiSelect, promptText } from '@finografic/cli-kit/flow';
+import { promptMultiSelect, promptText } from '@finografic/cli-kit/flow';
 import type { FlowContext } from '@finografic/cli-kit/flow';
 
 import { emailSchema } from 'utils/validation.utils';
@@ -15,14 +15,15 @@ export async function promptAuthor(flow: FlowContext, defaults: Author, scope: s
   const scopeClean = scope.replace('@', '');
   const urlSuggestion = defaults.url || `https://github.com/${scopeClean}`;
 
-  const fields = await promptAutocompleteMultiSelect<AuthorField>(flow, {
+  // Plain multi-select, not autocomplete: three fixed options need no filter, and the search line
+  // only added a row of chrome above them.
+  const fields = await promptMultiSelect<AuthorField>(flow, {
     message: 'Select author fields to edit',
     options: [
       { value: 'name', label: 'Name', hint: defaults.name },
       { value: 'email', label: 'Email', hint: defaults.email },
       { value: 'url', label: 'URL', hint: urlSuggestion },
     ],
-    placeholder: 'Type to filter fields...',
     initialValues: ['name', 'email', 'url'],
   });
 
