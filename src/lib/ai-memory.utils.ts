@@ -106,15 +106,55 @@ export function stripLegacyClaudeImportHeadings(content: string): string {
   return content.replace(/^## Imported from `\.claude\/(?:memory|handoff)\.md`\n\n?/gm, '');
 }
 
-/** Update handoff maintenance note from legacy Claude paths to the four-file memory model. */
-export function updateHandoffMaintenanceNote(content: string): string | null {
-  const legacy =
-    /— `\.claude\/memory\.md` = session work log\. `\.agents\/handoff\.md` = project state snapshot\./;
-  const updated =
-    '— `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.';
-  if (!legacy.test(content)) {
-    return null;
+/**
+ * Extract the leading `> ...` blockquote — the "How to maintain this file" note that follows the H1.
+ * Returns the blockquote lines plus the index range they occupy, or null when there is none.
+ */
+function findMaintenanceBlock(
+  lines: readonly string[],
+): { start: number; end: number; block: string[] } | null {
+  const headingIndex = lines.findIndex((line) => line.startsWith('# '));
+  if (headingIndex === -1) return null;
+
+  let start = headingIndex + 1;
+  while (start < lines.length && lines[start]?.trim() === '') start++;
+  if (start >= lines.length || !lines[start]?.startsWith('>')) return null;
+
+  let end = start;
+  while (end < lines.length && lines[end]?.startsWith('>')) end++;
+
+  return { start, end, block: lines.slice(start, end) };
+}
+
+/**
+ * Replace a target file's maintenance blockquote with the canonical one from `_templates/`.
+ *
+ * The blockquote states how the file is maintained, so it is genx-owned and must stay uniform; the
+ * body beneath it is project-authored and never touched. A target that has lost its blockquote gets
+ * the canonical one reinserted after the H1.
+ *
+ * Returns null when nothing needs to change, or when the canonical file has no blockquote to copy.
+ */
+export function syncMaintenanceBlock(content: string, canonical: string): string | null {
+  const canonicalBlock = findMaintenanceBlock(canonical.split('\n'));
+  if (!canonicalBlock) return null;
+
+  const lines = content.split('\n');
+  const current = findMaintenanceBlock(lines);
+
+  if (current) {
+    if (current.block.join('\n') === canonicalBlock.block.join('\n')) return null;
+    const next = [...lines.slice(0, current.start), ...canonicalBlock.block, ...lines.slice(current.end)];
+    return next.join('\n');
   }
-  const next = content.replace(legacy, updated);
-  return next === content ? null : next;
+
+  const headingIndex = lines.findIndex((line) => line.startsWith('# '));
+  if (headingIndex === -1) return null;
+  const next = [
+    ...lines.slice(0, headingIndex + 1),
+    '',
+    ...canonicalBlock.block,
+    ...lines.slice(headingIndex + 1),
+  ];
+  return next.join('\n');
 }

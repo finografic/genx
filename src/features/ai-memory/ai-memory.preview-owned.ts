@@ -21,7 +21,7 @@ import {
   mergeClaudeHandoffIntoAgentsHandoff,
   mergeClaudeMemoryIntoAgentsMemory,
   stripLegacyClaudeImportHeadings,
-  updateHandoffMaintenanceNote,
+  syncMaintenanceBlock,
 } from '../../lib/ai-memory.utils.js';
 import {
   createDeletePreviewChange,
@@ -147,7 +147,8 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
       proposed = mergeClaudeHandoffIntoAgentsHandoff(proposed, legacyHandoffContent);
     }
 
-    const maintenance = updateHandoffMaintenanceNote(proposed);
+    const canonicalHandoff = await templateBody(templateDir, '.agents/handoff.md', handoffVars);
+    const maintenance = syncMaintenanceBlock(proposed, canonicalHandoff);
     if (maintenance !== null) {
       proposed = maintenance;
     }
@@ -185,7 +186,9 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
     changes.push(createWritePreviewChange(agentsMemoryPath, '', body, '.agents/memory.md'));
   } else {
     const current = await readFile(agentsMemoryPath, 'utf8');
-    const withoutLegacyHeading = stripLegacyClaudeImportHeadings(current);
+    const canonicalMemory = await templateBody(templateDir, '.agents/memory.md', baseVars);
+    const stripped = stripLegacyClaudeImportHeadings(current);
+    const withoutLegacyHeading = syncMaintenanceBlock(stripped, canonicalMemory) ?? stripped;
     if (isMigratableClaudeMemoryContent(legacyMemoryContent)) {
       const proposed = mergeClaudeMemoryIntoAgentsMemory(withoutLegacyHeading, legacyMemoryContent);
       if (proposed !== current) {
@@ -206,7 +209,7 @@ export async function previewAiMemoryOwnedFiles(context: FeatureContext): Promis
           agentsMemoryPath,
           current,
           normalizeNewline(withoutLegacyHeading),
-          '.agents/memory.md (remove legacy import heading)',
+          '.agents/memory.md (maintenance note)',
         ),
       );
     } else {

@@ -1,17 +1,24 @@
 # @finografic/genx — Handoff
 
 > **How to maintain this file**
-> Update after sessions that change architecture, add/remove features, resolve open questions, or shift priorities — not every session.
-> — Update only the sections that changed. Keep the total under 150 lines.
-> — Write in present tense. No code snippets — describe what exists, not how it works.
+> Current-state snapshot, read at the start of a session. Update after sessions that change architecture, add or remove features, resolve open questions, or shift priorities — not every session.
+> — **Do not duplicate content held elsewhere.** Specs, plans, TODO/DONE docs, commits and diffs are referenced by path, never summarised here.
+> — **Do not record derivable facts.** No version numbers, no dates, no counts — they go stale silently and nothing forces them current. Derive them when needed.
+> — Write in present tense. Describe what exists, not how it works. No code snippets.
+> — Budgets: Architecture ≤ 60 lines, Key Decisions ≤ 15 items, every other section ≤ 20 lines. **When a section is over budget, cut detail before you cut items** — losing an entry is worse than losing its explanation. An Architecture entry needing more than ~5 lines has outgrown this file: write a spec and leave a pointer.
+> — Retire Key Decisions once they are no longer questioned, or are already stated in `AGENTS.md`.
+> — Tag every Open Work item with exactly one of `[in flight <branch>]`, `[verified, uncommitted]`, `[open PR #N]`, `[planned, not started]`, `[blocked: <what>]`. An untagged item is not done — so tag it.
+> — Redact secrets, tokens, and personal data. This file is tracked in git.
 > — `.agents/memory.md` = chronological working memory / session log. `.agents/handoff.md` = current project state snapshot. See `docs/process/PROJECT_MEMORY_MODEL.md`.
 
-📅 August 19, 2026
+## Capsule
 
-## Project
-
-`@finografic/genx` is an opinionated generator and codemod toolkit for the `@finografic`
-ecosystem. Current version: **v5.48.4**.
+- An opinionated generator and codemod toolkit for the `@finografic` ecosystem, applied across ~20
+  managed repos.
+- `create`, `upgrade`, `deps`, `managed`, and `audit` are the public commands; features are internal.
+- `_templates/` is the only canonical source for generated content.
+- Monorepo generation is complete and verified end to end; operation scoping is the open design work.
+- Nothing sits at P0 or P1.
 
 ## Architecture
 
@@ -146,27 +153,34 @@ separately.
 
 ## Open Work
 
-Nothing is at P0 or P1. `docs/todo/ROADMAP.md` is canonical for items and priorities; two things it
-does not make obvious:
+`docs/todo/ROADMAP.md` is canonical for items and priorities. What it does not make obvious:
 
-- #6 shipped 2026-08-19, so **#4 (`design-docs`) is the unblocked item on the critical path** — and
-  it no longer ships a script, only the two directories and an instruction file pointing at the bin.
-  `docs/specs/` now exists with its first occupant, so #4 has a real consumer to build against.
-- Monorepo generation is **done and verified end to end** (v0 + v1, 2026-08-19). The substantive
-  remainder is #11: `upgrade` scopes features but never scoped _operations_, which still run at the
-  workspace root by inherited default. Design in
-  [`docs/specs/2026-08-19-workspace-ownership-model.md`](../docs/specs/2026-08-19-workspace-ownership-model.md).
-- #11's scope-as-a-set decision should land **before** the recursive `AGENTS.md` work, not during
-  it — that work needs a root spine plus per-package files, which the current exclusive partition
-  cannot express.
+- ROADMAP #4 (`design-docs`) is the unblocked item on the critical path, and `docs/specs/` now exists
+  as a real consumer for it. `[planned, not started]`
+- ROADMAP #11 is the substantive remainder of monorepo work — `upgrade` scopes features but never
+  scoped operations. Design in `docs/specs/2026-08-19-workspace-ownership-model.md`, whose
+  scope-as-a-set decision should land **before** the recursive `AGENTS.md` work. `[planned, not started]`
+- This file's Architecture section is over its 60-line budget and needs a prune pass, promoting
+  subsystems to specs. `[planned, not started]`
 
 Open in other repos, tracked in each:
 
 - `@finografic/react` has no consumers; `touch-monorepo` carries drifted vendored copies of
-  `useBoundingRect` / `useKeyPress`.
-- `monorepo-starter` has a pre-existing MD012 error in `docs/todo/ROADMAP.md` (auto-fixable).
+  `useBoundingRect` / `useKeyPress`. `[blocked: no consumer to validate against]`
+- `monorepo-starter` has a pre-existing MD012 error in `docs/todo/ROADMAP.md`. `[planned, not started]`
 - `plate-editor`, `react`, and `zustand-context-creator` lack `.markdownlint.jsonc`, but have no
-  `md-lint` wired, so nothing fails yet.
+  `md-lint` wired, so nothing fails yet. `[planned, not started]`
+
+## Next Move
+
+Scope ROADMAP #4 (`design-docs`) — its blocker cleared, and `docs/specs/` already exists to build
+against.
+
+## Suggested Skills
+
+- `generate-new-genx-feature` — for #4, before writing any feature module
+- `template-canonical-merge` — whenever content flows into a target from `_templates/`
+- `scaffold-feature-preview` — if a feature still hand-writes detection
 
 ## References
 
