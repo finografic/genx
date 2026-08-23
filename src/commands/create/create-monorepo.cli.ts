@@ -28,6 +28,7 @@ import {
   resolveMonorepoSource,
   seedDevEnvFile,
 } from 'lib/monorepo';
+import { installSharedSkills } from 'lib/skills/skills-install.runner';
 import { pc } from 'utils/picocolors';
 import { promptCreateMonorepo } from 'utils/prompts';
 
@@ -187,6 +188,10 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
         warnMessage('Please run `pnpm dev:db:reset` manually');
       }
     }
+
+    // 7b. The starter ships its own skills and lockfile, so this is normally a report. It still
+    // covers the case where the clone's lockfile names skills the checkout does not have.
+    await installSharedSkills({ targetDir, commit: false });
 
     // 8. Initialize git
     const gitSpin = spinner();

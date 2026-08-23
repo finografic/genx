@@ -22,6 +22,7 @@ import { runManagedLoop } from 'lib/managed/managed-loop.runner';
 import { isMonorepoRoot } from 'lib/monorepo/monorepo.workspace';
 import { readPackageJson } from 'lib/package-policy/package-json.utils';
 import { promptFeatures } from 'lib/prompts/features.prompt';
+import { installSharedSkills } from 'lib/skills/skills-install.runner';
 import { isDevelopment } from 'utils/env.utils';
 
 import type { UpgradeOnlySection } from 'types/upgrade.types';
@@ -164,6 +165,10 @@ export async function upgradeSingleTarget(params: {
     targetDir: params.targetDir,
     featureIds: partition.member,
   });
+
+  // Skills last: the `ai-agents` feature dual-writes them while this repository has no lockfile, so
+  // installing first would have that write land on top of the CLI's symlinks in the same run.
+  await installSharedSkills({ targetDir: params.targetDir, flow: params.flow, commit: true });
 
   successMessage('Upgrade complete');
 }

@@ -2,6 +2,8 @@
  * Ai-agents feature constants.
  */
 
+import { SKILLS_LOCKFILE } from 'lib/skills/skills.constants';
+
 /** Paths created/managed by this feature (relative to targetDir). */
 export const AI_AGENTS_FILES = ['AGENTS.md', '.agents/skills/', '.claude/skills/'] as const;
 
@@ -18,11 +20,14 @@ export const AI_AGENTS_SKILLS_SOURCE_DIR = 'skills';
 export const AI_AGENTS_SKILLS_TARGET_DIRS = ['.agents/skills', '.claude/skills'] as const;
 
 /**
- * Lockfile written by the Agent Skills CLI (`npx skills`). Its presence means an external manager
- * owns this repository's skills, so this feature must not write them — see
+ * Lockfile written by the Agent Skills CLI. Its presence means an external manager owns this
+ * repository's skills, so this feature must not write them — see
  * `docs/specs/2026-08-23-skill-distribution-model.md`.
+ *
+ * Re-exported rather than restated: the installer and this gate must name the same file, and a
+ * second copy of the string is a copy that can drift.
  */
-export const SKILLS_LOCKFILE = 'skills-lock.json';
+export { SKILLS_LOCKFILE };
 
 /** Reported when skills are left alone because an external manager owns them. */
 export const AI_AGENTS_SKILLS_EXTERNALLY_MANAGED = `.agents/skills/, .claude/skills/ (managed by ${SKILLS_LOCKFILE})`;

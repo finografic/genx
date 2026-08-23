@@ -1,4 +1,5 @@
-import { relative } from 'node:path';
+import { lstat, readlink, rm, symlink } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 import { execa } from 'execa';
 
 export interface GitCommitTracker {
@@ -14,6 +15,115 @@ export interface GitCommitResult {
   message?: string;
   /** Git's own summary line, e.g. `7 files changed, 93 insertions(+), 40 deletions(-)`. */
   stat?: string;
+  /** Separate commit made first to clear a type change — see {@link findStagedTypeChanges}. */
+  preludeCommit?: GitCommitResult;
+}
+
+export interface StagedEntry {
+  /** Porcelain status letter(s): `A`, `D`, `M`, `R100`, … */
+  status: string;
+  /** Path the entry refers to now — the destination side of a rename or copy. */
+  path: string;
+}
+
+/** Parse `git diff --cached --name-status -z` into entries. */
+export function parseStagedNameStatus(output: string): StagedEntry[] {
+  const entries: StagedEntry[] = [];
+  const fields = output.split('\0').filter((field) => field !== '');
+
+  for (let index = 0; index < fields.length; index += 1) {
+    const status = fields[index];
+    if (!status) continue;
+
+    // A rename or copy carries two paths; the second is where the content lives now.
+    const pathOffset = status.startsWith('R') || status.startsWith('C') ? 2 : 1;
+    const path = fields[index + pathOffset];
+    index += pathOffset;
+
+    if (path) entries.push({ status, path });
+  }
+
+  return entries;
+}
+
+/**
+ * Staged paths that make the index unstashable.
+ *
+ * Replacing a tracked directory with a symlink stages an addition at the directory's path plus a
+ * deletion of every file that was inside it. Those deletions now sit *beyond* the new symlink, and
+ * git refuses to read through one:
+ *
+ *     error: '.claude/skills/foo/SKILL.md' is beyond a symbolic link
+ *     fatal: Unable to process path .claude/skills/foo/SKILL.md
+ *
+ * `git stash create` fails on that, and lint-staged takes exactly that stash as its backup before
+ * running any task — so the commit aborts with `Failed to back up original state` and not one check
+ * runs. Committing the two halves separately avoids it without resorting to `--no-verify`, which
+ * would disable lint and format on the commit.
+ *
+ * @returns Added paths whose prefix is also staged as deleted.
+ */
+export function findStagedTypeChanges(entries: readonly StagedEntry[]): string[] {
+  const deleted = entries.filter((entry) => entry.status.startsWith('D')).map((entry) => entry.path);
+  if (deleted.length === 0) return [];
+
+  return entries
+    .filter((entry) => entry.status.startsWith('A'))
+    .map((entry) => entry.path)
+    .filter((path) => deleted.some((deletedPath) => deletedPath.startsWith(`${path}/`)));
+}
+
+async function readStagedEntries(gitRoot: string): Promise<StagedEntry[]> {
+  const result = await execa('git', ['diff', '--cached', '--name-status', '-z'], { cwd: gitRoot });
+  return parseStagedNameStatus(result.stdout);
+}
+
+/**
+ * Commit the deletion half of a type change on its own, then restage the symlinks.
+ *
+ * The symlinks are taken out of the working tree for the duration: with one still in place git
+ * cannot read the staged deletions beneath it, so staging only the deletions is not enough on its
+ * own — verified 2026-08-24.
+ *
+ * @returns The prelude commit, or `undefined` when there was nothing to split.
+ */
+async function commitTypeChangePrelude(params: {
+  gitRoot: string;
+  entries: readonly StagedEntry[];
+  message: string;
+}): Promise<GitCommitResult | undefined> {
+  const typeChanges = findStagedTypeChanges(params.entries);
+  if (typeChanges.length === 0) return undefined;
+
+  const links: Array<{ path: string; target: string }> = [];
+  for (const path of typeChanges) {
+    const absolute = join(params.gitRoot, path);
+    const stats = await lstat(absolute);
+    // Only a symlink can be recreated exactly from what we can read here. Anything else is left
+    // staged and the caller's single commit proceeds — failing loudly beats losing content.
+    if (!stats.isSymbolicLink()) return undefined;
+    links.push({ path, target: await readlink(absolute) });
+  }
+
+  for (const link of links) {
+    await rm(join(params.gitRoot, link.path));
+  }
+
+  try {
+    await execa('git', ['add', '-A'], { cwd: params.gitRoot });
+    await execa('git', ['commit', '-m', params.message], { cwd: params.gitRoot });
+  } finally {
+    // Restore the symlinks even when the commit was rejected, so a failed hook never leaves the
+    // repository missing the files the installer just wrote.
+    for (const link of links) {
+      await symlink(link.target, join(params.gitRoot, link.path)).catch(() => undefined);
+    }
+    await execa('git', ['add', '-A'], { cwd: params.gitRoot }).catch(() => undefined);
+  }
+
+  const hash = (await execa('git', ['rev-parse', '--short', 'HEAD'], { cwd: params.gitRoot })).stdout;
+
+  return { committed: true, hash, message: params.message };
 }
 
 function isInsideGitRoot(path: string): boolean {
@@ -120,14 +230,30 @@ export async function commitTrackedGitChanges(params: {
  * must have shown the user that file list first.
  *
  * Throws on failure — a rejected commit hook is the caller's to report.
+ *
+ * `typeChangeMessage` opts into splitting a directory-to-symlink replacement into its own preceding
+ * commit; without it the single commit is attempted as before. See {@link findStagedTypeChanges}.
  */
-export async function commitAllChanges(targetDir: string, message: string): Promise<GitCommitResult> {
+export async function commitAllChanges(
+  targetDir: string,
+  message: string,
+  options?: { typeChangeMessage?: string },
+): Promise<GitCommitResult> {
   const gitRoot = (await execa('git', ['rev-parse', '--show-toplevel'], { cwd: targetDir })).stdout.trim();
 
   await execa('git', ['add', '-A'], { cwd: gitRoot });
 
-  const staged = await execa('git', ['diff', '--cached', '--name-only'], { cwd: gitRoot });
-  if (staged.stdout.trim() === '') return { committed: false };
+  const entries = await readStagedEntries(gitRoot);
+  if (entries.length === 0) return { committed: false };
+
+  const preludeCommit = options?.typeChangeMessage
+    ? await commitTypeChangePrelude({ gitRoot, entries, message: options.typeChangeMessage })
+    : undefined;
+
+  // The prelude consumed part of the index; what is left may be nothing at all.
+  if (preludeCommit && (await readStagedEntries(gitRoot)).length === 0) {
+    return { ...preludeCommit, preludeCommit: undefined };
+  }
 
   const commit = await execa('git', ['commit', '-m', message], { cwd: gitRoot });
 
@@ -151,5 +277,6 @@ export async function commitAllChanges(targetDir: string, message: string): Prom
     hash: hashResult.stdout,
     message,
     stat,
+    preludeCommit,
   };
 }

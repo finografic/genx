@@ -23,6 +23,7 @@ import {
 
 import { generateCliHelpContent } from 'lib/generators/cli-help.generator';
 import { alignScaffoldDependencies } from 'lib/package-policy/scaffold-policy.utils';
+import { installSharedSkills } from 'lib/skills/skills-install.runner';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
 import { promptCreatePackage } from 'utils/prompts';
@@ -318,6 +319,11 @@ export async function createPackage(argv: string[], context: { cwd: string }): P
       if (!feature) continue;
       await feature.apply({ targetDir });
     }
+
+    // 6b. Shared skills, before `git init` so they land in Genesis. Nothing is tracked yet, so the
+    // symlinks cause no type change and need no commit split. Not offered: a new project has
+    // nothing to overwrite, and skills are baseline here the way `oxc-config` is.
+    await installSharedSkills({ targetDir, commit: false });
 
     // 7. Initialize git
     const gitSpin = spinner();

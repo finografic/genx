@@ -34,7 +34,7 @@ agents, with `.claude/skills/<name>` a symlink into `.agents/skills/<name>`.
 | --- | ------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | 1   | Skills are distributed by `npx skills add finografic/ai-skills`, never vendored by genx.                                        | **Adopted** |
 | 2   | `finografic/ai-skills` is public, MIT, and carries `skills/` as its only discovery container.                                   | **Adopted** |
-| 3   | Every skill layout — shared, third-party, and genx-local — is canonical copy plus symlinks, never two real copies.              | Proposed    |
+| 3   | Every skill layout — shared, third-party, and genx-local — is canonical copy plus symlinks, never two real copies.              | **Adopted** |
 | 4   | **`skills-lock.json` is the migration gate.** Its presence means an external manager owns skills, and genx must not write them. | **Adopted** |
 | 5   | genx **invokes** the CLI, pinned and non-fatal, rather than only reporting. It offers; it never runs silently.                  | **Adopted** |
 | 6   | Dual-write stays, gated on the lockfile's _absence_, until every managed repo has migrated. It is then dead code and deletes.   | **Adopted** |
@@ -256,9 +256,9 @@ Steps A–C are genx-only and invisible to consumers. D is the first thing anyon
 
 ## Open Questions
 
-1. **Does the CLI invocation belong in `upgrade`, in `audit`, or both?** Decision 5 settles that genx
-   invokes rather than only reports, but not where. `audit` is the feature-repair command and is the
-   more natural home; `upgrade` is where people already are.
+1. **Does `audit` want the invocation too?** `upgrade` and both `create` commands now carry it.
+   `audit` is the feature-repair command and would be the natural place to offer a restore, but
+   nothing forces it: an incomplete checkout is repaired by the next `upgrade`.
 
 2. **Does `experimental_install` carry an experimental-ness risk worth avoiding?** It is the only
    deterministic restore path, and the name says it may move. Pinning the CLI version contains the
@@ -278,3 +278,12 @@ Steps A–C are genx-only and invisible to consumers. D is the first thing anyon
 - **Do `scaffold-cli-help` and `scaffold-core-module` belong in a public repo?** Yes. They encode
   `@finografic` CLI conventions, and many of these projects are CLIs. Only genx-internal scaffolding
   stays out.
+- **Which agent identifiers produce the canonical-plus-symlink layout?** `universal` and
+  `claude-code`, passed as repeated `--agent` flags. Probed 2026-08-24: `claude` is not a valid
+  identifier, a comma-separated list is rejected whole, and installing to `claude-code` alone writes
+  real directories into `.claude/skills/` with no `.agents/` copy at all — the duplication this move
+  exists to remove. Both agents are required, so the pair is a constant, not a caller's choice.
+- **Should genx recompute `computedHash` to detect drift?** No. That re-implements the CLI's hashing
+  in a second place and goes stale the first time the algorithm changes — the same failure mode as
+  the pinned starter tag. `skills update` is the authority; genx reports only that an external
+  manager is in charge.
