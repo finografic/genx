@@ -30,14 +30,16 @@ agents, with `.claude/skills/<name>` a symlink into `.agents/skills/<name>`.
 
 ## Decision Summary
 
-| #   | Decision                                                                                                                             | State       |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 1   | Skills are distributed by `npx skills add finografic/ai-skills`, never vendored by genx.                                             | **Adopted** |
-| 2   | `finografic/ai-skills` is public, MIT, and carries `skills/` as its only discovery container.                                        | **Adopted** |
-| 3   | Every skill layout — shared, third-party, and genx-local — is canonical copy plus symlinks, never two real copies.                   | Proposed    |
-| 4   | ai-agent-config's skill asset moves to a new `external` ownership mode rather than being deleted from the manifest.                  | Proposed    |
-| 5   | genx offers to run `npx skills update`; it never runs it silently.                                                                   | Proposed    |
-| 6   | genx must ship `external` support **before** ai-agent-config emits it — fail-closed makes the reverse order an error. See Migration. | **Adopted** |
+| #   | Decision                                                                                                                        | State       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1   | Skills are distributed by `npx skills add finografic/ai-skills`, never vendored by genx.                                        | **Adopted** |
+| 2   | `finografic/ai-skills` is public, MIT, and carries `skills/` as its only discovery container.                                   | **Adopted** |
+| 3   | Every skill layout — shared, third-party, and genx-local — is canonical copy plus symlinks, never two real copies.              | Proposed    |
+| 4   | **`skills-lock.json` is the migration gate.** Its presence means an external manager owns skills, and genx must not write them. | **Adopted** |
+| 5   | genx **invokes** the CLI, pinned and non-fatal, rather than only reporting. It offers; it never runs silently.                  | **Adopted** |
+| 6   | Dual-write stays, gated on the lockfile's _absence_, until every managed repo has migrated. It is then dead code and deletes.   | **Adopted** |
+| 7   | ai-agent-config's skill asset later moves to an `external` ownership mode rather than being deleted from the manifest.          | Proposed    |
+| 8   | genx must understand `external` before ai-agent-config emits it — fail-closed makes the reverse order an error.                 | **Adopted** |
 
 ## Architecture
 
@@ -72,7 +74,36 @@ breaks every consumer's `skills-lock.json` entry.
 17 keeps asking for, except supplied by the transport rather than hand-rolled per surface. It is a
 **pull**: publishing a change does not reach a consumer until someone runs `skills update`.
 
-## The removal hazard
+## Two hazards
+
+### 1. Two managers, one path — live today
+
+genx declares `AI_AGENTS_SKILLS_TARGET_DIRS = ['.agents/skills', '.claude/skills']` and dual-writes
+the five manifest skills into both as real directories. The CLI puts a **symlink** at
+`.claude/skills/<name>`. So installing any of those five into a managed repository today means
+genx's next `upgrade` either replaces the symlink with a real directory or writes straight through
+it into the canonical copy. Either way `computedHash` in `skills-lock.json` stops matching and the
+CLI reports drift it did not cause.
+
+Third-party skills are unaffected: `design-taste-frontend` is absent from the manifest, so genx
+never touches it. The exposure is exactly the five shared skills.
+
+**Resolution: gate on `skills-lock.json`.** Its presence is proof that an external manager owns
+skills in this repository.
+
+| Lockfile | genx behaviour                                                              |
+| -------- | --------------------------------------------------------------------------- |
+| Absent   | Dual-write as today — the repository has not migrated — and offer migration |
+| Present  | Never write skills; report state and offer `update` when hashes drift       |
+
+This makes migration **per-repository and unordered** rather than a flag day, and it is
+self-retiring: once every managed repository has a lockfile, the dual-write branch is unreachable
+and deletes cleanly. Until then it is a live path and keeps its tests.
+
+It also closes the freeze that a hard cutover would cause. A repository that has not migrated keeps
+receiving skill updates exactly as before, instead of silently stopping.
+
+### 2. Removing the manifest entry offers deletion
 
 ai-agent-config declares skills as a `managed` asset:
 
@@ -103,44 +134,80 @@ Rule 1 of the distribution contract is **fail closed**: an asset with no recogni
 is an error, not a default. An older genx meeting `ownership: 'external'` will therefore refuse the
 sync and report why.
 
-That is correct behaviour, and it fixes the migration order: **genx must understand `external`
-before ai-agent-config ships it.** The contract should also record the minimum genx version for each
-mode, so this constraint is discoverable rather than tribal.
+That is correct behaviour, and it constrains the order: **genx must understand `external` before
+ai-agent-config ships it.** The contract should also record the minimum genx version for each mode,
+so this is discoverable rather than tribal.
+
+Note this constraint is no longer on the critical path. The lockfile gate does the safety work;
+`external` is the later declarative cleanup, and can land whenever it suits.
+
+## How genx invokes the CLI
+
+genx runs the CLI rather than only reporting. `skills add` clones from GitHub and needs no local
+checkout, which makes it strictly better than today's vendoring — that requires the
+`@finografic/ai-agent-config` package resolved locally, so it fails on a fresh machine. The CLI's
+`-a/--agent`, `-s/--skill` and `-y/--yes` flags mean it runs without opening a prompt inside genx's
+own flow.
+
+| Repository state                 | genx action                                                         |
+| -------------------------------- | ------------------------------------------------------------------- |
+| No lockfile                      | Offer `skills add finografic/ai-skills`                             |
+| Lockfile present, skills absent  | `skills experimental_install` — deterministic restore from the lock |
+| Lockfile present, hashes drifted | Offer `skills update`                                               |
+| Lockfile present, hashes match   | Report and do nothing                                               |
+
+Two constraints: **pin the CLI version**, as `genx clean` already pins its `dlx` target, so an
+upstream release cannot change behaviour mid-upgrade; and treat failure as **non-fatal**, since a
+network blip must not abort an upgrade that is otherwise filesystem-local.
 
 ## Migration Strategy
 
-Each step is independently shippable and safe to stop after.
+Each step is independently shippable and safe to stop after. Only step A is blocking — everything
+after it can happen at whatever pace suits, per repository.
 
-1. **genx learns `external`.** Add the mode to the ownership switch and the contract. No behaviour
-   changes until a manifest emits it.
-2. **genx converts its own skills to canonical + symlink**, with copy fallback. Self-contained,
-   removes the dual-write from the repository that advocates against it.
-3. **ai-agent-config flips its skill asset to `external`** and releases, noting the minimum genx
-   version.
-4. **Consumers upgrade.** genx reports skills as externally managed and touches nothing. Each repo
-   runs `npx skills add finografic/ai-skills` once, at whatever pace suits.
-5. **ai-agent-config deletes `assets/skills/`**, plus its `.agents/skills/` and `.claude/skills/`
-   copies, and installs its own skills through the CLI like any other consumer.
-6. **genx's `ai-agents` feature offers `npx skills update`** when `skills-lock.json` shows drift.
+**A. The lockfile gate (genx).** Before writing any skill, check for `skills-lock.json`; if present,
+write nothing and report that skills are externally managed. **This is the step that makes it safe
+to install the five shared skills anywhere.** It must be released and the global link rebuilt before
+it protects anything.
 
-Steps 1–2 are genx-only. Step 3 is the first one consumers can observe.
+**B. genx's own skills become canonical + symlink** (copy fallback). Self-contained; removes the
+dual-write from the repository that argues against it.
+
+**C. genx invokes the CLI** per the table above — add, restore, update — pinned and non-fatal.
+
+**D. Migrate repositories, one at a time.** `npx skills add finografic/ai-skills` in each. Order does
+not matter, and a half-migrated ecosystem is a valid steady state.
+
+**E. genx learns the `external` ownership mode**, then ai-agent-config flips its skill asset to it
+and releases, recording the minimum genx version. Declarative cleanup, not a safety requirement.
+
+**F. Retire the dual-write.** Once every managed repository has a lockfile, the branch is
+unreachable. Delete it, its tests, ai-agent-config's `assets/skills/`, and that package's
+`src/assets.test.ts` dual-write assertion — which encodes the rule being retired.
+
+Steps A–C are genx-only and invisible to consumers. D is the first thing anyone notices.
 
 ## Open Questions
 
-1. **Should genx run `npx skills` at all, or only report?** Running it during `upgrade` adds a
-   network dependency and an `npx` fetch to a command that is otherwise filesystem-local. Reporting
-   keeps genx's role advisory. Decision 5 proposes offering, never silently running; whether even
-   the offer belongs in `upgrade` or only in `audit` is unresolved.
+1. **Does the CLI invocation belong in `upgrade`, in `audit`, or both?** Decision 5 settles that genx
+   invokes rather than only reports, but not where. `audit` is the feature-repair command and is the
+   more natural home; `upgrade` is where people already are.
 
-2. **What happens to `assets/skills/` in ai-agent-config?** Deleting it is clean, but the package's
-   `src/assets.test.ts` asserts skills dual-write, and that test encodes the very rule being
-   retired. Retire the test with the asset.
+2. **Does `experimental_install` carry an experimental-ness risk worth avoiding?** It is the only
+   deterministic restore path, and the name says it may move. Pinning the CLI version contains the
+   blast radius, but a rename still forces a genx change.
 
-3. **Do `scaffold-cli-help` and `scaffold-core-module` belong in a public shared repo?** Both encode
-   `@finografic` CLI conventions specifically. They are shared across this ecosystem but are not
-   general-purpose the way `maintain-agents` is. Keeping them is harmless; the question is whether a
-   public repository should present them as reusable.
+3. **How does genx know a repository is "fully migrated" for step F?** `managed status` could report
+   lockfile presence across all targets, which turns "is the dual-write dead yet" into a query
+   rather than a memory.
 
-4. **Does anything need to prevent a skill existing in both transports?** A repository could carry
-   `maintain-agents` from `ai-skills` while an older genx still vendors it. Step 3's ordering makes
-   this a transient state, but nothing detects it.
+### Resolved during drafting
+
+- **Should genx run the CLI, or only report?** Run it. `skills add` clones from GitHub and needs no
+  local checkout, so it works on a fresh machine where vendoring does not. Non-interactive flags mean
+  no nested prompt. Decision 5.
+- **Must dual-write survive the transition?** Yes — gated on the lockfile's absence, so unmigrated
+  repositories keep receiving updates instead of silently freezing. Decision 6.
+- **Do `scaffold-cli-help` and `scaffold-core-module` belong in a public repo?** Yes. They encode
+  `@finografic` CLI conventions, and many of these projects are CLIs. Only genx-internal scaffolding
+  stays out.
