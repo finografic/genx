@@ -1,12 +1,18 @@
+import { resolve } from 'node:path';
 import { promptConfirm } from '@finografic/cli-kit/flow';
 import type { FlowContext } from '@finografic/cli-kit/flow';
-import { infoMessage, spinner, successMessage, warnMessage } from 'utils';
+import { fileExists, infoMessage, spinner, successMessage, warnMessage } from 'utils';
 
 import { commitAllChanges } from 'lib/git/target-git-commit.utils';
 
 import { buildSkillsAddArgs, buildSkillsRestoreArgs, runSkillsCli } from './skills-cli.runner.js';
 import { resolveSkillsStatus } from './skills-lock.utils.js';
-import { SHARED_SKILLS_SOURCE, SKILLS_LOCKFILE } from './skills.constants.js';
+import {
+  SHARED_SKILLS_SOURCE,
+  SKILLS_CANONICAL_DIR,
+  SKILLS_CLAUDE_DIR,
+  SKILLS_LOCKFILE,
+} from './skills.constants.js';
 
 const ADD_COMMIT_MESSAGE = `chore(skills): install shared skills from ${SHARED_SKILLS_SOURCE}`;
 const RESTORE_COMMIT_MESSAGE = `chore(skills): restore skills from ${SKILLS_LOCKFILE}`;
@@ -93,8 +99,19 @@ export async function installSharedSkills(
 
 async function commitSkills(targetDir: string, message: string): Promise<void> {
   try {
+    // Scoped to what the installer wrote. `upgrade` calls this at the end of a run that has left
+    // package.json, .gitignore and the template sync dirty on purpose, so an unscoped `git add -A`
+    // would file the entire upgrade under a "skills" subject.
+    // Filtered to what exists: git rejects a pathspec that matches nothing, and a single-agent
+    // install leaves one of the two containers absent.
+    const paths = [SKILLS_CANONICAL_DIR, SKILLS_CLAUDE_DIR, SKILLS_LOCKFILE].filter((path) =>
+      fileExists(resolve(targetDir, path)),
+    );
+    if (paths.length === 0) return;
+
     const commit = await commitAllChanges(targetDir, message, {
       typeChangeMessage: REMOVE_COMMIT_MESSAGE,
+      paths,
     });
 
     if (commit.preludeCommit?.hash) {

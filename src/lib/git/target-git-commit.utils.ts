@@ -73,8 +73,19 @@ export function findStagedTypeChanges(entries: readonly StagedEntry[]): string[]
     .filter((path) => deleted.some((deletedPath) => deletedPath.startsWith(`${path}/`)));
 }
 
-async function readStagedEntries(gitRoot: string): Promise<StagedEntry[]> {
-  const result = await execa('git', ['diff', '--cached', '--name-status', '-z'], { cwd: gitRoot });
+/** Pathspec suffix for git commands, empty when the caller wants the whole tree. */
+function pathspec(paths: readonly string[] | undefined): string[] {
+  return paths && paths.length > 0 ? ['--', ...paths] : [];
+}
+
+async function stageAll(gitRoot: string, paths?: readonly string[]): Promise<void> {
+  await execa('git', ['add', '-A', ...pathspec(paths)], { cwd: gitRoot });
+}
+
+async function readStagedEntries(gitRoot: string, paths?: readonly string[]): Promise<StagedEntry[]> {
+  const result = await execa('git', ['diff', '--cached', '--name-status', '-z', ...pathspec(paths)], {
+    cwd: gitRoot,
+  });
   return parseStagedNameStatus(result.stdout);
 }
 
@@ -91,6 +102,7 @@ async function commitTypeChangePrelude(params: {
   gitRoot: string;
   entries: readonly StagedEntry[];
   message: string;
+  paths?: readonly string[];
 }): Promise<GitCommitResult | undefined> {
   const typeChanges = findStagedTypeChanges(params.entries);
   if (typeChanges.length === 0) return undefined;
@@ -110,15 +122,17 @@ async function commitTypeChangePrelude(params: {
   }
 
   try {
-    await execa('git', ['add', '-A'], { cwd: params.gitRoot });
-    await execa('git', ['commit', '-m', params.message], { cwd: params.gitRoot });
+    await stageAll(params.gitRoot, params.paths);
+    await execa('git', ['commit', '-m', params.message, ...pathspec(params.paths)], {
+      cwd: params.gitRoot,
+    });
   } finally {
     // Restore the symlinks even when the commit was rejected, so a failed hook never leaves the
     // repository missing the files the installer just wrote.
     for (const link of links) {
       await symlink(link.target, join(params.gitRoot, link.path)).catch(() => undefined);
     }
-    await execa('git', ['add', '-A'], { cwd: params.gitRoot }).catch(() => undefined);
+    await stageAll(params.gitRoot, params.paths).catch(() => undefined);
   }
 
   const hash = (await execa('git', ['rev-parse', '--short', 'HEAD'], { cwd: params.gitRoot })).stdout;
@@ -233,29 +247,34 @@ export async function commitTrackedGitChanges(params: {
  *
  * `typeChangeMessage` opts into splitting a directory-to-symlink replacement into its own preceding
  * commit; without it the single commit is attempted as before. See {@link findStagedTypeChanges}.
+ *
+ * `paths` narrows the sweep to a pathspec. A caller running inside a larger command must pass it:
+ * `upgrade` leaves the whole tree dirty by design, so an unscoped sweep would file every operation's
+ * work under whatever message this call happens to carry.
  */
 export async function commitAllChanges(
   targetDir: string,
   message: string,
-  options?: { typeChangeMessage?: string },
+  options?: { typeChangeMessage?: string; paths?: readonly string[] },
 ): Promise<GitCommitResult> {
   const gitRoot = (await execa('git', ['rev-parse', '--show-toplevel'], { cwd: targetDir })).stdout.trim();
+  const paths = options?.paths;
 
-  await execa('git', ['add', '-A'], { cwd: gitRoot });
+  await stageAll(gitRoot, paths);
 
-  const entries = await readStagedEntries(gitRoot);
+  const entries = await readStagedEntries(gitRoot, paths);
   if (entries.length === 0) return { committed: false };
 
   const preludeCommit = options?.typeChangeMessage
-    ? await commitTypeChangePrelude({ gitRoot, entries, message: options.typeChangeMessage })
+    ? await commitTypeChangePrelude({ gitRoot, entries, message: options.typeChangeMessage, paths })
     : undefined;
 
   // The prelude consumed part of the index; what is left may be nothing at all.
-  if (preludeCommit && (await readStagedEntries(gitRoot)).length === 0) {
+  if (preludeCommit && (await readStagedEntries(gitRoot, paths)).length === 0) {
     return { ...preludeCommit, preludeCommit: undefined };
   }
 
-  const commit = await execa('git', ['commit', '-m', message], { cwd: gitRoot });
+  const commit = await execa('git', ['commit', '-m', message, ...pathspec(paths)], { cwd: gitRoot });
 
   const [hashResult, branchResult] = await Promise.all([
     execa('git', ['rev-parse', '--short', 'HEAD'], { cwd: gitRoot }),

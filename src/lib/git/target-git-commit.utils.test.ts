@@ -71,6 +71,8 @@ describe('commitAllChanges type-change split', () => {
     await mkdir(join(root, '.claude/skills/foo'), { recursive: true });
     await writeFile(join(root, '.agents/skills/foo/SKILL.md'), 'canonical\n');
     await writeFile(join(root, '.claude/skills/foo/SKILL.md'), 'canonical\n');
+    // Tracked, so a later edit shows as modified rather than untracked — the shape `upgrade` leaves.
+    await writeFile(join(root, 'package.json'), '{ "name": "x" }\n');
 
     await execa('git', ['add', '-A'], { cwd: root });
     await execa('git', ['commit', '-qm', 'init'], { cwd: root });
@@ -150,6 +152,31 @@ describe('commitAllChanges type-change split', () => {
 
     const log = await execa('git', ['log', '--format=%s'], { cwd: root });
     expect(log.stdout.split('\n')).toEqual(['install skills', 'init']);
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('leaves changes outside the pathspec dirty, split included', async () => {
+    // `upgrade` deliberately leaves package.json and .gitignore dirty when the skills install runs
+    // at the end. Without a pathspec the sweep files that work under the skills subject.
+    const root = await createRepoWithVendoredSkill();
+    await writeFile(join(root, 'package.json'), '{ "name": "edited-by-upgrade" }\n');
+
+    const result = await commitAllChanges(root, 'install skills', {
+      typeChangeMessage: 'remove vendored copies',
+      paths: ['.agents/skills', '.claude/skills'],
+    });
+
+    expect(result.committed).toBe(true);
+    expect(result.preludeCommit?.committed).toBe(true);
+
+    const status = await execa('git', ['status', '--porcelain'], { cwd: root });
+    expect(status.stdout.trim()).toBe('M package.json');
+
+    for (const ref of ['HEAD', 'HEAD~1']) {
+      const files = await execa('git', ['show', '--name-only', '--format=', ref], { cwd: root });
+      expect(files.stdout).not.toContain('package.json');
+    }
 
     await rm(root, { recursive: true, force: true });
   });
