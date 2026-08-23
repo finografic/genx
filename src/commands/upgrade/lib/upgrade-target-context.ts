@@ -31,6 +31,8 @@ export async function createUpgradeTargetContext(params: {
   only: Set<UpgradeOnlySection> | null;
   debug: boolean;
   selectedFeatureIds: FeatureId[];
+  /** `-y`. Seeds the shared confirm state so operations honour it, not only features. */
+  yesMode?: boolean;
 }): Promise<UpgradeTargetContext | null> {
   const validation = validateExistingPackage(params.targetDir);
   if (!validation.ok) {
@@ -91,6 +93,9 @@ export async function createUpgradeTargetContext(params: {
     vars,
     plan,
     state,
-    diffState: createDiffConfirmState(),
+    // Seeded from `-y`. A fresh state ignored the flag entirely, so `genx upgrade -y` still stopped
+    // to ask about package.json, .gitignore and the template sync — contradicting the flag's own
+    // help text, which promises to skip per-file confirmation prompts.
+    diffState: { ...createDiffConfirmState(), yesAll: params.yesMode === true },
   };
 }

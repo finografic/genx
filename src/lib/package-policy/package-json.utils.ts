@@ -139,17 +139,3 @@ export async function writePackageJson(path: string, packageJson: PackageJson): 
   const formatted = `${JSON.stringify(packageJson, null, 2)}\n`;
   await writeFile(path, formatted, 'utf8');
 }
-
-/**
- * Read package.json, strip inlined `commitlint` if present, and write back when changed.
- * Used when upgrade runs hooks without the package-json operation selected.
- */
-export async function stripCommitlintFromPackageJsonFile(packageJsonPath: string): Promise<boolean> {
-  const packageJson = await readPackageJson(packageJsonPath);
-  const { packageJson: next, changed } = stripInlinedCommitlintFromPackageJson(packageJson);
-  if (!changed) {
-    return false;
-  }
-  await writePackageJson(packageJsonPath, reorderGitHookTailKeys(next));
-  return true;
-}

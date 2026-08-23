@@ -173,16 +173,21 @@ export async function previewGitHooks(context: FeatureContext): Promise<FeatureP
     applied.push('package.json (git hooks manifest)');
   }
 
+  // Compared, not merely created. The `hooks` upgrade operation used to keep this file matching the
+  // template — and did it by overwriting with no diff. That operation is gone, so this feature took
+  // over the job; proposing the change keeps it visible and skippable instead.
   const commitlintDest = resolve(targetDir, COMMITLINT_CONFIG);
-  if (!fileExists(commitlintDest)) {
-    const fromDir = fileURLToPath(new URL('.', import.meta.url));
-    const packageRoot = findPackageRoot(fromDir);
-    const src = resolve(packageRoot, '_templates', COMMITLINT_CONFIG);
-    if (!fileExists(src)) {
-      throw new Error(`commitlint template not found: ${src}`);
-    }
-    const body = await readFile(src, 'utf8');
-    changes.push(createWritePreviewChange(commitlintDest, '', body, COMMITLINT_CONFIG));
+  const fromDir = fileURLToPath(new URL('.', import.meta.url));
+  const commitlintSrc = resolve(findPackageRoot(fromDir), '_templates', COMMITLINT_CONFIG);
+  if (!fileExists(commitlintSrc)) {
+    throw new Error(`commitlint template not found: ${commitlintSrc}`);
+  }
+  const commitlintBody = await readFile(commitlintSrc, 'utf8');
+  const currentCommitlint = fileExists(commitlintDest) ? await readFile(commitlintDest, 'utf8') : '';
+  if (currentCommitlint !== commitlintBody) {
+    changes.push(
+      createWritePreviewChange(commitlintDest, currentCommitlint, commitlintBody, COMMITLINT_CONFIG),
+    );
   } else {
     applied.push(COMMITLINT_CONFIG);
   }

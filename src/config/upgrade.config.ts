@@ -7,17 +7,10 @@ export const upgradeConfig: UpgradeConfig = {
 
   syncFromTemplate: [
     { section: 'package-json', templatePath: '.npmrc', targetPath: '.npmrc' },
-    {
-      section: 'hooks',
-      templatePath: '.husky/pre-commit',
-      targetPath: '.husky/pre-commit',
-    },
-    {
-      section: 'hooks',
-      templatePath: '.husky/commit-msg',
-      targetPath: '.husky/commit-msg',
-    },
-    { section: 'hooks', templatePath: 'commitlint.config.mjs', targetPath: 'commitlint.config.mjs' },
+    // No `.husky/*` or `commitlint.config.mjs` entries: the `gitHooks` feature owns those files and
+    // writes them from its own constants. Copying them here as well made `_templates/` a second
+    // source for the same content, and this path overwrites without showing a diff — so whichever
+    // ran last silently won. See `src/features/git-hooks/`.
     // No `.nvmrc` entry: the `node` section writes it from deps-policy's toolchain, the same source
     // `create` uses. Copying `_templates/.nvmrc` as well made the template a second source of truth
     // for the node version, and a stale template downgraded targets — monorepo-starter went from

@@ -12,7 +12,6 @@ const UPGRADE_OPERATION_OPTIONS: Array<{
   { value: 'dependencies', label: 'dependencies', hint: 'align versions to deps-policy' },
   { value: 'node', label: 'node', hint: '.nvmrc, CI node version, @types/node' },
   { value: 'renames', label: 'renames', hint: 'normalize canonical filenames' },
-  { value: 'hooks', label: 'hooks', hint: 'husky and commitlint files' },
   { value: 'workflows', label: 'workflows', hint: 'GitHub CI and release workflows' },
   { value: 'docs', label: 'docs', hint: 'docs and .env.example sync' },
   {
@@ -24,6 +23,17 @@ const UPGRADE_OPERATION_OPTIONS: Array<{
 
 const DEFAULT_UPGRADE_OPERATIONS = UPGRADE_OPERATION_OPTIONS.map((option) => option.value);
 
+/**
+ * Attach `merges` to a selection that includes `package-json`.
+ *
+ * `merges` is package.json only (see `config/merge.rules.ts`), so it is not offered as its own
+ * operation: leaving it selectable meant deselecting `package-json` did not protect package.json.
+ * Riding with `package-json` is its only route — there is no `--only` flag.
+ */
+export function applyMergesRider(selected: UpgradeOnlySection[]): UpgradeOnlySection[] {
+  return selected.includes('package-json') ? [...selected, 'merges'] : selected;
+}
+
 export async function promptUpgradeOperations(flow: FlowContext): Promise<UpgradeOnlySection[]> {
   const selected = await promptMultiSelect(flow, {
     message: 'Select upgrade operations:',
@@ -31,8 +41,5 @@ export async function promptUpgradeOperations(flow: FlowContext): Promise<Upgrad
     initialValues: DEFAULT_UPGRADE_OPERATIONS,
   });
 
-  // `merges` is package.json only (see config/merge.rules.ts), so it is not offered as its own
-  // operation: leaving it selectable meant deselecting `package-json` did not protect package.json.
-  // It rides with `package-json` here and stays reachable explicitly via `--only merges`.
-  return selected.includes('package-json') ? [...selected, 'merges'] : selected;
+  return applyMergesRider(selected);
 }

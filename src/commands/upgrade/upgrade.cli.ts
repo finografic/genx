@@ -145,6 +145,7 @@ export async function upgradeSingleTarget(params: {
     only: params.selectedOperations,
     debug: params.debug,
     selectedFeatureIds: partition.root,
+    yesMode: params.flow.yesMode,
   });
   if (!context) {
     return;

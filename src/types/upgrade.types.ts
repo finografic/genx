@@ -1,7 +1,13 @@
+/**
+ * Maintenance operations `upgrade` can run, independent of the feature list.
+ *
+ * There is deliberately no `hooks` section: the `gitHooks` feature owns `.husky/*` and
+ * `commitlint.config.mjs`, and a second path that wrote the same files from `_templates/` meant two
+ * sources for one file with nothing keeping them equal — and the template copy overwrote without
+ * showing a diff. `oxc-config` is likewise a feature, not an operation.
+ */
 export const UPGRADE_ONLY_SECTIONS = [
   'package-json',
-  'hooks',
-  'oxc-config',
   'workflows',
   'docs',
   'dependencies',

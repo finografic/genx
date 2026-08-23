@@ -15,8 +15,12 @@ import type { UpgradeOnlySection } from 'types/upgrade.types';
 export async function applySelectedFeatures(
   targetDir: string,
   selectedFeatureIds: FeatureId[],
+  yesAll = false,
 ): Promise<{ appliedFeatures: FeatureId[]; noopMessages: string[] }> {
-  return applyFeaturesToTarget(targetDir, selectedFeatureIds, { commitEachFeature: false });
+  // `yesAll` is threaded through for the same reason the target context seeds its confirm state:
+  // features applied at the root previously ignored `-y`, while the same features applied to a
+  // workspace member honoured it.
+  return applyFeaturesToTarget(targetDir, selectedFeatureIds, { commitEachFeature: false, yesAll });
 }
 
 export function logFeatureResults(results: { appliedFeatures: FeatureId[]; noopMessages: string[] }): void {

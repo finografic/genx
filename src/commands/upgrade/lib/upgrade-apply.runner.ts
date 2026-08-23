@@ -5,12 +5,7 @@ import type { UpgradeTargetContext } from './upgrade-target-context.js';
 import type { FeatureId } from 'features/feature.types';
 
 import { applyDependencyChanges, planDependencyChanges } from 'lib/package-policy/dependencies.utils';
-import {
-  patchPackageJson,
-  readPackageJson,
-  stripCommitlintFromPackageJsonFile,
-  writePackageJson,
-} from 'lib/package-policy/package-json.utils';
+import { patchPackageJson, readPackageJson, writePackageJson } from 'lib/package-policy/package-json.utils';
 
 import { dependencyRules } from 'config/dependencies.rules';
 import { toolchain } from 'config/policy';
@@ -169,16 +164,18 @@ export async function applyUpgradeTarget(params: {
     }
   }
 
-  await syncFromTemplate(context.targetDir, templateDir, context.vars, only, updatedPackageJson);
+  await syncFromTemplate(
+    context.targetDir,
+    templateDir,
+    context.vars,
+    only,
+    updatedPackageJson,
+    context.diffState,
+  );
 
-  if (shouldRunSection(only, 'hooks')) {
-    const removedInlinedCommitlint = await stripCommitlintFromPackageJsonFile(context.packageJsonPath);
-    if (removedInlinedCommitlint) {
-      successUpdatedMessage('Removed inlined commitlint from package.json (use commitlint.config.mjs)');
-      updatedPackageJson = await readPackageJson(context.packageJsonPath);
-      context.packageJson = updatedPackageJson;
-    }
-  }
+  // Inlined `commitlint` in package.json is stripped by the `gitHooks` feature, which does it as
+  // part of the same edit that adds `lint-staged` and the `prepare` script — so it is shown in one
+  // diff rather than written here behind the user's back.
 
   await copyLicenseIfMissing(
     context.targetDir,
@@ -190,7 +187,11 @@ export async function applyUpgradeTarget(params: {
     successMessage('Added LICENSE file');
   }
 
-  const featureResults = await applySelectedFeatures(context.targetDir, selectedFeatureIds);
+  const featureResults = await applySelectedFeatures(
+    context.targetDir,
+    selectedFeatureIds,
+    context.diffState.yesAll,
+  );
   logFeatureResults(featureResults);
 
   hasDependencyChanges = await ensureCliHelpFile({ context, only, hasDependencyChanges });

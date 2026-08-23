@@ -66,6 +66,26 @@ describe('git-hooks preview-driven detect', () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it('proposes an update when an existing commitlint.config.mjs has drifted from the template', async () => {
+    // The retired `hooks` upgrade operation kept this file current by overwriting it with no diff.
+    // This feature took the job over, so a drifted file must still be caught here.
+    const root = await mkdtemp(join(tmpdir(), 'genx-gh-commitlint-'));
+    await writeFile(
+      join(root, 'package.json'),
+      `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
+    );
+    await writeFile(join(root, 'commitlint.config.mjs'), 'export default { extends: [] };\n');
+
+    const preview = await previewGitHooks({ targetDir: root });
+    const change = preview.changes.find((entry) => entry.path === join(root, 'commitlint.config.mjs'));
+
+    expect(change).toBeDefined();
+    expect(change?.kind).toBe('write');
+    expect(preview.applied).not.toContain('commitlint.config.mjs');
+
+    await rm(root, { recursive: true, force: true });
+  });
+
   it('replaces scripts.prepare simple-git-hooks with husky when migrating from simple-git-hooks', async () => {
     const root = await mkdtemp(join(tmpdir(), 'genx-gh-sgh-'));
     const pkg = {
