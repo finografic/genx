@@ -129,7 +129,7 @@ genx create monorepo --no-install
 | `scope`   | internal packages keep the generic @workspace/* scope                        |
 | `source`  | always a cloned tag — tagging the starter is the sign-off                    |
 | `pin`     | --tag, or monorepoStarter.tag in genx.config.jsonc                           |
-| `offline` | falls back to v0.2.2, and says so when it does                               |
+| `offline` | not supported — the clone needs the same remote the tag lookup does          |
 | `early`   | to try starter changes before release, tag a prerelease (v0.3.0-rc.1)        |
 
 **How it works:**
