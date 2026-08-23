@@ -4,3 +4,4 @@ minimumReleaseAgeExclude:
   - '@finografic/ai-agent-config@0.1.1'
   - '@finografic/deps-policy@0.26.12 || 0.26.13 || 0.26.19'
   - '@finografic/project-scripts@1.6.1 || 2.0.0 || 2.0.1'
+  - '@finografic/md-lint@0.16.7'
