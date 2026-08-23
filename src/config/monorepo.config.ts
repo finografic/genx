@@ -11,18 +11,6 @@ export interface MonorepoConfig {
   repoUrl: string;
 
   /**
-   * Offline fallback tag — **not** the default source.
-   *
-   * Generation resolves the newest tag on the remote, because tagging the starter is already the
-   * sign-off; a pin here would duplicate that decision and then go stale unnoticed. This value is
-   * used only when the remote cannot be reached, and that case is announced rather than silent.
-   *
-   * Keep it roughly current so an offline run still produces something recent, but it no longer has
-   * to be bumped in lockstep with the starter.
-   */
-  pinnedTag: string;
-
-  /**
    * Features applied to the workspace root after scaffolding.
    *
    * Deliberately limited to features that write documentation and agent content only. Three
@@ -59,8 +47,6 @@ export interface MonorepoConfig {
 
 export const monorepoConfig: MonorepoConfig = {
   repoUrl: 'git@github.com:finografic/monorepo-starter.git',
-
-  pinnedTag: 'v0.2.2',
 
   rootFeatures: ['aiAgents', 'aiInstructions', 'aiMemory', 'designMd'],
 

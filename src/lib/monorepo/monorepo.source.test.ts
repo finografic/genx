@@ -8,7 +8,6 @@ import {
 } from './monorepo.source';
 
 const repoUrl = 'git@github.com:finografic/monorepo-starter.git';
-const pinnedTag = 'v0.2.1';
 
 describe('compareSemverTags', () => {
   it('orders by numeric component, not lexically', () => {
@@ -59,15 +58,22 @@ describe('parseRemoteTags', () => {
 });
 
 describe('resolveMonorepoSource', () => {
-  it('falls back to the release pin when the remote cannot be reached', async () => {
-    // Unreachable remote: nothing configured, so resolution reaches the network and fails.
-    await expect(
-      resolveMonorepoSource({ pinnedTag, repoUrl: 'git@example.invalid:nope/nope.git' }),
-    ).resolves.toEqual({ tag: 'v0.2.1', origin: 'pinned-fallback' });
+  it('fails, rather than falling back, when the remote cannot be reached', async () => {
+    // Generation clones the same remote this lookup reads, so an unreachable remote cannot produce
+    // a workspace by any route. Failing here beats failing later at the clone with a stale tag.
+    await expect(resolveMonorepoSource({ repoUrl: 'git@example.invalid:nope/nope.git' })).rejects.toThrow(
+      /Failed to list tags/,
+    );
+  });
+
+  it('names --tag as the escape hatch when the lookup fails', async () => {
+    await expect(resolveMonorepoSource({ repoUrl: 'git@example.invalid:nope/nope.git' })).rejects.toThrow(
+      /--tag/,
+    );
   });
 
   it('prefers a configured tag over reaching the remote', async () => {
-    await expect(resolveMonorepoSource({ configTag: 'v0.3.0', pinnedTag, repoUrl })).resolves.toEqual({
+    await expect(resolveMonorepoSource({ configTag: 'v0.3.0', repoUrl })).resolves.toEqual({
       tag: 'v0.3.0',
       origin: 'config',
     });
@@ -75,16 +81,16 @@ describe('resolveMonorepoSource', () => {
 
   it('prefers a prerelease tag when asked for one', async () => {
     // Trying unreleased starter changes goes through the same path: tag a prerelease.
-    await expect(resolveMonorepoSource({ tagFlag: 'v0.3.0-rc.1', pinnedTag, repoUrl })).resolves.toEqual({
+    await expect(resolveMonorepoSource({ tagFlag: 'v0.3.0-rc.1', repoUrl })).resolves.toEqual({
       tag: 'v0.3.0-rc.1',
       origin: 'flag',
     });
   });
 
   it('prefers --tag over a configured tag', async () => {
-    await expect(
-      resolveMonorepoSource({ tagFlag: 'v0.9.9', configTag: 'v0.3.0', pinnedTag, repoUrl }),
-    ).resolves.toEqual({ tag: 'v0.9.9', origin: 'flag' });
+    await expect(resolveMonorepoSource({ tagFlag: 'v0.9.9', configTag: 'v0.3.0', repoUrl })).resolves.toEqual(
+      { tag: 'v0.9.9', origin: 'flag' },
+    );
   });
 });
 
@@ -97,13 +103,6 @@ describe('describeMonorepoSource', () => {
     expect(describeMonorepoSource({ tag: 'v0.9.9', origin: 'flag' })).toBe('tag v0.9.9 (--tag)');
     expect(describeMonorepoSource({ tag: 'v1.0.0', origin: 'flag-latest' })).toBe(
       'tag v1.0.0 (--tag latest)',
-    );
-  });
-
-  it('says out loud when a stale pin was used because the remote was unreachable', () => {
-    // The fallback must never look like a deliberate choice — that is the whole reason it is named.
-    expect(describeMonorepoSource({ tag: 'v0.2.2', origin: 'pinned-fallback' })).toBe(
-      "tag v0.2.2 (remote unreachable — falling back to this release's pin)",
     );
   });
 });

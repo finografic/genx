@@ -64,7 +64,6 @@ export async function createMonorepo(argv: string[], context: { cwd: string }): 
       source = await resolveMonorepoSource({
         tagFlag: typeof flow.flags['tag'] === 'string' ? flow.flags['tag'] : undefined,
         configTag: starterConfig?.tag,
-        pinnedTag: monorepoConfig.pinnedTag,
         repoUrl: monorepoConfig.repoUrl,
       });
     } catch (error) {
