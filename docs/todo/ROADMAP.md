@@ -35,7 +35,18 @@ No items.
 
 ## P1 — Next Up
 
-No items.
+### 12. Skill distribution moves to the Agent Skills CLI
+
+Skills stop being vendored by genx and are installed with `npx skills add finografic/ai-skills`,
+which writes one canonical copy and symlinks each agent directory at it. That retires the
+dual-write — two real copies of identical content — which caused a CI failure on 2026-08-23 when
+md-lint classified one path as an agent doc and the other as standard.
+
+`finografic/ai-skills` exists, is public, and is verified installing to nine agents. Remaining work
+is genx-side and staged; the ordering matters, because fail-closed ownership means genx must
+understand the new `external` mode before ai-agent-config emits it.
+
+Detail: [`docs/specs/2026-08-23-skill-distribution-model.md`](../specs/2026-08-23-skill-distribution-model.md)
 
 ---
 
