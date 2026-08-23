@@ -40,6 +40,8 @@ agents, with `.claude/skills/<name>` a symlink into `.agents/skills/<name>`.
 | 6   | Dual-write stays, gated on the lockfile's _absence_, until every managed repo has migrated. It is then dead code and deletes.   | **Adopted** |
 | 7   | ai-agent-config's skill asset later moves to an `external` ownership mode rather than being deleted from the manifest.          | Proposed    |
 | 8   | genx must understand `external` before ai-agent-config emits it — fail-closed makes the reverse order an error.                 | **Adopted** |
+| 9   | `skills-lock.json` is **committed**. It is the migration gate, so an untracked lockfile un-migrates the repo on every clone.    | **Adopted** |
+| 10  | Migration commits the directory removal and the symlink **separately** — one staged type change breaks `git stash`.             | **Adopted** |
 
 ## Architecture
 
@@ -74,7 +76,7 @@ breaks every consumer's `skills-lock.json` entry.
 17 keeps asking for, except supplied by the transport rather than hand-rolled per surface. It is a
 **pull**: publishing a change does not reach a consumer until someone runs `skills update`.
 
-## Two hazards
+## Three hazards
 
 ### 1. Two managers, one path — live today
 
@@ -141,6 +143,64 @@ so this is discoverable rather than tribal.
 Note this constraint is no longer on the critical path. The lockfile gate does the safety work;
 `external` is the later declarative cleanup, and can land whenever it suits.
 
+### 3. Migration stages a type change, and `git stash` refuses it
+
+Every migrating repository holds `.claude/skills/<name>/` as a real directory today. Installing
+replaces it with a symlink, which git stages as two entries at once:
+
+```
+A  .claude/skills/foo          <- the new symlink
+D  .claude/skills/foo/SKILL.md <- a file inside the directory that no longer exists
+```
+
+`git stash create` cannot serialise that state, because the staged deletion asks it to reach through
+the new symlink:
+
+```
+error: '.claude/skills/foo/SKILL.md' is beyond a symbolic link
+fatal: Unable to process path .claude/skills/foo/SKILL.md
+Cannot save the current worktree state
+```
+
+lint-staged takes that stash as its backup **before running any task**, so the commit aborts with
+`Failed to back up original state` and not one check runs. Reproduced on git 2.55.0 / lint-staged
+17.3.0, and observed in two repositories on 2026-08-23. It is not version-specific: git has always
+refused to write beyond a symlink, and nothing in this ecosystem converted a tracked directory into
+a symlink until skills migration.
+
+This is not an edge case for the rollout — it is **every repository in step D**, because dual-write
+put a real directory at that exact path in all of them.
+
+**Resolution: commit the removal and the symlink as two commits.** Each half stages cleanly and
+stashes fine, so the hook keeps running and nothing needs `--no-verify`:
+
+| Commit | Staged                   | Stashes |
+| ------ | ------------------------ | ------- |
+| 1      | `D .claude/skills/foo/…` | Yes     |
+| 2      | `A .claude/skills/foo`   | Yes     |
+
+genx must do this itself in step C. `commitTrackedGitChanges` runs `git commit` with hooks enabled,
+so a single-commit install fails in any repository whose hook backs up state — which is all of them.
+`--no-verify` is the wrong escape: it would silently disable lint and format on a commit that
+rewrites agent configuration.
+
+Detection is cheap and does not need a symlink-specific check: any path staged as added whose
+**prefix is also staged as deleted** is a type change, and splitting on that rule covers
+file→directory and directory→symlink alike.
+
+### The lockfile must be committed
+
+Decision 4 makes `skills-lock.json` the gate: present means externally managed, absent means genx
+dual-writes. That only holds if the file survives a clone.
+
+An untracked lockfile makes every fresh clone look unmigrated, so genx dual-writes real directories
+over the symlinks the CLI put there — hazard 1, reintroduced by a `.gitignore` line. Committing it
+also makes `computedHash` drift reviewable, and lets `experimental_install` restore the same
+versions on another machine. It is a lockfile in the ordinary sense, and gets the ordinary treatment.
+
+Nothing in `_templates/.gitignore` excludes it today, and genx's own copy is tracked. This decision
+exists so it stays that way.
+
 ## How genx invokes the CLI
 
 genx runs the CLI rather than only reporting. `skills add` clones from GitHub and needs no local
@@ -156,9 +216,15 @@ own flow.
 | Lockfile present, hashes drifted | Offer `skills update`                                               |
 | Lockfile present, hashes match   | Report and do nothing                                               |
 
-Two constraints: **pin the CLI version**, as `genx clean` already pins its `dlx` target, so an
-upstream release cannot change behaviour mid-upgrade; and treat failure as **non-fatal**, since a
-network blip must not abort an upgrade that is otherwise filesystem-local.
+Three constraints: **pin the CLI version**, as `genx clean` already pins its `dlx` target, so an
+upstream release cannot change behaviour mid-upgrade; treat failure as **non-fatal**, since a
+network blip must not abort an upgrade that is otherwise filesystem-local; and **split the commit**
+per hazard 3, since `add` and `update` both replace directories with symlinks and a single commit
+cannot be stashed.
+
+`add` and `experimental_install` create the type change from scratch. `update` recreates it in any
+repository where a previous genx `upgrade` overwrote a symlink with a real directory. Both paths
+need the split, so it belongs in the shared commit helper rather than at one call site.
 
 ## Migration Strategy
 
@@ -176,7 +242,8 @@ dual-write from the repository that argues against it.
 **C. genx invokes the CLI** per the table above — add, restore, update — pinned and non-fatal.
 
 **D. Migrate repositories, one at a time.** `npx skills add finografic/ai-skills` in each. Order does
-not matter, and a half-migrated ecosystem is a valid steady state.
+not matter, and a half-migrated ecosystem is a valid steady state. Commit the removal and the
+symlinks separately per hazard 3, and commit `skills-lock.json`.
 
 **E. genx learns the `external` ownership mode**, then ai-agent-config flips its skill asset to it
 and releases, recording the minimum genx version. Declarative cleanup, not a safety requirement.
