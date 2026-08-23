@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -210,5 +210,58 @@ describe('ai-agents preview-driven detect', () => {
     );
 
     await rm(root, { recursive: true, force: true });
+  });
+
+  describe('skills-lock.json hands skills to an external manager', () => {
+    async function seedProject(root: string): Promise<void> {
+      await writeFile(
+        join(root, 'package.json'),
+        `${JSON.stringify({ name: 'x', version: '1.0.0' }, null, 2)}\n`,
+      );
+      await writeFile(join(root, 'AGENTS.md'), '# x\n');
+    }
+
+    it('proposes no skill writes when the lockfile is present', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'genx-agents-lock-'));
+      await seedProject(root);
+      await writeFile(join(root, 'skills-lock.json'), '{"version":1,"skills":{}}\n');
+
+      const preview = await previewAiAgents({ targetDir: root });
+
+      expect(preview.changes.some((c) => c.path.includes('/skills/'))).toBe(false);
+      expect(preview.applied.some((entry) => entry.includes('skills-lock.json'))).toBe(true);
+
+      await rm(root, { recursive: true, force: true });
+    });
+
+    it('still proposes skill writes when the lockfile is absent', async () => {
+      // The gate must not disable the legacy path — repos that have not migrated keep receiving
+      // skill updates rather than silently freezing.
+      const root = await mkdtemp(join(tmpdir(), 'genx-agents-nolock-'));
+      await seedProject(root);
+
+      const preview = await previewAiAgents({ targetDir: root });
+
+      expect(preview.changes.some((c) => c.path.includes('/skills/'))).toBe(true);
+
+      await rm(root, { recursive: true, force: true });
+    });
+
+    it('never replaces a symlink the external manager created', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'genx-agents-symlink-'));
+      await seedProject(root);
+      await writeFile(join(root, 'skills-lock.json'), '{"version":1,"skills":{}}\n');
+      await mkdir(join(root, '.agents/skills/maintain-agents'), { recursive: true });
+      await writeFile(join(root, '.agents/skills/maintain-agents/SKILL.md'), '# canonical\n');
+      await mkdir(join(root, '.claude/skills'), { recursive: true });
+      await symlink('../../.agents/skills/maintain-agents', join(root, '.claude/skills/maintain-agents'));
+
+      const preview = await previewAiAgents({ targetDir: root });
+
+      expect(preview.changes.some((c) => c.path.includes('.claude/skills'))).toBe(false);
+      expect((await lstat(join(root, '.claude/skills/maintain-agents'))).isSymbolicLink()).toBe(true);
+
+      await rm(root, { recursive: true, force: true });
+    });
   });
 });

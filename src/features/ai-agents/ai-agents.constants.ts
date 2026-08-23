@@ -17,6 +17,16 @@ export const AI_AGENTS_SKILLS_SOURCE_DIR = 'skills';
  */
 export const AI_AGENTS_SKILLS_TARGET_DIRS = ['.agents/skills', '.claude/skills'] as const;
 
+/**
+ * Lockfile written by the Agent Skills CLI (`npx skills`). Its presence means an external manager
+ * owns this repository's skills, so this feature must not write them — see
+ * `docs/specs/2026-08-23-skill-distribution-model.md`.
+ */
+export const SKILLS_LOCKFILE = 'skills-lock.json';
+
+/** Reported when skills are left alone because an external manager owns them. */
+export const AI_AGENTS_SKILLS_EXTERNALLY_MANAGED = `.agents/skills/, .claude/skills/ (managed by ${SKILLS_LOCKFILE})`;
+
 /** Skills only useful in CLI-shaped target packages. */
 export const AI_AGENTS_CLI_ONLY_SKILL_DIRS = ['scaffold-cli-help', 'scaffold-core-module'] as const;
 

@@ -22,7 +22,9 @@ import { mergeAgentsMdFromTemplate, proposeAgentsMdForNewFile } from './ai-agent
 import {
   AI_AGENTS_CLI_ONLY_SKILL_DIRS,
   AI_AGENTS_REMOVED_SKILL_DIRS,
+  AI_AGENTS_SKILLS_EXTERNALLY_MANAGED,
   AI_AGENTS_SKILLS_SOURCE_DIR,
+  SKILLS_LOCKFILE,
 } from './ai-agents.constants';
 
 async function collectSkillTreeWrites(
@@ -132,6 +134,18 @@ export async function previewAiAgents(
   if (skipSkills) {
     const noopMessage =
       changes.length === 0 ? 'AGENTS.md already matches canonical configuration.' : undefined;
+    return { changes, applied, noopMessage };
+  }
+
+  // The Agent Skills CLI writes one canonical copy and symlinks each agent directory at it. Writing
+  // our own dual-written copies over that would replace those symlinks and break the content hashes
+  // in the lockfile, so the lockfile's presence hands skills over entirely.
+  if (fileExists(resolve(targetDir, SKILLS_LOCKFILE))) {
+    applied.push(AI_AGENTS_SKILLS_EXTERNALLY_MANAGED);
+    const noopMessage =
+      changes.length === 0
+        ? `AGENTS.md already matches canonical configuration. Skills are managed by ${SKILLS_LOCKFILE}.`
+        : undefined;
     return { changes, applied, noopMessage };
   }
 
