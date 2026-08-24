@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, rm } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileExists } from 'utils';
 import type { FeaturePreviewChange } from './feature-preview/feature-preview.types.js';
@@ -52,11 +52,20 @@ export async function collectLegacyGithubInstructionsChanges(params: {
   targetDir: string;
   /** Absolute path of the canonical `.agents/instructions/` directory. */
   canonicalRoot: string;
+  /**
+   * Canonical paths this preview is already going to write.
+   *
+   * On a first migration the canonical tree does not exist on disk yet — it is only proposed — so
+   * disk state alone would report every shipped instruction as project-specific and copy the stale
+   * legacy copy over the new one.
+   */
+  plannedCanonicalPaths?: ReadonlySet<string>;
 }): Promise<FeaturePreviewChange[]> {
   const legacyRoot = join(params.targetDir, LEGACY_GITHUB_INSTRUCTIONS_DIR);
   if (!fileExists(legacyRoot)) return [];
 
   const changes: FeaturePreviewChange[] = [];
+  const planned = params.plannedCanonicalPaths ?? new Set<string>();
 
   for (const legacyPath of await listFilesRecursively(legacyRoot)) {
     const relativePath = relative(legacyRoot, legacyPath);
@@ -70,7 +79,7 @@ export async function collectLegacyGithubInstructionsChanges(params: {
     const body = await readFile(legacyPath, 'utf8');
     const canonicalPath = join(params.canonicalRoot, relativePath);
 
-    if (!fileExists(canonicalPath)) {
+    if (!fileExists(canonicalPath) && !planned.has(canonicalPath)) {
       // Project-specific content with nowhere else to live — carry it over before removing it.
       changes.push(
         createWritePreviewChange(
@@ -93,4 +102,21 @@ export async function collectLegacyGithubInstructionsChanges(params: {
 /** Point documents at the canonical directory. Safe on content that never mentioned the old one. */
 export function rewriteLegacyGithubInstructionsPaths(content: string): string {
   return content.replaceAll(`${LEGACY_GITHUB_INSTRUCTIONS_DIR}/`, '.agents/instructions/');
+}
+
+/**
+ * After the preview's deletes are applied: remove `.github/instructions/` when nothing is left in it.
+ *
+ * Preview changes are per file, so deleting every file leaves the directory tree standing — still
+ * visible in an editor, still looking like the migration did not happen. Anything unexpected still
+ * inside keeps the directory, rather than being swept away with it.
+ */
+export async function finalizeLegacyGithubInstructionsAfterApply(targetDir: string): Promise<void> {
+  const legacyRoot = join(targetDir, LEGACY_GITHUB_INSTRUCTIONS_DIR);
+  if (!fileExists(legacyRoot)) return;
+
+  const remaining = await listFilesRecursively(legacyRoot);
+  if (remaining.length > 0) return;
+
+  await rm(legacyRoot, { recursive: true, force: true });
 }

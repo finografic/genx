@@ -311,17 +311,17 @@ export async function previewAiInstructions(
     }
   }
 
-  // Retire `.github/instructions/` once the canonical tree exists. The standalone migration could
-  // never do this: it renamed the directory only when `.agents/instructions/` was absent, which
-  // stopped being true the moment this feature ran.
-  if (fileExists(instructionsDestRoot)) {
-    changes.push(
-      ...(await collectLegacyGithubInstructionsChanges({
-        targetDir,
-        canonicalRoot: instructionsDestRoot,
-      })),
-    );
-  }
+  // Retire `.github/instructions/`. Deliberately not guarded on the canonical directory existing:
+  // this is a *preview*, so on a repository migrating for the first time that directory is still
+  // only proposed, and guarding on disk state made the whole retirement a no-op in exactly the case
+  // it exists for. The paths this preview is already writing count as canonical.
+  changes.push(
+    ...(await collectLegacyGithubInstructionsChanges({
+      targetDir,
+      canonicalRoot: instructionsDestRoot,
+      plannedCanonicalPaths: new Set(changes.map((change) => change.path)),
+    })),
+  );
 
   if (!skipAgentsInfrastructure) {
     const gitignorePath = resolve(targetDir, '.gitignore');
