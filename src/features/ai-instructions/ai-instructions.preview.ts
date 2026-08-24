@@ -26,6 +26,10 @@ import {
   collectLegacyAiFolderMigrationChanges,
 } from '../../lib/agents-legacy-ai-folder.utils.js';
 import {
+  collectLegacyGithubInstructionsChanges,
+  rewriteLegacyGithubInstructionsPaths,
+} from '../../lib/agents-legacy-github-instructions.utils.js';
+import {
   createDeletePreviewChange,
   createFilePreviewChange,
   createWritePreviewChange,
@@ -268,8 +272,11 @@ export async function previewAiInstructions(
     } else {
       const templateAgentsRaw = await readFile(agentsTemplatePath, 'utf8');
       const currentAgents = await readFile(agentsDest, 'utf8');
-      const proposedAgents = mergeAgentsFromTemplate(currentAgents, templateAgentsRaw);
-      if (proposedAgents !== null) {
+      const merged = mergeAgentsFromTemplate(currentAgents, templateAgentsRaw);
+      // Rewrite the legacy path even when the merge itself is a no-op: the directory is being
+      // removed, and a document that still points at it sends every agent to a dead path.
+      const proposedAgents = rewriteLegacyGithubInstructionsPaths(merged ?? currentAgents);
+      if (proposedAgents !== currentAgents) {
         changes.push(
           createWritePreviewChange(
             agentsDest,
@@ -302,6 +309,18 @@ export async function previewAiInstructions(
         );
       }
     }
+  }
+
+  // Retire `.github/instructions/` once the canonical tree exists. The standalone migration could
+  // never do this: it renamed the directory only when `.agents/instructions/` was absent, which
+  // stopped being true the moment this feature ran.
+  if (fileExists(instructionsDestRoot)) {
+    changes.push(
+      ...(await collectLegacyGithubInstructionsChanges({
+        targetDir,
+        canonicalRoot: instructionsDestRoot,
+      })),
+    );
   }
 
   if (!skipAgentsInfrastructure) {
