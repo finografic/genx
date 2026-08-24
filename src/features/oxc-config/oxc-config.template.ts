@@ -2,21 +2,35 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { inferPackageTypeId } from 'lib/package-type.utils';
+import { inferPackageTypeId, isFrontendPackageType } from 'lib/package-type.utils';
 import { findPackageRoot } from 'utils/package-root.utils';
 
 import type { PackageJson } from 'types/package-json.types';
 
-let cachedOxfmtConfigContent: string | undefined;
+const cachedOxfmtConfigContent = new Map<string, string>();
 
-/** Canonical `oxfmt.config.ts` from `_templates/oxfmt.config.ts` (single source of truth). */
-export function getOxfmtConfigCanonicalFileContent(): string {
-  if (cachedOxfmtConfigContent === undefined) {
+/**
+ * Canonical `oxfmt.config.ts` from `_templates/` (single source of truth).
+ *
+ * Frontend packages read the react overlay, which carries the `*.css` / `*.scss` override. The base
+ * template has none — writing it to a frontend package stripped that project's CSS formatting rules
+ * with no replacement, because one template was doing duty for every package type.
+ */
+export function getOxfmtConfigCanonicalFileContent(packageJson?: PackageJson): string {
+  const relativePath =
+    packageJson && isFrontendPackageType(inferPackageTypeId(packageJson))
+      ? '_templates/package-types/react/oxfmt.config.ts'
+      : '_templates/oxfmt.config.ts';
+
+  let content = cachedOxfmtConfigContent.get(relativePath);
+  if (content === undefined) {
     const fromDir = fileURLToPath(new URL('.', import.meta.url));
     const pkgRoot = findPackageRoot(fromDir);
-    cachedOxfmtConfigContent = readFileSync(join(pkgRoot, '_templates/oxfmt.config.ts'), 'utf8');
+    content = readFileSync(join(pkgRoot, relativePath), 'utf8');
+    cachedOxfmtConfigContent.set(relativePath, content);
   }
-  return cachedOxfmtConfigContent.endsWith('\n') ? cachedOxfmtConfigContent : `${cachedOxfmtConfigContent}\n`;
+
+  return content.endsWith('\n') ? content : `${content}\n`;
 }
 
 function getOxlintPresetName(packageJson: PackageJson): string {

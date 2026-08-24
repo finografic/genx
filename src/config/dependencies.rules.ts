@@ -13,11 +13,15 @@ const dev = policy.base.devDependencies ?? {};
 export const dependencyRules: DependencyRule[] = [
   // build
   { name: 'typescript', version: dev['typescript'], section: 'devDependencies', group: 'build' },
-  { name: 'tsdown', version: dev['tsdown'], section: 'devDependencies', group: 'build' },
+  // Optional: a package that builds with Vite (or does not build at all) has no use for tsdown, and
+  // force-adding a second bundler to a frontend app is not an alignment.
+  { name: 'tsdown', version: dev['tsdown'], section: 'devDependencies', optional: true, group: 'build' },
   { name: '@types/node', version: dev['@types/node'], section: 'devDependencies', group: 'build' },
 
   // testing
-  { name: 'vitest', version: dev['vitest'], section: 'devDependencies', group: 'testing' },
+  // Optional: the `vitest` feature installs it. Force-adding it here put vitest into packages that
+  // had deliberately not selected the feature.
+  { name: 'vitest', version: dev['vitest'], section: 'devDependencies', optional: true, group: 'testing' },
 
   // linting
   { name: 'oxlint', version: dev['oxlint'], section: 'devDependencies', optional: true, group: 'linting' },
@@ -58,10 +62,12 @@ export const dependencyRules: DependencyRule[] = [
   },
 
   // ecosystem
+  // Optional: a toolbox a project opts into, not a requirement of being a @finografic package.
   {
     name: '@finografic/project-scripts',
     version: dev['@finografic/project-scripts'],
     section: 'devDependencies',
+    optional: true,
     group: 'ecosystem',
   },
 ];

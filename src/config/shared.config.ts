@@ -38,9 +38,9 @@ export const sharedConfig: SharedConfig = {
    * _templates/package.json.
    */
   packageJsonScripts: {
-    'test': 'vitest',
-    'test:run': 'vitest run',
-    'test:coverage': 'vitest run --coverage',
+    // No `test` / `test:run` / `test:coverage`: the `vitest` feature owns them, and it inserts them
+    // under a TESTING section title rather than appending to the end. Listing them here added
+    // vitest scripts to packages that never selected the feature, in the wrong place.
     'lint': 'oxlint -c oxlint.config.ts',
     'lint:fix': 'oxlint -c oxlint.config.ts --fix',
     'typecheck': 'tsc --project tsconfig.json --noEmit',
@@ -65,10 +65,9 @@ export const sharedConfig: SharedConfig = {
       'oxfmt --no-error-on-unmatched-pattern',
       'oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern',
     ],
-    '*.md': [
-      'oxfmt --no-error-on-unmatched-pattern',
-      'oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern',
-    ],
+    // No `*.md`: the `markdown` feature owns it and writes `md-lint --fix`. Claiming it here
+    // replaced that with oxlint on every upgrade, which — together with the missing CI step —
+    // silently switched markdown linting off in a repository that had it.
     '*.{json,jsonc,yml,yaml,toml}': ['oxfmt --no-error-on-unmatched-pattern'],
   },
 

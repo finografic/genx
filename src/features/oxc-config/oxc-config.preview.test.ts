@@ -49,6 +49,25 @@ describe('oxc-config.template', () => {
       /^import type \{ OxfmtConfig, OxfmtOverrideConfig \} from '@finografic\/oxc-config\/oxfmt';/m,
     );
   });
+
+  it('keeps the CSS override for a frontend package', async () => {
+    // One template for every package type stripped a React app's CSS formatting rules and put
+    // nothing back, because the base template has no `*.css` override at all.
+    const reactPkg = { name: 'x', keywords: ['genx:type:react'] };
+    const content = getOxfmtConfigCanonicalFileContent(reactPkg);
+
+    expect(content).toContain("files: ['*.css', '*.scss']");
+    expect(content).toMatch(/^\s+css,$/m);
+
+    const overlay = await readFile(join(repoRoot, '_templates/package-types/react/oxfmt.config.ts'), 'utf8');
+    expect(content).toBe(overlay.endsWith('\n') ? overlay : `${overlay}\n`);
+  });
+
+  it('leaves the base template free of the CSS override for a library package', () => {
+    const content = getOxfmtConfigCanonicalFileContent({ name: 'x', keywords: ['genx:type:library'] });
+
+    expect(content).not.toContain("files: ['*.css', '*.scss']");
+  });
 });
 
 describe('oxfmt.preview — package.json drift', () => {

@@ -77,6 +77,18 @@ export function stripInlinedCommitlintFromPackageJson(packageJson: PackageJson):
   return { packageJson: next, changed: true };
 }
 
+/**
+ * Bring a package.json into line with the canonical set.
+ *
+ * **Ensure, not enforce.** A key the target already defines is left exactly as it is; only missing
+ * keys are added. Overwriting on difference is what replaced `prepare: "husky && pnpm panda:codegen"`
+ * with a bare `"husky"`, dropped `format:check` out of a project's `release:check`, and swapped
+ * `md-lint` out of the markdown lint-staged entry — each time silently, and each time destroying a
+ * deliberate project decision to restate a default.
+ *
+ * The trade-off is real and accepted: a script that genuinely has gone stale is no longer corrected
+ * automatically. Deleting the key and re-running restores the canonical value.
+ */
 export function patchPackageJson(
   packageJson: PackageJson,
   packageNameWithoutScope: string,
@@ -87,7 +99,7 @@ export function patchPackageJson(
   // scripts
   const scripts = { ...packageJson.scripts };
   for (const [key, value] of Object.entries(upgradeConfig.packageJson.ensureScripts)) {
-    if (scripts[key] !== value) {
+    if (scripts[key] === undefined) {
       scripts[key] = value;
       changes.push(`scripts.${key}`);
     }
@@ -97,8 +109,7 @@ export function patchPackageJson(
   // lint-staged
   const lintStaged = { ...packageJson['lint-staged'] };
   for (const [pattern, s] of Object.entries(upgradeConfig.packageJson.ensureLintStaged)) {
-    const current = lintStaged[pattern];
-    if (!Array.isArray(current) || current.join('\n') !== s.join('\n')) {
+    if (lintStaged[pattern] === undefined) {
       lintStaged[pattern] = s;
       changes.push(`lint-staged.${pattern}`);
     }

@@ -224,7 +224,7 @@ export async function previewOxcConfig(context: FeatureContext): Promise<Feature
     applied.push('package.json (oxfmt canonical layout)');
   }
 
-  const canonicalConfig = getOxfmtConfigCanonicalFileContent();
+  const canonicalConfig = getOxfmtConfigCanonicalFileContent(currentPkg);
   let currentConfig = '';
   try {
     currentConfig = await readFile(configPath, 'utf8');
