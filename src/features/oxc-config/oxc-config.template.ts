@@ -46,17 +46,32 @@ function getOxlintPresetName(packageJson: PackageJson): string {
   }
 }
 
-/** Canonical `oxlint.config.ts` based on inferred package type and shared preset exports. */
+/** Whether the package actually has tests for `testOverrides` to apply to. */
+function usesVitest(packageJson: PackageJson): boolean {
+  return (
+    packageJson.devDependencies?.['vitest'] !== undefined ||
+    packageJson.dependencies?.['vitest'] !== undefined
+  );
+}
+
+/**
+ * Canonical `oxlint.config.ts` based on inferred package type and shared preset exports.
+ *
+ * `testOverrides` is included only when the package has vitest. Emitting it unconditionally added
+ * lint overrides for test files to packages that had deliberately not selected the testing feature.
+ */
 export function getOxlintConfigCanonicalFileContent(packageJson: PackageJson): string {
   const presetName = getOxlintPresetName(packageJson);
+  const overrideNames = usesVitest(packageJson) ? ['testOverrides', 'configOverrides'] : ['configOverrides'];
+  const imported = [presetName, ...overrideNames].join(', ');
 
   return `import { defineConfig } from 'oxlint';
 import type { OxlintConfig } from 'oxlint';
-import { ${presetName}, testOverrides, configOverrides } from '@finografic/oxc-config/oxlint';
+import { ${imported} } from '@finografic/oxc-config/oxlint';
 
 export default defineConfig({
   ...${presetName},
-  overrides: [testOverrides, configOverrides],
+  overrides: [${overrideNames.join(', ')}],
 } satisfies OxlintConfig);
 `;
 }

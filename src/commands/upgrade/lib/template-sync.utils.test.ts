@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { TemplateVars } from 'types/template.types';
 import type { UpgradeOnlySection } from 'types/upgrade.types';
 
-import { syncFromTemplate } from './template-sync.utils.js';
+import { differsOnlyByTrailingNewline, syncFromTemplate } from './template-sync.utils.js';
 
 const vars: TemplateVars = {
   SCOPE: '@finografic',
@@ -30,7 +30,40 @@ async function createTemplateDir(): Promise<string> {
   return templateDir;
 }
 
+describe('differsOnlyByTrailingNewline', () => {
+  it('recognises a file saved without a newline at end of file', () => {
+    expect(differsOnlyByTrailingNewline('a=1', 'a=1\n')).toBe(true);
+    expect(differsOnlyByTrailingNewline('a=1\n\n', 'a=1\n')).toBe(true);
+  });
+
+  it('is false for identical content and for a real change', () => {
+    expect(differsOnlyByTrailingNewline('a=1\n', 'a=1\n')).toBe(false);
+    expect(differsOnlyByTrailingNewline('a=1\n', 'a=2\n')).toBe(false);
+    expect(differsOnlyByTrailingNewline('', 'a=1\n')).toBe(false);
+  });
+});
+
 describe('syncFromTemplate', () => {
+  it('adds a missing newline at end of file without prompting', async () => {
+    // `.npmrc` differed from the template by one byte, and asked about it on every single run.
+    const templateDir = await mkdtemp(join(tmpdir(), 'genx-tmpl-'));
+    await mkdir(join(templateDir, '.github/workflows'), { recursive: true });
+    await writeFile(join(templateDir, '.github/workflows/ci.yml'), 'name: CI\n');
+    await writeFile(join(templateDir, '.github/workflows/release.yml'), 'name: Release\n');
+    const targetDir = await mkdtemp(join(tmpdir(), 'genx-sync-'));
+    await mkdir(join(targetDir, '.github/workflows'), { recursive: true });
+    await writeFile(join(targetDir, '.github/workflows/ci.yml'), 'name: CI');
+    await writeFile(join(targetDir, '.github/workflows/release.yml'), 'name: Release\n');
+
+    // No diff state at all: a prompt here would hang rather than resolve.
+    await syncFromTemplate(targetDir, templateDir, vars, new Set<UpgradeOnlySection>(['workflows']), {});
+
+    await expect(readFile(join(targetDir, '.github/workflows/ci.yml'), 'utf8')).resolves.toBe('name: CI\n');
+
+    await rm(templateDir, { recursive: true, force: true });
+    await rm(targetDir, { recursive: true, force: true });
+  });
+
   it('writes a missing file', async () => {
     const templateDir = await createTemplateDir();
     const targetDir = await mkdtemp(join(tmpdir(), 'genx-sync-'));

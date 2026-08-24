@@ -517,6 +517,8 @@ describe('oxfmt.preview — oxlint config', () => {
         'oxlint': '0.0.0',
         'oxlint-tsgolint': '0.0.0',
         '@finografic/oxc-config': '0.0.0',
+        // `testOverrides` is emitted only for a package that actually has tests.
+        'vitest': '0.0.0',
       },
     };
     await writeFile(resolve(dir, PACKAGE_JSON), formatPackageJsonString(pkg), 'utf8');
@@ -530,6 +532,16 @@ describe('oxfmt.preview — oxlint config', () => {
     expect(oxlintChange!.proposedContent).toBe(getOxlintConfigCanonicalFileContent(pkg));
     expect(oxlintChange!.proposedContent).toContain('oxlintClientConfig');
     expect(oxlintChange!.proposedContent).toContain('overrides: [testOverrides, configOverrides]');
+  });
+
+  it('omits testOverrides for a package without vitest', () => {
+    // Emitting it unconditionally added test-file lint overrides to packages that had deliberately
+    // not selected the testing feature.
+    const pkg: PackageJson = { name: '@finografic/no-tests', version: '0.0.0', devDependencies: {} };
+    const content = getOxlintConfigCanonicalFileContent(pkg);
+
+    expect(content).toContain('overrides: [configOverrides]');
+    expect(content).not.toContain('testOverrides');
   });
 });
 

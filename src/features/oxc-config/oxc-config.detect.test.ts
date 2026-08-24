@@ -181,6 +181,8 @@ describe('auditOxcConfig', () => {
         'oxlint': '0.0.0',
         'oxlint-tsgolint': '0.0.0',
         '@finografic/oxc-config': '0.0.0',
+        // The fixture below declares `testOverrides`, which is canonical only with vitest present.
+        'vitest': '0.0.0',
       },
     };
     await writeFile(

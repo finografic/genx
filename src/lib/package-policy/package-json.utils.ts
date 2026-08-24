@@ -3,6 +3,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { upgradeConfig } from 'config/upgrade.config';
 import type { PackageJson } from 'types/package-json.types';
 
+import { addScriptInSection, getCanonicalScriptSections } from './script-sections.utils.js';
+
 export interface PackageAuthor {
   name: string;
   email: string;
@@ -97,10 +99,13 @@ export function patchPackageJson(
   const next: PackageJson = { ...packageJson };
 
   // scripts
-  const scripts = { ...packageJson.scripts };
+  const sections = getCanonicalScriptSections();
+  let scripts = { ...packageJson.scripts };
   for (const [key, value] of Object.entries(upgradeConfig.packageJson.ensureScripts)) {
     if (scripts[key] === undefined) {
-      scripts[key] = value;
+      // Placed in the section the template puts it in — appending sent `link` and `unlink` to the
+      // bottom of the file, under whatever heading happened to be last.
+      scripts = addScriptInSection(scripts, key, value, sections[key]);
       changes.push(`scripts.${key}`);
     }
   }

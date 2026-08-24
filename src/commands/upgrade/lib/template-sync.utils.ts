@@ -15,6 +15,11 @@ import { shouldRunSection } from './upgrade-metadata.utils.js';
 /** Never copied into a target: editor and OS droppings that have no business in a package. */
 const TEMPLATE_JUNK_FILES = new Set(['.DS_Store', 'Thumbs.db']);
 
+/** True when the two differ only in trailing newlines — the same file, saved by a different editor. */
+export function differsOnlyByTrailingNewline(current: string, proposed: string): boolean {
+  return current !== proposed && current.replace(/\n+$/, '') === proposed.replace(/\n+$/, '');
+}
+
 interface SyncFile {
   sourcePath: string;
   destinationPath: string;
@@ -103,6 +108,14 @@ export async function syncFromTemplate(
   for (const file of files) {
     const proposed = applyTemplate(await readFile(file.sourcePath, 'utf8'), vars);
     const current = fileExists(file.destinationPath) ? await readFile(file.destinationPath, 'utf8') : '';
+
+    // A missing newline at end of file is not a content change, and prompting about one on every
+    // run is noise the user cannot clear except by accepting it. Normalise it silently.
+    if (current !== '' && differsOnlyByTrailingNewline(current, proposed)) {
+      await writeFile(file.destinationPath, proposed, 'utf8');
+      written += 1;
+      continue;
+    }
 
     const action = await confirmFileWrite(file.destinationPath, current, proposed, diffState);
     if (action === 'skip') continue;
