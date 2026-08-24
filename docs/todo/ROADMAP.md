@@ -23,7 +23,10 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## Next
 
-No items.
+- **#10 `REACT_DEV_DEPS` drift check** — smallest P1, and it removes a live source of wrong output.
+- Independent of any roadmap item: the remaining managed repositories still need
+  `npx skills add finografic/ai-skills`. It gates nothing, needs no genx changes, and can happen at
+  any pace — see the migration note under P3.
 
 ---
 
@@ -35,18 +38,29 @@ No items.
 
 ## P1 — Next Up
 
-### 12. Skill distribution moves to the Agent Skills CLI
+### 10. `REACT_DEV_DEPS` has no drift check
 
-Skills stop being vendored by genx and are installed with `npx skills add finografic/ai-skills`,
-which writes one canonical copy and symlinks each agent directory at it. That retires the
-dual-write — two real copies of identical content — which caused a CI failure on 2026-08-23 when
-md-lint classified one path as an agent doc and the other as standard.
+`src/features/react-vite/react-vite.constants.ts` pins React-side versions in genx because
+deps-policy has no `react` group by design (see `src/config/policy.ts`). Nothing keeps them current,
+and they are already behind `monorepo-starter`, so a fresh `genx create` of a react package
+scaffolds stale versions.
 
-`finografic/ai-skills` exists, is public, and is verified installing to nine agents. Remaining work
-is genx-side and staged; the ordering matters, because fail-closed ownership means genx must
-understand the new `external` mode before ai-agent-config emits it.
+This is Key Decision 17 — a value duplicated with nothing forcing it current — and the 2026-08-24
+integrity pass hit that same shape five separate times in one command. Unlike `_templates/` there is
+no policy group to check against, so either give `react` a deps-policy group, or add a check that
+compares these constants with the starter at its resolved tag.
 
-Detail: [`docs/specs/2026-08-23-skill-distribution-model.md`](../specs/2026-08-23-skill-distribution-model.md)
+Small, self-contained, and it removes a live source of wrong output.
+
+### 4. `design-docs` genx feature
+
+Add a `design-docs` feature to set up `docs/specs/`, `docs/scratch/`, triage script, and
+instruction file in any `@finografic` package. Unblocked 2026-08-19 by #6 — the triage step is now
+`pnpm --package=@finografic/project-scripts dlx triage-docs`, so the feature ships an instruction
+file and the two directories rather than a script.
+
+`docs/specs/` now exists in genx as a real consumer, so the shape is no longer hypothetical.
+Use the `generate-new-genx-feature` skill before writing any module.
 
 ---
 
@@ -65,13 +79,6 @@ Detail: [`docs/specs/2026-08-19-workspace-ownership-model.md`](../specs/2026-08-
 Allow `library.ts` and `config.ts` in `@finografic/deps-policy` to intentionally diverge from
 `base` where it makes sense (e.g., `config` packages may not need `vitest` or `@types/node`).
 Deferred until concrete need arises.
-
-### 4. `design-docs` genx feature
-
-Add a `design-docs` feature to set up `docs/specs/`, `docs/scratch/`, triage script, and
-instruction file in any `@finografic` package. Unblocked 2026-08-19 by #6 — the triage step is now
-`pnpm --package=@finografic/project-scripts dlx triage-docs`, so the feature ships an instruction
-file and the two directories rather than a script.
 
 ### 9. Vitest DOM environment for React packages without a bundler config
 
@@ -92,18 +99,6 @@ Two changes, both small:
 
 No failure until someone writes the first component test, at which point the fix by hand is one line
 plus one devDependency. Observed 2026-08-19 on a generated monorepo's `packages/ui`.
-
-### 10. `REACT_DEV_DEPS` has no drift check
-
-`src/features/react-vite/react-vite.constants.ts` pins React-side versions in genx because
-deps-policy has no `react` group by design (see `src/config/policy.ts`). Nothing keeps them current:
-as of 2026-08-19 genx says `vite ^7.1.10`, `@vitejs/plugin-react ^5.1.0`, `concurrently ^9.2.1`
-while `monorepo-starter` already ships `^8.1.0`, `^6.0.3` and `^10.0.5`. A fresh `genx create` of a
-react package therefore scaffolds versions behind the starter.
-
-Same shape as Key Decision 17 — a value duplicated with nothing forcing it current — but unlike
-`_templates/` there is no policy group to check against. Either give `react` a deps-policy group, or
-add a check that compares these constants with the starter at its pinned tag.
 
 ### 5. `generate-new-genx-feature` skill — modernize for diff-as-detection
 
@@ -135,6 +130,20 @@ Detail: [`docs/todo/TODO_FIND_FILE_SECTION.md`](./TODO_FIND_FILE_SECTION.md)
 ---
 
 ## P3 — Backlog / Ideas
+
+### Retire the skills dual-write (tail of #12)
+
+genx still dual-writes the shared skills into repositories that have no `skills-lock.json`. That
+branch is unreachable once every managed repository has migrated, at which point it deletes cleanly
+along with its tests, `ai-agent-config`'s `assets/skills/`, and that package's dual-write assertion.
+`ai-agent-config`'s manifest entry then moves to an `external` ownership mode rather than being
+deleted, so genx keeps reporting who owns those paths.
+
+**Not a prerequisite for anything.** Migration is per-repository and unordered by design, and a
+half-migrated ecosystem is a valid steady state — the lockfile gate exists precisely so this can
+wait. Pick it up when the count reaches zero, not before.
+
+Detail: [`docs/specs/2026-08-23-skill-distribution-model.md`](../specs/2026-08-23-skill-distribution-model.md) steps D–F
 
 ### Monorepo generator v2 — additive starter slices
 
@@ -183,35 +192,38 @@ Detail: [`docs/todo/DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_RE
 
 ## Done
 
-| Date       | Item                                                                                                                                                                                                                                                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-19 | `triage-docs` cross-project portability — shipped as a `triage-docs` bin in `@finografic/project-scripts` 2.0.0, consumed via `pnpm dlx` like `purge-builds`; genx's local `scripts/triage-docs.ts` deleted and the skill, instruction file and dependency repointed. Unblocks #4                                            |
-| 2026-08-19 | Monorepo generator v1 — `upgrade` routes features by workspace scope: `genx:workspace:monorepo` marker, `pnpm-workspace.yaml` member resolution, doc/agent features at the root, package-scoped features per selected member, starter-owned toolchain skipped — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md) |
-| 2026-08-19 | `upgrade` merges confirm per file — `merges` no longer writes package.json from a filename list, rides with `package-json` in the picker, plans only real changes, and keeps the trailing newline                                                                                                                            |
-| 2026-08-17 | `genx create` aligns scaffolded dependency versions to deps-policy — `_templates/package.json` no longer carries a second copy of every version (it was 11 stale for every package type)                                                                                                                                     |
-| 2026-08-17 | `genx create monorepo` (v0) — clone a pinned `monorepo-starter` tag, rewrite root identity, apply doc/agent features only, seed `.env.development` + database — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md), [`MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md)                                  |
-| 2026-08-13 | Asset ownership contract — manifest-driven resolution, fail-closed ownership, seed protection, skills fixed to managed, removal semantics decided — [`TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md)                                                                                                 |
-| 2026-08-13 | `genx design` command (sync --pull/--push, check, render, lint; PandaCSS + Tailwind v4) — [`TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)                                                                                                                                                                               |
-| 2026-07-26 | Migrate agent instructions/skills `.github/` → `.agents/`, dual-write `.claude/skills/`, self-update lifecycle — [`DONE_AGENTS_DIR_MIGRATION.md`](./DONE_AGENTS_DIR_MIGRATION.md)                                                                                                                                            |
-| 2026-07-07 | Deps policy refresh and managed deps snapshot flow — [`DONE_DEPS_UPDATE_POLICY.md`](./DONE_DEPS_UPDATE_POLICY.md)                                                                                                                                                                                                            |
-| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)                                                                                                                                                                                                                    |
-| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                                                                                                                                                                                                                               |
-| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                                                                                                                                                                                                                              |
-| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                                                                                                                                                                                                                             |
-| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                                                                                                                                                                                                                                     |
-| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                                                                                                                                                                                                                                  |
-| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)                                                                                                                                                                                                               |
-| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)                                                                                                                                                                                                                     |
-| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                                                                                                                                                                                                                                   |
-| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)                                                                                                                                                                                                                    |
-| 2026-05-26 | Upgrade command refactor (Phases 1-3) — [`DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_REFACTOR.md)                                                                                                                                                                                                             |
-| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                                                                                                                                                                                                                                         |
-| 2026-04-07 | #3 Husky template completion                                                                                                                                                                                                                                                                                                 |
-| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                                                                                                                                                                                                                              |
-| 2026-04-07 | jsdiff per-file diff display                                                                                                                                                                                                                                                                                                 |
-| 2026-04-07 | Structured markdown section management                                                                                                                                                                                                                                                                                       |
-| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                                                                                                                                                                                                                            |
-| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                                                                                                                                                                                                                                  |
+| Date       | Item                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-24 | `upgrade` integrity pass — every operation now previews and confirms, `-y` reaches operations and root features, and blanket writers stopped claiming keys their owning feature already writes. Fourteen defects, all found by running `genx upgrade` against a real repository — [`docs/specs/2026-08-24-upgrade-integrity.md`](../specs/2026-08-24-upgrade-integrity.md) |
+| 2026-08-24 | `.github/instructions/` retirement runs on an ordinary upgrade — owned by `ai-instructions`, moves `project/` content rather than losing it, and removes the directory once empty                                                                                                                                                                                          |
+| 2026-08-24 | #12 Skill distribution moves to the Agent Skills CLI (genx side) — lockfile gate, genx's own skills as canonical + symlink, and `upgrade` / both `create` commands invoking the pinned CLI — [`2026-08-23-skill-distribution-model.md`](../specs/2026-08-23-skill-distribution-model.md)                                                                                   |
+| 2026-08-19 | `triage-docs` cross-project portability — shipped as a `triage-docs` bin in `@finografic/project-scripts` 2.0.0, consumed via `pnpm dlx` like `purge-builds`; genx's local `scripts/triage-docs.ts` deleted and the skill, instruction file and dependency repointed. Unblocks #4                                                                                          |
+| 2026-08-19 | Monorepo generator v1 — `upgrade` routes features by workspace scope: `genx:workspace:monorepo` marker, `pnpm-workspace.yaml` member resolution, doc/agent features at the root, package-scoped features per selected member, starter-owned toolchain skipped — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md)                                               |
+| 2026-08-19 | `upgrade` merges confirm per file — `merges` no longer writes package.json from a filename list, rides with `package-json` in the picker, plans only real changes, and keeps the trailing newline                                                                                                                                                                          |
+| 2026-08-17 | `genx create` aligns scaffolded dependency versions to deps-policy — `_templates/package.json` no longer carries a second copy of every version (it was 11 stale for every package type)                                                                                                                                                                                   |
+| 2026-08-17 | `genx create monorepo` (v0) — clone a pinned `monorepo-starter` tag, rewrite root identity, apply doc/agent features only, seed `.env.development` + database — [`DONE_MONOREPO_GENERATOR.md`](./DONE_MONOREPO_GENERATOR.md), [`MONOREPO_GENERATION.md`](../process/MONOREPO_GENERATION.md)                                                                                |
+| 2026-08-13 | Asset ownership contract — manifest-driven resolution, fail-closed ownership, seed protection, skills fixed to managed, removal semantics decided — [`TODO_ASSET_OWNERSHIP_CONTRACT.md`](./TODO_ASSET_OWNERSHIP_CONTRACT.md)                                                                                                                                               |
+| 2026-08-13 | `genx design` command (sync --pull/--push, check, render, lint; PandaCSS + Tailwind v4) — [`TODO_DESIGN_COMMAND.md`](./TODO_DESIGN_COMMAND.md)                                                                                                                                                                                                                             |
+| 2026-07-26 | Migrate agent instructions/skills `.github/` → `.agents/`, dual-write `.claude/skills/`, self-update lifecycle — [`DONE_AGENTS_DIR_MIGRATION.md`](./DONE_AGENTS_DIR_MIGRATION.md)                                                                                                                                                                                          |
+| 2026-07-07 | Deps policy refresh and managed deps snapshot flow — [`DONE_DEPS_UPDATE_POLICY.md`](./DONE_DEPS_UPDATE_POLICY.md)                                                                                                                                                                                                                                                          |
+| 2026-07-06 | Public commands simplified — [`DONE_PUBLIC_COMMANDS_SIMPLIFIED.md`](./DONE_PUBLIC_COMMANDS_SIMPLIFIED.md)                                                                                                                                                                                                                                                                  |
+| 2026-06-02 | AI Memory feature — [`DONE_AI_MEMORY_FEATURE.md`](./DONE_AI_MEMORY_FEATURE.md)                                                                                                                                                                                                                                                                                             |
+| 2026-06-02 | Audit feature hardening and manual feature-install verification                                                                                                                                                                                                                                                                                                            |
+| 2026-05-27 | #13 React package type + react-vite feature — [`DONE_REACT_PACKAGE.md`](./DONE_REACT_PACKAGE.md)                                                                                                                                                                                                                                                                           |
+| 2026-05-26 | #12 Remove legacy dprint logic from genx                                                                                                                                                                                                                                                                                                                                   |
+| 2026-05-26 | #11 Remove legacy stylelint logic from genx                                                                                                                                                                                                                                                                                                                                |
+| 2026-05-26 | #10 Convert `--managed` flag into a `managed` command — [`DONE_MANAGED_COMMAND.md`](./DONE_MANAGED_COMMAND.md)                                                                                                                                                                                                                                                             |
+| 2026-05-26 | #9 Toolchain version consumption from deps-policy — [`DONE_TOOLCHAIN_GENX.md`](./DONE_TOOLCHAIN_GENX.md)                                                                                                                                                                                                                                                                   |
+| 2026-05-26 | #8 Remove legacy ESLint from genx codebase                                                                                                                                                                                                                                                                                                                                 |
+| 2026-05-26 | Command folder restructure — [`DONE_COMMAND_FOLDER_RESTRUCTURE.md`](./DONE_COMMAND_FOLDER_RESTRUCTURE.md)                                                                                                                                                                                                                                                                  |
+| 2026-05-26 | Upgrade command refactor (Phases 1-3) — [`DONE_UPGRADE_COMMAND_REFACTOR.md`](./DONE_UPGRADE_COMMAND_REFACTOR.md)                                                                                                                                                                                                                                                           |
+| 2026-04-26 | XDG-first policy loader — [`DONE_XDG_POLICY_LOADER.md`](./DONE_XDG_POLICY_LOADER.md)                                                                                                                                                                                                                                                                                       |
+| 2026-04-07 | #3 Husky template completion                                                                                                                                                                                                                                                                                                                                               |
+| 2026-04-07 | Diff-as-detection (preview-driven detect/apply)                                                                                                                                                                                                                                                                                                                            |
+| 2026-04-07 | jsdiff per-file diff display                                                                                                                                                                                                                                                                                                                                               |
+| 2026-04-07 | Structured markdown section management                                                                                                                                                                                                                                                                                                                                     |
+| 2026-04-07 | `ai-agents` feature (AGENTS.md + skills scaffold)                                                                                                                                                                                                                                                                                                                          |
+| 2026-04-06 | Bulk orchestrator (`--managed` flag, now `managed` command)                                                                                                                                                                                                                                                                                                                |
 
 | Date       | Deleted file (obsolete)                                                   |
 | ---------- | ------------------------------------------------------------------------- |

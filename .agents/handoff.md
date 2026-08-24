@@ -18,7 +18,10 @@
 - `create`, `upgrade`, `deps`, `managed`, and `audit` are the public commands; features are internal.
 - `_templates/` is the only canonical source for generated content.
 - Monorepo generation is complete and verified end to end; operation scoping is the open design work.
-- Nothing sits at P0 or P1.
+- Shared skills are installed by the Agent Skills CLI, not vendored; `skills-lock.json` hands a
+  repository's skills to it entirely.
+- `upgrade` operations all preview and confirm, and no blanket writer overwrites a key its owning
+  feature already writes.
 
 ## Architecture
 
@@ -26,46 +29,41 @@
 application is internal infrastructure, not a public command. `managed` subcommands are `upgrade`,
 `deps`, `audit`, and `status`.
 
-**Managed status:** `genx managed status` reads every managed target's worktree in parallel, then
-offers a multi-select of dirty targets only. Confirming walks them one at a time, showing each
-target's pending files and an AI-drafted commit message for accept-or-regenerate, then committing
-with `git add -A`. Drafts come from a local Ollama model and are generated read-only, ahead of
-time, so the next target's message is ready while the current prompt is on screen.
+**Managed status:** `genx managed status` reads every managed worktree in parallel, offers a
+multi-select of dirty targets only, then walks them one at a time with an AI-drafted commit message
+for accept-or-regenerate. Drafts come from a local Ollama model via `src/lib/ai/`, generated
+read-only and preloaded so the next message is ready while the current prompt is on screen; every
+failure path returns null and falls back to manual entry.
 
-**AI commit drafts:** `src/lib/ai/` holds a thin Ollama HTTP client, pure prompt/response logic, and
-a preloading draft cache. Ported from `zconf message` in `~/.zshrc-config` so genx stays
-self-contained. Every failure path returns null and the flow falls back to manual entry.
-
-**Prompt styling:** `src/lib/prompts/styled-multiselect.prompt.ts` is a multi-select with per-row
-state styling, built on `@clack/core`'s `MultiSelectPrompt` plus clack's exported `limitOptions`.
-It exists because clack's own `multiselect` hardcodes its label styler and exposes no hook.
+**Prompt styling:** `src/lib/prompts/styled-multiselect.prompt.ts` exists because clack's own
+`multiselect` hardcodes its label styler and exposes no hook.
 
 **Templates:** `_templates/` is the only canonical source for generated target content.
 Package-type overlays live under `_templates/package-types/`. `templates:policy:check` and
 `templates:cli-core:check` fail when the template copies drift; both run in `release:check`.
 
-**Upgrade merges:** `merges` covers `package.json` only, so it is not independently selectable — it
-rides with the `package-json` operation in the picker, and stays reachable via `--only merges`. It
-plans only real changes, applies against disk rather than plan-time content, and confirms through
-the same per-file diff as every other `package.json` writer.
+**Upgrade operations:** seven, all uniform — each previews, shows a diff, and waits; a file already
+matching the template produces no output. `merges` covers `package.json` only and is not offered
+separately: it rides with `package-json`. There is no `--only` flag. `-y` seeds the shared confirm
+state, so it reaches operations and features alike. Ownership is the rule that keeps them honest —
+an operation may add what is missing, never overwrite what a feature or the project already wrote.
+Reference: `docs/specs/2026-08-24-upgrade-integrity.md`.
 
 **Package types:** `library`, `cli`, `config`, and `react`. Package-type inference is centralized
 in `src/lib/package-type.utils.ts`; explicit `genx:type:*` keywords win over heuristics.
 
 **Monorepo generation:** `genx create monorepo` clones the `monorepo-starter` repository at a
-pinned tag — not `_templates/`, and not a fifth package type. A monorepo root is a workspace kind,
-orthogonal to package type. `src/lib/monorepo/` holds clone, tag resolution, identity rewrite, and
-env/database bootstrap; `src/config/monorepo.config.ts` holds the pin and the root-feature
-allowlist. Only documentation/agent features apply — toolchain config is the starter's own, kept
-current by upgrading and re-tagging the starter rather than re-deriving it per generation. A cloned
-tag is the only source: local-checkout generation was built, leaked `.env.*` and the dev database,
-and was removed. Reference: `docs/process/MONOREPO_GENERATION.md`.
+resolved tag — not `_templates/`, and not a fifth package type; a monorepo root is a workspace kind,
+orthogonal to package type. Only documentation/agent features apply, because toolchain config is the
+starter's own, kept current by re-tagging the starter rather than re-deriving it per generation. A
+cloned tag is the only source: local-checkout generation leaked `.env.*` and the dev database, and
+was removed. Reference: `docs/process/MONOREPO_GENERATION.md`.
 
 **Workspace-aware upgrade:** against a monorepo root, `upgrade` partitions selected features into
-root (doc/agent), member (`vitest`, `css`, `reactVite`, applied per selected workspace member), and
-blocked (starter-owned toolchain, reported as skipped). Detection requires a non-empty `packages:`
-list in `pnpm-workspace.yaml` — since pnpm 10 a single package may carry that file for `allowBuilds`
-alone. Upgrade _operations_ are not scoped this way; see ROADMAP #11.
+root (doc/agent), member (`vitest`, `css`, `reactVite`), and blocked (starter-owned toolchain).
+Detection requires a non-empty `packages:` list in `pnpm-workspace.yaml` — since pnpm 10 a single
+package may carry that file for `allowBuilds` alone. Upgrade _operations_ are not scoped this way;
+see ROADMAP #11.
 
 **Features:** Self-contained modules live under `src/features/`. Preview-driven change sets power
 both detection and apply flows. Audit reports `installed`, `partial`, and `missing` states.
@@ -82,40 +80,34 @@ stable JSONC ordering with blank lines between groups.
 `oxc-config` removes obsolete ESLint / dprint dependencies and root files, then cleans related
 VS Code and CI surfaces.
 
-**Agent docs:** `ai-agents` owns `AGENTS.md` and portable skill scaffolding, dual-written to
-`.agents/skills/` (cross-tool manual reference via `AGENTS.md`) and `.claude/skills/` (native
-Claude Code discovery) from one `_templates/.agents/skills/` source. `ai-instructions` owns shared
-Copilot, Cursor, and Claude-facing instructions under `.agents/instructions/`
-(`.github/copilot-instructions.md` stays a stub — only place Copilot itself reads from). `ai-memory`
-owns roadmap, handoff, session memory, `.gitignore`, and the minimal `CLAUDE.md` shim. When selected
-alone, `ai-memory` syncs the required AGENTS memory-model block without installing skills.
+**Agent docs:** `ai-agents` owns `AGENTS.md`. `ai-instructions` owns shared Copilot, Cursor and
+Claude-facing instructions under `.agents/instructions/` (`.github/copilot-instructions.md` stays a
+stub — the only place Copilot itself reads from), and retires the legacy `.github/instructions/`,
+carrying `project/` content across rather than losing it. `ai-memory` owns roadmap, handoff, session
+memory, `.gitignore`, and the minimal `CLAUDE.md` shim; selected alone it syncs the AGENTS
+memory-model block only.
+
+**Skills:** distributed by the Agent Skills CLI, pinned and invoked by genx from `upgrade` and both
+`create` commands. `universal` owns `.agents/skills/<name>` as the real copy; `claude-code` symlinks
+`.claude/skills/<name>` at it — both agents are required, or the CLI writes real directories instead.
+`skills-lock.json` is the gate: present means an external manager owns skills and genx writes none.
+It is committed, or a fresh clone looks unmigrated. genx still dual-writes where the lockfile is
+absent; that branch retires once every repository has migrated.
+Reference: `docs/specs/2026-08-23-skill-distribution-model.md`.
 
 **Single source of truth for agent content:** `@finografic/ai-agent-config` (separate repo,
-published to GitHub Packages) is canonical for instructions/skills shared across every
-`@finografic` project. `_templates/.agents/` and genx root's own `.agents/` both pull from it —
-genx is simultaneously the tool that vendors this content into other projects _and_ a consumer of
-it for its own root. `genx upgrade --agent-docs -y` (wrapped by `pnpm run update:ai-agent-config`)
-is the non-interactive sync path: legacy structural migration (old `.github/instructions/` →
-`.agents/instructions/`, `.ai/` → `.agents/`) followed by real content diff-and-apply via the same
-`applyFeaturesToTarget` helper `genx audit` uses. Applied changes auto-commit per feature.
+published to GitHub Packages) is canonical for the instructions shared across every `@finografic`
+project; `finografic/ai-skills` is canonical for shared skills. genx is simultaneously the tool that
+vendors this content into other projects _and_ a consumer of it for its own root.
+`genx upgrade --agent-docs -y` (wrapped by `pnpm run update:ai-agent-config`) is the non-interactive
+sync path. Note it does **not** cover legacy retirement: that belongs to the owning feature and runs
+on an ordinary upgrade, because the standalone migration was unreachable from the normal flow.
 
 ## Feature Status
 
-Manual audit installation passes are complete for:
-
-- `oxc-config`
-- `react-vite`
-- `ai-agents`
-- `ai-instructions`
-- `ai-memory`
-- `git-hooks`
-- `markdown`
-- `css`
-- `vitest`
-
-`genx audit` starts with no features selected, keeps metadata visible for unchecked rows, shows
-installed rows as disabled green `ok — config up to date` entries, and commits each applied feature
-separately.
+Every feature in `src/features/` has had a manual audit installation pass. `genx audit` starts with
+nothing selected, keeps metadata visible for unchecked rows, shows installed rows as disabled green
+`ok — config up to date`, and commits each applied feature separately.
 
 ## Key Decisions
 
@@ -133,9 +125,8 @@ separately.
 10. `@finografic/ai-agent-config` is the single source of truth for shared agent instructions/
     skills; genx's own `_templates/.agents/` and root `.agents/` both vendor from it, never from
     each other. Content flows outward from `ai-agent-config`, never back into it.
-11. Skills dual-write to `.agents/skills/` (manual reference) and `.claude/skills/` (native Claude
-    Code discovery) from one source. Instructions do not dual-write — no tool natively discovers an
-    "instructions" directory the way Claude Code discovers `.claude/skills/`.
+11. One canonical copy plus symlinks, never two real copies. Two real copies of identical content is
+    a bug generator — it produced an md-lint CI failure by classifying the two paths differently.
 12. Genx-dev-only skills (`generate-new-genx-feature`, `migrate-to-cli-kit`,
     `scaffold-feature-preview`, `template-canonical-merge`) stay root-only permanently, never
     distributed via `ai-agent-config`. `triage-docs` was the one exception and is now portable — it
@@ -150,16 +141,27 @@ separately.
     write it on the strength of a filename list or an up-front batch prompt.
 17. Values duplicated outside their source of truth need a check that fails when they drift —
     `_templates` versions, `.nvmrc`, `engines.pnpm`, and the CLI core spec copy each have one.
+    `REACT_DEV_DEPS` is the outstanding exception; it is ROADMAP #10.
+18. The feature that owns a file owns its migration and its maintenance. A blanket writer may add
+    what is missing; it may never overwrite what a feature or the project already wrote. Section
+    placement, ownership tables and migrations are derived from `_templates/`, not restated.
+19. A preview reasons about proposed state, not only disk state. Guarding on a directory the same
+    run is about to create makes the guard false exactly when the code is needed.
+20. Correctness claims about genx come from running it against a real repository. Every defect in
+    the 2026-08-19 and 2026-08-24 passes was invisible to a green test suite.
 
 ## Open Work
 
 `docs/todo/ROADMAP.md` is canonical for items and priorities. What it does not make obvious:
 
-- ROADMAP #4 (`design-docs`) is the unblocked item on the critical path, and `docs/specs/` now exists
-  as a real consumer for it. `[planned, not started]`
+- ROADMAP #10 (`REACT_DEV_DEPS` drift) is the smallest P1 and the last live instance of Key Decision
+  17 — genx scaffolds React versions already behind the starter. `[planned, not started]`
 - ROADMAP #11 is the substantive remainder of monorepo work — `upgrade` scopes features but never
-  scoped operations. Design in `docs/specs/2026-08-19-workspace-ownership-model.md`, whose
-  scope-as-a-set decision should land **before** the recursive `AGENTS.md` work. `[planned, not started]`
+  scoped operations, and the 2026-08-24 pass made operations do _more_ without scoping them. Design
+  in `docs/specs/2026-08-19-workspace-ownership-model.md`, whose scope-as-a-set decision should land
+  **before** the recursive `AGENTS.md` work. `[planned, not started]`
+- Migrating the remaining managed repositories to the skills CLI gates nothing and needs no genx
+  change; the dual-write branch retires only once that count reaches zero. `[planned, not started]`
 - This file's Architecture section is over its 60-line budget and needs a prune pass, promoting
   subsystems to specs. `[planned, not started]`
 
@@ -173,8 +175,8 @@ Open in other repos, tracked in each:
 
 ## Next Move
 
-Scope ROADMAP #4 (`design-docs`) — its blocker cleared, and `docs/specs/` already exists to build
-against.
+ROADMAP #10 (`REACT_DEV_DEPS` drift check) — smallest P1, self-contained, and the last place genx
+still ships a duplicated value with nothing forcing it current. Then #4 (`design-docs`).
 
 ## Suggested Skills
 
