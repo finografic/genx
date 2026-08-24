@@ -6,3 +6,4 @@ minimumReleaseAgeExclude:
   - '@finografic/project-scripts@1.6.1 || 2.0.0 || 2.0.1'
   - '@finografic/md-lint@0.16.7'
   - '@finografic/core@0.16.0'
+  - '@finografic/cli-kit@2.0.0'

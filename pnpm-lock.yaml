@@ -18,8 +18,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       '@finografic/cli-kit':
-        specifier: ^1.4.0
-        version: 1.4.1
+        specifier: ^2.0.0
+        version: 2.0.0
       '@finografic/core':
         specifier: ^0.16.0
         version: 0.16.0
@@ -374,6 +374,10 @@ packages:
 
   '@finografic/cli-kit@1.4.1':
     resolution: {integrity: sha512-tzVn6ATo5f9H8OGDcq2k35ntThsErvXma4Mspm4EQ447zHuH66j3ZGEfZz+A/ZFLjoN9HINfAGffMLtIY4A/pw==, tarball: https://npm.pkg.github.com/download/@finografic/cli-kit/1.4.1/ee7269f7881ab410e71fa4f508516394b72a0bd6}
+    engines: {node: '>=24.19.0'}
+
+  '@finografic/cli-kit@2.0.0':
+    resolution: {integrity: sha512-yeuikE35cpScojG0IeNQEUkwkXh/UKoGw6kDsjnxbC3cA4u9SxHKGw1RKTx99C7XqXjkOwkgM7V+rDWOsnNhqg==, tarball: https://npm.pkg.github.com/download/@finografic/cli-kit/2.0.0/00468e557bd40d159c7d5edbbe10ede474799bee}
     engines: {node: '>=24.19.0'}
 
   '@finografic/core@0.13.0':
@@ -2516,6 +2520,14 @@ snapshots:
       '@clack/prompts': 1.7.0
       diff: 8.0.4
       jsonc-parser: 3.3.1
+      picocolors: 1.1.1
+      strip-ansi: 7.2.0
+
+  '@finografic/cli-kit@2.0.0':
+    dependencies:
+      '@clack/core': 1.4.3
+      '@clack/prompts': 1.7.0
+      diff: 8.0.4
       picocolors: 1.1.1
       strip-ansi: 7.2.0
 
