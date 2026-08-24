@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
-import { createXdgPaths, parseJsoncObject } from '@finografic/cli-kit/xdg';
+import { createXdgPaths, parseJsoncObject } from '@finografic/core/xdg';
 import { z } from 'zod';
 
 import type { ManagedConfig, ManagedTarget, MonorepoStarterConfig } from 'types/managed.types';

@@ -13,6 +13,7 @@ Replace genx's inline `src/core/` copies with `@finografic/cli-kit` subpath impo
 - [x] Swap `core/render-help` → `@finografic/cli-kit/render-help` (8 import sites)
 - [x] Swap `core/file-diff` → `@finografic/cli-kit/file-diff` (`upgrade.cli.ts` + `feature-preview.utils.ts` + `feature-preview.test.ts`)
 - [x] Migrate XDG path in `src/utils/managed.utils.ts` → `getConfigPath('genx')` from `cli-kit/xdg`
+      (XDG later moved to `@finografic/core/xdg` on 2026-08-24; `cli-kit/xdg` no longer exists)
 - [x] Remove `core/*` path alias from `tsconfig.json`
 - [x] Delete `src/core/flow/`, `src/core/render-help/`, `src/core/file-diff/` (keep `src/core/self-update/`)
 - [x] `pnpm typecheck` — zero errors

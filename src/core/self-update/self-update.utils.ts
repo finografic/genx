@@ -2,7 +2,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPnpm } from '@finografic/cli-kit/package-manager';
-import { createXdgPaths } from '@finografic/cli-kit/xdg';
+import { createXdgPaths } from '@finografic/core/xdg';
 import * as clack from '@clack/prompts';
 import { execa } from 'execa';
 import pc from 'picocolors';

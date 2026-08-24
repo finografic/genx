@@ -73,9 +73,13 @@ is canonical before wiring genx.
 This is the single new file that loads policy at startup — all existing import sites point here
 instead of directly to `@finografic/deps-policy`.
 
+> **Historical import path.** The snippet below records the code as originally written. XDG helpers
+> moved to `@finografic/core/xdg` on 2026-08-24 and `@finografic/cli-kit/xdg` was removed — new code
+> must import from Core.
+
 ```ts
 // src/config/policy.ts
-import { createXdgPaths, readJsonc } from '@finografic/cli-kit/xdg';
+import { createXdgPaths, readJsonc } from '@finografic/cli-kit/xdg'; // now: '@finografic/core/xdg'
 import type { DependencyGroup } from '@finografic/deps-policy/deps.types';
 
 interface PolicySnapshot {

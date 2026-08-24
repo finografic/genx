@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { parseJsoncObject } from '@finografic/cli-kit/xdg';
+import { parseJsoncObject } from '@finografic/core/xdg';
 
 export { parseJsoncObject };
 

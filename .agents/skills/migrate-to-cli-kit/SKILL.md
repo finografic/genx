@@ -11,13 +11,17 @@ tools: [file-read, file-edit, terminal]
 
 ## What cli-kit provides (relevant subpaths)
 
-| Subpath                           | Replaces                                                                                                 |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `@finografic/cli-kit/flow`        | `src/core/flow/` (`createFlowContext`, `promptConfirm`, `FlowContext`, …)                                |
-| `@finografic/cli-kit/render-help` | `src/core/render-help/` (`renderHelp`, `renderCommandHelp`, `HelpConfig`, …)                             |
-| `@finografic/cli-kit/xdg`         | Manual XDG path constants + sync fs helpers (`getConfigPath`, `getCachePath`, `readJsonc`, `writeJsonc`) |
+| Subpath                           | Replaces                                                                                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@finografic/cli-kit/flow`        | `src/core/flow/` (`createFlowContext`, `promptConfirm`, `FlowContext`, …)                                                                      |
+| `@finografic/cli-kit/render-help` | `src/core/render-help/` (`renderHelp`, `renderCommandHelp`, `HelpConfig`, …)                                                                   |
+| `@finografic/core/xdg`            | Manual XDG path constants + sync fs helpers (`createXdgPaths`, `getConfigPath`, `getCachePath`, `parseJsoncObject`, `readJsonc`, `writeJsonc`) |
 
 Full export list: `@finografic/cli-kit/commands`, `/file-diff`, `/paths`, `/prompts`, `/tui`, `/package-manager` — check `src/index.ts` in the cli-kit repo for the latest.
+
+> **XDG lives in Core, not CLI Kit.** The XDG helpers moved to the Node-only `@finografic/core/xdg`
+> subpath on 2026-08-24 and `@finografic/cli-kit/xdg` was removed. A migration that needs them must
+> add `@finografic/core` as a dependency — it is a separate package from `@finografic/cli-kit`.
 
 ## Pre-flight
 
@@ -62,7 +66,7 @@ export const CACHE_FILE  = join(CONFIG_PATH, 'cache.json');
 
 // After
 import { join } from 'node:path';
-import { getConfigPath } from '@finografic/cli-kit/xdg';
+import { getConfigPath } from '@finografic/core/xdg';
 export const CONFIG_PATH = getConfigPath('<app>');   // honours XDG_CONFIG_HOME
 export const CONFIG_FILE = join(CONFIG_PATH, 'config.json');
 export const CACHE_FILE  = join(CONFIG_PATH, 'cache.json');
@@ -74,7 +78,7 @@ export const CACHE_FILE  = join(CONFIG_PATH, 'cache.json');
 
 ## Step 4 — Migrate `config.utils.ts` to async
 
-This is the most impactful change. Replace the sync `fs` reads/writes with `readJsonc`/`writeJsonc` from cli-kit:
+This is the most impactful change. Replace the sync `fs` reads/writes with `readJsonc`/`writeJsonc` from `@finografic/core/xdg`:
 
 ```ts
 // Before (sync)
@@ -94,9 +98,9 @@ export function readConfig(): AppConfig {
   // ... parse, validate, return
 }
 
-// After (async) — cli-kit's writeJsonc handles mkdir internally
+// After (async) — Core's writeJsonc handles mkdir internally
 import { join } from 'node:path';
-import { getConfigPath, readJsonc, writeJsonc } from '@finografic/cli-kit/xdg';
+import { getConfigPath, readJsonc, writeJsonc } from '@finografic/core/xdg';
 
 const CONFIG_FILE = join(getConfigPath('<app>'), 'config.json');
 
@@ -118,7 +122,7 @@ export async function readConfig(): Promise<AppConfig> {
 }
 ```
 
-Keep project-specific logic (type validation, legacy field migration, `FULL_DEFAULT_CONFIG`) in the local file — only the read/write mechanics move to cli-kit.
+Keep project-specific logic (type validation, legacy field migration, `FULL_DEFAULT_CONFIG`) in the local file — only the read/write mechanics move to `@finografic/core/xdg`.
 
 ---
 
@@ -234,7 +238,7 @@ Suggested commit body:
 - Add @finografic/cli-kit dependency
 - Replace src/core/flow/ → @finografic/cli-kit/flow
 - Replace src/core/render-help/ → @finografic/cli-kit/render-help
-- Replace XDG path constants → @finografic/cli-kit/xdg getConfigPath
+- Replace XDG path constants → @finografic/core/xdg createXdgPaths / getConfigPath
 - readConfig/writeConfig now async via readJsonc/writeJsonc
 - Ripple await through all callers
 - Delete src/core/; remove core/* tsconfig path alias

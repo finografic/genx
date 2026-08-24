@@ -1,4 +1,4 @@
-import { createXdgPaths, readJsonc } from '@finografic/cli-kit/xdg';
+import { createXdgPaths, readJsonc } from '@finografic/core/xdg';
 import type { DependencyGroup, PackageType, ToolchainPolicy } from '@finografic/deps-policy/deps.types';
 
 interface PolicySnapshot {

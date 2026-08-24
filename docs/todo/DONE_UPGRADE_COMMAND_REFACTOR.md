@@ -54,7 +54,7 @@ Pause after each phase to review and check off the section before moving to the 
 
 ## Phase 4 — Review cli-kit candidates
 
-- [ ] Review managed-target config/path handling against `@finografic/cli-kit/xdg` and `paths`
+- [ ] Review managed-target config/path handling against `@finografic/core/xdg` and `@finografic/cli-kit/paths`
 - [ ] Review the per-target apply/skip/cancel loop as a possible shared orchestration primitive
 - [ ] Review upgrade-mode selection / command-mode branching for reuse potential
 - [ ] Document only the truly portable candidates — do not move `@finografic` policy logic
