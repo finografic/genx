@@ -100,7 +100,7 @@
     "@finografic/ai-agent-config": "^0.1.1",
     "@finografic/cli-kit": "^2.0.0",
     "@finografic/core": "^0.16.1",
-    "@finografic/deps-policy": "^0.26.25",
+    "@finografic/deps-policy": "^0.26.27",
     "@google/design.md": "^0.4.0",
     "clack-tree-select": "^1.0.8",
     "diff": "^8.0.4",

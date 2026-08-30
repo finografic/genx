@@ -24,8 +24,8 @@ importers:
         specifier: ^0.16.1
         version: 0.16.1
       '@finografic/deps-policy':
-        specifier: ^0.26.25
-        version: 0.26.25
+        specifier: ^0.26.27
+        version: 0.26.27
       '@google/design.md':
         specifier: ^0.4.0
         version: 0.4.0
@@ -385,8 +385,8 @@ packages:
     engines: {node: '>=24.19.0'}
     hasBin: true
 
-  '@finografic/deps-policy@0.26.25':
-    resolution: {integrity: sha512-JuZDI5c6J/Sf24Jraya2HAhdBp9nkh+0aFqZDPwKm2b51kndKf8U9X0SpMV7yzGjliApHRqZej2qEnC4FDEKHg==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.26.25/a793d1913f4e8f8af5bf50aa6f66b0157487351f}
+  '@finografic/deps-policy@0.26.27':
+    resolution: {integrity: sha512-sRSrBA02xTLzFewR+u/ctDh/o9LbSCWsEu5x6eE5zL8iOnew3Juk9njhxvz3Oll4jMTroXHmCJqoP9P1fzjJWg==, tarball: https://npm.pkg.github.com/download/@finografic/deps-policy/0.26.27/f65970ecb8575a238346bdb3cd532c1f8a149280}
     engines: {node: '>=24.19.0'}
     hasBin: true
 
@@ -2536,7 +2536,7 @@ snapshots:
       lodash: 4.17.21
       type-fest: 5.8.0
 
-  '@finografic/deps-policy@0.26.25':
+  '@finografic/deps-policy@0.26.27':
     dependencies:
       '@finografic/cli-kit': 2.0.0
       '@finografic/core': 0.18.0
@@ -4225,7 +4225,7 @@ snapshots:
   vite@8.2.1(@types/node@24.12.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.33.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       postcss: 8.5.26
       rolldown: 1.2.4
       tinyglobby: 0.2.17

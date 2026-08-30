@@ -1,9 +1,13 @@
 allowBuilds:
   esbuild: true
+
+# Our own packages are exempt from the release-age gate.
+#
+# That gate exists to keep a third-party package published minutes ago out of the tree — the window
+# a supply-chain attack lives in. It makes no sense against packages we publish ourselves, where the
+# normal flow is release then immediately consume, which is exactly what it rejects.
+#
+# Entries used to be version-pinned, so every release of our own needed another line added by hand,
+# and the failure surfaced later, mid-install, on an unrelated command. Three times in one day.
 minimumReleaseAgeExclude:
-  - '@finografic/ai-agent-config@0.1.1'
-  - '@finografic/deps-policy@0.26.12 || 0.26.13 || 0.26.19 || 0.26.25'
-  - '@finografic/project-scripts@1.6.1 || 2.0.0 || 2.0.1'
-  - '@finografic/md-lint@0.16.7'
-  - '@finografic/core@0.16.0 || 0.16.1 || 0.18.0'
-  - '@finografic/cli-kit@2.0.0'
+  - '@finografic/*'
