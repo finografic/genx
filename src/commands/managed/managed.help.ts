@@ -50,6 +50,8 @@ export const help: CommandHelpConfig = {
     'Runs the selected command (upgrade, deps, audit, or status) on each target',
     'Managed status reads each target worktree, then pre-selects only targets with uncommitted files (clean targets are shown but disabled)',
     'Managed deps uses the current policy snapshot unless --update-policy is passed',
+    'Managed deps checks each target first, and skips the prompt entirely for targets already aligned',
+    'Managed deps plans every workspace member package.json, not only the workspace root',
     'Managed audit scans all targets first, then prompts for feature selection per target',
     'Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features',
     'Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite',

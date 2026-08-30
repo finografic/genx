@@ -216,10 +216,11 @@ genx deps --update-policy
 **How it works:**
 
 1. Reads policy versions from @finografic/deps-policy
-2. Compares against local package.json dependencies
-3. Shows a table of planned upgrades and downgrades for installed dependencies
-4. Prompts to select packages (or applies all with --yes)
-5. Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)
+2. In a workspace, plans every member package.json as well as the root — one table per manifest
+3. Only aligns dependencies a package already declares; nothing is ever added
+4. Shows a table of planned upgrades and downgrades for installed dependencies
+5. Prompts to select packages (or applies all with --yes)
+6. Runs one pnpm install at the root, then syncs toolchain versions (.nvmrc, engines, packageManager)
 
 ### `genx audit`
 
@@ -312,9 +313,11 @@ genx managed status
 2. Runs the selected command (upgrade, deps, audit, or status) on each target
 3. Managed status reads each target worktree, then pre-selects only targets with uncommitted files (clean targets are shown but disabled)
 4. Managed deps uses the current policy snapshot unless --update-policy is passed
-5. Managed audit scans all targets first, then prompts for feature selection per target
-6. Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features
-7. Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite
+5. Managed deps checks each target first, and skips the prompt entirely for targets already aligned
+6. Managed deps plans every workspace member package.json, not only the workspace root
+7. Managed audit scans all targets first, then prompts for feature selection per target
+8. Managed audit --features=KEYS skips feature selection and applies only matching partial/missing features
+9. Feature keys match src/features/* folder names, e.g. ai-memory, git-hooks, react-vite
 
 <!-- GENERATED:USAGE:END -->
 

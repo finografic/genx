@@ -27,9 +27,10 @@ export const help: ReadmeCommandHelpConfig = {
   ],
   howItWorks: [
     'Reads policy versions from @finografic/deps-policy',
-    'Compares against local package.json dependencies',
+    'In a workspace, plans every member package.json as well as the root — one table per manifest',
+    'Only aligns dependencies a package already declares; nothing is ever added',
     'Shows a table of planned upgrades and downgrades for installed dependencies',
     'Prompts to select packages (or applies all with --yes)',
-    'Runs pnpm install and syncs toolchain versions (.nvmrc, engines, packageManager)',
+    'Runs one pnpm install at the root, then syncs toolchain versions (.nvmrc, engines, packageManager)',
   ],
 };
