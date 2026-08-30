@@ -59,17 +59,22 @@ and adoption in `gli` (Phase 3) are tracked in those repos and blocked on this s
 
 Detail: [`docs/todo/TODO_MANAGED_LIVE_DASHBOARD.md`](./TODO_MANAGED_LIVE_DASHBOARD.md)
 
+A scheduled drift report (#14) builds directly on this — the same facts, rendered as JSON.
+
 ### 10. `REACT_DEV_DEPS` has no drift check
 
-`src/features/react-vite/react-vite.constants.ts` pins React-side versions in genx because
-deps-policy has no `react` group by design (see `src/config/policy.ts`). Nothing keeps them current,
-and they are already behind `monorepo-starter`, so a fresh `genx create` of a react package
-scaffolds stale versions.
+`src/features/react-vite/react-vite.constants.ts` pins React-side versions in genx. Nothing keeps
+them current, and they are already behind `monorepo-starter`, so a fresh `genx create` of a react
+package scaffolds stale versions.
 
 This is Key Decision 17 — a value duplicated with nothing forcing it current — and the 2026-08-24
-integrity pass hit that same shape five separate times in one command. Unlike `_templates/` there is
-no policy group to check against, so either give `react` a deps-policy group, or add a check that
-compares these constants with the starter at its resolved tag.
+integrity pass hit that same shape five separate times in one command.
+
+Updated 2026-08-30: this was written when deps-policy had no `react` group, so the item offered two
+routes — create one, or compare against the starter at its resolved tag. The group now exists and
+`toPolicyPackageType` passes `react` through, so the first route is taken. What remains is moving
+`REACT_RUNTIME_DEPS` / `REACT_DEV_DEPS` onto it, which also gives `_templates/`-style drift checking
+for free.
 
 Small, self-contained, and it removes a live source of wrong output.
 
@@ -86,6 +91,25 @@ Use the `generate-new-genx-feature` skill before writing any module.
 ---
 
 ## P2 — Planned
+
+### 14. Scheduled managed drift report
+
+A read-only `genx managed deps --check --json` that a scheduler can call, so drift is reported
+without anything being applied. genx owns the facts; cron or Hermes owns the delivery, and genx
+learns nothing about either.
+
+Report-only on purpose. On 2026-08-30 a routine `oxlint 1.79 → 1.80` bump broke lint in three repos
+and needed three unrelated fixes — an unattended apply would have committed all of it. Note that was
+a _minor_: semver is not a safety signal for lint tooling, so "auto-apply patches" is not a safe
+middle ground either.
+
+Blocked on #13. `managed live` already gathers these facts for its table, so `--json` is the same
+data with a different renderer rather than a parallel implementation.
+
+A purpose-built Google ADK agent was considered and rejected for this; the reasoning and the trigger
+to revisit are recorded in the detail doc.
+
+Detail: [`docs/todo/TODO_MANAGED_DRIFT_REPORT.md`](./TODO_MANAGED_DRIFT_REPORT.md)
 
 ### 11. What does a workspace root own? — upgrade operation scoping
 
