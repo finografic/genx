@@ -19,13 +19,18 @@
  * hand-authored and left alone.
  */
 
+import { execFile as execFileCallback } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { createInterface } from 'node:readline/promises';
+import { promisify } from 'node:util';
 import type { PackageJson } from '../src/types/package-json.types';
 
 import { policy, toolchain } from '../src/config/policy';
 import { pc } from '../src/utils/picocolors';
+
+const execFile = promisify(execFileCallback);
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const TEMPLATE_PACKAGE_JSON = path.join(ROOT, '_templates/package.json');
@@ -113,6 +118,59 @@ function fieldCount(count: number): string {
   return `${count} field${count === 1 ? '' : 's'}`;
 }
 
+async function writeTemplates(packageJson: PackageJson, nvmrc: string): Promise<void> {
+  await writeFile(TEMPLATE_PACKAGE_JSON, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  await writeFile(TEMPLATE_NVMRC, nvmrc, 'utf8');
+}
+
+const SYNC_COMMIT_MESSAGE = 'deps(templates): sync _templates with deps-policy';
+
+/**
+ * Commit just the two template files.
+ *
+ * `--only` with explicit paths so nothing else in the working tree is swept in — a release run
+ * routinely has unrelated edits open, and they are not part of this fix.
+ *
+ * Committing is what lets the run carry on: `pnpm version` tags whatever is committed, so an
+ * uncommitted fix would ship a tag that does not contain it. Returns false when git refuses
+ * (no repo, or a hook rejects the message), leaving the caller to fail the check as before.
+ */
+async function commitTemplates(): Promise<boolean> {
+  const paths = [TEMPLATE_PACKAGE_JSON, TEMPLATE_NVMRC];
+
+  try {
+    await execFile('git', ['add', '--', ...paths], { cwd: ROOT });
+    await execFile('git', ['commit', '-m', SYNC_COMMIT_MESSAGE, '--only', '--', ...paths], { cwd: ROOT });
+    return true;
+  } catch {
+    await execFile('git', ['restore', '--staged', '--', ...paths], { cwd: ROOT }).catch(() => undefined);
+    return false;
+  }
+}
+
+/**
+ * Ask whether to align the templates right now.
+ *
+ * Only when stdin is a TTY: `--check` runs in CI and in `release:check`, where there is nobody to
+ * answer and a blocked read would hang the pipeline. Without a terminal this returns false and the
+ * check fails exactly as it did before.
+ */
+async function confirmSync(): Promise<boolean> {
+  if (!process.stdin.isTTY) return false;
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = (await rl.question(pc.white('Update template deps now? [Y/n] '))).trim().toLowerCase();
+    return answer === '' || answer === 'y' || answer === 'yes';
+  } catch {
+    // Ctrl-D, or stdin closing under us. Declining is the safe reading of "no answer": the check
+    // still fails and nothing is written, which is what happens without a terminal at all.
+    return false;
+  } finally {
+    rl.close();
+  }
+}
+
 async function main(): Promise<void> {
   const checkOnly = process.argv.includes('--check');
   const { drift, packageJson } = await collectDrift();
@@ -133,15 +191,39 @@ async function main(): Promise<void> {
   }
 
   if (checkOnly) {
+    // The verdict stays red because it fails the build, but the fix is the part worth reading and
+    // it lands directly above pnpm's ELIFECYCLE lines. Giving it its own blank lines and a warning
+    // colour keeps it findable instead of grey text swallowed by the noise below.
     console.error(
-      `\n${pc.red('✘')} ${pc.red(`${fieldCount(drift.length)} in _templates/ have drifted from deps-policy.`)}\n` +
-        `  ${pc.gray('Run')} ${pc.cyan('pnpm templates:policy:sync')} ${pc.gray('to align them.')}`,
+      `\n${pc.red('✘')} ${pc.red(`${fieldCount(drift.length)} in _templates/ have drifted from deps-policy.`)}\n`,
     );
+    // One colour for the whole line so it reads as a single hint; the command is the only part
+    // worth acting on, so it stays bright while the prose around it recedes.
+    console.error(
+      `${pc.yellow('⚠️')}  ${pc.yellow(pc.dim('Run'))} ${pc.bold(pc.yellow('pnpm templates:policy:sync'))} ${pc.yellow(pc.dim('to align them.'))}\n`,
+    );
+
+    if (await confirmSync()) {
+      await writeTemplates(packageJson, expectedNvmrc);
+      console.log(`\n${pc.green('✔')} ${pc.green(`Aligned ${fieldCount(drift.length)} in _templates/.`)}`);
+
+      // Commit it, then let the run continue. Stopping here to ask for a commit would defeat the
+      // prompt: the whole point is not to lose the release to a drift the script can fix itself.
+      if (await commitTemplates()) {
+        console.log(`${pc.green('✔')} ${pc.green(`Committed: ${SYNC_COMMIT_MESSAGE}`)}\n`);
+        return;
+      }
+
+      console.error(
+        `${pc.yellow('⚠️  Templates were written but could not be committed.')}\n` +
+          `${pc.yellow('   Commit them, then run the release again.')}\n`,
+      );
+    }
+
     process.exit(1);
   }
 
-  await writeFile(TEMPLATE_PACKAGE_JSON, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
-  await writeFile(TEMPLATE_NVMRC, expectedNvmrc, 'utf8');
+  await writeTemplates(packageJson, expectedNvmrc);
   console.log(`\n${pc.green('✔')} ${pc.green(`Aligned ${fieldCount(drift.length)} in _templates/.`)}`);
 }
 
