@@ -83,4 +83,21 @@ export const dependencyRules: DependencyRule[] = [
     optional: true,
     group: 'frontend',
   },
+  {
+    name: '@finografic/icons',
+    version: reactDeps['@finografic/icons'],
+    section: 'dependencies',
+    optional: true,
+    group: 'frontend',
+  },
+  // Imported directly by the generated `icons.generated.ts`, so it is a real dependency of the app
+  // rather than only a transitive one. It had reached three versions across two repos before being
+  // pinned in policy.
+  {
+    name: 'lucide-react',
+    version: reactDeps['lucide-react'],
+    section: 'dependencies',
+    optional: true,
+    group: 'frontend',
+  },
 ];
