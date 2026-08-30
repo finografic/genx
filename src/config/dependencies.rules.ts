@@ -2,6 +2,7 @@ import { policy } from 'config/policy.js';
 import type { DependencyRule } from 'types/dependencies.types';
 
 const dev = policy.base.devDependencies ?? {};
+const reactDeps = policy.react.dependencies ?? {};
 
 /**
  * Dependency version rules for template upgrades. Versions are sourced from @finografic/deps-policy — edit
@@ -69,5 +70,17 @@ export const dependencyRules: DependencyRule[] = [
     section: 'devDependencies',
     optional: true,
     group: 'ecosystem',
+  },
+
+  // frontend
+  // Optional, and a runtime dependency rather than a dev one. Only front-end packages have any
+  // use for it, so it is aligned where already installed and never added elsewhere — pushing
+  // React hooks into a CLI would not be an alignment.
+  {
+    name: '@finografic/react',
+    version: reactDeps['@finografic/react'],
+    section: 'dependencies',
+    optional: true,
+    group: 'frontend',
   },
 ];

@@ -7,6 +7,8 @@ interface PolicySnapshot {
   cli: DependencyGroup;
   library: DependencyGroup;
   config: DependencyGroup;
+  /** Added in deps-policy 0.27; older snapshots on disk will not have it. */
+  react?: DependencyGroup;
   formatting: Record<string, string>;
   linting: Record<string, string>;
   toolchain?: ToolchainPolicy;
@@ -25,6 +27,9 @@ export const policy = xdgSnapshot
       cli: xdgSnapshot.cli,
       library: xdgSnapshot.library,
       config: xdgSnapshot.config,
+      // A snapshot written before deps-policy 0.27 has no react group; fall back to the
+      // installed package so the field is never undefined.
+      react: xdgSnapshot.react ?? installed.policy.react,
     }
   : installed.policy;
 
@@ -37,19 +42,20 @@ export const toolchain: ToolchainPolicy = xdgSnapshot?.toolchain ?? installed.to
 /**
  * Genx package types that deps-policy also knows about.
  *
- * `react` is a genx package type with no policy group of its own — see `toPolicyPackageType`.
+ * Every genx package type now has a matching policy group, `react` included.
  */
 export type PolicyPackageType = PackageType;
 
 /**
  * Map a genx package type onto the policy group that governs its dependency versions.
  *
- * `react` resolves to `library`, which is what it is as far as dependency policy is concerned: a
- * published package, not a binary. Its React-specific dependencies are added by the `reactVite`
- * feature and are outside policy entirely.
+ * `react` used to resolve to `library` because deps-policy had no group of its own for it.
+ * It now has one, so the type passes through and its shared dependencies are policy-managed
+ * like every other type. Framework packages (react, react-dom, vite) still come from the
+ * `reactVite` feature — policy covers the @finografic packages, not the stack.
  */
 export function toPolicyPackageType(id: string): PolicyPackageType {
-  return id === 'cli' || id === 'config' ? id : 'library';
+  return id === 'cli' || id === 'config' || id === 'react' ? id : 'library';
 }
 
 /**
