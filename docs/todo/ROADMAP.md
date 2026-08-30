@@ -23,7 +23,11 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ## Next
 
+- **#13 `genx managed live`** — top priority once any outstanding bug fixes are clear. Fully scoped.
 - **#10 `REACT_DEV_DEPS` drift check** — smallest P1, and it removes a live source of wrong output.
+  Half-answered on 2026-08-30: deps-policy now has a real `react` group, so the "give `react` a
+  deps-policy group" branch is taken. What remains is moving `REACT_RUNTIME_DEPS` /
+  `REACT_DEV_DEPS` onto it, or adding the comparison check.
 - Independent of any roadmap item: the remaining managed repositories still need
   `npx skills add finografic/ai-skills`. It gates nothing, needs no genx changes, and can happen at
   any pace — see the migration note under P3.
@@ -37,6 +41,23 @@ No items.
 ---
 
 ## P1 — Next Up
+
+### 13. `genx managed live` — live alignment dashboard
+
+A read-only TUI across selected managed targets, refreshed on an interval: version, last commit
+date, ahead/behind, dirty files, and how many dependencies are unaligned with policy. Opens with a
+multi-select whose choices are remembered in XDG cache, so a session can watch only the three or
+four repos currently being worked on — including while an agent edits them.
+
+Decided 2026-08-30 to keep `managed` inside genx rather than extract it to its own CLI: three of its
+four subcommands are short loops whose body calls a genx command, and the dashboard's most valuable
+column needs `dependencyRules` and `planDependencyChanges`, both genx-internal. The reasoning, the
+column cost tiers, and the refresh budget are in the detail doc.
+
+Phase 1 is genx-only and deliberately unabstracted. Extraction to `@finografic/cli-kit` (Phase 2)
+and adoption in `gli` (Phase 3) are tracked in those repos and blocked on this shipping first.
+
+Detail: [`docs/todo/TODO_MANAGED_LIVE_DASHBOARD.md`](./TODO_MANAGED_LIVE_DASHBOARD.md)
 
 ### 10. `REACT_DEV_DEPS` has no drift check
 
