@@ -10,6 +10,17 @@ export async function runManagedLoop(params: {
   yesMode: boolean;
   actionLabel: string;
   runTarget: (target: ManagedTarget) => Promise<void>;
+  /**
+   * Optional pre-check, run before a target is offered.
+   *
+   * Return false for a target with nothing to do: it is then neither prompted for nor run.
+   * Prompting about a repo that needs nothing is how a long managed run teaches you to press
+   * Enter without reading it.
+   *
+   * Reporting is the caller's job, since only the caller knows what "nothing to do" means for
+   * its flow — print whatever explanation fits before returning false.
+   */
+  hasPendingWork?: (target: ManagedTarget) => Promise<boolean>;
 }): Promise<void> {
   let managedTargets: ManagedTarget[];
   try {
@@ -28,8 +39,14 @@ export async function runManagedLoop(params: {
 
   let appliedCount = 0;
   let skippedCount = 0;
+  let alignedCount = 0;
 
   for (const [index, target] of managedTargets.entries()) {
+    if (params.hasPendingWork && !(await params.hasPendingWork(target))) {
+      alignedCount += 1;
+      continue;
+    }
+
     if (!params.yesMode) {
       const action = await promptManagedTargetAction({
         actionLabel: params.actionLabel,
@@ -53,7 +70,10 @@ export async function runManagedLoop(params: {
     appliedCount += 1;
   }
 
-  successMessage(
-    `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})`,
-  );
+  const summary = [
+    `${appliedCount} processed`,
+    ...(alignedCount > 0 ? [`${alignedCount} already aligned`] : []),
+    ...(skippedCount > 0 ? [`${skippedCount} skipped`] : []),
+  ].join(', ');
+  successMessage(`Managed run complete (${summary})`);
 }
