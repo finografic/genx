@@ -12,6 +12,13 @@ export const MONOREPO_WORKSPACE_KEYWORD = 'genx:workspace:monorepo';
 
 export const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
+export interface WorkspaceManifest {
+  /** Absolute path to a `package.json` governed by policy. */
+  packageJsonPath: string;
+  /** Path relative to the workspace root; empty string for the root manifest itself. */
+  label: string;
+}
+
 export interface WorkspaceMember {
   /** Path relative to the workspace root, POSIX separators — e.g. `apps/client`. */
   relativePath: string;
@@ -102,4 +109,29 @@ export async function readWorkspaceMembers(targetDir: string): Promise<Workspace
   }
 
   return members;
+}
+
+/**
+ * Every manifest policy applies to: the target's own `package.json`, plus each workspace member's
+ * when the target is a monorepo root.
+ *
+ * A monorepo keeps its real dependencies in `packages/*` and `apps/*`, so a root-only sync reports
+ * "already aligned" while the members drift — which is exactly how they fell behind.
+ */
+export async function collectWorkspaceManifests(
+  targetDir: string,
+  rootPackageJson: PackageJson,
+): Promise<WorkspaceManifest[]> {
+  const manifests: WorkspaceManifest[] = [{ packageJsonPath: resolve(targetDir, 'package.json'), label: '' }];
+
+  if (!(await isMonorepoRoot(targetDir, rootPackageJson))) return manifests;
+
+  for (const member of await readWorkspaceMembers(targetDir)) {
+    manifests.push({
+      packageJsonPath: resolve(member.dir, 'package.json'),
+      label: member.relativePath,
+    });
+  }
+
+  return manifests;
 }

@@ -30,9 +30,11 @@ import {
 import type { GitCommitTracker } from 'lib/git/target-git-commit.utils';
 import { commitTrackedGitChanges, createGitCommitTracker } from 'lib/git/target-git-commit.utils';
 import { promptManagedTargetAction } from 'lib/managed/managed.prompt';
+import { collectWorkspaceManifests } from 'lib/monorepo/monorepo.workspace';
 import type { DependencyChange } from 'lib/package-policy/dependencies.utils';
 import { applyDependencyChanges, planDependencyChanges } from 'lib/package-policy/dependencies.utils';
 import { readPackageJson, writePackageJson } from 'lib/package-policy/package-json.utils';
+import type { ToolchainChange } from 'lib/package-policy/toolchain.utils';
 import { applyToolchainChanges, planToolchainChanges } from 'lib/package-policy/toolchain.utils';
 import { isDevelopment } from 'utils/env.utils';
 import { pc } from 'utils/picocolors';
@@ -43,6 +45,7 @@ import { dependencyRules } from 'config/dependencies.rules';
 import { toolchain } from 'config/policy';
 import type { DependencyRule } from 'types/dependencies.types';
 import type { ManagedTarget } from 'types/managed.types';
+import type { PackageJson } from 'types/package-json.types';
 
 import { help } from './deps.help.js';
 
@@ -213,8 +216,18 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
 
       let appliedCount = 0;
       let skippedCount = 0;
+      let alignedCount = 0;
 
       for (const [index, target] of managedTargets.entries()) {
+        // Check before asking. Prompting about a repo that turns out to need nothing is how a
+        // long managed run teaches you to press Enter without reading it.
+        if (!(await targetHasPendingChanges(target.path, { allowDowngrade }))) {
+          infoMessage(`\n${pc.cyan(target.path.replace(homedir(), ''))}`);
+          infoMessage(pc.white('All dependencies and toolchain versions already aligned with policy.'));
+          alignedCount += 1;
+          continue;
+        }
+
         if (!yesMode) {
           const action = await promptManagedTargetAction({
             actionLabel: 'Sync dependencies for',
@@ -237,15 +250,84 @@ export async function syncDeps(argv: string[], context: { cwd: string }): Promis
         appliedCount += 1;
       }
 
-      successMessage(
-        `Managed run complete (${appliedCount} processed${skippedCount > 0 ? `, ${skippedCount} skipped` : ''})\n`,
-      );
+      const summary = [
+        `${appliedCount} processed`,
+        ...(alignedCount > 0 ? [`${alignedCount} already aligned`] : []),
+        ...(skippedCount > 0 ? [`${skippedCount} skipped`] : []),
+      ].join(', ');
+      successMessage(`Managed run complete (${summary})\n`);
       return;
     }
 
     const targetDir = resolveTargetDir(context.cwd, pathArg);
     await syncDepsForTarget(targetDir, { allowDowngrade, yesMode });
   });
+}
+interface ManifestPlan {
+  packageJsonPath: string;
+  /** Path relative to the workspace root; empty for the root manifest itself. */
+  label: string;
+  packageJson: PackageJson;
+  changes: DependencyChange[];
+}
+
+interface TargetPlan {
+  rootPackageJsonPath: string;
+  rootPackageJson: PackageJson;
+  plans: ManifestPlan[];
+  toolchainChanges: ToolchainChange[];
+}
+
+/**
+ * Work out everything a target needs without writing anything or prompting.
+ *
+ * Split out from the apply step so a managed run can tell whether a repo needs attention
+ * *before* asking about it — presenting Apply/Skip/Cancel for a repo that turns out to be
+ * already aligned trains you to hit Enter without reading.
+ */
+async function planTarget(targetDir: string, options: { allowDowngrade: boolean }): Promise<TargetPlan> {
+  const rootPackageJsonPath = resolve(targetDir, 'package.json');
+  const rootPackageJson = await readPackageJson(rootPackageJsonPath);
+
+  const manifestPaths = await collectWorkspaceManifests(targetDir, rootPackageJson);
+
+  const plans: ManifestPlan[] = [];
+  for (const { packageJsonPath, label } of manifestPaths) {
+    const packageJson =
+      packageJsonPath === rootPackageJsonPath ? rootPackageJson : await readPackageJson(packageJsonPath);
+
+    plans.push({
+      packageJsonPath,
+      label,
+      packageJson,
+      // `add` operations are dropped here as they always were: this command aligns what a package
+      // already declares and never introduces a dependency it did not ask for.
+      changes: planDependencyChanges(packageJson, dependencyRules, {
+        allowDowngrade: options.allowDowngrade,
+        includeMissing: false,
+      }).filter((change) => change.operation !== 'add'),
+    });
+  }
+
+  // Toolchain is a root concern — `.nvmrc` and `packageManager` govern the whole workspace.
+  const toolchainChanges = await planToolchainChanges(targetDir, rootPackageJson, toolchain);
+
+  return { rootPackageJsonPath, rootPackageJson, plans, toolchainChanges };
+}
+
+function planIsEmpty(plan: TargetPlan): boolean {
+  return plan.plans.every((manifest) => manifest.changes.length === 0) && plan.toolchainChanges.length === 0;
+}
+
+/** True when a target has anything to align. Reads only — never writes or prompts. */
+export async function targetHasPendingChanges(
+  targetDir: string,
+  options: { allowDowngrade: boolean },
+): Promise<boolean> {
+  const validation = validateExistingPackage(targetDir);
+  if (!validation.ok) return false;
+
+  return !planIsEmpty(await planTarget(targetDir, options));
 }
 
 export async function syncDepsForTarget(
@@ -258,61 +340,62 @@ export async function syncDepsForTarget(
     process.exit(1);
   }
 
-  const packageJsonPath = resolve(targetDir, 'package.json');
-  const packageJson = await readPackageJson(packageJsonPath);
   const commitTracker = await createGitCommitTracker(targetDir);
   const changedTargetPaths = new Set<string>();
 
-  const allChanges = planDependencyChanges(packageJson, dependencyRules, {
-    allowDowngrade: options.allowDowngrade,
-    includeMissing: false,
-  });
+  const targetPlan = await planTarget(targetDir, { allowDowngrade: options.allowDowngrade });
+  const { rootPackageJsonPath, rootPackageJson, plans, toolchainChanges } = targetPlan;
 
   const header = pc.cyan(targetDir.replace(homedir(), ''));
   infoMessage(`\n${header}`);
 
-  const toolchainChanges = await planToolchainChanges(targetDir, packageJson, toolchain);
-
-  if (allChanges.length === 0 && toolchainChanges.length === 0) {
+  if (planIsEmpty(targetPlan)) {
     infoMessage(pc.white('All dependencies and toolchain versions already aligned with policy.'));
     return;
   }
 
   const ruleByName = new Map(dependencyRules.map((r) => [r.name, r]));
-  const updateChanges = allChanges.filter((c) => c.operation !== 'add');
-
   const columns = getDepsColumns();
 
-  // ─── Show upgrade/downgrade table ──────────────────────────────
-  if (updateChanges.length > 0) {
-    const updateEntries = updateChanges.map((c) => changeToEntry(c, ruleByName.get(c.name), packageJsonPath));
-    printDepsTable(updateEntries, columns);
+  const appliedChanges: DependencyChange[] = [];
+  let rootPackageJsonAfterDeps = rootPackageJson;
+
+  for (const plan of plans) {
+    if (plan.changes.length === 0) continue;
+
+    if (plan.label) infoMessage(pc.gray(plan.label));
+
+    const entries = plan.changes.map((change) =>
+      changeToEntry(change, ruleByName.get(change.name), plan.packageJsonPath),
+    );
+    printDepsTable(entries, columns);
     console.log();
-  }
 
-  // ─── Select packages (interactive) or apply all (--yes / -y) ─────────
-  const selectedChanges: DependencyChange[] = [];
+    let selectedChanges = plan.changes;
 
-  if (options.yesMode) {
-    selectedChanges.push(...updateChanges);
-  } else {
-    if (updateChanges.length > 0) {
-      const updateEntries = updateChanges.map((c) =>
-        changeToEntry(c, ruleByName.get(c.name), packageJsonPath),
-      );
-      const selectedEntries = await selectEntries(updateEntries, columns, 'Select packages to update');
-      const selectedNames = new Set(selectedEntries.map((e) => e.name));
-      selectedChanges.push(...updateChanges.filter((c) => selectedNames.has(c.name)));
+    if (!options.yesMode) {
+      const prompt = plan.label ? `Select packages to update — ${plan.label}` : 'Select packages to update';
+      const selectedEntries = await selectEntries(entries, columns, prompt);
+      const selectedNames = new Set(selectedEntries.map((entry) => entry.name));
+      selectedChanges = plan.changes.filter((change) => selectedNames.has(change.name));
+    }
+
+    if (selectedChanges.length === 0) continue;
+
+    const updatedPackageJson = applyDependencyChanges(plan.packageJson, selectedChanges);
+    await writePackageJson(plan.packageJsonPath, updatedPackageJson);
+    changedTargetPaths.add(plan.packageJsonPath);
+    appliedChanges.push(...selectedChanges);
+
+    if (plan.packageJsonPath === rootPackageJsonPath) {
+      rootPackageJsonAfterDeps = updatedPackageJson;
     }
   }
 
-  if (selectedChanges.length === 0 && toolchainChanges.length === 0) {
+  if (appliedChanges.length === 0 && toolchainChanges.length === 0) {
     infoMessage(pc.white('No changes selected.'));
     return;
   }
-
-  let updatedPackageJson = applyDependencyChanges(packageJson, selectedChanges);
-  changedTargetPaths.add(packageJsonPath);
 
   if (toolchainChanges.length > 0) {
     const labels = toolchainChanges.map((c) => {
@@ -321,27 +404,29 @@ export async function syncDepsForTarget(
     });
     logMessage(`${pc.cyan('Toolchain versions:')}\n${labels.join('\n')}`);
 
-    updatedPackageJson = await applyToolchainChanges(targetDir, updatedPackageJson, toolchainChanges);
+    const withToolchain = await applyToolchainChanges(targetDir, rootPackageJsonAfterDeps, toolchainChanges);
+    await writePackageJson(rootPackageJsonPath, withToolchain);
+    changedTargetPaths.add(rootPackageJsonPath);
+
     if (toolchainChanges.some((change) => change.target === '.nvmrc')) {
       changedTargetPaths.add(resolve(targetDir, '.nvmrc'));
     }
     successMessage('Toolchain versions updated');
   }
 
-  await writePackageJson(packageJsonPath, updatedPackageJson);
-
   // Install last, after every write. A `packageManager` bump must be on disk before pnpm runs, or
   // the install executes under the version being replaced — and a toolchain-only run would
   // otherwise never install at all, leaving a version that has never been exercised locally.
+  // One install at the root is enough: pnpm resolves every workspace member in a single pass.
   const installSpin = spinner();
-  installSpin.start(pc.cyan(describeInstallStep(selectedChanges.length, toolchainChanges.length)));
+  installSpin.start(pc.cyan(describeInstallStep(appliedChanges.length, toolchainChanges.length)));
 
   try {
     await runPnpmInstall(targetDir);
     installSpin.stop(pc.green('Dependencies installed'));
     changedTargetPaths.add(resolve(targetDir, 'pnpm-lock.yaml'));
-    if (selectedChanges.length > 0) {
-      logWrittenDependencyVersions(selectedChanges);
+    if (appliedChanges.length > 0) {
+      logWrittenDependencyVersions(appliedChanges);
     }
   } catch (error) {
     installSpin.stop('Failed to install dependencies');

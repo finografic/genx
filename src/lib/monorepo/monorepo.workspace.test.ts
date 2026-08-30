@@ -8,6 +8,7 @@ import {
   MONOREPO_WORKSPACE_KEYWORD,
   readWorkspaceMembers,
   readWorkspacePatterns,
+  collectWorkspaceManifests,
 } from './monorepo.workspace.js';
 
 async function makeRoot(): Promise<string> {
@@ -200,6 +201,48 @@ describe('readWorkspaceMembers', () => {
     expect(members).toHaveLength(1);
     expect(members[0].relativePath).toBe('packages/broken');
     expect(members[0].name).toBeUndefined();
+
+    await rm(root, { recursive: true, force: true });
+  });
+});
+
+describe('collectWorkspaceManifests', () => {
+  it('returns only the root manifest for a single package', async () => {
+    const root = await makeRoot();
+    await writeFile(join(root, 'package.json'), '{ "name": "solo" }\n');
+
+    const manifests = await collectWorkspaceManifests(root, { name: 'solo' });
+
+    expect(manifests).toEqual([{ packageJsonPath: join(root, 'package.json'), label: '' }]);
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  // The regression this exists for: policy was applied to the workspace root only, so members
+  // drifted while every run reported "already aligned".
+  it('includes every workspace member alongside the root', async () => {
+    const root = await makeRoot();
+    await writeFile(join(root, 'pnpm-workspace.yaml'), STARTER_YAML);
+    await addMember(root, 'packages/ui', '@workspace/ui');
+    await addMember(root, 'apps/client', '@workspace/client');
+
+    const manifests = await collectWorkspaceManifests(root, {});
+
+    expect(manifests.map((manifest) => manifest.label)).toEqual(['', 'apps/client', 'packages/ui']);
+    expect(manifests[2].packageJsonPath).toBe(join(root, 'packages/ui', 'package.json'));
+
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it('skips a matched directory that has no package.json', async () => {
+    const root = await makeRoot();
+    await writeFile(join(root, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
+    await addMember(root, 'packages/real', '@workspace/real');
+    await addMember(root, 'packages/empty');
+
+    const manifests = await collectWorkspaceManifests(root, {});
+
+    expect(manifests.map((manifest) => manifest.label)).toEqual(['', 'packages/real']);
 
     await rm(root, { recursive: true, force: true });
   });
