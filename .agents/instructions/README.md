@@ -16,7 +16,7 @@ and to define how this folder is maintained.
 | Folder           | Contents                                                                   |
 | ---------------- | -------------------------------------------------------------------------- |
 | (root)           | `general.instructions.md` — baseline rules that apply everywhere           |
-| `code/`          | TypeScript patterns, oxlint style, code conventions, CLI styling           |
+| `code/`          | TypeScript patterns, oxlint style, path aliases, conventions, CLI styling  |
 | `naming/`        | File naming, variable naming, identifier conventions                       |
 | `documentation/` | Documentation standards, README rules, agent-facing markdown, design specs |
 | `git/`           | Commit conventions, branch policy, release process                         |
