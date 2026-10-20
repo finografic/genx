@@ -149,6 +149,10 @@ nothing selected, keeps metadata visible for unchecked rows, shows installed row
     run is about to create makes the guard false exactly when the code is needed.
 20. Correctness claims about genx come from running it against a real repository. Every defect in
     the 2026-08-19 and 2026-08-24 passes was invisible to a green test suite.
+21. Monorepo generation copies the starter's toolchain; it never owns it. `rewriteRootPackageJson`
+    writes identity fields only, so the starter can change task runner, scripts or dependencies with
+    no genx code change — docs and the `monorepo.identity.test.ts` shape fixture are the only
+    followers. The starter runs Nx; it previously ran Turborepo.
 
 ## Open Work
 
@@ -162,8 +166,9 @@ nothing selected, keeps metadata visible for unchecked rows, shows installed row
   **before** the recursive `AGENTS.md` work. `[planned, not started]`
 - Migrating the remaining managed repositories to the skills CLI gates nothing and needs no genx
   change; the dual-write branch retires only once that count reaches zero. `[planned, not started]`
-- This file's Architecture section is over its 60-line budget and needs a prune pass, promoting
-  subsystems to specs. `[planned, not started]`
+- This file's Architecture section is over its 60-line budget, and Key Decisions is over its 15-item
+  budget. Both need a prune pass — promote subsystems to specs, and retire decisions no longer
+  questioned or already stated in `AGENTS.md`. `[planned, not started]`
 
 Open in other repos, tracked in each:
 
