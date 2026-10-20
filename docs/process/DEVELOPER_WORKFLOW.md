@@ -68,7 +68,7 @@ git commit -m "deps: bump zod to latest patch"
 | `docs`     | Documentation only                                                                      |
 | `chore`    | Maintenance, tooling, scaffolding (use `deps` when the commit is only dependency bumps) |
 | `deps`     | Dependency changes only (lockfile, version bumps)                                       |
-| `build`    | Build system, bundler, or compile pipeline (e.g. Vite, tsup, `turbo` build config)      |
+| `build`    | Build system, bundler, or compile pipeline (e.g. Vite, tsup, `nx` target config)        |
 | `ci`       | CI workflows, Actions, automation config                                                |
 | `style`    | Formatting-only or style rules (no logic change)                                        |
 | `revert`   | Reverts a previous commit                                                               |

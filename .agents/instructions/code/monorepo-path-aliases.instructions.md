@@ -86,7 +86,7 @@ path aliases, so nothing leaks:
 
 Then set `typecheck` to `tsc --build` in both, so the provider is built first.
 Add the provider's output directory to `.gitignore` and to the `typecheck`
-task's `outputs` in `turbo.json`.
+task's `outputs` in `nx.json` (`targetDefaults.typecheck.outputs`).
 
 **Accepted exception:** shadcn/ui components are vendored source and import
 each other as `ui/*` and the `cn` helper as `utils`. Keep those two mapped at

@@ -66,7 +66,8 @@ coverage/
 styled-system/
 
 # Monorepos
-.turbo/
+.nx/cache
+.nx/workspace-data
 .moon/cache
 .moon/docker
 

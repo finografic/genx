@@ -64,7 +64,7 @@ Proposed, from inspecting a generated monorepo (starter v0.4.4):
 | `docs`         | root  | Repo-level documentation structure                                              |
 | `renames`      | root  | Canonical filenames, wherever they are                                          |
 | `node`         | both  | One `.nvmrc`; `engines.node` belongs to every manifest                          |
-| `package-json` | both  | Root scripts are turbo orchestration; member scripts are the real ones          |
+| `package-json` | both  | Root scripts are Nx orchestration; member scripts are the real ones             |
 | `dependencies` | both  | Each manifest has its own — **including the root**, which is not an empty shell |
 
 The root of the generated starter carries ~92 lines of real manifest, including `commitlint`,

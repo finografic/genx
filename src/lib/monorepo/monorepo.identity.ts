@@ -183,7 +183,7 @@ export async function resetProjectMemory(
  *
  * `apps/**`, `packages/**` and `config/**` are deliberately untouched — including the internal
  * `@workspace/*` scope, which is already generic and is referenced by tsconfig path aliases and
- * root `turbo --filter` scripts.
+ * root `nx run-many --projects` scripts.
  *
  * @returns Repo-relative paths that were rewritten, in apply order.
  */

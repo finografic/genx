@@ -72,7 +72,7 @@ dependencies, and `lint-staged`. Those are the starter's working configuration, 
 
 Internal packages keep `@workspace/client`, `@workspace/server`, `@workspace/ui`,
 `@workspace/config`. The scope is already generic (shadcn convention) and is referenced by
-`tsconfig.json` path aliases and root `turbo --filter` scripts.
+`tsconfig.json` path aliases and root `nx run-many --projects` scripts.
 
 Renaming it would touch ~38 files for no benefit. Keeping it also means every generated monorepo
 shares identical member names, which makes future member iteration predictable rather than
@@ -151,7 +151,7 @@ should never quietly depend on it.
 
 Generating from a local checkout was built and then removed. It needed its own file-selection
 rules, and any hand-maintained approximation of `.gitignore` leaks — the implementation excluded
-`node_modules`, `.git`, `.turbo` and `dist`, and still copied `.env.*`, the dev sqlite database and
+`node_modules`, `.git`, the task-runner cache and `dist`, and still copied `.env.*`, the dev sqlite database and
 `.claude/settings.local.json` into generated workspaces. Worse, an inherited `.env.development`
 made `seedDevEnvFile` skip, so the workspace silently reused the starter's `AUTH_SECRET`.
 
